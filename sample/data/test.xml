@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process version="4.0beta2">
+
+  <operator name="Root" class="Process">
+      <operator name="Input" class="ExampleSource">
+          <parameter key="attributes"	value="Y:\workspace\yale\sample\data\golf.hubs.dbscanEA.aml"/>
+          <parameter key="column_separators"	value="\t"/>
+      </operator>
+      <operator name="ParameterIteration" class="ParameterIteration">
+          <parameter key="keep_output"	value="true"/>
+          <list key="parameters">
+            <parameter key="DBScanEAClustering.max_distance"	value="[5;7;1]"/>
+            <parameter key="DBScanEAClustering.min_pts"	value="[1;3;1]"/>
+            <parameter key="DBScanEAClustering.lambda"	value="[0;1;0.2]"/>
+          </list>
+          <operator name="DBScanEAClustering" class="DBScanEAClustering">
+              <parameter key="add_cluster_attribute"	value="false"/>
+              <parameter key="global_fuzziness"	value="1.0"/>
+              <parameter key="lambda"	value="1.0"/>
+              <parameter key="max_distance"	value="7.0"/>
+              <parameter key="min_pts"	value="3"/>
+          </operator>
+      </operator>
+      <operator name="ClusteringAggregation" class="ClusteringAggregation">
+      </operator>
+      <operator name="IOConsumer" class="IOConsumer">
+          <parameter key="deletion_type"	value="delete_all_but_number"/>
+          <parameter key="io_object"	value="ExampleSet"/>
+      </operator>
+      <operator name="ExampleVisualizer" class="ExampleVisualizer">
+      </operator>
+  </operator>
+
+</process>

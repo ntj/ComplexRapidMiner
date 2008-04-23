@@ -1,0 +1,170 @@
+/*
+ *  RapidMiner
+ *
+ *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *
+ *  Complete list of developers available at our web site:
+ *
+ *       http://rapid-i.com
+ *
+ *  This program is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License as 
+ *  published by the Free Software Foundation; either version 2 of the
+ *  License, or (at your option) any later version. 
+ *
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ *  General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+ *  USA.
+ */
+package com.rapidminer.operator.io;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.util.List;
+import java.util.zip.GZIPOutputStream;
+
+import com.rapidminer.operator.IOObject;
+import com.rapidminer.operator.Model;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.OperatorDescription;
+import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.UserError;
+import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypeBoolean;
+import com.rapidminer.parameter.ParameterTypeCategory;
+import com.rapidminer.parameter.ParameterTypeFile;
+
+import static com.rapidminer.operator.io.OutputTypes.*;
+
+/**
+ * <p>Writes the input model in the file specified by the corresponding parameter.
+ * Since models are often written into files and loaded and applied in other 
+ * processes or applications, this operator offers three different writing
+ * modes for models:</p>
+ * 
+ * <ul>
+ * <li><em>XML</em>: in this mode, the models are written as plain text XML files. The file size
+ * is usually the biggest in this mode (might be several hundred mega bytes so you should
+ * be cautious) but this model type has the advantage that the user can inspect and change
+ * the files.</li>
+ * <li><em>XML Zipped (default)</em>: In this mode, the models are written as zipped XML files. Users 
+ * can simply unzip the files and read or change the contents. The file sizes are smallest for
+ * most models. For these reasons, this mode is the default writing mode for models although
+ * the loading times are the longest due to the XML parsing and unzipping.</li>
+ * <li><em>Binary</em>: In this mode, the models are written in an proprietary binary format. 
+ * The resulting model files cannot be inspected by the user and the file sizes are usually 
+ * slightly bigger then for the zipped XML files. The loading time, however, is smallers than 
+ * the time needed for the other modes.</li>
+ * </ul>
+ * 
+ * <p>This operator is also able to keep old files if the overwriting flag is set to false.
+ * However, this could also be achieved by using some of the parameter macros provided by
+ * RapidMiner like %{t} or %{a} (please refer to the tutorial section about macros).</p>
+ * 
+ * @author Ingo Mierswa
+ * @version $Id: ModelWriter.java,v 1.3 2007/06/15 16:58:37 ingomierswa Exp $
+ */
+public class ModelWriter extends Operator {
+
+
+	/** The parameter name for &quot;Filename for the model file.&quot; */
+	public static final String PARAMETER_MODEL_FILE = "model_file";
+
+	/** The parameter name for &quot;Overwrite an existing file. If set to false then an index is appended to the filename.&quot; */
+	public static final String PARAMETER_OVERWRITE_EXISTING_FILE = "overwrite_existing_file";
+
+	/** The parameter name for &quot;Indicates the type of the output&quot; */
+	public static final String PARAMETER_OUTPUT_TYPE = "output_type";
+	private static final Class[] INPUT_CLASSES = { Model.class };
+
+	private static final Class[] OUTPUT_CLASSES = { Model.class };
+
+	public ModelWriter(OperatorDescription description) {
+		super(description);
+	}
+
+	/** Writes the attribute set to a file. */
+	public IOObject[] apply() throws OperatorException {
+		File modelFile = getParameterAsFile(PARAMETER_MODEL_FILE);
+		Model model = getInput(Model.class);
+
+		try {
+			if (!getParameterAsBoolean(PARAMETER_OVERWRITE_EXISTING_FILE)) {
+				if (modelFile.exists()) {
+					File newFile = null;
+					String fileName = modelFile.getAbsolutePath();
+					int counter = 1;
+					while (true) {
+						// create the new file name
+						String[] extension = fileName.split("\\.");
+						extension[extension.length - 2] += "_" + counter + ".";
+						String newFileName = stringArrayToString(extension);
+						newFile = new File(newFileName);
+						if (!newFile.exists()) {
+							break;
+						}
+						counter++;
+					}
+					modelFile = newFile;
+				}
+			}
+			int outputType = getParameterAsInt(PARAMETER_OUTPUT_TYPE);
+            switch (outputType) {
+            case OUTPUT_TYPE_XML:
+            	OutputStream out = new FileOutputStream(modelFile);
+     			model.write(out);
+                out.close();
+            	break;
+            case OUTPUT_TYPE_XML_ZIPPED:
+            	out = new GZIPOutputStream(new FileOutputStream(modelFile));
+     			model.write(out);
+                out.close();
+            	break;
+            case OUTPUT_TYPE_BINARY:
+            	ObjectOutputStream objectOut = new ObjectOutputStream(new FileOutputStream(modelFile));
+     			objectOut.writeObject(model);
+     			objectOut.close();
+            	break;
+            default:
+            	break;
+            }
+		} catch (IOException e) {
+			throw new UserError(this, e, 303, new Object[] { modelFile, e.getMessage() });
+		}
+
+		return new IOObject[] { model };
+	}
+
+    private String stringArrayToString(String[] filenameParts) {
+		StringBuffer newString = new StringBuffer();
+		for (int i = 0; i < filenameParts.length; i++) {
+			newString.append(filenameParts[i]);
+		}
+		return newString.toString();
+	}
+	
+	public Class[] getInputClasses() {
+		return INPUT_CLASSES;
+	}
+
+	public Class[] getOutputClasses() {
+		return OUTPUT_CLASSES;
+	}
+
+	public List<ParameterType> getParameterTypes() {
+		List<ParameterType> types = super.getParameterTypes();
+		types.add(new ParameterTypeFile(PARAMETER_MODEL_FILE, "Filename for the model file.", "mod", false));
+		types.add(new ParameterTypeBoolean(PARAMETER_OVERWRITE_EXISTING_FILE, "Overwrite an existing file. If set to false then an index is appended to the filename.", true));
+        types.add(new ParameterTypeCategory(PARAMETER_OUTPUT_TYPE, "Indicates the type of the output", OUTPUT_TYPES, OutputTypes.OUTPUT_TYPE_XML_ZIPPED));
+		return types;
+	}
+}

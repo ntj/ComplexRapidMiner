@@ -1,0 +1,37 @@
+Some notes about new Weka versions
+----------------------------------
+
+CVSROOT
+-------
+
+   :pserver:cvs_anon@cvs.scms.waikato.ac.nz:/usr/local/global-cvs/ml_cvs
+
+
+CVS checkout
+------------
+
+    cvs login
+
+    cvs co weka
+
+    cvs logout
+
+
+Building Weka Jar file
+----------------------
+
+   ant exejar
+
+
+System.out / System.err
+-----------------------
+
+Are there System.out / System.err invocations during start-up?
+
+
+Test new Weka operators
+-----------------------
+
+Use the commented line in WekaTools in order to test if all
+operators can be constructed. Comment the line afterwards
+(in order to speed up initialization).

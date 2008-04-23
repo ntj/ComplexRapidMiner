@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process version="4.0beta2">
+
+  <operator name="Root" class="Process">
+      <operator name="Input" class="ExampleSource">
+          <parameter key="attributes"	value="C:\Dokumente und Einstellungen\s6904961\workspace\yale\sample\data\golf.hubs.aml"/>
+          <parameter key="column_separators"	value="\t"/>
+      </operator>
+      <operator name="FDBScanClustering" class="FDBScanClustering">
+          <parameter key="global_fuzziness"	value="1.0"/>
+          <parameter key="max_distance"	value="10.0"/>
+      </operator>
+      <operator name="ExampleVisualizer" class="ExampleVisualizer">
+      </operator>
+  </operator>
+
+</process>

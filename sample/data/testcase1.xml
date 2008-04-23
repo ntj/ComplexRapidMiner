@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process version="4.0beta2">
+
+  <operator name="Root" class="Process">
+      <operator name="Input" class="ExampleSource">
+          <parameter key="attributes"	value="C:\Dokumente und Einstellungen\s6904961\workspace\yale\sample\data\testcase1.aml"/>
+          <parameter key="column_separators"	value="\t"/>
+      </operator>
+      <operator name="FDBScanClustering" class="FDBScanClustering">
+          <parameter key="max_distance"	value="6.0"/>
+      </operator>
+      <operator name="ExampleVisualizer" class="ExampleVisualizer">
+      </operator>
+  </operator>
+
+</process>

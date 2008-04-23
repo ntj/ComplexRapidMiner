@@ -1,0 +1,87 @@
+/*
+ *  RapidMiner
+ *
+ *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *
+ *  Complete list of developers available at our web site:
+ *
+ *       http://rapid-i.com
+ *
+ *  This program is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License as 
+ *  published by the Free Software Foundation; either version 2 of the
+ *  License, or (at your option) any later version. 
+ *
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ *  General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+ *  USA.
+ */
+package com.rapidminer.gui.tools;
+
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.Tools;
+
+/**
+ * This class loads all available tips and provides them as string. Each invocation of 
+ * {@link #nextTip()} returns a new randomly chosen tip string.
+ *
+ * @author Ingo Mierswa
+ * @version $Id: TipOfTheDayProvider.java,v 1.1 2007/06/03 16:39:03 ingomierswa Exp $
+ */
+public class TipOfTheDayProvider {
+
+	private List<String> allTips = new ArrayList<String>();
+	
+	private Random random;
+	
+	public TipOfTheDayProvider() {
+		this.random = new Random();
+		
+		// load all tips
+		try {
+			StringBuffer current = new StringBuffer();
+            URL totdURL = Tools.getResource("totd.txt");
+            if (totdURL != null) {
+            	java.io.BufferedReader in = new java.io.BufferedReader(new java.io.InputStreamReader(totdURL.openStream()));
+            	String line = null;
+            	while ((line = in.readLine()) != null) {
+            		line = line.trim();
+            		if (line.startsWith("#"))
+            			continue;
+            		if (line.length() == 0) { // start new tip
+            			String tip = current.toString();
+            			if (tip.length() > 0)
+            				allTips.add(tip);
+            			current = new StringBuffer();
+            		} else {
+            			current.append(line + "<lb>");
+            		}
+            	}
+            	in.close();
+            } else {
+                LogService.getGlobal().logWarning("Cannot show Tip of the Day: resource 'totd.txt' not found...");
+            }
+		} catch (java.io.IOException e) {
+			LogService.getGlobal().logWarning("Cannot show Tip of the Day: cannot load tip file.");
+		}
+	}
+	
+	public String nextTip() {
+		if (allTips.size() == 0) {
+			return "No tips available.";
+		} else {
+			return allTips.get(random.nextInt(allTips.size()));
+		}
+	}
+}

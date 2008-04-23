@@ -1,0 +1,11 @@
+(jde-project-file-version "1.0")
+(jde-set-variables
+ '(jde-global-classpath (quote ("./build" "./lib/kdb.jar" "./lib/weka.jar" "./lib/freehep/freehep-base.jar" "./lib/Jama.jar" "./lib/junit.jar")))
+ '(jde-compile-option-directory "./build")
+ '(jde-build-function (quote (jde-ant-build)))
+ '(jde-compile-option-classpath (quote ("./lib/visad.jar" "./lib/visad_ij.jar" "./lib/freehep/freehep-base.jar" "./lib/weka.jar" "./lib/Jama.jar" "./lib/kdb.jar")))
+ '(jde-compile-option-deprecation t)
+ '(jde-compile-option-sourcepath (quote ("./src")))
+ '(jde-run-application-class "com.rapidminer.gui.RapidMinerGUI")
+ '(jde-compile-option-command-line-args (quote ("-Xlint:deprecation,fallthrough,finally,unchecked")))
+ '(jde-run-option-properties (quote (("rapidminer.home" . "~/yale/")))))

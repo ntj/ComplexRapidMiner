@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<attributeset default_source="golf.data">
+  <attribute
+    name       = "Temperature"
+    sourcecol  = "2"
+    valuetype  = "integer"
+  />
+  <attribute
+    name       = "Humidity"
+    sourcecol  = "3"
+    valuetype  = "integer"
+  />
+</attributeset>

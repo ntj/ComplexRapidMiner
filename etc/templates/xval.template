@@ -1,0 +1,11 @@
+SVM with XValidation
+A simple crossvalidation using a SVM.
+xval.xml
+ExampleSource.configure_operator
+ExampleSource.attributes
+XValid.number_of_validations
+Learner.svm_type
+Learner.kernel_type
+Evaluator.main_criterion
+Evaluator.accuracy
+Evaluator.root_mean_squared_error

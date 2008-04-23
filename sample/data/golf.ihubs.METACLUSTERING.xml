@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process version="4.0beta2">
+
+  <operator name="Root" class="Process">
+      <operator name="Input" class="ExampleSource">
+          <parameter key="attributes"	value="Y:\workspace\yale\sample\data\golf.hubs.dbscanEA.aml"/>
+          <parameter key="column_separators"	value="\t"/>
+      </operator>
+      <operator name="ParameterIteration" class="ParameterIteration" activated="no">
+          <parameter key="keep_output"	value="true"/>
+          <list key="parameters">
+            <parameter key="DBScanEAClustering.max_distance"	value="[4;6;1]"/>
+          </list>
+          <operator name="DBScanEAClustering" class="DBScanEAClustering">
+              <parameter key="global_fuzziness"	value="1.0"/>
+              <parameter key="max_distance"	value="6.0"/>
+          </operator>
+      </operator>
+      <operator name="DBScanEAClustering (2)" class="DBScanEAClustering">
+          <parameter key="add_cluster_attribute"	value="false"/>
+          <parameter key="global_fuzziness"	value="1.0"/>
+          <parameter key="max_distance"	value="4.0"/>
+      </operator>
+      <operator name="DBScanEAClustering (3)" class="DBScanEAClustering">
+          <parameter key="add_cluster_attribute"	value="false"/>
+          <parameter key="global_fuzziness"	value="1.0"/>
+          <parameter key="max_distance"	value="8.0"/>
+      </operator>
+      <operator name="DBScanClustering" class="DBScanClustering">
+          <parameter key="add_cluster_attribute"	value="false"/>
+          <parameter key="max_distance"	value="5.0"/>
+      </operator>
+      <operator name="ClusteringAggregation" class="ClusteringAggregation">
+      </operator>
+      <operator name="ExampleVisualizer" class="ExampleVisualizer">
+      </operator>
+  </operator>
+
+</process>

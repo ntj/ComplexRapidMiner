@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process version="4.0beta2">
+
+  <operator name="Root" class="Process">
+      <operator name="Input" class="ExampleSource">
+          <parameter key="attributes"	value="/Volumes/USB-STICK/workspace/yale/sample/data/golf.hubs.dbscanEA.mac.aml"/>
+          <parameter key="column_separators"	value="\t"/>
+      </operator>
+      <operator name="ParameterIteration" class="ParameterIteration">
+          <parameter key="keep_output"	value="true"/>
+          <list key="parameters">
+            <parameter key="DBScanEAClustering.lambda"	value="[0;1;0.2]"/>
+          </list>
+          <operator name="DBScanEAClustering" class="DBScanEAClustering">
+              <parameter key="max_distance"	value="10.0"/>
+          </operator>
+      </operator>
+      <operator name="ExampleVisualizer" class="ExampleVisualizer">
+      </operator>
+  </operator>
+
+</process>

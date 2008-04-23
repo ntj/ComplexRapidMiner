@@ -1,0 +1,525 @@
+<!-- Version: $Id: build.xml,v 2.173 2007/07/06 10:04:05 meltac Exp $ -->
+<project name="RapidMiner" default="build">
+
+  <description>
+    Build file for RapidMiner
+  </description>
+
+  <property name="rapidminer.version" value="4.0beta2"/>
+
+  <property name="rapidminer.home" location="."/>
+
+  <property name="src"           location="src"/>
+  <property name="license"       location="licenses/short_license.txt"/>
+  <property name="lib"           location="lib"/>
+  <property name="pluginslib"    location="lib/plugins"/>
+  <property name="build"         location="build"/>
+  <property name="javadoc"       location="javadoc"/>
+
+  <property name="resources.src"  location="resources"/>
+  <property name="resources.dest" location="${build}/com/rapidminer/resources"/>
+	  	
+  <property name="etc"             location="etc"/>
+  <property name="sample"          location="sample"/>
+  <property name="release"         location="release/"/>
+  <property name="release_rapidminer"    location="${release}/rapidminer/${rapidminer.version}"/>
+  <property name="release_windows" location="${release}/windows_installer"/>
+  <property name="tutorial"        location="tutorial"/>
+  <property name="parameter.refactoring.log"        location="."/>
+  <property name="manual"          location="${tutorial}/guimanual"/>
+  <property name="manual.html"     location="resources/manual"/>
+	
+  <property name="jre"             location="jre"/>
+
+  <!-- compiler options -->
+  <property name="compiler.version" value="modern"/>
+  <property name="compiler.debug" value="true"/>
+  <property name="compiler.arguments" value="-Xlint:deprecation,finally,unchecked,path,serial"/>
+  <property name="compiler.deprecation" value="yes"/>
+
+
+  <path id="javadoc.classpath">
+	    <pathelement location="${java.home}/jre/lib/rt.jar"/>
+	    <pathelement location="${java.home}/../jre/lib/rt.jar"/>
+	    <pathelement location="${java.home}/lib/tools.jar"/>
+	    <pathelement location="${java.home}/../lib/tools.jar"/>
+	    <pathelement location="${java.home}/classes"/>
+        <pathelement location="${lib}/collections-generic-4.01.jar"/>
+	    <pathelement location="${lib}/colt-1.2.0.jar"/>
+        <pathelement location="${lib}/commons-collections.jar"/>
+        <pathelement location="${lib}/concurrent-1.3.4.jar"/>
+        <pathelement location="${lib}/felt.jar"/>
+  	    <pathelement location="${lib}/Jama.jar"/>
+        <pathelement location="${lib}/jcommon.jar"/>
+        <pathelement location="${lib}/jfreechart.jar"/>
+        <pathelement location="${lib}/jmathplot.jar"/>
+        <pathelement location="${lib}/joone-engine.jar"/>
+        <pathelement location="${lib}/jugpreview.jar"/>
+        <pathelement location="${lib}/jung-algorithms-2.0-alpha2.jar"/>
+        <pathelement location="${lib}/jung-api-2.0-alpha2.jar"/>
+        <pathelement location="${lib}/jung-graph-impl-2.0-alpha2.jar"/>
+        <pathelement location="${lib}/jung-visualization-2.0-alpha2.jar"/>
+        <pathelement location="${lib}/junit.jar"/>
+        <pathelement location="${lib}/jxl.jar"/>
+	    <pathelement location="${lib}/kdb.jar"/>
+	    <pathelement location="${lib}/weka.jar"/>
+        <pathelement location="${lib}/xpp3.jar"/>
+	    <pathelement location="${lib}/xstream.jar"/>
+	    <fileset dir="${lib}/freehep">
+	      <include name="*.jar"/>
+	    </fileset>
+  </path>
+	
+  <path id="classpath">
+    <path refid="javadoc.classpath"/>
+    <pathelement location="${build}"/>
+  </path>
+
+
+  <target name="init">
+    <tstamp/>
+    <mkdir dir="${build}"/>
+    <mkdir dir="${pluginslib}"/>
+    <echo file="${pluginslib}/Readme.txt">Copy downloaded plugins into this directory.</echo>
+    <mkdir dir="${javadoc}"/>
+    <mkdir dir="${release}"/>
+  </target>
+
+  <!-- ************ Build, Dist ***************** -->
+
+  <target name="build" depends="compile,copy-resources" description="Compile classes and copy resources to the build directory"/>
+
+  <target name="compile" depends="init" description="Compile all java files excluding tests">
+    <echo message="Compile with Java from dir: ${java.home}"/>
+    <echo message="using Java version: ${java.version}"/>
+    <javac debug="${compiler.debug}" destdir="${build}" deprecation="${compiler.deprecation}" compiler="${compiler.version}">
+      <compilerarg value="${compiler.arguments}"/>
+      <classpath refid="classpath"/>
+      <src path="${src}"/>
+      <!-- includes all ... -->
+      <include name="**/*.java"/>
+      <!-- ...but Tests -->
+      <!-- exclude name="**/test/*"/ -->
+    </javac>
+  </target>
+
+  <target name="check-resources">
+    <condition property="resource.lib.present">
+	  <available file="${resources.src}/imire.jar"/>
+	</condition>
+  </target>
+ 
+  <target name="copy-non-image-resources" depends="init">
+    <copy todir="${resources.dest}">
+      <fileset dir="${resources.src}"  includes="**/*" excludes="imire.jar"/>
+	</copy>
+  </target>
+	
+  <target name="copy-image-resources" depends="init,check-resources" if="resource.lib.present">
+  	<unjar src="${resources.src}/imire.jar" dest="${resources.dest}"/>
+  	<delete dir="${resources.dest}/META-INF"/>
+  </target>
+	
+  <target name="copy-resources" depends="init,copy-non-image-resources,copy-image-resources"/>
+	
+ <!-- without test: excludes="com/rapidminer/test/*.class,*.class" -->
+  <target name="dist" depends="build,copy-resources" description="Generate the lib/rapidminer.jar file">
+    <jar jarfile="${lib}/rapidminer.jar">
+      <fileset dir="${build}"
+               excludes="*.class"
+               includes="**/*"/>
+      <manifest>
+        <attribute name="Specification-Title" value="RapidMiner"/>
+        <attribute name="Specification-Version" value="${rapidminer.version}"/>
+        <attribute name="Implementation-Title" value="RapidMiner"/>
+        <attribute name="Implementation-Version" value="${rapidminer.version}"/>
+        <attribute name="Implementation-Vendor" value="Rapid-I"/>
+        <attribute name="Specification-Vendor" value="Rapid-I"/>
+	    <attribute name="Implementation-URL" value="http://www.rapidminer.com"/>
+        <attribute name="Class-Path" value="collections-generic-4.01.jar colt-1.2.0.jar commons-collections.jar concurrent-1.3.4.jar felt.jar Jama.jar jcommon.jar jfreechart.jar jmathplot.jar joone-engine.jar jugpreview.jar jung-algorithms-2.0-alpha2.jar jung-api-2.0-alpha2.jar jung-graph-impl-2.0-alpha2.jar jung-visualization-2.0-alpha2.jar jxl.jar kdb.jar weka.jar xpp3.jar xstream.jar freehep/freehep-base.jar freehep/freehep-graphics2d.jar freehep/freehep-graphicsio-cgm.jar freehep/freehep-graphicsio-emf.jar freehep/freehep-graphicsio-gif.jar freehep/freehep-graphicsio.jar freehep/freehep-graphicsio-java.jar freehep/freehep-graphicsio-pdf.jar freehep/freehep-graphicsio-ppm.jar freehep/freehep-graphicsio-ps.jar freehep/freehep-graphicsio-svg.jar freehep/freehep-graphicsio-swf.jar"/>
+        <attribute name="Main-Class" value="com.rapidminer.gui.RapidMinerGUI"/>
+      </manifest>
+   </jar>
+  </target>
+
+   <target name="javadoc-depend">
+     <uptodate property="rapidminer.javadoc.uptodate" targetfile="${javadoc}/index.html">
+       <srcfiles dir="${src}" includes="**/*"/>
+     </uptodate>
+   </target>
+
+  <target name="javadoc" depends="init,compile,javadoc-depend" description="Generate the java class documentation" unless="rapidminer.javadoc.uptodate">
+    <javadoc sourcepath="${src}"
+             packagenames="com.*"
+             destdir="${javadoc}"
+             author="true"
+             version="true"
+             windowtitle="RapidMiner Class Documentation"
+    		 use="true">
+             <!-- breakiterator="true" -->
+      <classpath refid="javadoc.classpath"/>
+      <doctitle><![CDATA[<h1>RapidMiner ${rapidminer.version} Class Documentation</h1>]]></doctitle>
+      <footer><![CDATA[<a href="http://sourceforge.net"><img src="http://sourceforge.net/sflogo.php?group_id=114160&amp;type=2" width="125" height="37" border="0" alt="SourceForge.net Logo" /></a>]]></footer>
+      <bottom><![CDATA[<i>Copyright &#169; 2001-2007 by <a href="http://rapid-i.com" target="_blank">Rapid-I</a></i>]]></bottom> <!-- Links are not supported here -->
+      <tag name="rapidminer.todo" description="To do:"/>
+      <tag name="rapidminer.index" description="Keywords:" scope="types"/>
+      <tag name="rapidminer.xmlclass" description="XML classname:" scope="types"/>
+      <taglet name="com.rapidminer.doc.CiteTaglet" path="${build}"/>
+      <taglet name="com.rapidminer.doc.RefTaglet" path="${build}"/>
+      <taglet name="com.rapidminer.doc.ReferenceTaglet" path="${build}"/>
+      <taglet name="com.rapidminer.doc.MathTaglet" path="${build}"/>
+      <taglet name="com.rapidminer.doc.XMLExampleTaglet" path="${build}"/>
+    </javadoc>
+  </target>
+
+  <!-- *********** Clean *********** -->
+
+  <target name="clean-classes" description="Delete class files.">
+    <delete>
+      <fileset dir="${build}" includes="**/*.class" />
+    </delete>
+  </target>
+
+  <target name="clean" depends="clean-classes,clean-dist,clean-tex" description="Delete the build directory, jar files, documentation, and emacs backup files">
+    <!-- delete includeemtydirs="true">	
+      <fileset dir="${build}" includes="**/*" />
+    </delete -->
+    <!-- workaround for Ant versions smaller than 1.6.5 -->
+    <delete dir="${build}" />
+    <mkdir dir="${build}" />
+    <!-- end of workaround -->
+    <delete dir="${javadoc}" />
+    <delete dir="${release}" />
+    <delete>
+      <fileset dir="./" defaultexcludes="no" includes="**/*~" />
+      <fileset dir="${lib}/" includes="rapidminer.jar" />
+      <fileset dir="${pluginslib}" includes="*.jar" />
+    </delete>
+  </target>
+
+  <!-- *********** Release *********** -->
+
+  <target name="release-init" depends="update-version,dist">
+    <mkdir dir="${release}"/>
+    <mkdir dir="${release_rapidminer}"/>
+  </target>
+
+  <target name="release-bin" depends="release-init" description="Create the binary release file">
+    <zip destfile="${release_rapidminer}/rapidminer-${rapidminer.version}-bin.zip">
+           <zipfileset dir="./" prefix="rapidminer-${rapidminer.version}">
+             <include name="etc/**/*"/>
+             <exclude name="etc/rapidminerrc.*"/>
+             <include name="lib/**/*"/>
+             <exclude name="lib/plugins/*.jar"/>
+             <exclude name="lib/weka-notes.txt"/>
+             <include name="resources/**/*"/>
+             <include name="sample/**/*.xml"/>
+             <include name="sample/data/*"/>
+	         <exclude name="sample/*.tmp"/>
+             <include name="INSTALL.txt"/>
+             <include name="LICENSE.txt"/>
+             <include name="CHANGES.txt"/>
+             <include name="README.txt"/>
+             <include name="licenses/README*"/>
+           </zipfileset>
+ 
+           <zipfileset dir="./" prefix="rapidminer-${rapidminer.version}">
+             <include name="scripts/**/*"/>
+           </zipfileset>
+    </zip>
+  </target>
+
+
+  <!-- target name="release" depends="release-doc,release-tutorial,release-bin,release-src" description="Create source, binary, and documentation release files"/ -->
+
+  <target name="release" depends="release-tutorial,release-bin,release-src" description="Create source, binary, and documentation release files"/>
+	
+  <target name="release-src" depends="release-init" description="Create the source release file">
+        <zip destfile="${release_rapidminer}/rapidminer-${rapidminer.version}-src.zip">
+           <zipfileset dir="./" prefix="rapidminer-${rapidminer.version}">
+             <include name="etc/**/*"/>
+             <exclude name="etc/rapidminerrc.*"/>
+             <include name="lib/**/*"/>
+             <exclude name="lib/plugins/*.jar"/>
+             <exclude name="lib/weka-notes.txt"/>
+             <include name="resources/**/*"/>
+             <include name="sample/**/*.xml"/>
+             <include name="sample/data/*"/>
+	         <exclude name="sample/*.tmp"/>
+             <include name="INSTALL.txt"/>
+             <include name="LICENSE.txt"/>
+             <include name="CHANGES.txt"/>
+             <include name="README.txt."/>
+             <include name="licenses/README*"/>
+           </zipfileset>
+ 
+           <zipfileset dir="./" prefix="rapidminer-${rapidminer.version}">
+             <include name="scripts/**/*"/>
+           </zipfileset>
+
+           <zipfileset dir="./" prefix="rapidminer-${rapidminer.version}">
+             <include name="resources/**/*"/>
+             <include name="src/**/*"/>
+             <exclude name="src/*.java"/>
+             <exclude name="src/**/*.cache"/>
+             <include name="build.xml"/>
+             <include name="prj.el"/>
+             <include name=".project"/>
+             <include name=".classpath"/>
+          </zipfileset>
+        </zip>
+  </target>
+
+	<target name="release-windows-installer" depends="release-bin" description="Create the windows installer version of RapidMiner">
+	    <mkdir dir="${release_windows}"/>
+		<unzip src="${release_rapidminer}/rapidminer-${rapidminer.version}-bin.zip" dest="${release_windows}"/>
+		<move file="${release_windows}/rapidminer-${rapidminer.version}" tofile="${release_windows}/rapidminer"/>
+		<copy todir="${release_windows}/rapidminer/jre">
+		  <fileset dir="${jre}"/>
+		</copy>
+		<exec executable="makensis.exe">
+		  <arg line="installation/launcher.nsi"/>
+		</exec>
+		<exec executable="makensis.exe">
+		  <arg line="installation/installer.nsi"/>
+		</exec>
+		<move file="${release}/rapidminer-${rapidminer.version}-install.exe" tofile="${release_rapidminer}/rapidminer-${rapidminer.version}-install.exe"/>
+	    <delete dir="${release_windows}"/>
+	</target>
+		
+  <target name="release-doc" depends="release-init,javadoc" description="Create the documentation release file">
+    <zip destfile="${release_rapidminer}/rapidminer-${rapidminer.version}-javadoc.zip">
+      <zipfileset dir="./javadoc" prefix="rapidminer-${rapidminer.version}/javadoc/">
+        <include name="**/*"/>
+      </zipfileset>
+    </zip>
+  </target>
+
+	
+  <target name="release-tutorial" depends="release-init,tutorial,manual" description="Copy tutorial to release directory">
+    <copy file="${tutorial}/RapidMinerTutorial.pdf" tofile="${release_rapidminer}/rapidminer-${rapidminer.version}-tutorial.pdf"/>
+    <copy file="${manual}/RapidMinerGUIManual.pdf" tofile="${release_rapidminer}/rapidminer-${rapidminer.version}-guimanual.pdf"/>
+  </target>
+	
+	
+
+  <target name="clean-dist" description="Delete all release files" >
+    <delete dir="${release}"/>
+  </target>
+
+
+   <!-- ********* Documentation (Manual) ****** -->
+
+  <target name="manual" depends="init" description="Generate the RapidMiner GUI Manual dvi, ps, pdf, and html">
+    <echo message="Creating RapidMiner GUI manual from ${manual}"/>
+
+    <echo message="Creating PDF"/>
+    <apply executable="pdflatex" dir="${manual}" failifexecutionfails="false">
+      <srcfile/>
+      <fileset dir="${manual}" includes="RapidMinerGUIManual.tex"/>
+    </apply>
+    <apply executable="pdflatex" dir="${manual}" failifexecutionfails="false">
+      <srcfile/>
+      <fileset dir="${manual}" includes="RapidMinerGUIManual.tex"/>
+    </apply>
+    <apply executable="pdflatex" dir="${manual}" failifexecutionfails="false">
+      <srcfile/>
+      <fileset dir="${manual}" includes="RapidMinerGUIManual.tex"/>
+    </apply>
+
+    <echo message="Creating html"/>
+    <apply executable="latex2html" dir="${manual}" dest="${manual.html}" os="Linux,SunOS" failifexecutionfails="false">
+      <arg value="-t"/><arg value="RapidMiner GUI Manual"/>
+      <arg value="-dir"/><arg file="${manual.html}"/>
+      <arg value="-address"/><arg value="request@rapid-i.com"/>
+      <arg value="-info"/><arg value=""/>
+      <arg value="-html_version"/><arg value="3.2,math"/>
+      <arg value="-split"/><arg value="0"/>
+      <arg value="-antialias"/>
+      <arg value="-external_images"/>
+      <arg value="-local_icons"/>
+      <arg value="-verbosity"/><arg value="0"/>
+      <srcfile/>
+      <fileset dir="${manual}" includes="RapidMinerGUIManual.tex"/>
+      <mapper type="glob" from="*.tex" to="*.html"/>
+     </apply>
+  	 <delete>
+  	    <fileset dir="${manual.html}" includes="images.*"/>
+  	    <fileset dir="${manual.html}" includes="*.pl"/>
+  	    <fileset dir="${manual.html}" includes="WARNINGS"/>
+  	    <fileset dir="${manual.html}" includes="index.html"/>
+  	 </delete>
+  	
+     <java classname="HTMLImageAdder" classpath="${build}">
+        <arg value="${manual.html}/RapidMinerGUIManual.html"/>
+     </java>
+  	
+	 <copy todir="${manual.html}">
+	   <fileset dir="${manual}" includes="*.png"/>
+	 </copy>
+  	
+  	 <move file="${manual.html}/guimanualtemp.html" tofile="${manual.html}/RapidMinerGUIManual.html"></move>
+  	
+  </target>
+
+  <target name="clean-tex" description="Removes tex output files">
+    <delete>
+      <fileset dir="${tutorial}" defaultexcludes="no" includes="**/*~"/>
+      <fileset dir="${tutorial}">
+         <include name="*.dvi"/>
+         <include name="*.pdf"/>
+         <include name="*.aux"/>
+         <include name="*.log"/>
+         <include name="*.tox"/>
+      </fileset>
+    </delete>
+  </target>
+
+
+   <!-- ********* Documentation (Tutorial) ****** -->
+
+   <target name="operator-doc-depend">
+     <uptodate property="rapidminer.opdoc.uptodate" targetfile="${tutorial}/OperatorsGenerated.tex">
+       <srcfiles dir="${src}" includes="**/*"/>
+     </uptodate>
+   </target>
+
+   <target name="operator-doc" depends="build,operator-doc-depend" unless="rapidminer.opdoc.uptodate">
+     <java classname="com.rapidminer.doc.DocumentationGenerator" fork="true">
+        <classpath refid="classpath"/>
+        <sysproperty key="rapidminer.home" file="./"/>
+     </java>
+   </target>
+
+  <target name="tutorial" depends="operator-doc" description="Generate the RapidMiner Tutorial">
+    <echo message="Creating Tutorial (create script)"/>
+  	<chmod file="${tutorial}/create" perm="755"/>
+    <exec executable="${tutorial}/create" dir="${tutorial}"/>
+  </target>
+
+
+
+  <!-- *********** Test *********** -->
+
+  <target name="test-basic" depends="build" description="Invoke the JUnit test suite">
+    <java classname="com.rapidminer.test.AllTests"
+	  classpathref="classpath"
+	  fork="true">      
+      <classpath refid="classpath"/>
+      <sysproperty key="rapidminer.home" value="${rapidminer.home}"/>
+    </java>
+  </target>
+	
+ <target name="test-operator" depends="build" description="Invoke the JUnit test suite">
+    <java classname="com.rapidminer.test.OperatorDataSampleTest"
+	  classpathref="classpath"
+	  fork="true">      
+      <classpath refid="classpath"/>
+      <sysproperty key="rapidminer.home" value="${rapidminer.home}"/>
+    </java>
+  </target>
+	
+	<target name="test" depends="test-basic,test-operator" description="Invoke the JUnit test suite"/>
+
+   <!-- *********** Version file *********** -->
+
+   <target name="version-depend">
+     <uptodate property="rapidminer.version.uptodate" 
+	    targetfile="${src}/com/rapidminer/Version.java"
+        srcfile="${ant.file}"/>
+   </target>
+
+  <target name="update-version" depends="init,version-depend" unless="rapidminer.version.uptodate">
+  	<delete file="${src}/com/rapidminer/Version.java"/>
+    <echo message="Updating to version ${rapidminer.version}"/>
+    <copy file="${license}" tofile="${src}/com/rapidminer/Version.java" />
+    <echo file="${src}/com/rapidminer/Version.java" append="true">package com.rapidminer;
+    	
+/** This class is generated by the ant target &quot;update-version&quot; to ensure the correct version number in RapidMiner. */
+public class Version { 
+  public static String getVersion() { return "${rapidminer.version}"; } 
+}</echo>
+  </target>
+
+
+  <!-- *********** Style Checks *********** -->
+
+  <target name="check-total-lines" depends="build" description="Prints the total amount of written lines.">
+    <echo message="Count lines of RapidMiner core..." />
+    <java classname="StyleCheck" classpath="${build}">
+       <arg value="total_lines"/>
+       <arg value="${src}"/>
+    </java>
+  </target>
+
+  <target name="check-size" depends="build" description="Prints all classes with a high number of lines.">
+    <java classname="StyleCheck" classpath="${build}">
+       <arg value="size_check"/>
+       <arg value="800"/>
+       <arg value="${src}"/>
+    </java>
+  </target>
+
+  <target name="check-for-comments" depends="build" description="Prints all classes with a missing class comment.">
+    <java classname="StyleCheck" classpath="${build}">
+       <arg value="comment_check"/>
+       <arg value="${src}"/>
+    </java>
+  </target>
+
+  <target name="check-version-tags" depends="build" description="Prints all classes with a missing '@version' tag.">
+    <java classname="StyleCheck" classpath="${build}">
+       <arg value="version_check"/>
+       <arg value="${src}"/>
+    </java>
+  </target>
+
+  <target name="check-author-tags" depends="build" description="Prints all classes with a missing '@author' tag.">
+    <java classname="StyleCheck" classpath="${build}">
+       <arg value="author_check"/>
+       <arg value="${src}"/>
+    </java>
+  </target>
+
+  <target name="check-all-authors" depends="build" description="Prints all authors and the number of classes and lines they wrote.">
+    <java classname="StyleCheck" classpath="${build}">
+       <arg value="all_authors"/>
+       <arg value="${src}/com"/>
+    </java>
+  </target>
+
+	  <target name="check-author-list" depends="build" description="Prints all classes written by a specific author.">
+	    <java classname="StyleCheck" classpath="${build}">
+	       <arg value="author_list"/>
+	       <arg value="${src}/com"/>
+		   <arg value="Ingo Mierswa"/>
+	    </java>
+	  </target>
+
+	<target name="check-for-license" depends="build" description="Prints all classes with a missing license.">
+    <java classname="StyleCheck" classpath="${build}">
+       <arg value="license_check"/>
+       <arg value="${src}"/>
+    </java>
+  </target>
+
+  <!-- *********** Misc *********** -->
+
+  <target name="parameter-refactoring" depends="build" description="Replace all parameter name string literals by constants">
+	 <java classname="ParameterRefactoring" classpath="${build}">
+	    <arg value="${src}"/>
+	    <arg value="${parameter.refactoring.log}"/>
+	 </java>
+  </target>
+	
+  <target name="license" depends="build" description="Prepend license terms to the java files">
+    <java classname="LicensePrepender" classpath="${build}">
+       <arg value="${license}"/>
+       <arg value="${src}"/>
+    </java>
+  </target>
+
+  <target name="recompile" depends="clean-classes,compile" description="Recompile all classes"/>
+  <target name="rebuild" depends="clean,build" description="Rebuild everything"/>
+
+</project>

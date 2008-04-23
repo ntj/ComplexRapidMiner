@@ -1,0 +1,78 @@
+/*
+ *  RapidMiner
+ *
+ *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *
+ *  Complete list of developers available at our web site:
+ *
+ *       http://rapid-i.com
+ *
+ *  This program is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License as 
+ *  published by the Free Software Foundation; either version 2 of the
+ *  License, or (at your option) any later version. 
+ *
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ *  General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+ *  USA.
+ */
+package com.rapidminer.operator.visualization;
+
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.gui.ExampleVisualizer;
+import com.rapidminer.operator.IOObject;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.OperatorDescription;
+import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.UserError;
+import com.rapidminer.tools.ObjectVisualizerService;
+
+
+/**
+ * Remembers the given example set and uses the ids provided by this set
+ * for the query for the corresponding example and the creation of a
+ * generic example visualizer. This visualizer simply displays the attribute
+ * values of the example. Adding this operator is often necessary to 
+ * enable the visualization of single examples in the provided plotter
+ * components.
+ * 
+ * @author Ingo Mierswa
+ * @version $Id: ExampleVisualizationOperator.java,v 2.11 2006/03/21 15:35:42
+ *          ingomierswa Exp $
+ */
+public class ExampleVisualizationOperator extends Operator {
+
+	private static final Class[] INPUT_CLASSES = { ExampleSet.class };
+
+	private static final Class[] OUTPUT_CLASSES = { ExampleSet.class };
+
+	public ExampleVisualizationOperator(OperatorDescription description) {
+		super(description);
+	}
+
+	public IOObject[] apply() throws OperatorException {
+		ExampleSet exampleSet = getInput(ExampleSet.class);
+		Attribute idAttribute = exampleSet.getAttributes().getId();
+		if (idAttribute == null) {
+			throw new UserError(this, 113, "Id");
+		}
+		ObjectVisualizerService.addObjectVisualizer(new ExampleVisualizer(exampleSet));
+
+		return new IOObject[] { exampleSet };
+	}
+
+	public Class[] getInputClasses() {
+		return INPUT_CLASSES;
+	}
+
+	public Class[] getOutputClasses() {
+		return OUTPUT_CLASSES;
+	}
+}

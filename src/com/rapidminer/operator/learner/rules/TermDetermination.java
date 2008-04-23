@@ -1,0 +1,103 @@
+/*
+ *  RapidMiner
+ *
+ *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *
+ *  Complete list of developers available at our web site:
+ *
+ *       http://rapid-i.com
+ *
+ *  This program is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License as 
+ *  published by the Free Software Foundation; either version 2 of the
+ *  License, or (at your option) any later version. 
+ *
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ *  General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+ *  USA.
+ */
+package com.rapidminer.operator.learner.rules;
+
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.set.SplittedExampleSet;
+import com.rapidminer.operator.learner.tree.GreaterSplitCondition;
+import com.rapidminer.operator.learner.tree.LessEqualsSplitCondition;
+import com.rapidminer.operator.learner.tree.NominalSplitCondition;
+import com.rapidminer.operator.learner.tree.SplitCondition;
+
+/**
+ * Determines the best term for the given example set with respect to the criterion.
+ * 
+ * @author Sebastian Land, Ingo Mierswa
+ * @version $Id: TermDetermination.java,v 1.3 2007/07/15 02:01:43 ingomierswa Exp $
+ */
+public class TermDetermination {
+
+    private Criterion criterion;
+    
+	private NumericalSplitter splitter;
+	
+    private double minValue;
+
+    public TermDetermination(Criterion criterion, int numberOfSamples) {
+    	this(criterion, numberOfSamples, Double.NEGATIVE_INFINITY);
+    }
+    
+    public TermDetermination(Criterion criterion, int numberOfSamples, double minValue) {
+        this.criterion = criterion;
+        splitter = new NumericalSplitter(numberOfSamples);
+        this.minValue = minValue;
+    }
+    
+    public SplitCondition getBestTerm(ExampleSet exampleSet, String labelName) {
+        SplitCondition bestCondition = null;
+        double bestBenefit = Double.NEGATIVE_INFINITY;
+        double bestTotalWeight = 0;
+        for (Attribute attribute : exampleSet.getAttributes()) {
+        	if (attribute.isNominal()) {
+        		SplittedExampleSet splitted = SplittedExampleSet.splitByAttribute(exampleSet, attribute);
+        		for (int i = 0; i < splitted.getNumberOfSubsets(); i++) {
+        			SplittedExampleSet posSet = (SplittedExampleSet)splitted.clone();
+        			posSet.selectSingleSubset(i);
+        			SplittedExampleSet negSet = (SplittedExampleSet)splitted.clone();
+        			negSet.selectAllSubsetsBut(i);
+        			double[] benefits = this.criterion.getBenefit(posSet, negSet, labelName);
+        			if ((benefits[0] > minValue) &&
+        				(benefits[0] > 0) && (benefits[1] > 0) &&
+        				((benefits[0] > bestBenefit) || 
+        				((benefits[0] == bestBenefit) && (benefits[1] > bestTotalWeight)))) {
+        				bestBenefit = benefits[0];
+        				bestTotalWeight = benefits[1];
+        				bestCondition = new NominalSplitCondition(attribute, attribute.getMapping().mapIndex(i));
+        			}
+        		}
+        	} else {
+        		Split bestSplit = splitter.getBestSplit(exampleSet, attribute, labelName);
+        		double bestSplitValue = bestSplit.getSplitPoint();
+        		if (!Double.isNaN(bestSplitValue)) {
+        			double[] benefits = bestSplit.getBenefit();
+        			if ((benefits[0] > minValue) &&
+            				(benefits[0] > 0) && (benefits[1] > 0) &&
+            				((benefits[0] > bestBenefit) || 
+            				((benefits[0] == bestBenefit) && (benefits[1] > bestTotalWeight)))) {
+            				bestBenefit = benefits[0];
+            				bestTotalWeight = benefits[1];
+            				if (bestSplit.getSplitType() == Split.LESS_SPLIT) {
+            					bestCondition = new LessEqualsSplitCondition(attribute, bestSplitValue);
+            				} else {
+            					bestCondition = new GreaterSplitCondition(attribute, bestSplitValue);
+            				}
+        			}
+        		}
+        	}
+        }
+        return bestCondition;
+    }
+}

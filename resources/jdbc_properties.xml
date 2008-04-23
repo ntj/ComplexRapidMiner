@@ -1,0 +1,66 @@
+<drivers>
+
+	<driver name="MySQL"
+			defaultport="3306"
+			urlprefix="jdbc:mysql://"
+			dbnameseperator="/"
+			type_varchar="VARCHAR"
+			type_integer="INTEGER"
+			type_real="REAL"
+	/>
+
+	<driver name="PostgreSQL"
+			defaultport="5432"
+			urlprefix="jdbc:postgresql://"
+			dbnameseperator="/"
+			type_varchar="VARCHAR"
+			type_integer="INTEGER"
+			type_real="REAL"
+	/>
+	
+	<driver name="Sybase"
+			defaultport="7100"
+			urlprefix="jdbc:jtds:sybase://"
+			dbnameseperator="/"
+			type_varchar="VARCHAR"
+			type_integer="INTEGER"
+			type_real="REAL"
+	/>
+	
+	<driver name="Microsoft SQL Server (JTDS)"
+			defaultport="1433"
+			urlprefix="jdbc:jtds:sqlserver://"
+			dbnameseperator="/"
+			type_varchar="VARCHAR"
+			type_integer="INTEGER"
+			type_real="REAL"
+	/>
+
+	<driver name="Microsoft SQL Server (MS)"
+			defaultport="1433"
+			urlprefix="jdbc:microsoft:sqlserver://"
+			dbnameseperator=";databaseName="
+			type_varchar="VARCHAR"
+			type_integer="INTEGER"
+			type_real="REAL"
+	/>
+
+	<driver name="Oracle"
+			defaultport="1521"
+			urlprefix="jdbc:oracle:thin:@"
+			dbnameseperator=":"
+			type_varchar="VARCHAR2"
+			type_integer="INTEGER"
+			type_real="REAL"
+	/>	
+
+	<driver name="HSQLDB"
+			defaultport="9001"
+			urlprefix="jdbc:hsqldb://"
+			dbnameseperator="/"
+			type_varchar="VARCHAR"
+			type_integer="INTEGER"
+			type_real="REAL"
+	/>
+		
+</drivers>

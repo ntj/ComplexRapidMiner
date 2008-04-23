@@ -1,0 +1,59 @@
+#!/bin/sh
+
+## set the path to your RapidMiner installation here or in an environment variable
+#RAPIDMINER_HOME=${HOME}
+
+## set the maximum amount of memory Java uses here or in an environment variable
+#MAX_JAVA_MEMORY=256
+
+## set the path to the files with additional operators here or in an environment variable
+#RAPIDMINER_OPERATORS_ADDITIONAL=
+
+if [ -z "${RAPIDMINER_HOME}" ] ; then
+    BIN_DIR=`dirname "$0"`
+    RAPIDMINER_HOME=`dirname "${BIN_DIR}"`
+    echo "RAPIDMINER_HOME is not set. Trying the directory '${RAPIDMINER_HOME}'..."
+fi 
+
+if [ -z "${JAVA_HOME}" ] ; then
+    echo "JAVA_HOME is not set. Edit $0 and/or your local startup files."
+    exit 1
+else
+    JAVA=${JAVA_HOME}/bin/java
+fi
+
+if [ -z "${MAX_JAVA_MEMORY}" ] ; then
+    MAX_JAVA_MEMORY=128
+    echo "No maximum Java memory defined, using 128 Mb..."
+fi
+
+
+BUILD="${RAPIDMINER_HOME}/build"
+RAPIDMINER_JAR="${RAPIDMINER_HOME}/lib/rapidminer.jar"
+RAPIDMINER_CLASSPATH=""
+
+if [ -d "${BUILD}" ] ; then
+    RAPIDMINER_CLASSPATH=${BUILD}
+elif [ -f "${RAPIDMINER_JAR}" ] ; then
+    RAPIDMINER_CLASSPATH=${RAPIDMINER_JAR}
+else
+    echo "Neither ${BUILD} nor ${RAPIDMINER_JAR} was found."
+    echo "Try 'ant build' or 'ant dist' first or check the value of RAPIDMINER_HOME!"
+    exit 1
+fi
+
+for JAR in ${RAPIDMINER_HOME}/lib/*.jar ${RAPIDMINER_HOME}/lib/freehep/*.jar
+do
+CLASSPATH=${CLASSPATH}:${JAR}
+done
+
+CLASSPATH=${RAPIDMINER_CLASSPATH}:${CLASSPATH}
+
+echo "Starting RapidMiner from '${RAPIDMINER_HOME}', using classes from '${RAPIDMINER_CLASSPATH}'..."
+
+$JAVA \
+    -Xmx${MAX_JAVA_MEMORY}m \
+	-cp ${CLASSPATH} \
+	-Drapidminer.home=${RAPIDMINER_HOME} \
+	-Drapidminer.operators.additional=${RAPIDMINER_OPERATORS_ADDITIONAL} \
+	com.rapidminer.RapidMinerCommandLine $@

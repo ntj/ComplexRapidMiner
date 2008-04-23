@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process version="4.0beta2">
+
+  <operator name="Root" class="Process">
+      <operator name="Input" class="ExampleSource">
+          <parameter key="attributes"	value="Y:\workspace\yale\sample\data\golf.hubs.dbscanEA.aml"/>
+          <parameter key="column_separators"	value="\t"/>
+      </operator>
+      <operator name="DBScanEAClustering" class="DBScanEAClustering">
+          <parameter key="global_fuzziness"	value="4.0"/>
+          <parameter key="lambda"	value="0.7"/>
+          <parameter key="max_distance"	value="5.0"/>
+      </operator>
+      <operator name="ExampleVisualizer" class="ExampleVisualizer">
+      </operator>
+  </operator>
+
+</process>

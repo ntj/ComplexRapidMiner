@@ -1,0 +1,1786 @@
+History of changes of the RapidMiner / Yale versions
+====================================================
+
+Changes from RapidMiner 4.0beta2 to RapidMiner 4.0beta3 [????/??/??]
+-------------------------------------------------------------------
+
+  * New operators:
+      - SimplePerformance (could be used in most cases instead of 
+        now deprecated PerformanceEvaluator)
+      - ClassificationPerformance
+      - BinominalClassificationPerformance
+      - RegressionPerformance
+      - UserBasedPerformance
+      - SingleRuleWeighting
+        
+  * Almost all process setups will now also correctly work if the 
+    nominal values of training and test data are not defined or 
+    are not defined in the same order
+  
+  * The somewhat big operator "PerformanceEvaluator" is now
+    deprecated and was divided into several smaller operators
+    which now fit the different learning task types. 
+      
+  * Added a filter for the New Operator tab
+  
+  * Added learning for numerical attributes for rule learners
+  
+  * Renamed lowest verbosity level to "all"
+  
+  * Improved visualization of performance criteria
+  
+  * Improved ExampleSetMerge
+  
+  * Improved rule learning on numerical data sets
+  
+  * Improved tree learning on numerical data sets
+  
+  * Added single example visualization after clicking a node
+    in the graph view of similarity visualizations
+    
+  * Implementation Details:
+      - Revised clustering operators and introduced improved
+        abstract clustering
+      - The global logging can now be specified either by
+        general properties or via the method
+        LogService.initGlobalLogging(...)
+      - Attribute.getStatistics(...) is now deprecated, please
+        use ExampleSet.getStatistics(Attribute, ...) instead
+      - Changed the log verbosity of the process informations
+        at the beginning and the end of process executions
+     
+  * Bugfixes:
+      - Removed unnecessary parameters from RandomForest
+      - Fixed attribute name bug (not case sensitive) causing
+        errors in some preprocessing operators if features with 
+        the same name but different cases exists
+      - Fixed bug in Anova and T-Test calculation (wrong degree
+        of freedom)
+      - Fixed bug during weight normalization which lead in many
+        cases to a concurrent modification exception which was
+        covered by a process change message
+      - Removed possible bug in UPGMA-Clustering
+      - Graph View of Cluster Models did not work
+      - Added missing clone in discretization operator which 
+        might have caused problems in cases where the discretization
+        was added into an iterating chain (like validation chains)
+      - Streams are now not automatically closed during XML (de-)
+        serialization
+      - Rule learners did not produce greater equal conditions
+        
+        
+Changes from RapidMiner 4.0beta to RapidMiner 4.0beta2 [2007/06/24]
+-------------------------------------------------------------------
+  
+  * New operators:
+      - BatchXValidation
+      - BatchSlidingWindowValidation
+      - AttributeCopy
+      - ExampleSetTranspose
+      - AssociationRuleGenerator
+      - RelevanceTree
+      - CHAID
+      - Tree2RuleConverter
+
+  * Removed operators:
+      - RegressionTree (may be re-added in later releases)
+      - Ripper (replaced by RuleLearner)    
+  
+  * Renamed operators (old operator names are deprecated now):
+      - ExperimentEmbedder operator was renamed
+        to ProcessEmbedder (see below)
+      - ExperimentLog operator was renamed to 
+        ProcessLog operator (see below)
+          
+  * API change: Renamed Experiment to Process 
+    (the old class Experiment is still available for
+    compatibility reasons but deprecated)
+    
+  * API change: OperatorService.createOperator(Class)
+    is now the preferred way for operator creation
+    and does no longer need a cast (generics)
+  
+  * Added correct file encodings to all IO operators
+  
+  * Renamed log verbosity "minimum" to "all" and log
+    verbosity "maximum" to "off"
+    
+  * Added meaningful default and range values for the 
+    parameters of the ParameterOptimization operators
+  
+  * Replaced Tip of the Day dialog by the tip in the 
+    Welcome screen
+  
+  * Changed all Weka parameters to non-expert parameters
+    (available in beginners mode)
+  
+  * SVMWeighting now supports more than 2 classes
+  
+  * All weighting schemes now return normalized results
+  
+  * Completely revised tree and rule learners
+  
+  * Completely revised tree, cluster model, and similarity
+    visualization
+  
+  * Latest release of LibSVM integrated (2.84)
+  
+  * Latest release of xstream integrated (1.2.2)
+  
+  * Latest release of Jung integrated (2.0alpha2)
+  
+  * Added table view for experiment log results
+  
+  * Added text views for learned tree models
+  
+  * Added text views for learner kernel models
+  
+  * Added text view for logistic regression model
+  
+  * Added Anova kernels for JMySVM and EvoSVM
+      
+  * Removed obsolete temp file service
+  
+  * CommandLineOperator now uses a higher log 
+    verbosity for the output of the command
+    
+  * Improved output of Naive Bayes models
+  
+  * Improved context menu for attribute editor
+  
+  * Example visualization now automatically added after
+    IdTagging
+    
+  * Improved standard example visualization
+    
+  * Bugfixes:
+      - Added missing dialog if more than one special attribute
+        with the same name was defined with the ExampleSource
+        configuration wizard
+      - Log view panel was not resizable
+      - Special attributes were no longer special after 
+        AttributeSubsetPreprocessing on special attributes
+      - LibSVM multi class issues fixes (no confidences)
+      - Bugfix in the fast example set to sparse transformation
+        causing problems in Weka learners (and maybe the LibSVM)
+      - Dichotomization did not properly work
+      - Parallel plotter did not properly work for special
+        attributes
+      - Fixed missing Id problem for top down clusterers
+      - Fixed wrong nominal value writing for attribute editor
+      - Column colors were not transferred if columns were 
+        moved in data views
+      - The AttributeConstructionLoader did not properly
+        created attributes for the identical function
+        (no construction at all)
+      - Normalization did not work properly work on nominal
+        attributes
+      - AttributeSubsetPreprocessing did not properly keep
+        the old attributes
+      - Replace operator (context menu) of operator chains
+        added (2) to the inner operators even if the names
+        were not used in the process setup
+      - Spearman's Rho and Kendall's Tau now deliver 0 if not
+        defined (e.g. for default model) instead of NaN
+      - Fixed problem with delegate attribute unwrapping in 
+        some feature selection cases in combination with
+        cross validation operators
+        
+
+Changes from Yale 3.4 to RapidMiner 4.0beta [2007/05/29]
+------------------------------------------------------------
+
+  * "YALE" was renamed to "RapidMiner"
+  
+  * New operators:
+      - DensityBasedOutlierDetection
+      - LOFOutlierDetection
+      - DistanceBasedOutlierDetection
+      - PCAWeighting
+      - SVMWeighting
+      - Relief
+      - InfoGainWeighting
+      - InfoGainRatioWeighting
+      - ChiSquaredWeighting
+      - SymmetricalUncertaintyWeighting
+      - PSOWeighting
+      - FPGrowth
+      - LinearRegression
+      - NaiveBayes
+      - NeuralNetLearner
+      - LogisticRegression
+      - DecisionStump
+      - DecisionTree
+      - ID3
+      - ID3Numerical
+      - RegressionTree
+      - RandomTree
+      - RandomForest
+      - Prism
+      - Ripper
+      - OneR
+      - NearestNeighbors
+      - AdditiveRegression
+      - Stacking
+      - Vote
+      - MetaCost
+      - CostBasedThresholdLearner      
+      - Binary2MultiClassLearner
+      - SVDReduction (from clustering plugin)
+      - KMedoids (from clustering plugin)
+      - KMeans (from clustering plugin)
+      - KernelKMeans (from clustering plugin)
+      - SupportVectorClustering (from clustering plugin)
+      - AggomerativeClustering (from clustering plugin)
+      - AgglomerativeFlatClustering (from clustering plugin)
+      - UPGMAClustering (from clustering plugin)
+      - TopDownRandomClustering (from clustering plugin)
+      - TopDownClustering (from clustering plugin)
+      - DBScanClustering (from clustering plugin)
+      - RandomFlatClustering (from clustering plugin)
+      - ExampleSet2ClusterModel (from clustering plugin)
+      - FlattenClusterModel (from clustering plugin)
+      - ClusterModel2ExampleSet (from clustering plugin)
+      - ExampleSet2Similarity (from clustering plugin)
+      - ClusterModel2Similarity (from clustering plugin)
+      - SimilarityComparator (from clustering plugin)
+      - Bootstrapping
+      - WeightedBootstrapping
+      - BootstrappingValidation
+      - WeightedBootstrappingValidation
+      - MissingValueImputation
+      - ExampleSetMerge
+      - ExampleSetCartesian
+      - XrffExampleSource
+      - XrffExampleSetWriter
+      - DatabaseExampleSetWriter
+      - IOSelector
+      - LinearCombination
+      - AttributeSubsetPreprocessing
+      - ModelVisualizer
+      - ModelUpdater
+      - LabelTrend2Classification
+      - Sorting
+      - AddNominalValue
+      - ExampleRangeFilter
+      - Numeric2Polynominal
+      - PartialExampleSetLearner
+      - SlidingWindowValidation
+      - GroupBy
+      - GroupedANOVA
+      - ANOVAMatrix
+      - Aggregation 
+        
+  * Renamed operators:
+      - AttributeSetWriter /-Loader into
+        AttributeConstructionsWriter / -Loader
+      - Renamed all operators starting with Y- into
+        the names without this prefix
+      - Added W- to all Weka operators, old experiments
+        can be loaded though
+      - AverageLearner (was deprecated) now revised and
+        renamed into AttributeBasedVote
+
+  * Deprecated operators:
+      - Numeric2Binary (use Numeric2Binominal instead)
+          
+  * API CHANGES: please refer to 
+       http://sourceforge.net/forum/forum.php?thread_id=1698583&forum_id=390413 and
+       http://sourceforge.net/forum/forum.php?thread_id=1730986&forum_id=390413
+    for details
+    
+  * The clustering plugin is now part of the YALE core
+  
+  * Drag'n'Drop for operator trees
+  
+  * New Icons (please refer to the license files for
+    informations about the icons)
+  
+  * New Look and Feel (please refer to the license 
+    files for informations about the look and feel)
+  
+  * Improved general speed, most YALE runs now use
+    less 60% of the runtime needed before
+    
+  * Added page setup and print preview dialogs
+  
+  * Improved printing
+  
+  * New file chooser and added favorites to it (in the
+    left part of the dialog)
+  
+  * Tool tips can now be painted over multiple lines 
+    allowing more informations about the operators and
+    parameters
+    
+  * New view menu
+  
+  * Result History viewer showing textual descriptions
+    of all experiment results in the session so far; allows
+    also the calculations of Anova for different results
+  
+  * Parameter values are now always saved at focus losses
+    or during resizing operations
+    
+  * All tables (viewers) can be sorted by clicking on the 
+    table headers (at least all tables where this makes sense)
+  
+  * Speed up of plotter initialization which was the reason
+    for the long times needed for displaying data sets
+    
+  * GUI is now able to immediately stop a running experiment
+  
+  * Improved capability to use YALE as library which makes
+    necessary that the Ant target "copy-resources" must be
+    performed before starts (see implementation details 
+    below)
+    
+  * All file formats were changed (sorry!) and are now
+    based on XML
+  
+  * Grid based parameter optimization / iteration operators 
+    now support another format for parameter definition:
+    [start;end;step]
+  
+  * XVPrediction can now also handle confidences for 
+    problems with more than two classes
+    
+  * Improved automatic closing of files and temp file
+    deletion after major experiment changes
+    
+  * Added graph view for BayesianNet models
+    
+  * Added textual and graphical view modes for models which
+    are capable of both, e.g. decision trees and Bayesian Nets
+    
+  * Added possibility to invert the result of an ExampleFilter
+  
+  * Added possibility to connect several attribute value 
+    conditions for an ExampleFilter
+    
+  * Added new performance criteria: Spearman's rho and 
+    Kendall's tau
+  
+  * Added option for AttributeWeightsApplier allowing for 
+    changing just the data view instead of the actual data
+    table
+    
+  * The data representation type "sparse_array" was renamed
+    to "double_sparse_array"
+    
+  * Added new data representation types "short_array", 
+    "short_sparse_array", and "boolean_sparse_array" allowing
+    for more efficient data handling
+  
+  * The univariate Series2WindowExamples operator now again
+    supports sets of examples if the time series is encoded 
+    as attributes
+    
+  * The (meta) data tables now support text selection allowing 
+    for copy and paste into other applications.
+    
+  * Performance Vector results can now be selected and copied
+  
+  * Example Set views can now be selected and copied
+  
+  * All displayed results now provide a "Save..." button
+  
+  * Use JTable for confusion matrices
+  
+  * Use JTable for correlation matrix (DataTable)
+  
+  * Added HSQLDB JDBC driver
+  
+  * Full platform compatible line feeds
+  
+  * ResultWriter can now also write results into single files
+    instead of the global result file defined in experiment
+  
+  * Improved LearningCurveOperator now using better dynamically 
+    growing training sets and a fixed test set
+    
+  * Allow the definition of number of digits for the 
+    ExampleSetWriter format
+    
+  * Added log scale to usual scatter plotter
+  
+  * Added several chart plots (new bars 2D and 3D, pie charts
+    2D and 3D, bubble plotter)
+  
+  * ExampleSetWriter now support zipped data files
+  
+  * Added initial support for updatable models, currently
+    only the updatable models from Weka are supported, other
+    will follow
+    
+  * Added another replenishment type 'zero' for the 
+    MissingValueReplenishment operator
+    
+  * Added source definition for all IO objects, i.e. the 
+    results do now show which operator was the creator
+    (only shown in result view if more than one result of
+    the same type was created)
+  
+  * Allow complete data scan for value type guessing now
+    in ExampleSource configuration wizard
+  
+  * Added weighted performance measures for weighted means
+    of the per-class recalls and precisions
+    
+  * Model writing and loading works for zipped files (gz) 
+  
+  * Changed attribute statistics handling and displaying
+  
+  * Implementation Details:
+     - The Ant target "copy-resources" must be performed 
+       before starts are possible
+     - new initialization methods available Yale.init(...)
+       allowing the specification which parts of YALE should 
+       be initialized
+     - Revised database access handling. Statements are now
+       always closed       
+     - changed name of method getVisualisationComponent into
+       getVisualizationComponent
+     - no longer necessary to register operators in an 
+       experiment (done automatically during adding)
+     - no longer necessary to implement the abstract 
+       OperatorChain method getNumberOfSteps()
+     - Completely revised the example set / attribute / 
+       example table data core of YALE which leads to much
+       better implementations of the core classes and more
+       possibilities for extensions. Please refer to the 
+       YALE forum for an in-depth description of the 
+       changes
+     - attribute statistics are now handled in a different
+       way, all statistics are queries now with a statistics
+       name string       
+     - most actions are now part of own packages
+     - replaced shuffled partition building by a version
+       reflecting the way Java shuffles collections
+     - improved efficiency of WekaInstancesAdaptor by finding
+       YALE weight attribute only once instead anew for each 
+       example
+     - removed static field in class Yale for the current
+       experiment
+     - The class Main was renamed into YaleCommandLine
+     - Added possibility to define default values for 
+       attributes
+     - BinaryAttribute was renamed to BinominalAttribute
+     - Newest versions of all libraries
+     - PropertyValueCellEditor can now be registered in 
+       PropertyTable allowing plugins to provide new
+       editors for new parameter types
+     - The same applies for PropertyKeyCellEditor
+     - Averagable: compareTo now implemented in subclasses
+     - Averagable: cloneAveragable(Averagable) is now
+       deprecated, please use copy constructors
+     - Added ParameterTypeText for longer text inputs
+     - XML serialization now uses object streams
+  
+  * Bugfixes:
+     - IOObjectWriter / - Reader did not work for Windows
+       executable due to library typo
+     - LibSVM regression models could not be saved
+     - Bugfix in PermutationOperator which uses all 
+       attributes of the ExampleTable instead of only using
+       those currently selected in the ExampleSet
+     - Exception in list property editors after one row was
+       deleted
+     - Use default GUI properties in cases where loading of
+       properties did not work
+     - Colons in attribute names were not supported by the
+       AttributeWeightsLoader / -Writer. Replacement by XML 
+       format fixes this problem
+     - Percent (%) in parameter strings were replaced by
+       the method expandString(String) which was not desired
+       The new format for short commands is %{a} now
+     - new CSV operator which better supports quoting and
+       column separators
+     - fixed problem for category parameters if the check 
+       value was a string of the index number
+     - fixed bug for number of components = -1 in GHA models
+     - fixed error for regular attributes with special names
+       when written into sparse format
+     - Fixed bug for RVM model writing
+     - Fixed bug for data transformation into the 
+       association rule learning format of Weka
+     - Removed error if a parameter for a non-existing 
+       special attribute was in the special format of the 
+       ExampleSetWriter
+       
+       
+Changes from Yale 3.3 to Yale 3.4 [2006/10/03]
+------------------------------------------------------------
+
+  * New operators:
+      - MultivariateSeries2WindowExamples
+      - EvolutionaryParameterOptimization
+      - IOObjectReader
+      - IOObjectWriter
+      - AGA
+      - YAGGA2
+      - SPSSExampleSource
+      - ExcelExampleSource
+      - LiftChart
+      - ROCChart
+      - MacroDefinition (see below)
+     
+  * Removed operators:
+      - NelderMeadParameterOptimization
+      - PatternSearchParameterOptimization
+
+  * Deprecated operators:     
+      - NaiveBayes, SimpleNaiveBayes, and NaiveBayesUpdateable
+       (replaced by Y-NaiveBayes)
+      - LibSVM (use LibSVMLearner instead)
+          
+  * Changed parameters:
+      - DatabaseExampleSource: replaced "driver", "urlprefix",
+        and "databasename" by "database_url" (can be easily 
+        defined with help of the new configuration wizard, see
+        below)
+      
+  * ExampleSource now support zipped data files
+  
+  * Added new data representations backed up by non-double 
+    arrays which will need less memory in case where no double
+    precision is needed
+  
+  * All IO objects also providing a loading operator are now
+    directly be saveable from the result tab
+  
+  * SimpleExampleSource is now able to automatically guess the
+    value types
+    
+  * The Attribute Editor has now some additional features:
+      - Context menu on row: "Use row as attribute names" which
+        is nice for example for CSV files
+      - Table Menu: "Guess all value types" which re-guesses
+        all value types which might be practical after declaring
+        one of the rows as names
+      - Reminder during closing if the data file and attribute
+        description file were not saved before
+        
+  * New configuration wizards for more sophisticated input 
+    operators like ExampleSource or DatabaseExampleSource 
+    (available via the "Start configuration wizard..." 
+    button of these operators)
+  
+  * New item in Tools menu "Show database drivers" which lists all 
+    available JDBC drivers
+    
+  * JDBC drivers can now be defined via adding them to the 
+    CLASSPATH or by copying them into lib/jdbc
+    
+  * Free JDBC drivers for MySQL, PostgreSQL, Microsoft SQL Server,
+    and Sybase included
+  
+  * The file resources/jdbc_properties.xml can be used to define
+    driver dependent settings like URL prefixes etc.
+      
+  * Improved the directly working on database mode (DatabaseES)
+  
+  * Improved data saving for ExampleSets  
+    
+  * Added macro definitions. Macros can be defined with the 
+    operator MacroDefinition and used with %{my_macro}. Several
+    predefined macros exist like %{experiment_name}, 
+    %{experiment_file}, and %{experiment_path}
+    
+  * The minimum and maximum colors for plotters can now be
+    specified in the properties dialog
+    
+  * Improved error messages for Weka learners and attribute 
+    evaluators
+    
+  * Density and SOM plotters now support example visualization
+  
+  * Density and SOM plotters now use buffered images (more 
+    efficient)
+    
+  * Allowing both attribute and example representations for
+    Series 2 Window Examples operators
+    
+  * Improved logging for both the message viewer and into files
+  
+  * Improved EvoSVM
+  
+  * Added several non-psd kernels for JMySVM and LibSVM as well
+    as support for returning the original optimization fitness
+  
+  * New operator dialog shows now deprecation information
+  
+  * Generating feature operator do now provide a parameter for
+    the total maximal number of attributes
+  
+  * PerformanceEvaluator: improved handling of input 
+    performances
+    
+  * Robustified plotters in cases where the given data contain
+    missing values
+      
+  * An environment variable YALE_OPERATORS_ADDITIONAL will now 
+    be regarded and set by the start scripts (for user written
+    operators)
+    
+  * IOConsume operator now allows deletion type "delete_all_but"
+        
+  * Implementation Details:
+      - the method getInput(Class) of Operator / IOContainer
+        do now deliver the correctly casted instance (no casts
+        necessary any longer)
+      - checkIO() of Experiment is now also able to check for 
+        given input objects
+      - Removed parameter number editors based on JSpinner
+        because of rounding and transformation problems (see
+        below)
+      - Installer now uninstalls old versions
+      - Windows launcher now allows external classpath settings
+      - ExampleSet.getSize() is deprecated now, use size() 
+        instead
+      - ExampleSet.getExampleReader() is deprecated now, use
+        iterator() instead
+      - Deprecation infos are now defined in operator in 
+        operator description files
+      
+  * Bugfixes:
+      - Fixed bug in Windows start scripts which did not allow
+        for space in filenames and paths
+      - Attribute weighting schemes do now provide correct
+        error messages for missing label
+      - IOContainer reading and writing did not work
+      - Description of the column separators did not match
+        the actual implementation of ExampleSource and 
+        SimpleExampleSource
+      - Export did not work for unnamed experiments
+      - Numerical parameter fields rounded to zero for small 
+        values (only in YALE 3.3)
+      - Better error message in case of non-decomposable data
+        sets in RVMLearners
+      - SOM is now not longer applicable to data sets 
+        containing missing values
+      - In version 3.3 there was a problem introduced if YALE
+        should be started via "java -jar yale.jar" which did 
+        no longer work without defining the property 
+        yale.home. Should be fixed now
+      - Additional performance criteria were not stored in XML
+      - Added missing close statements for database handling,
+        prevent errors if already closed   
+      - Fixed bug during statistics calculation if a column
+        only contains missing values
+      - Exception was thrown by feature binary generators if 
+        the generated value was NaN or infinite
+      - Fixed LibSVM model application bug for high class 
+        skews
+         
+
+Changes from Yale 3.2 to Yale 3.3 [2006/08/04]
+------------------------------------------------------------
+
+  * New operators:
+      - Y-AdaBoost
+      - Y-Bagging
+      - MultiCriterionDecisionStumps
+      - RVMLearner
+      - Gaussian Process Learner
+      - ExperimentEmbedder
+      - OperatorEnabler
+      - ExampleSetJoin
+      - Numeric2Binary
+      - Permutation
+      
+  * Removed operators:
+      - JViToPlotter (added most important functionality 
+        directly in YALE, other will follow)
+        
+  * Deprecated operators:     
+      - RenameAttribute (replaced by ChangeAttributeType
+        and ChangeAttributeName)
+        
+  * YALE is now available as exe-file for Windows systems
+  
+  * YALE now provides a Windows installer
+  
+  * Newest Weka version (CVS from 2006/08/04)
+  
+  * YALE now provides actual ensemble learners for more than
+    one inner learner
+  
+  * Search and Replace for XML tab
+  
+  * Save as "building block" in order to ease future experiment
+    setup
+    
+  * All validation operators are now able to optionally produce 
+    the model of the complete data set
+    
+  * Changes log verbosity of command line operator from
+    MINIMUM to MAXIMUM
+      
+  * Overworked all parameter optimization operators
+      
+  * Double click on operator in tree view now toggle breakpoint
+    status
+        
+  * Users can specify a search string and capabilities in the 
+    new operator dialog now
+    
+  * New operator dialog is not longer modal and provides an "add"
+    button. This allows for multiple operator insertions without
+    recreating the dialog (and its settings)  
+    
+  * New operator tree properties allowing to filter disabled
+    operators or expansion of the complete tree
+    
+  * Debug mode which adds a breakpoint after each operator
+    
+  * Disabled operators are now more clearly marked  
+      
+  * Default file extension for all IO files now
+  
+  * String property values will no longer be deleted when 
+    editing is started, the value will be used after losing
+    the focus
+    
+  * Added support for automatic parameter optimization of 
+    nominal parameters
+
+  * Exceptions for feature filter (skip all ... but not ...)
+  
+  * (Meta) data views are now backed up by tables which are
+    much faster than old HTML views
+    
+  * Added new (high-dimensional) plotters and jitter function 
+    for plotting, overworked old ones
+    
+  * More intelligent availability checks for plotters and 
+    automatic downsampling if number of data points is too
+    high
+    
+  * Added support for plotting and logging nominal values
+    and parameters
+      
+  * Data set plotters can now also consider feature weights
+    
+  * Range of integer parameters now use infinity symbol
+    
+  * Total number of parameter combinations is now logged
+    (parameter optimization operators)
+  
+  * (Almost) all randomized operators can now use own local
+    random seeds
+  
+  * The current memory usage can now be logged as a value of
+    the experiment operator (root)
+  
+  * All internal kernel based methods now provide the same 
+    data and plot view component
+    
+  * Faster conversion to Weka instances for sparse examples
+  
+  * Improves parameter guessing for Weka operators
+  
+  * Improved tutorial and added section about data creation
+    from Java applications
+    
+  * Implementation Details:
+      - new package structure for feature operators
+      - new package structure for operators
+      - new package structure for GUI
+      - new package structure for preprocessing
+      - used now JUnit 4.1 for testing
+      - code clean-up (no Eclipse-warnings)
+      - ExampleTable is an interface now
+      - copy-resources is now not longer necessary,
+        plugins have to place their resources in
+        edu/udo/cs/yale/resources
+      - Statistics now renamed in DataTable (in new package
+        called datatable)
+      - createName(...) of AttributeFactory now handles own
+        counters for each name
+      - prepareRun() is now autumatically invoked and must not
+        be invoked any longer before the run of an experiment
+      
+  * Bugfixes:
+      - Validation check did not work in all cases
+      - escaped XML characters for attribute description file
+        writing
+      - JMySVM, EvoSVM, MyKLR, and MultiModel cannot be read 
+        from files (fixed)
+      - Result file was not resolved against experiment 
+        location
+      - Tooltips for string parameters did not always have been
+        shown
+      - Streams for result output were not closed
+      - Temporary directories are now deleted at the end of
+        experiment if delete_temp_files is set to directly
+        (default)
+      - Resize bug after changing the name of an operator
+        in tree view
+      - Fixed problems if two ExampleSetGenerators with the 
+        same target function were used in the same experiment
+      - Removed unnecessary check during loading of sparse 
+        examples
+      - not all operators with inner loops did invoke 
+        inApplyLoop()
+      - Bugfix for IteratingOperatorChain if timeout was -1
+      - Dynamic parameter %t did not work for filenames under 
+        Windows
+      - At the end of a a Pattern param opt run the result was
+        not properly created
+      - Windows start scripts did not work if spaces were
+        part of the paths
+
+
+Changes from Yale 3.1 to Yale 3.2 [2006/04/14]
+------------------------------------------------------------
+
+  * YALE requires now JAVA 1.5 or higher  
+
+  * New operators:
+      - ThresholdCreator
+      - AttributeWeightsCreator
+      - WeightGuidedFeatureSelection
+      - CFSFeatureSetEvaluator
+      - ConsistencyFeatureSetEvaluator
+      - AttributeCounter
+      - WeightedPerformanceCreator
+      - CompleteFeatureGeneration
+      - Series2WindowExamples
+      - TransformedRegression
+      - SimpleExampleSource
+      - PCA (new version)
+      - FastICA
+      - GHA
+      - ComponentWeights
+      - HyperplaneProjection
+      - SplitSVMModel
+      - RemoveCorrelatedFeatures
+      - WeightOptimization
+      - TFIDFFilter
+      - MinimalEntropyPartitioning
+      - EvoSVM
+      - PsoSVM
+      - EvolutionaryFeatureAggregation
+      - PlattScaling
+      - SplitChain
+
+  * All operator chains now define conditions which must be
+    fulfilled by inner operators.
+
+  * New model concept: models which are used for prediction 
+    purposes (prediction models) can now be combined with
+    models for preprocessing, e.g. a z-transformation model.
+    This allows for fairer evaluations without using information
+    about the training data which might have been collected 
+    during preprocessing.
+
+  * Preprocessing models, e.g. a normalization model can be applied
+    with the same parameters on the test set
+
+  * Improved Operator Info Screen (F1) which now also shows
+    conditions for inner operators. This eases experiment design
+    for new users
+
+  * PerformanceEvaluator adds new criteria to input 
+    performance vectors now
+
+  * Evolutionary feature operators supports multiobjective
+    optimization now
+
+  * Feature operators now allow an arbitrary number of 
+    inner operators
+
+  * Added new VectorGraphics package (freehep) version 1.2.2
+
+  * New Weka version 3.5.2 (current CVS version of Weka)
+ 
+  * The attribute type "string" of Weka is now also supported
+
+  * Renamed two parameters of SparseFormatExampleSource: 
+    "attributes" is now called "attribute_description_file",
+    "attribute_file" is now called "data_file"
+
+  * AUC as a parameter of PerformanceEvaluator instead of 
+    ThresholdFinder
+
+  * ExampleSetWriter now resolves the relative path of the
+    data file
+
+  * Tutorial now reflects the development since Yale 3.0
+
+  * More example filter types for ExampleFilter operator
+
+  * Added filters for Data View
+
+  * Added parameter sample_ratio to example source operators
+
+  * Speed up of experiments by preventing IO logging if
+    not necessary
+
+  * GUI does not hang any longer after stopping an 
+    experiment and a message is shown that the current
+    operator will be finalized
+
+  * all regression performance criteria can now handle nominal
+    labels regarding the confidence for the desired true class
+
+  * relative_absolute_error now renamed to 
+    normalized_absolute_error
+
+  * Implementation Details:
+      - YALE is now completely type safe, i.e. no warnings
+        occur by compiling with Xlint:unchecked
+      - Population operators now work on objects of class
+        Individual instead of directly working on 
+        AttributeWeightedExampleSets
+      - Added method getSpecialAttribute(String) to 
+        ExampleSet interface. This allows a faster retrieval
+        of special attributes
+      - UndefinedParameterError will be thrown if an 
+        operator asks for the value of a non-optional
+        parameter with no default value and no user 
+        defined value
+      - The abstract method checkIO of OperatorChain was 
+        replaced by getInnerOperatorCondition()
+      - Removed deprecated method initApply()
+      - added new check method performAdditionalChecks()
+      - reworked package structure for feature operators
+      - improved memory management for BayesianBoosting
+      - Replaced method getValue() of averagables (like
+        performance criteria) by getMikroAverage(). 
+        Operators should use getAverage() which returns
+        the makro average if possible and the mikro 
+        average otherwise
+
+  * Bugfixes:
+      - Update of Data View did not properly work
+      - ThresholdApplier did not properly overwrite the
+        crisp predictions
+      - error in root mean squared error calculation for
+        data sets with different sizes
+      - wrong plotting of threshold values in ROC curves
+      - new operator was not properly selected after replacing
+        an operator via the context menu. Therefore the old
+        parameters were not removed in the GUI
+      - LibSVM used Math.random() and was therefore not 
+        deterministic
+      - Replace " by &quot; in XML parameter descriptions
+      - In some cases the variance of a performance 
+        criteria became negative. Fixed now.
+      - Bug in RemoveUselessAttributes since attribute stats
+        were not longer calculated
+
+
+Changes from Yale 3.0 to Yale 3.1 [2005/11/22]
+------------------------------------------------------------
+
+  * New operators:
+      - IOMultiplier
+      - PerformanceLoader
+      - T-Test
+      - Anova
+      - DataStatistics (usefull only for command line, see 
+        implementation details)
+
+  * Removed operators:
+      - old parameter based Weka operators (were deprecated)
+      - MultipleLabelLearner and 
+        MultipleLabelPerformanceEvaluator (please use
+        MultipleLabelIterator instead)
+
+  * Drastically reduced runtime (see implementation details)
+
+  * Improved attribute editor (added views on data, 
+    load series data, icons, nicer error messages)
+
+  * Binary classification performance criteria mark the
+    positive class
+
+  * Predict confidences for both binominal and polynominal 
+    classifications tasks
+
+  * Confidences are now automatically set after applying 
+    a classification model for all learners, the parameter 
+    use_distribution is therefore not longer supported
+
+  * ExampleSetWriter can also write prediction confidences
+    now. The dense data format and the special format was
+    slightly adapted to reflect this change
+
+  * Attribute ranges can also be specified in meta data view
+
+  * Splitted default noise of NoiseOperator in label_noise
+    and default_attribute_noise
+
+  * New Weka version 3.4.6 integrated
+
+  * Nicer error messages for many data reading problems
+
+  * IteratingPerformanceAverage can now handle all types of
+    averagable vectors and also more than one inner 
+    performance vectors
+
+  * The Yale color plotter shows now a legend with a mapping
+    of the colors to the values for these colors. This also
+    applies for the scatter plot based on the color plotter
+
+  * Sanity checks before learning if the used learner can
+    learn from the given data set (using the predefined 
+    learner capabilities)
+
+  * Uses (p) for initialization probability of feature 
+    selection algorithms instead of (1-p)
+
+  * The counter for the automatic creation of attribute names
+    is resetted before an experiment will be started
+
+  * A new breakpoint type for breakpoints in operator apply
+    loops
+
+  * CSVExampleSource now uses the first line for attribute 
+    names
+
+  * Implementation Details:
+      - The position of the Weka Jar file can now be defined
+        via an environment variable WEKA_JAR
+      - Removed the construction of attribute weights from 
+        example if this is not necessary (this drastically 
+        decreases the desired time for example constructions)
+      - Improved the calculation of example set statistics
+      - Removed the recalculation of attribute statistics
+        after data changes. Statistics are now only calculated
+        if they are needed (including display purposes in the 
+        graphical user interface)
+      - Attribute is an interface now, different classes of 
+        attributes introduced. As a consequence attributes,
+        can only be constructed with help of the 
+        AttributeFactory class
+      - Added a FastExample2SparseTransform class which
+        provides methods for fast sparse representation
+        creation, especially for SparseArrayDataRows
+      - Removed check if an attribute is already part of an
+        example set before it is added. This also improves
+        runtime
+      - FilteredExampleSet is now called ConditionedExampleSet
+      - Failing during operator initialization (during start up) 
+        does not prevent loading the following operators any 
+        longer
+
+  * Bugfixes:
+      - Bugs in SparseArrayDataRow
+      - Copy of IOContainer was shallow. This bug might have lead 
+        to a wrong parameter optimization behavior for complex
+        feature selection experiments
+      - Implemented missing method in ConditionedExampleSet
+      - Fixed size bug in ConditionedExampleSet
+      - Key strokes for cut, copy, and paste did not work 
+      - Syntax highlighting for description tag did not work
+      - Opening a new experiment kills experiment thread now
+      - Saving of settings did not always work
+      - Changing from XML view to other views caused empty 
+        status bar
+      - Error in change detection after modifying the 
+        experiment in XML view
+      - Range update in data view did not work for two changes
+        at the same time
+
+
+Changes from Yale 2.4.1 to Yale 3.0 [2005/07/11]
+------------------------------------------------------------
+
+  * New operators: 
+      - FeatureNameFilter (using regular expressions)
+      - FeatureValueTypeFilter (replaces FeatureTypeFilter)
+      - FeatureBlockTypeFilter
+      - operators for all Weka tasks instead of specifying 
+        the Weka operator with a parameter (see below)
+      - MultipleLabelLearning
+      - MultipleLabelPerformanceEvaluator
+      - MultipleLabelIterator
+      - AverageBuilder
+      - RenameAttribute (renaming and type changing)
+      - Data generators for testing purposes
+      - MinMaxWrapper for linear combinations of average and
+        minimum values (which might lead to more stable 
+        optimizations)
+      - CorrelationMatrix (which can also produce feature 
+        weights)
+      - SimpleBinDiscretization
+      - SimpleFrequencyDiscretization
+      - Single2Series
+      - PerformanceWriter (in addition to the ResultWriter)
+      - ParameterCloner
+      - ParameterSetWriter
+      - GridParameterOptimization (replaces old ParameterOpt.)
+      - NelderMeadParameterOptimization
+      - PatternParameterOptimization
+      - ParameterIteration (which simply iterates through 
+        given parameter combinations instead of optimize them)
+      - IOConsumer (consumes unused outputs)
+      - ARFFWriter
+      - WrapperXValidation (replaces old MethodXValidation)
+      - SimpleWrapperValidation (replaces old 
+        SimpleMethodValidation)
+      - NominalExampleSetGenerator
+      - JViToPlotter (additional to build in plotters)
+
+  * Removed operators: 
+      - The external operators for the C versions of MySVM, 
+        SVMLight, and C45 are not longer part of the Yale 
+        core. Please use the Java implementations JMySVM, 
+        LibSVM, and J48
+      - LegalNumberExampleFilter was replaced by the 
+        operator ExampleFilter. This operator can handle both
+        missing values and user defined value conditions
+      - MethodXValidation was replaced by WrapperXValidation.
+        The old operator was not able to handle mere feature 
+        weighting methods additional to selection
+      - ParameterOptimization (see above). In addition, the 
+        parameter parameter_file was removed from all 
+        parameter optimization operators
+      - SimpleMethodValidation (see above)
+      - FeatureTypeFilter was replaced by an improved 
+        FeatureValueTypeFilter
+      - BatchedValidationChain
+
+  * Improved data management and statistics. Yale can handle 
+    larger data sets now
+
+  * Undo and Redo function
+
+  * Several new performance criteria including MinMaxCriterion
+    for weighted linear combinations of the minimum and 
+    the average of arbitrary criteria
+
+  * Some operators are deprecated now. Deprecated operators
+    provide messages during application and validation and
+    should not longer be used
+
+  * New plotter concept, introducing Yale color plotter, 
+    GnuPlotPlotter for 3D plots, scatter plots, and 
+    distribution plotter (histograms). Plots are only 
+    automatically created for smaller data sets (settings)
+
+  * In addition to the new plotter concept the operator 
+    JViToPlotter can be used to plot some of the IOObjects
+    of Yale. The current version at least supports ExampleSet
+    and some numerical models
+
+  * Syntax highlighting in message viewer and XML editor,
+    colors can be specified in the preferences dialog
+
+  * New Weka version 3.4.5 integrated
+
+  * New LibSVM version 2.8 integrated
+
+  * Generic operator classes and operator sub types. This
+    allows the building of generic operators with one class
+    for several operators. This feature is used for the new 
+    Weka operator style where each learning scheme matches
+    one Yale operator (and not a parameter of an operator)
+
+  * Added Learner Capabilities. Each learning scheme can now
+    define which type of data set is supported by the learner
+
+  * Added stratified sampling for cross validation on data
+    with a categorical label. This ensures that the subsets 
+    provide the same class distribution than the whole data 
+    set
+
+  * Added several additional selection and crossover schemes 
+    for evolutionary feature operators. 
+
+  * Learners and performance evaluators can now deliver
+    the input example set as output if this is desired.
+    This also applies for models and ModelApplier.
+ 
+  * New structure of settings dialog
+
+  * (Optional) Tip of the Day at startup
+
+  * Automatical update check during start-up (once in a month,
+    no personal data is transmitted or collected).
+
+  * Command line version waits at breakpoints and can be
+    resumed by pressing enter
+
+  * Only a user defined amount of lines will be logged,
+    the default is 1000. This value can be changed in the
+    settings dialog
+
+  * Since massive logging may slow down experiments the
+    default log verbosity for new experiments is "init"
+
+  * Removed some verbosity levels which were not frequently
+    used
+
+  * Plugins can also provide a GenericOperatorFactory in their
+    operator description file which can be used to register 
+    additional generic operators
+ 
+  * Improved operator group structure in GUI and package 
+    structure
+
+  * Improved Javadoc documentation, at least all classes 
+    should have a class comment
+ 
+  * Learners cannot write the model directly into a file any
+    longer. Please use the operator ModelWriter for this
+    purpose.
+ 
+  * Implementation details:
+     - ATTENTION: Since operators should know their own 
+       operator description the usage of the empty operator
+       constructor is not longer allowed. Operators must be 
+       created with 
+            OperatorService.createOperator(String name)
+       The usage of empty operator constructors is not longer 
+       allowed for operator creation!
+     - Using Arff loader from Weka instead of KDB package
+     - Changed the method name getIdAttribute() to getId() 
+       in ExampleSet, some methods from Example were removed
+     - Added a copy method to Parameters
+     - It is now possible to query examples by their id
+     - It is also possible to query examples by their index.
+       This is only recommended for memory based example 
+       tables and should not be used for iteration purposes.
+       Each operator which must iterate through complete 
+       example sets should use ExampleReaders. However,
+       this change allows Yale to construct Weka instances
+       on the fly which drastically decreases memory usage
+     - Operators can now define the default behavior for 
+       input consumption and a parameter will be 
+       automatically defined and queried. This allows that
+       some operators (like validation chains or performance
+       evaluators) can pass their input (the example set
+       for example) to the following operators
+     - Added two helper methods getDeliveredOutputClasses()
+       and getAllOutputClasses(Class[] innerOutput). One
+       of these methods should be used to return the 
+       delivered output of an operator chain at the end of
+       checkIO(). These methods reflect the consumation
+       behaviour changes. Please refer to the Yale tutorial
+       for further informations.
+     - The implementation of the simple feature selection
+       operators was improved. The memory usage is reduced
+       especially in case of forward selection
+     - SparseArrayDataRows need less memory than 
+       SparseMapDataRows with the same runtime. This
+       datamanagement type should be used if data is 
+       sparser than 50%
+     - Using sparse array data rows after Nominal2Binary 
+       filtering
+
+  * Bugfixes: 
+    - bug in unix start scripts (plugins were not properly 
+      loaded)
+    - variance adaption in feature weighting
+    - wrong conversion from Weka instances to Yale example 
+      sets for data sets with more attributes than examples
+    - Bug in average handling of validation operators mixed 
+      up weights and performance values for some feature 
+      operation experiments
+    - strange plotting of some example sets
+    - validation of experiments containing disabled 
+      operators
+    - fixed bug in database handling which prevents feature
+      selection to work correctly on example sets based on 
+      databases (csv and dBase too)
+
+
+
+Changes from Yale 2.4 to Yale 2.4.1 [2004/10/08]
+------------------------------------------------------------
+
+  * New operators: 
+      - RandomOptimization
+
+  * New Weka version 3.4.3 integrated
+
+  * The Unix start scripts guess the location for YALE_HOME 
+    depending on the location of the script
+
+  * Bugfix: The performance which was delivered by validation 
+    chains (only for plotting purposes) was not the average 
+    but the last performance. This error was the reason for
+    a wrong plot in the ParameterOptimization sample 
+    experiment
+
+
+Changes from Yale 2.3.3 to Yale 2.4 [2004/09/20]
+------------------------------------------------------------
+
+  * New operators: 
+      - LearningCurveOperator, 
+      - StandardDeviationWeighting
+      - PrincipalComponents,
+      - WekaAttributeWeighting
+      - C45ExampleSource
+      - Obfuscator,
+      - Deobfuscator
+      - CorpusBasedWeighting
+
+  * Removed operators: UPGMAClusterer and WekaClusterer are 
+    now part of the Clustering plugin
+
+  * Changed operators: the former implementation of 
+    DecisionTreeLearner was removed since it was not able to
+    produce pruned decision trees. The internal representation
+    of Weka's J48 learner which was formerly known as Y45Learner
+    is now named DecisionTreeLearner.
+ 
+  * Splitting of KDBExampleSource operator in four operators
+    which individually load ARFF, csv, bibtex, and dBase 
+    files. 
+
+  * The parameter "mean_variance_scaling" of the 
+    normalization operator is no longer of type category but
+    of type boolean.
+
+  * The parameter $v[name] of the special format of 
+    ExampleSetWriter can now be used for both regular and
+    special attributes
+
+  * accuracy and classification error are now calculated for
+    both binary and multiclass problems. Additionally the 
+    confusion matrix is displayed.
+
+  * ThresholdFinder can deliver AUC (area under the ROC curve).
+    The maximum number of ROC-points which are plotted is 
+    limited to 200.
+
+  * All results are presented with the same number of digits
+
+  * Forward selection (FeatureSelectionOperator) initially
+    checks if the used attribute are useless, i.e. all values
+    are equal, before it creates a new example set based on 
+    this attribute.
+
+  * Validation chains which split example sets recalculate
+    the attribute statistics. Therefore for each iteration
+    one data scan is performed. These additional costs are
+    paid to clearify the values and eases the usage of inner
+    operators which make use of the statistics
+ 
+  * Implementation details: 
+      - recalculation of attribute statistics can be done 
+        directly with a method from example set now instead 
+        of the example table
+      - The method initApply() of operator is now deprecated
+      - The method getSpecialAttribute(String) of ExampleSet 
+        was removed. Use getAttribute(String) for both regular 
+        and special attributes.
+
+  * Bugfix: 
+      - data writing of the experiment log operator at the end 
+        of the experiment
+      - statistics plot is removed at the beginning of a new 
+        experiment
+      - Y45Learner (now named DecisionTreeLearner) did not 
+        allow to create unpruned trees
+      - newline at the end of data files can now be omitted
+    
+  
+Changes from Yale 2.3.2 to Yale 2.3.3 [2004/08/20]
+------------------------------------------------------------
+
+  * New operators: 
+      - IteratingOperatorChain
+
+  * Some new target functions for the ExampleSetGenerator
+ 
+  * With %b the apply count value plus 1 can be asked in a
+    parameter string (%b% will be resolved to %a + 1)
+
+  * Bayesian Boosting now supports internal bootstrapping and
+    provides the performance values to plot them with the
+    experiment log operator
+
+  * Weka models are now displayed in the message viewer and
+    log files
+
+  * Allow environment variable definition of the maximal used
+    memory in Windows start scripts (like the unix scripts)
+
+  * Some tutorial additions
+
+  * Bugfix: 
+      - Exception in toString() of tree
+      - wrong command line construction for C45Learner
+      - bug in status bar which increases CPU usage (low 
+        priority) and does not show the correct operator
+      - removal of nominal attributes in feature selection 
+        experiments
+
+
+Changes from Yale 2.3.1 to Yale 2.3.2 [2004/07/12]
+------------------------------------------------------------
+
+  * New operators: 
+      - ExampleSetGenerator
+
+  * Weighted mutation can be bounded between 0 and 1.
+
+  * Scaling of the ROC curve plotted by the threshold
+    finding operator. 
+
+  * Bugfix: 
+      - Internal change of representation for nominal 
+        attribute values. This guarantees the same order for
+        nominal values when writing a attribute description 
+        file and reloading it.
+
+
+Changes from Yale 2.3 to Yale 2.3.1 [2004/07/08]
+------------------------------------------------------------
+
+  * New operators: 
+      - Sampling
+      - BayesianBoosting
+      - ThresholdFinder
+      - ThresholdApplier
+      - ExampleVisualizer
+    
+  * Examples with Id can now be displayed from the plotter
+    by double clicking the example. Therefore a 
+    ExampleVisualization operator must have been added.
+
+  * Pressing the delete key removes the selected operator
+    from the operator tree 
+
+  * Bugfixes:
+     - Settings dialog displays correct default values at
+       startup.
+
+
+Changes from Yale 2.2 to Yale 2.3 [2004/06/22]
+------------------------------------------------------------
+
+  * New operators: 
+      - AttributeValueMapping
+      - AverageLearner
+      - LearnerFeatureGeneration (to create attributes from the
+        predictions of different learning schemes)
+      - RemoveUselessAttributes
+
+  * Removed operators: 
+      - ExampleSetInfo (use RemoveUselessAttributes instead)
+      - ModelContainerLearner (use LearnerFeatureGeneration)
+      - Concept Drift operators (in plugin now)
+
+  * New online Tutorial available in help menu
+
+  * Zooming functionality for all 2D plotters. Simply drag 
+    a rectangle to zoom into the selected region. Right 
+    clicking sets the range to maximum size.
+
+  * Added user descriptions (comments) which can be edited 
+    in the operator info screen (F1). The description of the
+    root operator is shown after loading an experiment. This
+    can be set disabled in the settings dialog.
+
+  * Expert and Beginner modes added. In expert mode all 
+    parameters are shown. In the beginner mode only important
+    parameters.
+ 
+  * Save as Template added. Experiments which were saved as
+    template can be used by the wizard.
+
+  * Using the LearnerFeatureGeneration produces a new example 
+    set containing the model predictions as attributes.
+    Another learning scheme can be used to learn from this 
+    values a meta model. Alternatively the new AverageLearner 
+    can simply calculate the average of the predictions which 
+    is especially useful in a selection or weighting wrapper.
+
+  * Implementation details: 
+      - new packages in operator and learner packages
+
+  * Bugfixes: 
+      - FixedSplitValidationChain delivered not the defined 
+        absolute number of examples
+      - Problems with classification tasks and Weka learners
+        due to Weka's new internal representation.
+
+
+Changes from Yale 2.1.1 to Yale 2.2 [2004/06/01]
+------------------------------------------------------------
+
+  * New operators: 
+      - AttributeSetLoader (instead of FeatureGenerationOperator)
+      - ModelWriter
+      - Y45
+      - WekaMetaLearner
+      - ModelContainerLearner
+      - NoiseOperator
+      - FourierTransform
+      - Java versions of MySVM and MyKLR
+
+  * AttributeSetWriter uses new format:
+            name::construction_description
+    This change was necessary to allow the weighting of 
+    attributes after loading and constructing them 
+
+  * Operators can now be disabled
+
+  * Weighting vector of JMySVM now delivered for linear 
+    kernels. JMySVM can also deliver xi alpha estimation
+    of performance now
+
+  * Interface Learner added, former learner super class is 
+    now abstract
+
+  * Weka independent internal implementation of J48 added
+    for own adaptions
+
+  * Weka meta learning schemes can be designed in two ways: 
+    With the known WekaLearner operator and by specifying 
+    parameters and, now, by specifying them as operator 
+    chains. This allows the same representation for all 
+    Yale meta learning schemes with internal learning 
+    operators as children
+
+  * Meta learner schemes can be used to create new attributes
+    from the predictions of learned models
+
+  * new system for objects which can be averaged like 
+    performance criteria or weights
+
+  * example sets are displayed in table view or plot view, the 
+    same applies for models of JMySVM learners
+
+  * Bugfixes: 
+      - Exception in unbalanced crossover
+      - unused IO objects will not longer be doubled by the 
+        usage of simple operator chains
+
+
+Changes from Yale 2.1 to Yale 2.1.1 [2004/04/16]
+------------------------------------------------------------
+
+  * Weka version 3.4.1 included. Since many of the learners 
+    are now part of a new package, it might be necessary to 
+    adapt the weka class names in your experimentfiles. 
+
+  * YaleIdMapping included. May be part of example sets in
+    future releases.
+
+  * Breakpoints are now saved.
+
+
+Changes from Yale 2.0.3 to Yale 2.1 [2003/12/17]
+------------------------------------------------------------
+
+  * New operators: 
+     - IdTagging
+     - InfiniteValueReplenishment
+     - InteractiveFeatureWeighting
+     - AttributeWeightsWriter
+     - AttributeWeightsLoader
+     - AttributeWeightsApplier for different weight functions
+     - Attribute2RealValues
+     - AttributeWeightSelection
+
+  * Support for Word Vector Tool, Value Series Preprocessing, 
+    and Clustering plugin
+
+  * The definition of a label attribute in cases where the
+    data contains no label but should get a predicted one is
+    no longer necessary
+
+  * attribute selection is now seen as attribute weighting 
+    which allows more flexible operators. Feature operators
+    like forward selection, genetic algorithms and the 
+    weighting operators can now deliver an example set with
+    the selection / weighting already applied or the original
+    example set (optional). Therefore all feature operators
+    delivers the new IO object "AttributeWeights", not only
+    the weighting ones. A weight of 0 means, that the attribute
+    should be deselected
+
+  * more than one additional operator description file can be 
+    specified with the -Dyale.operators.additional option by 
+    using the system dependant path separator (e.g. ":" on 
+    Unix systems)
+  
+  * Settings dialog
+
+  * Bugfixes:
+    - cut and paste bug fixed
+    - sometimes data columns and headers in attribute editor did
+      not match. Fixed.
+
+Changes from Yale 2.0.2 to Yale 2.0.3 [2003/12/17]
+------------------------------------------------------------
+
+  * Added parameter additional_performance_criteria to
+    PerformanceEvaluator for specifying user-defined performance 
+    criteria
+
+Changes from Yale 2.0.1 to Yale 2.0.2 [2003/11/20]
+------------------------------------------------------------
+
+  * Error estimation for MultiClassLearnerByRegression
+
+  * Bugfixes:
+    - Attribute editor combo box did not respond to attribute 
+      type changes
+
+Changes from Yale 2.0 to Yale 2.0.1 [2003/10/22]
+------------------------------------------------------------
+
+  * New operators:
+      - MultiClassLearnerByRegression
+
+  * %-expansion in parameter values: 
+      %a replaced by number of times, the operator was applied
+      %t replaced by current system time
+      %n replaced by name of operator
+      %c replaced by class of operator
+
+  * "Replace operator" context menu added
+
+  * Replaced kxml by Java XML parsers
+
+  * Removed DirectedGeneratingGeneticAlgorithm (DGGA)
+
+  * Bugfixes:
+      - GUI used to hang when stopping experiment at breakpoint
+
+Changes from Yale 2.0 beta 2 to Yale 2.0 [2003/08/28]
+------------------------------------------------------------
+
+  * New operators: 
+      - DefaultLearner
+      - WekaAssociationLearner
+      - QuadraticParameterOptimization
+      - GNUPlotOperator
+      - ConceptDriftAdaptor
+      - ForwardWeighting
+      - EvolutionaryWeighting
+      - UPGMA (tree clusterer)
+      - BatchedValidationChain
+      - ExampleSetInformation
+
+  * Added attribute weighting
+
+  * Added plugin support.
+
+  * SVMLearner does not automatically remove NaN examples. (This
+    feature was actually never documented). Use ExampleFilter to
+    remove NaNs instead. 
+
+  * Added gnuplot support for GUI; added GNUPlotOperator
+
+  * Operator 'ConceptDriftAdaptor' added for experiments where the data 
+    used for a classification task has a concept drift in the concept
+    to be learned. While the concept drifts in experiments performed
+    with the 'ConceptDriftSimulator' are artificially simulated, the
+    'ConceptDriftAdaptor' handles data with real concept drift (and
+    does not generate any additional artificial drift).
+
+  * Allowed arbitrary names for special attributes.
+
+
+Changes from Yale 2.0 beta to Yale 2.0 beta 2 [2003/06/18]
+----------------------------------------------------------
+
+  * Operators for concept drift simulation experiments and
+    several time window management and example weighting
+    approaches were added (see operators "ConceptDriftSimulator",
+    "BatchWindowLearner", "BatchWeightLearner").
+
+  * Renamed global experiment parameter 'keep_temp_files' to
+    'delete_temp_files'.
+
+  * LegalNumberExampleFilter replaced by more general operator 
+    ExampleFilter. By implementing ConditionExampleReader.Condition
+    users can specify arbitrary conditions.
+
+  * SparseFormatExampleSource: New parameter "attributes" allows
+    for an attribute description file similar to the ExampleSource.
+    If the old behaviour is desired, the parameter "format" must be
+    set to "separate_file".
+
+  * DatabaseExampleSource: Separate query file replaced by new
+    parameters ("username", "databasename", ...). In case of long
+    queries the query (and only the query) can still be read from a
+    separate file (still specified by "query_file"). If the password
+    should not be written to the config file, it is queried when
+    needed.
+    Yale can now directly work on databases without copying the data
+    to memory first (alpha version!!!). If this behavior is desired,
+    the parameter "work_on_databases" must be set to true and the
+    parameter "table_name" must be the name of an existing table. Be
+    careful with this option since it will change the database.
+
+  * FeatureGeneration: New parameter list "functions" allows 
+    specification of attribute generation and selection in config
+    file. Was formerly specified in separate file (still working).
+
+  * ExampleSetWriter: Output in sparse format and arbitrary user 
+    defined format now possible.
+
+  * PerformanceEvaluator: "comparator_class" allows for user defined
+    comparators of performance measures
+
+  * Performance criteria measure micro and makro average and variance.
+
+  * Special "id" attribute now supported (<id> tag in attribute
+    description files).
+
+  * Memory of unused attributes (e.g. intermediately generated
+    attributes, predicted labels in crossvalidations) freed.
+
+  * Weka models can now be displayed graphically.
+
+  * Implementation details:
+    - JUnit tests added
+    - UserError introduced and exception handling improved.
+    - Refactoring eases extensibility for user defined 
+      custom operators.
+    - Tutorial operator description automatically generated 
+      from the JavaDoc comments in the operator source code 
+      and the operator self description.
+
+
+Changes from Yale 1.0 to Yale 2.0 beta [2003/03/12]
+---------------------------------------------------
+
+  * Graphical User Interface (GUI) added.
+
+  * Configuration file '~/.yalerc' moved to '~/.yale/yalerc', 
+    together with some other configuration files.
+
+  * Root operators (= outer most operators) in experiments 
+    must now be of class "Experiment".
+
+  * The "group" attribute of the <parameter> tags was replaced by the
+    <list> tag, e.g.:
+        <list>
+          <parameter key="key1" value="value1"/>
+	  ...
+          <parameter key="keyN" value="valueN"/>
+        </list>
+
+  * All model applier operators were replaced by a single
+    "ModelApplier" operator for all models.
+
+  * The "parentlookup" attribute of <operator> tags is obsolete.
+
+  * The operator "SVMLearner" was renamed to "MySVMLearner"
+    (because Yale does not only support the mySVM by Stefan Rueping
+    as the only SVM implementation, but also supports the implementations
+    SVM^light by Thorsten Joachims and LibSVM by Chih-Chung Chang and 
+    Chih-Jen Lin).
+
+  * Some parameters were renamed (which can be easily checked in the GUI).
+      - PerformanceEvaluator: 'criteria_list' replaced by boolean parameters
+       - Experiment:          'tmp_dir' renamed to 'temp_dir'
+
+Release of Yale 1.0 [2002/06/19]
+--------------------------------
+
+  * Initial public release of the machine learning environment Yale
+    (Yet Another Learning Environment).

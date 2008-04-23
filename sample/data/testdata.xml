@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process version="4.0beta2">
+
+  <operator name="Root" class="Process">
+      <operator name="ExampleSource" class="ExampleSource">
+          <parameter key="attributes"	value="Y:\workspace\yale\sample\data\testdata.aml"/>
+      </operator>
+      <operator name="KMeans" class="KMeans">
+          <parameter key="k"	value="4"/>
+          <parameter key="max_runs"	value="100"/>
+      </operator>
+      <operator name="ExampleVisualizer" class="ExampleVisualizer">
+      </operator>
+  </operator>
+
+</process>

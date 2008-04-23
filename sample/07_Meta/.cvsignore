@@ -1,0 +1,5 @@
+*.tmp parameter_optimization.gnu parameters.best paraopt.log
+parameter_optimization.gnu
+parameters.best
+parameters.par
+08_MacroDefinition_all_objects.ioc

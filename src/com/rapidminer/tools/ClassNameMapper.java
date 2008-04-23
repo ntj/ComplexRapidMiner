@@ -1,0 +1,104 @@
+/*
+ *  RapidMiner
+ *
+ *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *
+ *  Complete list of developers available at our web site:
+ *
+ *       http://rapid-i.com
+ *
+ *  This program is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License as 
+ *  published by the Free Software Foundation; either version 2 of the
+ *  License, or (at your option) any later version. 
+ *
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ *  General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+ *  USA.
+ */
+package com.rapidminer.tools;
+
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import com.rapidminer.operator.UserError;
+
+
+/**
+ * Uses long class names and maps them to the final (short) part.
+ * These can be used for example for GUI purposes.
+ * 
+ * @author Michael Wurst, Ingo Mierswa
+ * @version $Id: ClassNameMapper.java,v 1.1 2007/05/27 21:59:08 ingomierswa Exp $
+ */
+public class ClassNameMapper {
+
+	Map<String, String> classMap = new LinkedHashMap<String, String>();
+
+	public ClassNameMapper(String[] classNames) {
+		for (int i = 0; i < classNames.length; i++) {
+			String completeClassName = classNames[i];
+			String simpleClassName = completeClassName;
+
+			// if possible, strip package information
+			int index = completeClassName.lastIndexOf('.');
+			if (index > -1)
+				simpleClassName = completeClassName.substring(index + 1);
+
+			// if no class with the same short name is found in the map, add it
+			// else use the complete class name
+			if (classMap.get(simpleClassName) == null) {
+				classMap.put(simpleClassName, completeClassName);
+			} else {
+				classMap.put(completeClassName, completeClassName);
+			}
+		}
+	}
+
+	public String getCompleteClassName(String shortName) {
+		return classMap.get(shortName);
+	}
+
+	public Class getClassByShortName(String shortName) throws UserError {
+		String completeClassName = getCompleteClassName(shortName);
+
+		// if the name is not found in the map, try to use the one provided as parameter.
+		if (completeClassName == null)
+			completeClassName = shortName;
+
+		try {
+			return Class.forName(completeClassName);
+		} catch (ClassNotFoundException e) {
+			throw new UserError(null, 904, shortName, e.getMessage());
+		}
+	}
+
+	public String[] getShortClassNames() {
+		String[] result = new String[classMap.size()];
+		Iterator<String> it = classMap.keySet().iterator();
+
+		for (int i = 0; i < classMap.size(); i++)
+			result[i] = it.next();
+
+		return result;
+	}
+
+	public Object getInstantiation(String shortName) throws UserError {
+		Object result = null;
+		try {
+			result = getClassByShortName(shortName).newInstance();
+		} catch (InstantiationException e) {
+			throw new UserError(null, 904, shortName, e.getMessage());
+		} catch (IllegalAccessException e) {
+			throw new UserError(null, 904, shortName, e.getMessage());
+		}
+		return result;
+	}
+}

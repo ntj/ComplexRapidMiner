@@ -1,0 +1,88 @@
+/*
+ *  RapidMiner
+ *
+ *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *
+ *  Complete list of developers available at our web site:
+ *
+ *       http://rapid-i.com
+ *
+ *  This program is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License as 
+ *  published by the Free Software Foundation; either version 2 of the
+ *  License, or (at your option) any later version. 
+ *
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ *  General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+ *  USA.
+ */
+package com.rapidminer.gui;
+
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+
+import com.rapidminer.InputHandler;
+
+
+/**
+ * An input handler which uses GUI components. Currently only used for passwords
+ * (e.g. for database access).
+ * 
+ * @author Simon Fischer, Ingo Mierswa
+ * @version $Id: GUIInputHandler.java,v 1.1 2007/05/27 22:03:22 ingomierswa Exp $
+ */
+public class GUIInputHandler implements InputHandler {
+
+	public String inputPassword(String messageText) {
+		final JDialog dialog = new JDialog(RapidMinerGUI.getMainFrame(), "Authentication", true);
+		JPanel contentPanel = new JPanel();
+
+		contentPanel.setBorder(BorderFactory.createEmptyBorder(11, 11, 11, 11));
+		contentPanel.setLayout(new BorderLayout());
+		contentPanel.add(new JLabel(messageText), BorderLayout.NORTH);
+		JPasswordField passwordField = new JPasswordField();
+        passwordField.addKeyListener(new KeyListener() {
+            public void keyPressed(KeyEvent e) {}
+            public void keyTyped(KeyEvent e) {}
+            public void keyReleased(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    dialog.dispose();
+                }
+            }
+        });
+		contentPanel.add(passwordField, BorderLayout.CENTER);
+		JButton close = new JButton("Ok");
+		close.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				dialog.dispose();
+			}
+		});
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.add(close);
+		contentPanel.add(buttonPanel, BorderLayout.SOUTH);
+		dialog.getContentPane().add(contentPanel);
+
+		dialog.pack();
+		dialog.setLocationRelativeTo(RapidMinerGUI.getMainFrame());
+		dialog.setVisible(true);
+		return new String(passwordField.getPassword());
+	}
+
+}

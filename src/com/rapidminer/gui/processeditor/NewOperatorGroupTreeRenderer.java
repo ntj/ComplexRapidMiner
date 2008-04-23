@@ -1,0 +1,66 @@
+/*
+ *  RapidMiner
+ *
+ *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *
+ *  Complete list of developers available at our web site:
+ *
+ *       http://rapid-i.com
+ *
+ *  This program is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License as 
+ *  published by the Free Software Foundation; either version 2 of the
+ *  License, or (at your option) any later version. 
+ *
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ *  General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+ *  USA.
+ */
+package com.rapidminer.gui.processeditor;
+
+import java.awt.Component;
+
+import javax.swing.JTree;
+import javax.swing.tree.DefaultTreeCellRenderer;
+
+import com.rapidminer.tools.GroupTree;
+
+
+/**
+ * The renderer for the group tree (displays a small group icon).
+ * 
+ * @author Ingo Mierswa
+ * @version $Id: NewOperatorGroupTreeRenderer.java,v 1.1 2007/06/07 17:12:24 ingomierswa Exp $
+ */
+public class NewOperatorGroupTreeRenderer extends DefaultTreeCellRenderer {
+
+    private static final long serialVersionUID = -6092290820461444236L;
+
+    public NewOperatorGroupTreeRenderer() {
+		setLeafIcon(getDefaultClosedIcon());
+    }
+    
+    public Component getTreeCellRendererComponent(JTree tree, 
+                                                  Object value, 
+                                                  boolean isSelected,
+                                                  boolean expanded,
+                                                  boolean leaf,
+                                                  int row,
+                                                  boolean hasFocus) {
+
+        super.getTreeCellRendererComponent(tree, value, isSelected,
+                                           expanded, leaf, row,
+                                           hasFocus);
+        GroupTree groupTree = (GroupTree)value;
+        setToolTipText("This group contains all operators of the group '" + groupTree.getName() + "'.");
+        if (isSelected)
+        	setIcon(getDefaultOpenIcon());
+        return this;
+    }
+}
