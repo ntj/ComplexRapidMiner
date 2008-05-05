@@ -378,7 +378,7 @@ public abstract class OperatorChain extends Operator {
             try {
                 input = i.next().apply(input);
             } catch (ConcurrentModificationException e) {
-                if (isDebugMode())
+             //   if (isDebugMode())
                     e.printStackTrace();
                 throw new UserError(this, 923);
             }

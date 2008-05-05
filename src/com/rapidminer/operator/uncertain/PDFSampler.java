@@ -1,25 +1,32 @@
 package com.rapidminer.operator.uncertain;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.set.SimpleExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.DataRowFactory;
 import com.rapidminer.example.table.DoubleArrayDataRow;
+import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.example.table.MemoryExampleTable;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.similarity.attributebased.AbstractProbabilityDensityFunction;
+import com.rapidminer.operator.similarity.attributebased.SimpleProbabilityDensityFunction;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeFile;
 import com.rapidminer.parameter.ParameterTypeInt;
+import com.rapidminer.parameter.UndefinedParameterError;
 
 public class PDFSampler extends Operator{
 
@@ -29,6 +36,8 @@ public class PDFSampler extends Operator{
 	public static final int PDF = 2;
 	public static final int INVERTED_PDF = 3;
 	private static final String[] SAMPLING_METHODS = new String[]{"Simple","Monte Carlo","PDF","Inverted PDF"};
+	private static final String SAMPLE_FREQUENCY = "Sampling Frequncy";
+	private static final String GLOBAL_UNCERTAINTY = "Global Uncertainty";
 
 	
 	public PDFSampler(OperatorDescription description) {
@@ -38,34 +47,69 @@ public class PDFSampler extends Operator{
 
 	@Override
 	public IOObject[] apply() throws OperatorException {
-		ExampleSet es = getInput(ExampleSet.class);
-		SampleStrategy st = getSamplingStrategy();
+		SimpleExampleSet es = (SimpleExampleSet)getInput(ExampleSet.class);
+		List<Attribute> listAtt = new LinkedList<Attribute>();
+		//create list 
+		Iterator<Attribute> iAt = es.getAttributes().iterator();
+		while(iAt.hasNext()){
+			Attribute a = iAt.next();
+			listAtt.add(a);
+		}
+		
+		
+		MemoryExampleTable newMT = new MemoryExampleTable(listAtt);
+		AbstractSampleStrategy st = getSamplingStrategy();
+		//copy to data to a new instance of the example set
+		
+		
+		
 		
 		for(Example e : es){
 			st.setElement(getValues(e));
 			Double[][] newExamples = st.getSamples();
-			
-			Attribute[] attributeArray = es.getExampleTable().getAttributes();
-			DataRow dr = es.getExampleTable().getDataRow(0);
-			int dataManagement = 0;
-			if (dr instanceof DoubleArrayDataRow) {
-				dataManagement = DataRowFactory.TYPE_DOUBLE_ARRAY;
-			}
-			
-			DataRowFactory dataRowFactory = new DataRowFactory(dataManagement);
-			for(int i = 0;i< newExamples.length ; i++){
-				
-				DataRow dataRow = dataRowFactory.create(newExamples[i], attributeArray);
-				
-				((MemoryExampleTable)es.getExampleTable()).addDataRow(dataRow);
+			new SimpleProbabilityDensityFunction(getParameterAsInt(GLOBAL_UNCERTAINTY));
+			if(newExamples.length>0){
+				Attribute[] attributeArray = es.getExampleTable().getAttributes();
+				DataRow dr = es.getExampleTable().getDataRow(0);
+				int dataManagement = 0;
+				if (dr instanceof DoubleArrayDataRow) {
+					dataManagement = DataRowFactory.TYPE_DOUBLE_ARRAY;
+				}
+		
+				DataRowFactory dataRowFactory = new DataRowFactory(dataManagement);
+				for(int i = 0;i< newExamples[0].length ; i++){
+					
+					Double[] exampleCleaned = new Double[newExamples.length];
+					for(int j = 0 ; j<newExamples.length ;j++){
+						exampleCleaned[j]= newExamples[j][i];
+					}
+					DataRow dataRow = dataRowFactory.create(exampleCleaned, attributeArray);
+					newMT.addDataRow(dataRow);
+					
+				}
+				newMT.addDataRow(dr);
 			}
 		}
 		
-		return new IOObject[]{es};
+		return new IOObject[]{new SimpleExampleSet(newMT)};
 		
 	}
 	
-	private SampleStrategy getSamplingStrategy(){
+	private AbstractSampleStrategy getSamplingStrategy(){
+		try {
+			AbstractSampleStrategy st = null;
+			switch(getParameterAsInt(SAMPLE_STRATEGY)){
+			case MONTE_CARLO:{st =  new MonteCarloSampling(); break;}
+			case SIMPLE:{st =  new SimpleSampling();break;}
+			default:
+			}
+			AbstractProbabilityDensityFunction pdf = new SimpleProbabilityDensityFunction(getParameterAsInt(GLOBAL_UNCERTAINTY));
+			st.setPdf(pdf);
+			return st;
+		} catch (UndefinedParameterError e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return null;
 	}
 
@@ -95,8 +139,15 @@ public class PDFSampler extends Operator{
 	
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		ParameterType type = new ParameterTypeCategory(SAMPLE_STRATEGY, "Specifies the sampling frequency",SAMPLING_METHODS,1);
+		ParameterType type = new ParameterTypeCategory(SAMPLE_STRATEGY, "Specifies the sampling method",SAMPLING_METHODS,1);
 		type.setExpert(false);
+		types.add(type);
+		type = new ParameterTypeInt(SAMPLE_FREQUENCY, "Specifies the sampling frequency",0,10000000,1);
+		type.setExpert(false);
+		types.add(type);
+		type = new ParameterTypeInt(GLOBAL_UNCERTAINTY, "The uncertainty specification around the points",0,10000000,1);
+		type.setExpert(false);
+		types.add(type);
 		return types;
 	}
 }

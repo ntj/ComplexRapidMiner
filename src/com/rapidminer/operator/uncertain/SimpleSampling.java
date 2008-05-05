@@ -14,7 +14,7 @@ import com.rapidminer.operator.similarity.attributebased.AbstractProbabilityDens
  * @author Michael Huber
  * 
  */
-public class SimpleSampling extends SampleStrategy {
+public class SimpleSampling extends AbstractSampleStrategy {
 
 	public SimpleSampling(double[] element, AbstractProbabilityDensityFunction pdf) {
 		this.element = element;
@@ -37,15 +37,18 @@ public class SimpleSampling extends SampleStrategy {
 	 * the second the index of the respective samples
 	 */
 	public Double[][] getSamples() {
-		Double[][] samples = new Double[element.length][]; //XXX: Here Be Dragons: es wird von 5 Samples ausgegangen
-		pdf.setValue(element[0]);
-		Double[] tmpSamples0 = {pdf.getMinValue(), pdf.getMaxValue(), pdf.getMinValue(), pdf.getMaxValue(), pdf.getValue()};
-		pdf.setValue(element[1]);
-		Double[] tmpSamples1 = {pdf.getMinValue(), pdf.getMaxValue(), pdf.getMaxValue(), pdf.getMinValue(), pdf.getValue()};
-		samples[0] = tmpSamples0;
-		samples[1] = tmpSamples1;
-		
-		return samples;
+		if(pdf != null){
+			Double[][] samples = new Double[element.length][]; //XXX: Here Be Dragons: es wird von 5 Samples ausgegangen
+			pdf.setValue(element[0]);
+			Double[] tmpSamples0 = {pdf.getMinValue(), pdf.getMaxValue(), pdf.getMinValue(), pdf.getMaxValue(), pdf.getValue()};
+			pdf.setValue(element[1]);
+			Double[] tmpSamples1 = {pdf.getMinValue(), pdf.getMaxValue(), pdf.getMaxValue(), pdf.getMinValue(), pdf.getValue()};
+			samples[0] = tmpSamples0;
+			samples[1] = tmpSamples1;
+			
+			return samples;
+		}
+		return null;
 	}
 
 //	public double[] getSamplesFromValue(double value) {

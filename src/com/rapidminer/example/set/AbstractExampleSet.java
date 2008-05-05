@@ -97,6 +97,8 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
         return "ExampleSet";
     }
 	
+    
+    
 	// --- Visualisation and toString() methods ---
 
 	public String toString() {

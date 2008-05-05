@@ -31,7 +31,7 @@ import com.rapidminer.parameter.ParameterTypeInt;
 
 import com.rapidminer.operator.similarity.attributebased.SimpleProbabilityDensityFunction;
 import com.rapidminer.operator.similarity.attributebased.AbstractValueBasedSimilarity;
-import com.rapidminer.operator.uncertain.SampleStrategy;
+import com.rapidminer.operator.uncertain.AbstractSampleStrategy;
 import com.rapidminer.operator.uncertain.SimpleSampling;
 
 
@@ -61,7 +61,7 @@ public class FDBScanClustering extends AbstractDensityBasedClusterer {
 
 	private static final String SAMPLE_RATE = "sample_rate";
 	
-	private SampleStrategy sampleStrategy;
+	private AbstractSampleStrategy sampleStrategy;
 
 	//HashMap that assigns an array of samples to each element
 	private Map<String, Double[][]> sampleCache;

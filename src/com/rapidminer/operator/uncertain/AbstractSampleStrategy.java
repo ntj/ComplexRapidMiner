@@ -4,16 +4,13 @@ import com.rapidminer.operator.similarity.attributebased.AbstractProbabilityDens
 
 
 
-public abstract class SampleStrategy {
+public abstract class AbstractSampleStrategy {
 
 	protected AbstractProbabilityDensityFunction pdf;
 	protected double[] element;
 	protected int sampleRate;
 
 	public abstract Double[][] getSamples();
-	
-	//public abstract double[] getSamplesFromValue(double value);
-	
 	
 	public void setElement(double[] element) {
 		this.element = element;

@@ -9,7 +9,7 @@ import com.rapidminer.operator.similarity.attributebased.AbstractProbabilityDens
  * Should be meaningful samples!!!
  *
  */
-public class MonteCarloSampling extends SampleStrategy {
+public class MonteCarloSampling extends AbstractSampleStrategy {
 
 
 	public Double[][] getSamples() {
@@ -20,13 +20,6 @@ public class MonteCarloSampling extends SampleStrategy {
 	public double[] getSamplesFromValue(double value) {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-	public AbstractProbabilityDensityFunction getPdf() {
-		return null;
-	}
-
-	public void setPdf(AbstractProbabilityDensityFunction pdf) {
 	}
 	
 	public double[] getElement() {

@@ -17,7 +17,7 @@ import com.rapidminer.operator.learner.clustering.IdUtils;
 import com.rapidminer.operator.learner.clustering.clusterer.AbstractDensityBasedClusterer;
 import com.rapidminer.operator.similarity.SimilarityMeasure;
 import com.rapidminer.operator.similarity.attributebased.SimpleProbabilityDensityFunction;
-import com.rapidminer.operator.uncertain.SampleStrategy;
+import com.rapidminer.operator.uncertain.AbstractSampleStrategy;
 import com.rapidminer.operator.uncertain.SimpleSampling;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeDouble;
@@ -53,7 +53,7 @@ public class DBScanEAClustering extends AbstractDensityBasedClusterer {
 
 	private static final String SAMPLE_RATE = "sample_rate";
 	
-	private SampleStrategy sampleStrategy;
+	private AbstractSampleStrategy sampleStrategy;
 	
 	private Map<String, Double[][]> sampleCache;
 	

@@ -405,6 +405,7 @@ public class LogService implements LoggingHandler {
 	 *  from operators but only at the end of processes. This will be ensured by RapidMiner itself. 
 	 *  If RapidMiner is not used in debug mode, the stack trace will not be shown. */
 	public void logFinalException(String message, Process process, Throwable exception, boolean debugMode) {
+		exception.printStackTrace();
 		if (FATAL < this.minVerbosityLevel)
 			return;
 		

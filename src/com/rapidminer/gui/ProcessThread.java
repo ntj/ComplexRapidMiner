@@ -72,7 +72,7 @@ public class ProcessThread extends Thread implements ProcessListener {
 		} catch (Throwable e) {
 			beep("error");
 			String debugProperty = System.getProperty(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEBUGMODE);
-			boolean debugMode = Tools.booleanValue(debugProperty, false);
+			boolean debugMode = Tools.booleanValue(debugProperty, true);
 			String message = e.getMessage();
 			if (!debugMode) {
 				if (e instanceof RuntimeException) {
