@@ -5,8 +5,8 @@ package com.rapidminer.operator.similarity.attributebased;
  * takes just the value and the global fuzziness as parameters.
  * 
  * @author Michael Huber
- * @see com.rapidminer.operator.learner.clustering.clusterer.DBScanEAClustering
- * @see com.rapidminer.operator.learner.clustering.clusterer.FDBScanClustering
+ * @see com.rapidminer.operator.learner.clustering.clusterer.uncertain.DBScanEAClustering
+ * @see com.rapidminer.operator.learner.clustering.clusterer.uncertain.FDBScanClustering
  */
 public class SimpleProbabilityDensityFunction extends
 		AbstractProbabilityDensityFunction {

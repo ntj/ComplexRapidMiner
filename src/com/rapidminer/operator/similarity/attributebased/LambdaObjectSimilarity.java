@@ -4,7 +4,7 @@ package com.rapidminer.operator.similarity.attributebased;
  * Lambda distance.
  * 
  * @author Michael Wurst
- * @see com.rapidminer.operator.learner.clustering.clusterer.DBScanEAClustering
+ * @see com.rapidminer.operator.learner.clustering.clusterer.uncertain.DBScanEAClustering
  */
 public class LambdaObjectSimilarity extends AbstractRealValueBasedSimilarity {
 

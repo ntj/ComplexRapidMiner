@@ -1,4 +1,4 @@
-package com.rapidminer.operator.learner.clustering.clusterer;
+package com.rapidminer.operator.uncertain;
 
 import com.rapidminer.operator.similarity.attributebased.AbstractProbabilityDensityFunction;
 
@@ -12,7 +12,7 @@ import com.rapidminer.operator.similarity.attributebased.AbstractProbabilityDens
 public class MonteCarloSampling extends SampleStrategy {
 
 
-	public double[][] getSamples() {
+	public Double[][] getSamples() {
 		// TODO Auto-generated method stub
 		return null;
 	}

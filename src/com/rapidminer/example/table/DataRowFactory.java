@@ -227,6 +227,34 @@ public class DataRowFactory {
 		dataRow.trim();
 		return dataRow;
 	}
+	
+	/**
+	 * Creates a data row from an Object array. The classes of the object must
+	 * match the value type of the corresponding {@link Attribute}. If the
+	 * corresponding attribute is nominal, <code>data[i]</code> will be cast
+	 * to String. If it is numerical, it will be cast to Number.
+	 * 
+	 * @throws ClassCastException
+	 *             if data class does not match attribute type
+	 * @see DatabaseDataRowReader
+	 * @author Peter B. Volk
+	 */
+	public DataRow create(Double[] data, Attribute[] attributes) {
+		DataRow dataRow = create(data.length);
+		for (int i = 0; i < data.length; i++) {
+			if (data[i] != null) {
+				if (attributes[i].isNominal()) {
+					dataRow.set(attributes[i], attributes[i].getMapping().mapString((String.valueOf(data[i])).trim()));
+				} else {
+					dataRow.set(attributes[i], ((Number) data[i]).doubleValue());
+				}
+			} else {
+				dataRow.set(attributes[i], Double.NaN);
+			}
+		}
+		dataRow.trim();
+		return dataRow;
+	}
 
 	/** Returns the type of the created data rows. */
 	public int getType() {

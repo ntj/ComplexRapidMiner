@@ -822,15 +822,22 @@
 
   <operator 
      name        = "FDBScanClustering"        
-     class       = "com.rapidminer.operator.learner.clustering.clusterer.FDBScanClustering"
+     class       = "com.rapidminer.operator.learner.clustering.clusterer.uncertain.FDBScanClustering"
      description = "Clustering with FDBSCAN"
-     group       = "Learner.Unsupervised.Clustering"/>     
+     group       = "Learner.Unsupervised.Clustering.Uncertain"/>     
+
+ <operator 
+     name        = "PDFSampling"        
+     class       = "com.rapidminer.operator.uncertain.PDFSampler"
+     description = "Samples the PDF according to the selected sampling method"
+     group       = "Learner.Unsupervised.Clustering.Uncertain"/>     
+
 
   <operator 
      name        = "DBScanEAClustering"        
-     class       = "com.rapidminer.operator.learner.clustering.clusterer.DBScanEAClustering"
+     class       = "com.rapidminer.operator.learner.clustering.clusterer.uncertain.DBScanEAClustering"
      description = "Clustering with DBSCAN^EA"
-     group       = "Learner.Unsupervised.Clustering"/>     
+     group       = "Learner.Unsupervised.Clustering.Uncertain"/>     
 
   <operator 
      name        = "ClusteringAggregation"        

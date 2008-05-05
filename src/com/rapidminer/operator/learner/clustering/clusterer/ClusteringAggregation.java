@@ -20,8 +20,8 @@ import com.rapidminer.operator.learner.clustering.IdUtils;
  * 
  * @author Michael Huber
  * @see com.rapidminer.operator.learner.clustering.clusterer.DBScanClustering
- * @see com.rapidminer.operator.learner.clustering.clusterer.DBScanEAClustering
- * @see com.rapidminer.operator.learner.clustering.clusterer.FDBScanClustering
+ * @see com.rapidminer.operator.learner.clustering.clusterer.uncertain.DBScanEAClustering
+ * @see com.rapidminer.operator.learner.clustering.clusterer.uncertain.FDBScanClustering
  */
 public class ClusteringAggregation extends AbstractFlatClusterer {
 
@@ -65,7 +65,7 @@ public class ClusteringAggregation extends AbstractFlatClusterer {
 				if(edge > 0.5) {
 					if(!containsId(uid, result) && !containsId(vid, result)) {
 						//beide in neues Cluster einfügen
-						result.addCluster(new DefaultCluster("" + clusterCount));
+						result.addCluster(new DefaultCluster(String.valueOf(clusterCount)));
 						((DefaultCluster) result.getClusterAt(clusterCount)).addObject(uid);
 						((DefaultCluster) result.getClusterAt(clusterCount)).addObject(vid);
 						clusterCount++;
@@ -112,11 +112,6 @@ public class ClusteringAggregation extends AbstractFlatClusterer {
 		}
 	}
 	
-//	private int getNextUnusedClusterId(FlatClusterModel cm) {
-//		return 0;
-//	}
-
-	
 	private int getClusterId(String id, FlatClusterModel cm) {
 		for(int i = 0; i < cm.getNumberOfClusters(); i++) {
 			if(cm.getClusterAt(i).contains(id))
@@ -124,16 +119,6 @@ public class ClusteringAggregation extends AbstractFlatClusterer {
 		}
 		return 0;
 	}
-	
-
-//	private int getClusterId(String id, int clusterModelId) {
-//		for(int i = 0; i < clusteringModels.get(clusterModelId).getNumberOfClusters(); i++) {
-//			if(clusteringModels.get(clusterModelId).getClusterAt(i).contains(id))
-//				return i;
-//		}
-//		return 0;
-//	}
-
 
 	private boolean containsId(String id, FlatClusterModel cm) {
 		for(int i = 0; i < cm.getNumberOfClusters(); i++) {

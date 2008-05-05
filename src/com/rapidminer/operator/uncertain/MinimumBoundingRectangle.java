@@ -1,4 +1,4 @@
-package com.rapidminer.operator.learner.clustering.clusterer;
+package com.rapidminer.operator.uncertain;
 
 public class MinimumBoundingRectangle {
 

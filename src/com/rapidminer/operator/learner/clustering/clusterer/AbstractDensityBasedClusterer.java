@@ -88,7 +88,6 @@ public abstract class AbstractDensityBasedClusterer extends AbstractFlatClustere
 			Integer status = assign.get(id);
 			if (status.intValue() == UNASSIGNED) {
 				List<String> l = getNeighbours(es, id);
-//				if (l.size() >= minPts) {
 				if (l.size() >= minPts) {
 					clusterId++;
 					assign.put(id, clusterId);

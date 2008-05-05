@@ -1,4 +1,4 @@
-package com.rapidminer.operator.learner.clustering.clusterer;
+package com.rapidminer.operator.learner.clustering.clusterer.uncertain;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -16,6 +16,9 @@ import com.rapidminer.operator.learner.clustering.DefaultCluster;
 import com.rapidminer.operator.learner.clustering.FlatClusterModel;
 import com.rapidminer.operator.learner.clustering.FlatCrispClusterModel;
 import com.rapidminer.operator.learner.clustering.IdUtils;
+import com.rapidminer.operator.learner.clustering.clusterer.AbstractDensityBasedClusterer;
+import com.rapidminer.operator.learner.clustering.clusterer.ClusteringAggregation;
+import com.rapidminer.operator.learner.clustering.clusterer.DBScanClustering;
 import com.rapidminer.operator.similarity.DistanceSimilarityConverter;
 import com.rapidminer.operator.similarity.SimilarityMeasure;
 import com.rapidminer.operator.similarity.attributebased.AbstractProbabilityDensityFunction;
@@ -25,11 +28,11 @@ import com.rapidminer.operator.similarity.SimilarityUtil;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
-import com.rapidminer.operator.learner.clustering.clusterer.SampleStrategy;
-import com.rapidminer.operator.learner.clustering.clusterer.SimpleSampling;
 
 import com.rapidminer.operator.similarity.attributebased.SimpleProbabilityDensityFunction;
 import com.rapidminer.operator.similarity.attributebased.AbstractValueBasedSimilarity;
+import com.rapidminer.operator.uncertain.SampleStrategy;
+import com.rapidminer.operator.uncertain.SimpleSampling;
 
 
 /**
@@ -37,7 +40,7 @@ import com.rapidminer.operator.similarity.attributebased.AbstractValueBasedSimil
  * 
  * @author Michael Huber
  * @see com.rapidminer.operator.learner.clustering.clusterer.DBScanClustering
- * @see com.rapidminer.operator.learner.clustering.clusterer.DBScanEAClustering
+ * @see com.rapidminer.operator.learner.clustering.clusterer.uncertain.DBScanEAClustering
  * @see com.rapidminer.operator.learner.clustering.clusterer.ClusteringAggregation
  */
 public class FDBScanClustering extends AbstractDensityBasedClusterer {
@@ -61,7 +64,7 @@ public class FDBScanClustering extends AbstractDensityBasedClusterer {
 	private SampleStrategy sampleStrategy;
 
 	//HashMap that assigns an array of samples to each element
-	private Map<String, double[][]> sampleCache;
+	private Map<String, Double[][]> sampleCache;
 
 	//HashMap that assigns a pdf to each element
 	private Map<String, AbstractProbabilityDensityFunction> pdfCache;
@@ -75,7 +78,7 @@ public class FDBScanClustering extends AbstractDensityBasedClusterer {
 	public FDBScanClustering(OperatorDescription description) {
 		super(description);
 		pdfCache = new HashMap<String, AbstractProbabilityDensityFunction>();
-		sampleCache = new HashMap<String, double[][]>();
+		sampleCache = new HashMap<String, Double[][]>();
 		//boundingBoxes = new HashMap<String, MinimumBoundingRectangle>();
 		coreObjectList = new HashMap<String, Double>();
 		sampleStrategy = new SimpleSampling();
@@ -132,8 +135,8 @@ public class FDBScanClustering extends AbstractDensityBasedClusterer {
 	//Berechnet die Wahrscheinlichkeit, dass die zwei Objekte "epsilon-Nachbarn" sind.
 	public double similarity(String id1, String id2) {
 		double prob = 0;
-		double [][] e1 = getSamples(id1);
-		double [][] e2 = getSamples(id2);
+		Double [][] e1 = getSamples(id1);
+		Double [][] e2 = getSamples(id2);
 		int max_dimensions = e1.length;
 		double[] a = new double[max_dimensions];
 		double[] b = new double[max_dimensions];
@@ -181,7 +184,7 @@ public class FDBScanClustering extends AbstractDensityBasedClusterer {
 			return true;
 		}
 		
-		double[][] sample = getSamples(id);
+		Double[][] sample = getSamples(id);
 		int max_dimensions = sample.length;
 		
 		//Prüfung auf core object fand noch nicht statt
@@ -193,7 +196,7 @@ public class FDBScanClustering extends AbstractDensityBasedClusterer {
 		
 		//Hier wird die Matrix erstellt. Folien S. 72
 		for(int k=0; k<preselection.size(); k++) {
-			double[][] tempSample = getSamples(preselection.get(k));
+			Double[][] tempSample = getSamples(preselection.get(k));
 			for(int i=0; i<sampleRate; i++) {		//Sample-Index für Element
 				for(int j=0; j<sampleRate; j++) {	//Sample-Index für Preselection-Elemente
 					//folgendes Statement ist nur zum Umschreiben der Information
@@ -294,7 +297,7 @@ public class FDBScanClustering extends AbstractDensityBasedClusterer {
 
 	//TODO: getSamples in eigene Klasse SampleCache delegieren.
 	//Wenn isReachable() geändert wird, muss sie umgeschrieben werden.
-	protected double[][] getSamples(String id) {
+	protected Double[][] getSamples(String id) {
 		if(!sampleCache.containsKey(id)) {
 			Example ex = IdUtils.getExampleFromId(es, id);
 			sampleStrategy.setElement(getValues(ex));

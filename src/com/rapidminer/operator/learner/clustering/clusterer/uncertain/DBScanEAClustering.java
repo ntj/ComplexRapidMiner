@@ -1,4 +1,4 @@
-package com.rapidminer.operator.learner.clustering.clusterer;
+package com.rapidminer.operator.learner.clustering.clusterer.uncertain;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -14,11 +14,11 @@ import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.learner.clustering.ClusterModel;
 import com.rapidminer.operator.learner.clustering.FlatClusterModel;
 import com.rapidminer.operator.learner.clustering.IdUtils;
-import com.rapidminer.operator.similarity.DistanceSimilarityConverter;
+import com.rapidminer.operator.learner.clustering.clusterer.AbstractDensityBasedClusterer;
 import com.rapidminer.operator.similarity.SimilarityMeasure;
-import com.rapidminer.operator.similarity.SimilarityUtil;
-import com.rapidminer.operator.similarity.attributebased.LambdaObjectSimilarity;
 import com.rapidminer.operator.similarity.attributebased.SimpleProbabilityDensityFunction;
+import com.rapidminer.operator.uncertain.SampleStrategy;
+import com.rapidminer.operator.uncertain.SimpleSampling;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
@@ -28,7 +28,7 @@ import com.rapidminer.parameter.ParameterTypeInt;
  * 
  * @author Michael Huber
  * @see com.rapidminer.operator.learner.clustering.clusterer.DBScanClustering
- * @see com.rapidminer.operator.learner.clustering.clusterer.FDBScanClustering
+ * @see com.rapidminer.operator.learner.clustering.clusterer.uncertain.FDBScanClustering
  * @see com.rapidminer.operator.learner.clustering.clusterer.ClusteringAggregation
  */
 public class DBScanEAClustering extends AbstractDensityBasedClusterer {
@@ -42,7 +42,7 @@ public class DBScanEAClustering extends AbstractDensityBasedClusterer {
 	//NOTE: While not having a pdf for each element, this global fuzziness is used.
 	private double globalFuzziness = 0.0;
 
-	private static final String GLOBAL_FUZZINESS = "global_fuzziness";
+	private static final String GLOBAL_UNCERTAINTY = "global_uncertainty";
 
 	private double lambda = 0.5;
 	
@@ -55,7 +55,7 @@ public class DBScanEAClustering extends AbstractDensityBasedClusterer {
 	
 	private SampleStrategy sampleStrategy;
 	
-	private Map<String, double[][]> sampleCache;
+	private Map<String, Double[][]> sampleCache;
 	
 	
 	public DBScanEAClustering(OperatorDescription description) {
@@ -71,10 +71,10 @@ public class DBScanEAClustering extends AbstractDensityBasedClusterer {
 	public ClusterModel createClusterModel(ExampleSet es) throws OperatorException {
 		this.es = es;
 		lambda = getParameterAsDouble(LAMBDA);
-		globalFuzziness = getParameterAsDouble(GLOBAL_FUZZINESS);
+		globalFuzziness = getParameterAsDouble(GLOBAL_UNCERTAINTY);
 		maxDistance = getParameterAsDouble(MAX_DISTANCE_NAME);
 		sampleStrategy = new SimpleSampling();
-		sampleCache = new HashMap<String, double[][]>();
+		sampleCache = new HashMap<String, Double[][]>();
 		FlatClusterModel result = doClustering(es);
 		return result;
 	}
@@ -106,8 +106,8 @@ public class DBScanEAClustering extends AbstractDensityBasedClusterer {
 	
 	public double minDistance(String id1, String id2) {
 		double dist = Double.MAX_VALUE;
-		double [][] e1 = getSamples(id1);
-		double [][] e2 = getSamples(id2);
+		Double [][] e1 = getSamples(id1);
+		Double [][] e2 = getSamples(id2);
 		int max_dimensions = e1.length;
 		double[] a = new double[max_dimensions];
 		double[] b = new double[max_dimensions];
@@ -128,8 +128,8 @@ public class DBScanEAClustering extends AbstractDensityBasedClusterer {
 	
 	public double maxDistance(String id1, String id2) {
 		double dist = Double.MIN_VALUE;
-		double [][] e1 = getSamples(id1);
-		double [][] e2 = getSamples(id2);
+		Double [][] e1 = getSamples(id1);
+		Double [][] e2 = getSamples(id2);
 		int max_dimensions = e1.length;
 		double[] a = new double[max_dimensions];
 		double[] b = new double[max_dimensions];
@@ -184,12 +184,14 @@ public class DBScanEAClustering extends AbstractDensityBasedClusterer {
 			return Double.NaN;
 	}
 	
-	protected double[][] getSamples(String id) {
+	protected Double[][] getSamples(String id) {
 		if(!sampleCache.containsKey(id)) {
 			Example ex = IdUtils.getExampleFromId(es, id);
 			sampleStrategy.setElement(getValues(ex));
 			sampleStrategy.setPdf(new SimpleProbabilityDensityFunction(globalFuzziness));
-			sampleCache.put(id, sampleStrategy.getSamples());
+			Double[][] res = sampleStrategy.getSamples();
+			sampleCache.put(id, res);
+			return res;
 		}
 		return sampleCache.get(id);
 	}
@@ -219,7 +221,7 @@ public class DBScanEAClustering extends AbstractDensityBasedClusterer {
 		p1.setExpert(false);
 		types.add(p1);
 		ParameterType p2;
-		p2 = new ParameterTypeDouble(GLOBAL_FUZZINESS, "global fuzzyness", 0.0, Double.POSITIVE_INFINITY, 0.0);
+		p2 = new ParameterTypeDouble(GLOBAL_UNCERTAINTY, "global fuzzyness", 0.0, Double.POSITIVE_INFINITY, 0.0);
 		p2.setDescription("Global fuzziness describes by which amount the values from the example set " +
 				"could fluctuate: i.e. plus/minus the given value. ");
 		p2.setExpert(false);

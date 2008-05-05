@@ -1,4 +1,4 @@
-package com.rapidminer.operator.learner.clustering.clusterer;
+package com.rapidminer.operator.uncertain;
 
 import com.rapidminer.operator.similarity.attributebased.AbstractProbabilityDensityFunction;
 
@@ -15,10 +15,6 @@ import com.rapidminer.operator.similarity.attributebased.AbstractProbabilityDens
  * 
  */
 public class SimpleSampling extends SampleStrategy {
-
-	private double[] element;
-
-	private int sampleRate;
 
 	public SimpleSampling(double[] element, AbstractProbabilityDensityFunction pdf) {
 		this.element = element;
@@ -40,12 +36,12 @@ public class SimpleSampling extends SampleStrategy {
 	 * @return matrix where the first index represents the dimension,
 	 * the second the index of the respective samples
 	 */
-	public double[][] getSamples() {
-		double[][] samples = new double[element.length][]; //XXX: Here Be Dragons: es wird von 5 Samples ausgegangen
+	public Double[][] getSamples() {
+		Double[][] samples = new Double[element.length][]; //XXX: Here Be Dragons: es wird von 5 Samples ausgegangen
 		pdf.setValue(element[0]);
-		double[] tmpSamples0 = {pdf.getMinValue(), pdf.getMaxValue(), pdf.getMinValue(), pdf.getMaxValue(), pdf.getValue()};
+		Double[] tmpSamples0 = {pdf.getMinValue(), pdf.getMaxValue(), pdf.getMinValue(), pdf.getMaxValue(), pdf.getValue()};
 		pdf.setValue(element[1]);
-		double[] tmpSamples1 = {pdf.getMinValue(), pdf.getMaxValue(), pdf.getMaxValue(), pdf.getMinValue(), pdf.getValue()};
+		Double[] tmpSamples1 = {pdf.getMinValue(), pdf.getMaxValue(), pdf.getMaxValue(), pdf.getMinValue(), pdf.getValue()};
 		samples[0] = tmpSamples0;
 		samples[1] = tmpSamples1;
 		
@@ -57,16 +53,6 @@ public class SimpleSampling extends SampleStrategy {
 //		return samples;
 //	}
 	
-	public double[] getElement() {
-		return element;
-	}
-
-	public void setElement(double[] element) {
-		this.element = element;
-	}
-
-	public int getSampleRate() {
-		return sampleRate;
-	}
+	
 
 }
