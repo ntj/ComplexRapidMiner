@@ -11,19 +11,19 @@ package com.rapidminer.operator.similarity.attributebased;
 public class SimpleProbabilityDensityFunction extends
 		AbstractProbabilityDensityFunction {
 
-	private double fuzziness;
+	private double uncertainty;
 
 	//unprecise value
 	private double value;
 	
-	public SimpleProbabilityDensityFunction(double value, double fuzziness) {
+	public SimpleProbabilityDensityFunction(double value, double uncertainty) {
 		this.value = value;
-		this.fuzziness = fuzziness;
+		this.uncertainty = uncertainty;
 	}
 	
-	public SimpleProbabilityDensityFunction(double fuzziness) {
+	public SimpleProbabilityDensityFunction(double uncertainty) {
 		this.value = 0;
-		this.fuzziness = fuzziness;
+		this.uncertainty = uncertainty;
 	}
 	
 	public double getValueAt(double x) {
@@ -35,11 +35,11 @@ public class SimpleProbabilityDensityFunction extends
 	}
 	
 	public double getMinValue() {
-		return value - fuzziness;
+		return value - uncertainty*value;
 	}
 	
 	public double getMaxValue() {
-		return value + fuzziness;
+		return value + uncertainty*value;
 	}
 
 	public double getValue() {
@@ -50,11 +50,11 @@ public class SimpleProbabilityDensityFunction extends
 		this.value = value;
 	}
 
-	public double getFuzziness() {
-		return fuzziness;
+	public double getUncertainty() {
+		return uncertainty;
 	}
 
-	public void setFuzziness(double fuzziness) {
-		this.fuzziness = fuzziness;
+	public void setUncertainty(double uncertainty) {
+		this.uncertainty = uncertainty;
 	}
 }

@@ -31,4 +31,8 @@ public abstract class AbstractSampleStrategy {
 	public void setPdf(AbstractProbabilityDensityFunction pdf) {
 		this.pdf = pdf;
 	}
+
+	public void setSampleRate(int sampleRate) {
+		this.sampleRate = sampleRate;
+	}
 }

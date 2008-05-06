@@ -38,6 +38,7 @@ public class PDFSampler extends Operator{
 	private static final String[] SAMPLING_METHODS = new String[]{"Simple","Monte Carlo","PDF","Inverted PDF"};
 	private static final String SAMPLE_FREQUENCY = "Sampling Frequncy";
 	private static final String GLOBAL_UNCERTAINTY = "Global Uncertainty";
+	private static final String ADD_ORIGINAL_POINT = "Add original measurement";
 
 	
 	public PDFSampler(OperatorDescription description) {
@@ -60,14 +61,14 @@ public class PDFSampler extends Operator{
 		MemoryExampleTable newMT = new MemoryExampleTable(listAtt);
 		AbstractSampleStrategy st = getSamplingStrategy();
 		//copy to data to a new instance of the example set
-		
+		st.setSampleRate(getParameterAsInt(SAMPLE_FREQUENCY));
 		
 		
 		
 		for(Example e : es){
 			st.setElement(getValues(e));
 			Double[][] newExamples = st.getSamples();
-			new SimpleProbabilityDensityFunction(getParameterAsInt(GLOBAL_UNCERTAINTY));
+			
 			if(newExamples.length>0){
 				Attribute[] attributeArray = es.getExampleTable().getAttributes();
 				DataRow dr = es.getExampleTable().getDataRow(0);
@@ -84,13 +85,14 @@ public class PDFSampler extends Operator{
 						exampleCleaned[j]= newExamples[j][i];
 					}
 					DataRow dataRow = dataRowFactory.create(exampleCleaned, attributeArray);
-					newMT.addDataRow(dataRow);
+					if(getParameterAsBoolean(ADD_ORIGINAL_POINT)){
+						newMT.addDataRow(dataRow);
+					}
 					
 				}
 				newMT.addDataRow(dr);
 			}
 		}
-		
 		return new IOObject[]{new SimpleExampleSet(newMT)};
 		
 	}
@@ -148,6 +150,10 @@ public class PDFSampler extends Operator{
 		type = new ParameterTypeInt(GLOBAL_UNCERTAINTY, "The uncertainty specification around the points",0,10000000,1);
 		type.setExpert(false);
 		types.add(type);
+		type = new ParameterTypeBoolean(ADD_ORIGINAL_POINT, "Add the original Measurement in the sampled set",true);
+		type.setExpert(false);
+		types.add(type);
+		
 		return types;
 	}
 }
