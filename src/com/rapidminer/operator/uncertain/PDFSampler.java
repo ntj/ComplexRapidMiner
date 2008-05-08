@@ -67,7 +67,7 @@ public class PDFSampler extends Operator{
 		
 		
 		for(Example e : es){
-			st.setElement(getValues(e));
+			st.setValue(getValues(e));
 			Double[][] newExamples = st.getSamples();
 			
 			if(newExamples.length>0){
@@ -79,7 +79,7 @@ public class PDFSampler extends Operator{
 				}
 		
 				DataRowFactory dataRowFactory = new DataRowFactory(dataManagement);
-				for(int i = 0;i< newExamples[0].length ; i++){
+				for(int i = 0;i< newExamples.length ; i++){
 					DataRow dataRow = dataRowFactory.create(newExamples[i], attributeArray);
 					if(getParameterAsBoolean(ADD_ORIGINAL_POINT)){
 						newMT.addDataRow(dataRow);

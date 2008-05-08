@@ -12,8 +12,9 @@ public abstract class AbstractSampleStrategy {
 
 	public abstract Double[][] getSamples();
 	
-	public void setElement(double[] element) {
-		this.element = element;
+	public void setValue(double[] ds) {
+		this.element = ds;
+		pdf.setValue(element);
 	}
 	
 	public double[] getElement() {

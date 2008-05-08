@@ -20,12 +20,15 @@ public class SimpleProbabilityDensityFunction extends
 
 	}
 
-	public SimpleProbabilityDensityFunction(Double[] value, double uncertainty,
+	public SimpleProbabilityDensityFunction(double[] value, double uncertainty,
 			boolean absoluteError) {
 		super(value, uncertainty, absoluteError);
 	}
 
 	public double getMinValue(int dimension) {
+		if(dimension>=value.length){
+			throw new NumberFormatException("number of dimensions in the example set lower than requested dimension ("+dimension+"/"+value.length+")");
+		}
 		if(absoluteError){
 			return value[dimension] - uncertainty;
 		}

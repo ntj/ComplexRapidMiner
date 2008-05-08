@@ -19,6 +19,7 @@ public class SimpleSampling extends AbstractSampleStrategy {
 	public SimpleSampling(double[] element, AbstractProbabilityDensityFunction pdf) {
 		this.element = element;
 		this.pdf = pdf;
+		pdf.setValue(element);
 		
 	}
 
@@ -40,14 +41,14 @@ public class SimpleSampling extends AbstractSampleStrategy {
 		if(pdf != null){
 			Double[][] samples = new Double[sampleRate][];
 			Double newVal[] = new Double[element.length];
-			//here do the following. i is a bivector of the length of the |dim|. each bit represents the 
-			for(int i = 0;i<Math.pow(2,element.length);i++){
+	 		//here do the following. i is a bivector of the length of the |dim|. each bit represents the 
+			for(int i = 0;i<sampleRate;i++){
 				newVal = new Double[element.length];
 				for(int j=1;j<Math.pow(2,element.length);j=j*2){
 					if((j&i)>0){
-						newVal[j]=pdf.getMaxValue(j/2);
+						newVal[new Double((Math.log(j)/Math.log(2))).intValue()]=pdf.getMaxValue(new Double((Math.log(j)/Math.log(2))).intValue());
 					}else{
-						newVal[j]=pdf.getMinValue(j/2);
+						newVal[new Double((Math.log(j)/Math.log(2))).intValue()]=pdf.getMinValue(new Double((Math.log(j)/Math.log(2))).intValue());
 					}
 					
 				}

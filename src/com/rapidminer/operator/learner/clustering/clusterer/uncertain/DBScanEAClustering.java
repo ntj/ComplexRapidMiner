@@ -190,7 +190,7 @@ public class DBScanEAClustering extends AbstractDensityBasedClusterer {
 	protected Double[][] getSamples(String id) {
 		if(!sampleCache.containsKey(id)) {
 			Example ex = IdUtils.getExampleFromId(es, id);
-			sampleStrategy.setElement(getValues(ex));
+			sampleStrategy.setValue(getValues(ex));
 			sampleStrategy.setPdf(new SimpleProbabilityDensityFunction(globalFuzziness,getParameterAsBoolean(ABSOLUTE_ERROR)));
 			Double[][] res = sampleStrategy.getSamples();
 			sampleCache.put(id, res);

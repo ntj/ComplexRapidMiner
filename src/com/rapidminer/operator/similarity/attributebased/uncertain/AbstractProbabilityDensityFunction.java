@@ -11,12 +11,12 @@ public abstract class AbstractProbabilityDensityFunction {
 	
 	
 	
-	protected Double value[];
+	protected double[] value;
 	protected double uncertainty;
 	protected boolean absoluteError;
 	
 	
-	public AbstractProbabilityDensityFunction(Double value[], double uncertainty,boolean absoluteError) {
+	public AbstractProbabilityDensityFunction(double value[], double uncertainty,boolean absoluteError) {
 		this.value = value;
 		this.uncertainty = uncertainty;
 		this.absoluteError = absoluteError;
@@ -45,7 +45,7 @@ public abstract class AbstractProbabilityDensityFunction {
 	 * 
 	 * @return returns the measurement point for the uncertainty
 	 */
-	public Double[] getValue() {
+	public double[] getValue() {
 		return value;
 	}
 
@@ -53,7 +53,7 @@ public abstract class AbstractProbabilityDensityFunction {
 	 * Sets the measurement center for the uncertainty
 	 * @param value
 	 */
-	public void setValue(Double value[]) {
+	public void setValue(double value[]) {
 		this.value = value;
 	}
 
