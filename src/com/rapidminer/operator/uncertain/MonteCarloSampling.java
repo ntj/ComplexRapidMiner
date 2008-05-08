@@ -32,11 +32,9 @@ public class MonteCarloSampling extends AbstractSampleStrategy {
 				diff = (diff/2.0)*d;
 				tempVal[j]= this.element[j]+diff;
 			}
-			
 			if(pdf.isPointInPDF(tempVal)){
 				ret[i] = tempVal;
 				i++;
-				
 			}
 		}
 		return ret;
