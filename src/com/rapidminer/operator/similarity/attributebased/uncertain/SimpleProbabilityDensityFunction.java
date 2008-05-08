@@ -1,4 +1,5 @@
-package com.rapidminer.operator.similarity.attributebased;
+package com.rapidminer.operator.similarity.attributebased.uncertain;
+
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -38,24 +39,19 @@ public class SimpleProbabilityDensityFunction extends
 		return value[dimension] + uncertainty*value[dimension];
 	}
 
-	public Double[] getValue() {
-		return value;
-	}
-
-	public void setValue(Double value[]) {
-		this.value = value;
-	}
-
-	public double getUncertainty() {
-		return uncertainty;
-	}
-
-	public void setUncertainty(double uncertainty) {
-		this.uncertainty = uncertainty;
-	}
-
 	@Override
 	public double getValueAt(int x) {
 		throw new NotImplementedException();
+	}
+
+	@Override
+	public boolean isPointInPDF(Double[] value) {
+		//check all dimensions to see if it violates the extrema values
+		for(int i = 0;i<value.length ;i++){
+			if(value[i]> this.getMaxValue(i) || value[i]<this.getMinValue(i)){
+				return false;
+			}
+		}
+		return true;
 	}
 }

@@ -21,7 +21,6 @@ import com.rapidminer.operator.learner.clustering.clusterer.ClusteringAggregatio
 import com.rapidminer.operator.learner.clustering.clusterer.DBScanClustering;
 import com.rapidminer.operator.similarity.DistanceSimilarityConverter;
 import com.rapidminer.operator.similarity.SimilarityMeasure;
-import com.rapidminer.operator.similarity.attributebased.AbstractProbabilityDensityFunction;
 import com.rapidminer.operator.similarity.attributebased.FuzzyObjectSimilarity;
 import com.rapidminer.operator.similarity.attributebased.Matrix;
 import com.rapidminer.operator.similarity.SimilarityUtil;
@@ -30,8 +29,9 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
 
-import com.rapidminer.operator.similarity.attributebased.SimpleProbabilityDensityFunction;
 import com.rapidminer.operator.similarity.attributebased.AbstractValueBasedSimilarity;
+import com.rapidminer.operator.similarity.attributebased.uncertain.AbstractProbabilityDensityFunction;
+import com.rapidminer.operator.similarity.attributebased.uncertain.SimpleProbabilityDensityFunction;
 import com.rapidminer.operator.uncertain.AbstractSampleStrategy;
 import com.rapidminer.operator.uncertain.SimpleSampling;
 

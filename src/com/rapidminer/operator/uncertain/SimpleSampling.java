@@ -1,6 +1,6 @@
 package com.rapidminer.operator.uncertain;
 
-import com.rapidminer.operator.similarity.attributebased.AbstractProbabilityDensityFunction;
+import com.rapidminer.operator.similarity.attributebased.uncertain.AbstractProbabilityDensityFunction;
 
 /**
  * Provides a set of five samples for a 2-dimensional point. The

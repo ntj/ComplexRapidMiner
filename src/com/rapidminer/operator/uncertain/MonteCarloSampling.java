@@ -2,6 +2,8 @@ package com.rapidminer.operator.uncertain;
 
 import java.util.Random;
 
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
 
 /**
  * @author Michael Huber
@@ -14,30 +16,32 @@ public class MonteCarloSampling extends AbstractSampleStrategy {
 
 
 	public Double[][] getSamples() {
-		double min = pdf.getMaxValue(1);
+		Double[][] ret = new Double[this.sampleRate][];
+		
 		Random r = new Random();
 		//get the random values an add them to the point list
-		for (int i = 0 ;i<this.sampleRate;i++){
-			r.nextInt();
+		for (int i = 0 ;i<this.sampleRate;){
+			Double tempVal[] = new Double[element.length];
+			
+			for(int j = 0;j<element.length;j++){
+				Double d = r.nextDouble();
+				double min = pdf.getMaxValue(j);
+				double max = pdf.getMaxValue(j);
+				double diff = max-min;
+				d = d-0.5;
+				diff = (diff/2.0)*d;
+				tempVal[j]= this.element[j]+diff;
+			}
+			
+			if(pdf.isPointInPDF(tempVal)){
+				i++;
+				ret[i] = tempVal;
+			}
 		}
-		return null;
+		return ret;
 	}
 
 	public double[] getSamplesFromValue(double value) {
-	
-		return null;
+		throw new NotImplementedException();
 	}
-	
-	public double[] getElement() {
-		return null;
-	}
-
-	public void setElement(double[] element) {
-	}
-
-	public int getSampleRate() {
-		return 0;
-	}
-
-
 }

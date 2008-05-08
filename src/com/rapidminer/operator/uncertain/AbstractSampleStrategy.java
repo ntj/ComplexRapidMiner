@@ -1,6 +1,6 @@
 package com.rapidminer.operator.uncertain;
 
-import com.rapidminer.operator.similarity.attributebased.AbstractProbabilityDensityFunction;
+import com.rapidminer.operator.similarity.attributebased.uncertain.AbstractProbabilityDensityFunction;
 
 
 

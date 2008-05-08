@@ -1,4 +1,4 @@
-package com.rapidminer.operator.similarity.attributebased;
+package com.rapidminer.operator.similarity.attributebased.uncertain;
 
 /**
  * Abstract class of an object encapsulating a Probability Density Function (pdf).
@@ -34,9 +34,35 @@ public abstract class AbstractProbabilityDensityFunction {
 	public abstract double getMinValue(int dimension);
 	
 	public abstract double getMaxValue(int dimension);
+
+	public abstract boolean isPointInPDF(Double[] tempVal) ;
 	
-	public abstract void setValue(Double value[]);
-	
-	public abstract Double[] getValue();
+	public void setUncertainty(double uncertainty) {
+		this.uncertainty = uncertainty;
+	}
+
+	/**
+	 * 
+	 * @return returns the measurement point for the uncertainty
+	 */
+	public Double[] getValue() {
+		return value;
+	}
+
+	/**
+	 * Sets the measurement center for the uncertainty
+	 * @param value
+	 */
+	public void setValue(Double value[]) {
+		this.value = value;
+	}
+
+	/**
+	 * Returns the uncertainty parameters for the PDF
+	 * @return
+	 */
+	public double getUncertainty() {
+		return uncertainty;
+	}
 	
 }

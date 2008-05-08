@@ -16,7 +16,7 @@ import com.rapidminer.operator.learner.clustering.FlatClusterModel;
 import com.rapidminer.operator.learner.clustering.IdUtils;
 import com.rapidminer.operator.learner.clustering.clusterer.AbstractDensityBasedClusterer;
 import com.rapidminer.operator.similarity.SimilarityMeasure;
-import com.rapidminer.operator.similarity.attributebased.SimpleProbabilityDensityFunction;
+import com.rapidminer.operator.similarity.attributebased.uncertain.SimpleProbabilityDensityFunction;
 import com.rapidminer.operator.uncertain.AbstractSampleStrategy;
 import com.rapidminer.operator.uncertain.SimpleSampling;
 import com.rapidminer.parameter.ParameterType;
