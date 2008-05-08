@@ -7,15 +7,36 @@ package com.rapidminer.operator.similarity.attributebased;
  */
 public abstract class AbstractProbabilityDensityFunction {
 	
-	private  double value;
 	
-	public abstract double getValueAt(double x);
 	
-	public abstract double getMinValue();
 	
-	public abstract double getMaxValue();
 	
-	public abstract void setValue(double value);
+	protected Double value[];
+	protected double uncertainty;
+	protected boolean absoluteError;
 	
-	public abstract double getValue();
+	
+	public AbstractProbabilityDensityFunction(Double value[], double uncertainty,boolean absoluteError) {
+		this.value = value;
+		this.uncertainty = uncertainty;
+		this.absoluteError = absoluteError;
+	}
+	
+	public AbstractProbabilityDensityFunction(double uncertainty,boolean absoluteError) {
+		this.value = null;
+		this.uncertainty = uncertainty;
+		this.absoluteError = absoluteError;
+	}
+	
+	
+	public abstract double getValueAt(int x);
+	
+	public abstract double getMinValue(int dimension);
+	
+	public abstract double getMaxValue(int dimension);
+	
+	public abstract void setValue(Double value[]);
+	
+	public abstract Double[] getValue();
+	
 }

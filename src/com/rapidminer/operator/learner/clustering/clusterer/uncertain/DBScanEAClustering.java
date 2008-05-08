@@ -20,13 +20,14 @@ import com.rapidminer.operator.similarity.attributebased.SimpleProbabilityDensit
 import com.rapidminer.operator.uncertain.AbstractSampleStrategy;
 import com.rapidminer.operator.uncertain.SimpleSampling;
 import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
 
 /**
  * Implements the DBSCAN^EA algorithm.
  * 
- * @author Michael Huber
+ * @author Michael Huber, Peter B Volk
  * @see com.rapidminer.operator.learner.clustering.clusterer.DBScanClustering
  * @see com.rapidminer.operator.learner.clustering.clusterer.uncertain.FDBScanClustering
  * @see com.rapidminer.operator.learner.clustering.clusterer.ClusteringAggregation
@@ -52,6 +53,8 @@ public class DBScanEAClustering extends AbstractDensityBasedClusterer {
 	private int sampleRate = 5;
 
 	private static final String SAMPLE_RATE = "sample_rate";
+	
+	private static final String ABSOLUTE_ERROR = "Absolute error";
 	
 	private AbstractSampleStrategy sampleStrategy;
 	
@@ -115,8 +118,8 @@ public class DBScanEAClustering extends AbstractDensityBasedClusterer {
 		for(int i=0; i<sampleRate; i++) {
 			for(int j=0; j<sampleRate; j++) {
 				for(int d=0; d<max_dimensions; d++) {
-					a[d] = e1[d][i];
-					b[d] = e2[d][j];
+					a[d] = e1[i][d];
+					b[d] = e2[j][d];
 				}
 				if(distance(a, b) < dist) {
 					dist = distance(a, b);
@@ -137,8 +140,8 @@ public class DBScanEAClustering extends AbstractDensityBasedClusterer {
 		for(int i=0; i<sampleRate; i++) {
 			for(int j=0; j<sampleRate; j++) {
 				for(int d=0; d < max_dimensions; d++) {
-					a[d] = e1[d][i];
-					b[d] = e2[d][j];
+					a[d] = e1[i][d];
+					b[d] = e2[j][d];
 				}
 				if(distance(a, b) > dist) {
 					dist = distance(a, b);
@@ -188,7 +191,7 @@ public class DBScanEAClustering extends AbstractDensityBasedClusterer {
 		if(!sampleCache.containsKey(id)) {
 			Example ex = IdUtils.getExampleFromId(es, id);
 			sampleStrategy.setElement(getValues(ex));
-			sampleStrategy.setPdf(new SimpleProbabilityDensityFunction(globalFuzziness));
+			sampleStrategy.setPdf(new SimpleProbabilityDensityFunction(globalFuzziness,getParameterAsBoolean(ABSOLUTE_ERROR)));
 			Double[][] res = sampleStrategy.getSamples();
 			sampleCache.put(id, res);
 			return res;
@@ -232,6 +235,10 @@ public class DBScanEAClustering extends AbstractDensityBasedClusterer {
 		p3.setExpert(false);
 		types.add(p3);
 		ParameterType p4;
+		p2 = new ParameterTypeBoolean(ABSOLUTE_ERROR, "Specifies if the error is an absolute error",true);
+		p2.setExpert(false);
+		types.add(p2);
+		
 		p4 = new ParameterTypeDouble(LAMBDA, "lambda", 0, 1, 0.5);
 		p4.setDescription("The range of this parameter spans from an extremly optimistic (1) " +
 				"to an extemly pessimistic (0) cluster strategy.");

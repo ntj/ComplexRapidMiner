@@ -26,6 +26,7 @@ import com.rapidminer.operator.similarity.attributebased.FuzzyObjectSimilarity;
 import com.rapidminer.operator.similarity.attributebased.Matrix;
 import com.rapidminer.operator.similarity.SimilarityUtil;
 import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
 
@@ -38,7 +39,7 @@ import com.rapidminer.operator.uncertain.SimpleSampling;
 /**
  * Implements the FDBSCAN algorithm.
  * 
- * @author Michael Huber
+ * @author Michael Huber, Peter B Volk
  * @see com.rapidminer.operator.learner.clustering.clusterer.DBScanClustering
  * @see com.rapidminer.operator.learner.clustering.clusterer.uncertain.DBScanEAClustering
  * @see com.rapidminer.operator.learner.clustering.clusterer.ClusteringAggregation
@@ -48,6 +49,8 @@ public class FDBScanClustering extends AbstractDensityBasedClusterer {
 	private ExampleSet es;
 
 	private double maxDistance = 0.2;
+	
+	private static final String ABSOLUTE_ERROR = "Absolute error";
 
 	private static final String MAX_DISTANCE_NAME = "max_distance";
 
@@ -144,8 +147,8 @@ public class FDBScanClustering extends AbstractDensityBasedClusterer {
 		for(int i=0; i<sampleRate; i++) {
 			for(int j=0; j<sampleRate; j++) {
 				for(int d=0; d<max_dimensions; d++) {
-					a[d] = e1[d][i];
-					b[d] = e2[d][j];
+					a[d] = e1[i][d];
+					b[d] = e2[j][d];
 				}
 				if(distance(a, b) <= maxDistance) {
 					prob++;
@@ -201,8 +204,8 @@ public class FDBScanClustering extends AbstractDensityBasedClusterer {
 				for(int j=0; j<sampleRate; j++) {	//Sample-Index für Preselection-Elemente
 					//folgendes Statement ist nur zum Umschreiben der Information
 					for(int d=0; d<max_dimensions; d++) {
-						a[d] = sample[d][i];
-						b[d] = tempSample[d][j];
+						a[d] = sample[i][d];
+						b[d] = tempSample[i][d];
 					}
 					if(distance(a, b) <= maxDistance) {
 						m.inc(i, j);
@@ -301,8 +304,10 @@ public class FDBScanClustering extends AbstractDensityBasedClusterer {
 		if(!sampleCache.containsKey(id)) {
 			Example ex = IdUtils.getExampleFromId(es, id);
 			sampleStrategy.setElement(getValues(ex));
-			sampleStrategy.setPdf(new SimpleProbabilityDensityFunction(globalFuzziness));
-			sampleCache.put(id, sampleStrategy.getSamples());
+			sampleStrategy.setPdf(new SimpleProbabilityDensityFunction(globalFuzziness,getParameterAsBoolean(ABSOLUTE_ERROR)));
+			Double res[][] = sampleStrategy.getSamples();
+			sampleCache.put(id, res);
+			return res;
 		}
 		return sampleCache.get(id);
 	}
@@ -337,6 +342,11 @@ public class FDBScanClustering extends AbstractDensityBasedClusterer {
 				"could fluctuate: i.e. plus/minus the given value. ");
 		p2.setExpert(false);
 		types.add(p2);
+		
+		p2 = new ParameterTypeBoolean(ABSOLUTE_ERROR, "Specifies if the error is an absolute error",true);
+		p2.setExpert(false);
+		types.add(p2);
+		
 		ParameterType p3;
 		p3 = new ParameterTypeInt(SAMPLE_RATE, "sample rate", 0, Integer.MAX_VALUE, 5);
 		p3.setDescription("Sample Rate sets the number of samples that are taken from each element.");

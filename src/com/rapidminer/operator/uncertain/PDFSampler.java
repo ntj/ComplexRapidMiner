@@ -30,7 +30,7 @@ import com.rapidminer.parameter.UndefinedParameterError;
 
 public class PDFSampler extends Operator{
 
-	private static final String SAMPLE_STRATEGY = "Sampling Frequency";
+	private static final String SAMPLE_STRATEGY = "Sampling Strategy";
 	public static final int MONTE_CARLO = 1;
 	public static final int SIMPLE = 0;
 	public static final int PDF = 2;
@@ -39,6 +39,7 @@ public class PDFSampler extends Operator{
 	private static final String SAMPLE_FREQUENCY = "Sampling Frequncy";
 	private static final String GLOBAL_UNCERTAINTY = "Global Uncertainty";
 	private static final String ADD_ORIGINAL_POINT = "Add original measurement";
+	private static final String ABSOLUTE_ERROR = "Absolute error";
 
 	
 	public PDFSampler(OperatorDescription description) {
@@ -79,12 +80,7 @@ public class PDFSampler extends Operator{
 		
 				DataRowFactory dataRowFactory = new DataRowFactory(dataManagement);
 				for(int i = 0;i< newExamples[0].length ; i++){
-					
-					Double[] exampleCleaned = new Double[newExamples.length];
-					for(int j = 0 ; j<newExamples.length ;j++){
-						exampleCleaned[j]= newExamples[j][i];
-					}
-					DataRow dataRow = dataRowFactory.create(exampleCleaned, attributeArray);
+					DataRow dataRow = dataRowFactory.create(newExamples[i], attributeArray);
 					if(getParameterAsBoolean(ADD_ORIGINAL_POINT)){
 						newMT.addDataRow(dataRow);
 					}
@@ -105,7 +101,7 @@ public class PDFSampler extends Operator{
 			case SIMPLE:{st =  new SimpleSampling();break;}
 			default:
 			}
-			AbstractProbabilityDensityFunction pdf = new SimpleProbabilityDensityFunction(getParameterAsInt(GLOBAL_UNCERTAINTY));
+			AbstractProbabilityDensityFunction pdf = new SimpleProbabilityDensityFunction(getParameterAsInt(GLOBAL_UNCERTAINTY),getParameterAsBoolean(ABSOLUTE_ERROR));
 			st.setPdf(pdf);
 			return st;
 		} catch (UndefinedParameterError e) {
@@ -151,6 +147,10 @@ public class PDFSampler extends Operator{
 		type.setExpert(false);
 		types.add(type);
 		type = new ParameterTypeBoolean(ADD_ORIGINAL_POINT, "Add the original Measurement in the sampled set",true);
+		type.setExpert(false);
+		types.add(type);
+		
+		type = new ParameterTypeBoolean(ABSOLUTE_ERROR, "Specifies if the error is an absolute error",true);
 		type.setExpert(false);
 		types.add(type);
 		

@@ -19,12 +19,12 @@ public class SimpleSampling extends AbstractSampleStrategy {
 	public SimpleSampling(double[] element, AbstractProbabilityDensityFunction pdf) {
 		this.element = element;
 		this.pdf = pdf;
-		this.sampleRate = 5;
+		
 	}
 
 	public SimpleSampling() {
 		this.element = null;
-		this.sampleRate = 5;
+		
 	}
 
 
@@ -38,24 +38,25 @@ public class SimpleSampling extends AbstractSampleStrategy {
 	 */
 	public Double[][] getSamples() {
 		if(pdf != null){
-			Double[][] samples = new Double[element.length][]; //XXX: Here Be Dragons: es wird von 5 Samples ausgegangen
-			pdf.setValue(element[0]);
-			Double[] tmpSamples0 = {pdf.getMinValue(), pdf.getMaxValue(), pdf.getMinValue(), pdf.getMaxValue(), pdf.getValue()};
-			pdf.setValue(element[1]);
-			Double[] tmpSamples1 = {pdf.getMinValue(), pdf.getMaxValue(), pdf.getMaxValue(), pdf.getMinValue(), pdf.getValue()};
-			samples[0] = tmpSamples0;
-			samples[1] = tmpSamples1;
+			Double[][] samples = new Double[sampleRate][];
+			Double newVal[] = new Double[element.length];
+			//here do the following. i is a bivector of the length of the |dim|. each bit represents the 
+			for(int i = 0;i<Math.pow(2,element.length);i++){
+				newVal = new Double[element.length];
+				for(int j=1;j<Math.pow(2,element.length);j=j*2){
+					if((j&i)>0){
+						newVal[j]=pdf.getMaxValue(j/2);
+					}else{
+						newVal[j]=pdf.getMinValue(j/2);
+					}
+					
+				}
+				samples[i] = newVal;
+			}
 			
 			return samples;
 		}
-		return null;
+		throw new NullPointerException();
 	}
-
-//	public double[] getSamplesFromValue(double value) {
-//		double[] samples = {pdf.getMinValue(), pdf.getMaxValue()};
-//		return samples;
-//	}
-	
-	
 
 }

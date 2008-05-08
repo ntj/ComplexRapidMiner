@@ -1,5 +1,7 @@
 package com.rapidminer.operator.similarity.attributebased;
 
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
 /**
  * A simple Implementation of a Probability Density Function (pdf) that
  * takes just the value and the global fuzziness as parameters.
@@ -10,43 +12,37 @@ package com.rapidminer.operator.similarity.attributebased;
  */
 public class SimpleProbabilityDensityFunction extends
 		AbstractProbabilityDensityFunction {
+	
+	public SimpleProbabilityDensityFunction(double uncertainty,
+			boolean absoluteError) {
+		super(uncertainty, absoluteError);
 
-	private double uncertainty;
+	}
 
-	//unprecise value
-	private double value;
-	
-	public SimpleProbabilityDensityFunction(double value, double uncertainty) {
-		this.value = value;
-		this.uncertainty = uncertainty;
+	public SimpleProbabilityDensityFunction(Double[] value, double uncertainty,
+			boolean absoluteError) {
+		super(value, uncertainty, absoluteError);
 	}
-	
-	public SimpleProbabilityDensityFunction(double uncertainty) {
-		this.value = 0;
-		this.uncertainty = uncertainty;
-	}
-	
-	public double getValueAt(double x) {
-		if(x > getMinValue() || x < getMaxValue()) {
-			return 1;
-		} else {
-			return 0;
+
+	public double getMinValue(int dimension) {
+		if(absoluteError){
+			return value[dimension] - uncertainty;
 		}
+		return value[dimension] - uncertainty*value[dimension];
 	}
 	
-	public double getMinValue() {
-		return value - uncertainty*value;
-	}
-	
-	public double getMaxValue() {
-		return value + uncertainty*value;
+	public double getMaxValue(int dimension) {
+		if(absoluteError){
+			return value[dimension] + uncertainty;
+		}
+		return value[dimension] + uncertainty*value[dimension];
 	}
 
-	public double getValue() {
+	public Double[] getValue() {
 		return value;
 	}
 
-	public void setValue(double value) {
+	public void setValue(Double value[]) {
 		this.value = value;
 	}
 
@@ -56,5 +52,10 @@ public class SimpleProbabilityDensityFunction extends
 
 	public void setUncertainty(double uncertainty) {
 		this.uncertainty = uncertainty;
+	}
+
+	@Override
+	public double getValueAt(int x) {
+		throw new NotImplementedException();
 	}
 }

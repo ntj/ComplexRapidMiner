@@ -1,6 +1,7 @@
 package com.rapidminer.operator.uncertain;
 
-import com.rapidminer.operator.similarity.attributebased.AbstractProbabilityDensityFunction;
+import java.util.Random;
+
 
 /**
  * @author Michael Huber
@@ -13,12 +14,17 @@ public class MonteCarloSampling extends AbstractSampleStrategy {
 
 
 	public Double[][] getSamples() {
-		// TODO Auto-generated method stub
+		double min = pdf.getMaxValue(1);
+		Random r = new Random();
+		//get the random values an add them to the point list
+		for (int i = 0 ;i<this.sampleRate;i++){
+			r.nextInt();
+		}
 		return null;
 	}
 
 	public double[] getSamplesFromValue(double value) {
-		// TODO Auto-generated method stub
+	
 		return null;
 	}
 	
