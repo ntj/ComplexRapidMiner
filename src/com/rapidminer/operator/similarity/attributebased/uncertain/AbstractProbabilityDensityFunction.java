@@ -29,7 +29,8 @@ public abstract class AbstractProbabilityDensityFunction {
 	}
 	
 	
-	public abstract double getValueAt(int x);
+	public abstract double getProbabilityAt(int x);
+	public abstract double getProbabilityFor(double[] position);
 	
 	public abstract double getMinValue(int dimension);
 	

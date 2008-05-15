@@ -6,10 +6,10 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 
 /**
- * @author Michael Huber
+ * @author Peter B. Volk
  * 
  * Generate a number of 5 samples to every value.
- * Should be meaningful samples!!!
+ * 
  *
  */
 public class MonteCarloSampling extends AbstractSampleStrategy {

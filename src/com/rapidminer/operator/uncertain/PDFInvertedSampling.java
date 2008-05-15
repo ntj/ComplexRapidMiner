@@ -1,5 +1,7 @@
 package com.rapidminer.operator.uncertain;
 
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
 import com.rapidminer.operator.similarity.attributebased.uncertain.AbstractProbabilityDensityFunction;
 
 /**
@@ -7,9 +9,8 @@ import com.rapidminer.operator.similarity.attributebased.uncertain.AbstractProba
  * point the samples are requested for and four further points
  * that represent the extreme values given by the global
  * fuzziness.
- *            *-------*
- *            |   *   |
- *            *-------*
+ *            
+ *            
  *
  * @author Peter B. Volk
  * 
@@ -17,14 +18,16 @@ import com.rapidminer.operator.similarity.attributebased.uncertain.AbstractProba
 public class PDFInvertedSampling extends AbstractSampleStrategy {
 
 	public PDFInvertedSampling(double[] element, AbstractProbabilityDensityFunction pdf) {
-		this.element = element;
-		this.pdf = pdf;
-		pdf.setValue(element);
+		throw new NotImplementedException();
+		//this.element = element;
+		//this.pdf = pdf;
+		//pdf.setValue(element);
 		
 	}
 
 	public PDFInvertedSampling() {
-		this.element = null;
+		throw new NotImplementedException();
+		//this.element = null;
 		
 	}
 

@@ -7,9 +7,7 @@ import com.rapidminer.operator.similarity.attributebased.uncertain.AbstractProba
  * point the samples are requested for and four further points
  * that represent the extreme values given by the global
  * fuzziness.
- *            *-------*
- *            |   *   |
- *            *-------*
+ *            
  *
  * @author Peter B. Volk
  * 
@@ -50,11 +48,9 @@ public class BorderSamplingEquidist extends AbstractSampleStrategy {
 					}else{
 						newVal[new Double((Math.log(j)/Math.log(2))).intValue()]=pdf.getMinValue(new Double((Math.log(j)/Math.log(2))).intValue());
 					}
-					
 				}
 				samples[i] = newVal;
 			}
-			
 			return samples;
 		}
 		throw new NullPointerException();

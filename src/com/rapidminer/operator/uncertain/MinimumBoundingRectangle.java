@@ -1,5 +1,12 @@
 package com.rapidminer.operator.uncertain;
 
+/**
+ * 
+ * This method creates a minimum bounding box over a set of samples
+ * 
+ * @author Peter Volk
+ *
+ */
 public class MinimumBoundingRectangle {
 
 	//double[d]: d ist die Dimension
@@ -36,9 +43,4 @@ public class MinimumBoundingRectangle {
 		return dimension;		
 	}
 	
-/*	
-	public double minDistance(MinimumBoundingRectangle otherElement) {
-		//XXX: Die Frage hierbei ist, ob man das nicht gleich auslagert!
-	}
-*/
 }

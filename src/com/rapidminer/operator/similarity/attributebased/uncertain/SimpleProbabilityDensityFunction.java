@@ -43,7 +43,7 @@ public class SimpleProbabilityDensityFunction extends
 	}
 
 	@Override
-	public double getValueAt(int x) {
+	public double getProbabilityAt(int x) {
 		throw new NotImplementedException();
 	}
 
@@ -56,5 +56,15 @@ public class SimpleProbabilityDensityFunction extends
 			}
 		}
 		return true;
+	}
+
+	@Override
+	public double getProbabilityFor(double[] position) {
+		//calc complete volume of the object
+		double volume = 1.0;
+		for(int i = 0;i<this.value.length;i++){
+			volume = volume*(getMaxValue(i)-getMinValue(i));
+		}
+		return 1.0/volume;
 	}
 }
