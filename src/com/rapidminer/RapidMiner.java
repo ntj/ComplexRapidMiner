@@ -248,7 +248,7 @@ public class RapidMiner {
 			                boolean searchJDBCInLibDir, 
 			                boolean searchJDBCInClasspath, 
 			                boolean addPlugins) throws IOException {
-		init(null, null, addWekaOperators, searchJDBCInLibDir, searchJDBCInClasspath, addPlugins);
+		init(operatorsXMLStream, null, addWekaOperators, searchJDBCInLibDir, searchJDBCInClasspath, addPlugins);
 	}
 
 	/**
