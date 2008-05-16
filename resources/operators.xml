@@ -754,6 +754,12 @@
      class       = "com.rapidminer.operator.learner.clustering.clusterer.KMeans"
      description = "Clustering with k-means"
      group       = "Learner.Unsupervised.Clustering"/>
+     
+  <operator 
+     name        = "FuzzyKMeans"       
+     class       = "com.rapidminer.operator.learner.clustering.clusterer.FuzzyKMeans"
+     description = "K-Means Clustering with additional fuzzy membership values"
+     group       = "Learner.Unsupervised.Clustering"/>
 
   <operator 
      name        = "MPCKMeans"       
