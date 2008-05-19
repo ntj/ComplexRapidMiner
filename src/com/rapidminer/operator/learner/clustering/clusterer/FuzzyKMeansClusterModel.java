@@ -96,9 +96,27 @@ public class FuzzyKMeansClusterModel extends FlatCrispClusterModel implements Ce
 		}
 		
 		result.append(Tools.getLineSeparator());
-		result.append("Membership Values:"+Tools.getLineSeparator());
+		result.append(getMemberships());
+		
+		return result.toString();
+	}
+
+	public String toResultString() {
+		return toString();
+	}
+
+	
+	public StringBuffer getMemberships(){
+		
+		StringBuffer res = new StringBuffer();
+		
+		res.append("Membership Values:"+Tools.getLineSeparator());
 		
 		int numCl = getNumberOfClusters();
+		double minCdist = getMinD();
+		double[] avgC = getAvgC();
+		
+		
 		
 		StringBuffer head = new StringBuffer();
 		head.append("Id\t");
@@ -106,17 +124,29 @@ public class FuzzyKMeansClusterModel extends FlatCrispClusterModel implements Ce
 			Cluster cl = getClusterAt(i);
 			head.append("Cluster "+cl.getId()+"\t");
 		}
+		
+		head.append("PC\t\tXB\t\tFS\t");
 		head.append("\n");
-		result.append(head+Tools.getLineSeparator());
+		res.append(head+Tools.getLineSeparator());
 		
 		float exp = 2/(this.m-1);
 		DecimalFormat df = new DecimalFormat("0.00");
+		
+		double globalSumPC = 0;
+		double rowSumPC = 0;
+		double globalSumXB = 0;
+		double rowSumXB = 0;
+		double globalSumFS = 0;
+		double rowSumFS = 0;
 		
 		for (int i = 0; i < es.size(); i++) {
 			Example e = es.getExample(i);
 			StringBuffer entry = new StringBuffer();
 			entry.append(e.getId()+"\t");
 			
+			rowSumPC = 0;
+			rowSumXB = 0;
+			rowSumFS = 0;
 			LinkedList<Double> dists = new LinkedList<Double>();
 			
 			for (int j = 0; j < getNumberOfClusters(); j++) {
@@ -137,23 +167,85 @@ public class FuzzyKMeansClusterModel extends FlatCrispClusterModel implements Ce
 				
 				entry.append(df.format(mem)+"\t\t");
 				
-				
+				rowSumPC+=Math.pow(mem,2);
+				rowSumXB+=Math.pow(mem,2)*Math.pow(dists.get(k),2);
+				rowSumFS+=Math.pow(mem, this.m)*(Math.pow(dists.get(k),2)-Math.pow(getCentroidToAvgDistance(k, avgC), 2));
 			}
-			
+			globalSumPC+=rowSumPC;
+			globalSumXB+=rowSumXB;
+			globalSumFS+=rowSumFS;
+			entry.append(df.format(rowSumPC)+"\t\t");
+			entry.append(df.format(rowSumXB/Math.pow(minCdist, 2))+"\t\t");
+			entry.append(df.format(rowSumFS)+"\t\t");
 			entry.append("\n");
-			result.append(entry);
+			res.append(entry);
 			
 			
 		}
+		res.append("\n\n"+Tools.getLineSeparator());
+		res.append("Global Partition Coefficient: "+df.format(globalSumPC/es.size())+Tools.getLineSeparator());
+		res.append("Global Sum Xie Beni: "+globalSumXB+Tools.getLineSeparator());
+		res.append("Global Xie Beni: "+df.format(globalSumXB/(es.size()*Math.pow(minCdist, 2)))+Tools.getLineSeparator());
+		res.append("Global Fukuyama Sugeno: "+df.format(globalSumFS)+Tools.getLineSeparator());
+		res.append("min centroid distance: "+df.format(minCdist)+Tools.getLineSeparator());
+		res.append("avgCentroid: "+avgToString(avgC)+Tools.getLineSeparator());
+		res.append("|Examples|: "+es.size()+Tools.getLineSeparator());
+		return res;
 		
 		
 		
 		
-		return result.toString();
+	}
+	
+	
+	
+	private double[] getAvgC() {
+		
+		double[] avg = new double[this.centroids[0].length];
+		
+			for (int i = 0; i < getNumberOfClusters(); i++) {
+				
+				double[] cent = this.centroids[i];
+				
+				for (int j = 0; j < cent.length; j++) {
+					avg[j]+=cent[j];
+				}
+			}
+		
+			for (int i = 0; i < avg.length; i++) {
+				avg[i]=avg[i]/getNumberOfClusters();
+			}
+		
+		return avg;
 	}
 
-	public String toResultString() {
-		return toString();
+	private double getMinD() {
+	
+		double min = Integer.MAX_VALUE;
+		for (int i = 0; i < getNumberOfClusters(); i++) {
+			for (int j = 0; j < getNumberOfClusters(); j++) {
+				double tmp = getCentroidDistance(i, j);
+				if (tmp<min&&tmp!=0) {
+					min=tmp;
+				}
+			}
+		}
+		return min;
+	}
+	
+	public double getCentroidToAvgDistance(int index1, double[] avg ) {
+		double sum = 0.0;
+		for (int i = 0; i < centroids[0].length; i++)
+			sum = sum + (centroids[index1][i] - avg[i]) * (centroids[index1][i] - avg[i]);
+		return Math.sqrt(sum);
+	}
+	
+	private String avgToString(double[] avg) {
+		StringBuffer s = new StringBuffer();
+		for (int j = 0; j < avg.length; j++) {
+			s.append(Tools.formatNumber(avg[j]) + " ");
+		} 
+		return s.toString();
 	}
 
 	private String centroidToString(int index) {
