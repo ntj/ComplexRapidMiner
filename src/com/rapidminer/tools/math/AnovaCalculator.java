@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools.math;
 
@@ -44,11 +42,11 @@ import com.rapidminer.tools.Tools;
  * determine probability that the null hypothesis is wrong.
  * 
  * @author Ingo Mierswa
- * @version $Id: AnovaCalculator.java,v 1.1 2007/05/27 21:59:36 ingomierswa Exp $
+ * @version $Id: AnovaCalculator.java,v 1.6 2008/05/09 19:23:03 ingomierswa Exp $
  */
 public class AnovaCalculator {
 
-	public class AnovaSignificanceTestResult extends SignificanceTestResult {
+	public static class AnovaSignificanceTestResult extends SignificanceTestResult {
 
 		private static final long serialVersionUID = 9007616378489018565L;
 
@@ -63,16 +61,19 @@ public class AnovaCalculator {
 		private int df1 = 0;
 
 		private int df2 = 0;
+		
+		private double alpha = 0.05;;
 
 		private double fValue = 0.0d;
 
 		private double prob = 0.0d;
 
-		public AnovaSignificanceTestResult(double sumSquaresBetween, double sumSquaresResiduals, int df1, int df2) {
+		public AnovaSignificanceTestResult(double sumSquaresBetween, double sumSquaresResiduals, int df1, int df2, double alpha) {
 			this.sumSquaresBetween = sumSquaresBetween;
 			this.sumSquaresResiduals = sumSquaresResiduals;
 			this.df1 = df1;
 			this.df2 = df2;
+			this.alpha = alpha;
 			this.meanSquaresBetween = sumSquaresBetween / df1;
 			this.meanSquaresResiduals = sumSquaresResiduals / df2;
 			this.fValue = meanSquaresBetween / meanSquaresResiduals;
@@ -124,36 +125,22 @@ public class AnovaCalculator {
             return new ExtendedJScrollPane(textPane);
 		}
 	}
-
-	/**
-	 * Helper class containing all information about a group, i.e. the number of
-	 * elements, the mean and variance value.
-	 */
-	private static class Group {
-
-		private int number;
-
-		private double mean;
-
-		private double variance;
-
-		public Group(int number, double mean, double variance) {
-			this.number = number;
-			this.mean = mean;
-			this.variance = variance;
-		}
-	}
+	
 
 	private double alpha = 0.05;
 
-	private List<Group> groups = new LinkedList<Group>();
+	private List<TestGroup> groups = new LinkedList<TestGroup>();
 
 	public void setAlpha(double alpha) {
 		this.alpha = alpha;
 	}
 
-	public void addGroup(int numberOfValues, double mean, double variance) {
-		groups.add(new Group(numberOfValues, mean, variance));
+	public void addGroup(TestGroup group) {
+		groups.add(group);
+	}
+	
+	public void addGroup(double numberOfValues, double mean, double variance) {
+		addGroup(new TestGroup(numberOfValues, mean, variance));
 	}
 
 	public void clearGroups() {
@@ -166,30 +153,30 @@ public class AnovaCalculator {
 		}
 
 		double meanOfMeans = 0.0d;
-		Iterator i = groups.iterator();
+		Iterator<TestGroup> i = groups.iterator();
 		while (i.hasNext()) {
-			Group group = (Group) i.next();
-			meanOfMeans += group.mean;
+			TestGroup group = i.next();
+			meanOfMeans += group.getMean();
 		}
 		meanOfMeans /= groups.size();
 
 		double sumSquaresBetween = 0.0d;
 		i = groups.iterator();
 		while (i.hasNext()) {
-			Group group = (Group) i.next();
-			double diff = group.mean - meanOfMeans;
-			sumSquaresBetween += group.number * (diff * diff);
+			TestGroup group = i.next();
+			double diff = group.getMean() - meanOfMeans;
+			sumSquaresBetween += group.getNumber() * (diff * diff);
 		}
 
 		double sumSquaresResiduals = 0.0d;
 		int counterSum = 0;
 		i = groups.iterator();
 		while (i.hasNext()) {
-			Group group = (Group) i.next();
-			sumSquaresResiduals += (group.number - 1) * group.variance;
-			counterSum += group.number;
+			TestGroup group = i.next();
+			sumSquaresResiduals += (group.getNumber() - 1) * group.getVariance();
+			counterSum += group.getNumber();
 		}
 
-		return new AnovaSignificanceTestResult(sumSquaresBetween, sumSquaresResiduals, groups.size() - 1, counterSum - groups.size());
+		return new AnovaSignificanceTestResult(sumSquaresBetween, sumSquaresResiduals, groups.size() - 1, counterSum - groups.size(), alpha);
 	}
 }

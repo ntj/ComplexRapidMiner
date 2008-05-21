@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.example.table;
 
@@ -160,7 +158,7 @@ public abstract class AbstractSparseArrayDataRow extends DataRow implements Spar
     }
 
     /** Returns the desired data for the given attribute. */
-    /* pp */ double get(int val, double defaultValue) {
+    protected double get(int val, double defaultValue) {
         int index = java.util.Arrays.binarySearch(x, val);
         if (index < 0) {
         	return defaultValue;
@@ -170,7 +168,7 @@ public abstract class AbstractSparseArrayDataRow extends DataRow implements Spar
     }
 
     /** Sets the given data for the given attribute. */
-    /* pp */ void set(int index, double value, double defaultValue) {
+    protected void set(int index, double value, double defaultValue) {
         // first search if it is already available
         // we need to replace the value
         // return a negative int if the value is not in the array

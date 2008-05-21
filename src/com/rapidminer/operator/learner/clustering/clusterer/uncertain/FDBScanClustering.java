@@ -215,7 +215,7 @@ public class FDBScanClustering extends AbstractDensityBasedClusterer {
 		}
 		
 		//Check, ob core object oder nicht:
-		int minPts = getMinPts();
+	
 		double prob = 0;
 		for(int i=0; i<sampleRate; i++) {
 			for(int j=0; j<sampleRate; j++) {
@@ -303,8 +303,9 @@ public class FDBScanClustering extends AbstractDensityBasedClusterer {
 	protected Double[][] getSamples(String id) {
 		if(!sampleCache.containsKey(id)) {
 			Example ex = IdUtils.getExampleFromId(es, id);
-			sampleStrategy.setValue(getValues(ex));
+			
 			sampleStrategy.setPdf(new SimpleProbabilityDensityFunction(globalFuzziness,getParameterAsBoolean(ABSOLUTE_ERROR)));
+			sampleStrategy.setValue(getValues(ex));
 			Double res[][] = sampleStrategy.getSamples();
 			sampleCache.put(id, res);
 			return res;

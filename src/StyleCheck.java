@@ -38,7 +38,6 @@ import java.util.TreeMap;
 
 import com.rapidminer.tools.Tools;
 
-
 /**
  * This class can be used to perform some style checks. In addition, this
  * program might give useful informations like the totalClasses number of lines or the

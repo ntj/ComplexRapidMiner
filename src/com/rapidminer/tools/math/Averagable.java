@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools.math;
 
@@ -34,17 +32,18 @@ import javax.swing.JTextPane;
 
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.ResultObjectAdapter;
+import com.rapidminer.tools.Reportable;
 import com.rapidminer.tools.Tools;
-
+import com.rapidminer.tools.Readable;
 
 /**
  * Superclass for all objects which can be averaged. Averagable objects can be
  * stored in a average vector.
  * 
  * @author Ingo Mierswa
- * @version $Id: Averagable.java,v 1.2 2007/06/26 16:06:23 ingomierswa Exp $
+ * @version $Id: Averagable.java,v 1.6 2008/05/09 19:23:03 ingomierswa Exp $
  */
-public abstract class Averagable extends ResultObjectAdapter implements Cloneable {
+public abstract class Averagable extends ResultObjectAdapter implements Cloneable, Reportable, Readable {
 
 	/** The averages are summed up each time buildAverage is called. */
 	private double meanSum;
@@ -236,7 +235,8 @@ public abstract class Averagable extends ResultObjectAdapter implements Cloneabl
 		try {
 			Class<?> clazz = this.getClass();
 			java.lang.reflect.Constructor cloneConstructor = clazz.getConstructor(new Class[] { clazz });
-			return cloneConstructor.newInstance(new Object[] { this });
+			Averagable result = (Averagable)cloneConstructor.newInstance(new Object[] { this });
+            return result;
 		} catch (IllegalAccessException e) {
 			throw new CloneNotSupportedException("Cannot clone averagable: " + e.getMessage());
 		} catch (InstantiationException e) {

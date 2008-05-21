@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.tree;
 
@@ -43,21 +41,18 @@ import com.rapidminer.parameter.ParameterTypeInt;
  * C4.5 or CART.</p>
  * 
  * <p>The actual type of the tree is determined by the criterion, e.g. using 
- * gain_ratio or Gini for CART / C4.5.
+ * gain_ratio or Gini for CART / C4.5.</p>
  * 
  * @rapidminer.index C4.5
  * @rapidminer.index CART
  *  
  * @author Sebastian Land, Ingo Mierswa
- * @version $Id: DecisionTreeLearner.java,v 1.8 2007/07/15 02:01:43 ingomierswa Exp $
+ * @version $Id: DecisionTreeLearner.java,v 1.14 2008/05/09 19:22:53 ingomierswa Exp $
  */
 public class DecisionTreeLearner extends AbstractTreeLearner {
 
 	/** The parameter name for the maximum tree depth. */
 	public static final String PARAMETER_MAXIMAL_DEPTH = "maximal_depth";
-
-	/** The parameter name for &quot;Disables the pruning and delivers an unpruned tree.&quot; */
-	public static final String PARAMETER_NUMERICAL_SAMPLE_SIZE = "numerical_sample_size";   
 	
 	/** The parameter name for &quot;The confidence level used for pruning.&quot; */
 	public static final String PARAMETER_CONFIDENCE = "confidence";
@@ -71,7 +66,7 @@ public class DecisionTreeLearner extends AbstractTreeLearner {
 
 	public Pruner getPruner() throws OperatorException {
         if (!getParameterAsBoolean(PARAMETER_NO_PRUNING)) {
-            return new PessimisticPruner(getParameterAsDouble(PARAMETER_CONFIDENCE), new LeafCreator());
+            return new PessimisticPruner(getParameterAsDouble(PARAMETER_CONFIDENCE), new DecisionTreeLeafCreator());
         } else {
             return null;
         }
@@ -108,7 +103,6 @@ public class DecisionTreeLearner extends AbstractTreeLearner {
 
     public List<ParameterType> getParameterTypes() {
         List<ParameterType> types = super.getParameterTypes();
-        types.add(new ParameterTypeInt(PARAMETER_NUMERICAL_SAMPLE_SIZE, "The number of examples used to determine the best split point for numerical attributes (-1: use all examples).", -1, Integer.MAX_VALUE, 100));
         ParameterType type = new ParameterTypeInt(PARAMETER_MAXIMAL_DEPTH, "The maximum tree depth (-1: no bound)", -1, Integer.MAX_VALUE, 10);
         type.setExpert(false);
         types.add(type);

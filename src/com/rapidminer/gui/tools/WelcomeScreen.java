@@ -1,38 +1,35 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -65,7 +62,7 @@ import com.rapidminer.tools.Tools;
  * recent file, wizard or tutorial. This panel is shown after RapidMiner was started.
  * 
  * @author Ingo Mierswa
- * @version $Id: WelcomeScreen.java,v 1.4 2007/06/08 13:45:38 ingomierswa Exp $
+ * @version $Id: WelcomeScreen.java,v 1.8 2008/05/09 19:22:58 ingomierswa Exp $
  */
 public class WelcomeScreen extends JPanel {
 
@@ -137,7 +134,7 @@ public class WelcomeScreen extends JPanel {
 		add(borderTopPanel);
 		
 		// central actions		
-		JToolBar actionBar = new ExtendedToolBar();
+		JToolBar actionBar = new ExtendedJToolBar();
 		actionBar.setBorder(null);
 		actionBar.setLayout(new FlowLayout(FlowLayout.CENTER));
 		actionBar.setBackground(Color.WHITE);
@@ -226,25 +223,22 @@ public class WelcomeScreen extends JPanel {
 		final TipOfTheDayProvider tipProvider = new TipOfTheDayProvider();
 		final TextPanel tipTextPanel = new TextPanel("Tip of the Day", nextTip(tipProvider), TextPanel.ALIGNMENT_LEFT, TextPanel.ALIGNMENT_BOTTOM);
 		
-		JButton nextTipButton = new JButton("Next Tip");
-		
-        // try trendy link button
-		try {
-			Class<?> linkButtonClass = Class.forName("com.Trendy.swing.TrendyLinkButton");
-	        nextTipButton = (JButton)linkButtonClass.newInstance();
-	        nextTipButton.setText("Next Tip");
-		} catch (Throwable e) {
-			// do nothing: Trendy not available...
-			LogService.getGlobal().log("Cannot use trendy link button, use normal one...", LogService.MINIMUM);
-		}
+		JLabel nextTipButton = new JLabel("Next Tip");
 		nextTipButton.setFont(TextPanel.TEXT_FONT);
 		nextTipButton.setForeground(SwingTools.LIGHT_BROWN_FONT_COLOR);
 		nextTipButton.setAlignmentX(Component.LEFT_ALIGNMENT);
 		nextTipButton.setAlignmentY(Component.TOP_ALIGNMENT);
 		nextTipButton.setOpaque(false);
 		nextTipButton.setBorder(BorderFactory.createEmptyBorder(0, 24, 24, 0));
-		nextTipButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+		nextTipButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		nextTipButton.addMouseListener(new MouseListener() {
+			
+			public void mouseClicked(MouseEvent e) {}
+			public void mousePressed(MouseEvent e) {}
+			public void mouseEntered(MouseEvent e) {}
+			public void mouseExited(MouseEvent e) {}
+
+			public void mouseReleased(MouseEvent e) {
 				tipTextPanel.setText(nextTip(tipProvider));
 				revalidate();
 				repaint();

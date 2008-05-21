@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.rules;
 
@@ -38,14 +36,12 @@ import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.learner.AbstractLearner;
 import com.rapidminer.operator.learner.LearnerCapability;
 import com.rapidminer.operator.learner.tree.AbstractTreeLearner;
-import com.rapidminer.operator.learner.tree.DecisionTreeLearner;
 import com.rapidminer.operator.learner.tree.EmptyTermination;
 import com.rapidminer.operator.learner.tree.NoAttributeLeftTermination;
 import com.rapidminer.operator.learner.tree.SplitCondition;
 import com.rapidminer.operator.learner.tree.Terminator;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeDouble;
-import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.ParameterTypeStringCategory;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Tools;
@@ -66,7 +62,7 @@ import com.rapidminer.tools.Tools;
  * pruned with the pruning metric p/(p+n).</p>
 
  * @author Sebastian Land, Ingo Mierswa
- * @version $Id: RuleLearner.java,v 1.9 2007/07/15 13:41:00 ingomierswa Exp $
+ * @version $Id: RuleLearner.java,v 1.16 2008/05/09 19:23:13 ingomierswa Exp $
  */
 public class RuleLearner extends AbstractLearner {
 
@@ -102,10 +98,11 @@ public class RuleLearner extends AbstractLearner {
         
         double pureness = getParameterAsDouble(SimpleRuleLearner.PARAMETER_PURENESS);
         double sampleRatio = getParameterAsDouble(PARAMETER_SAMPLE_RATIO);
+        double minimalPruneBenefit = getParameterAsDouble(PARAMETER_MINIMAL_PRUNE_BENEFIT);
         
         Attribute label = exampleSet.getAttributes().getLabel(); 
         RuleModel ruleModel = new RuleModel(exampleSet);
-        TermDetermination termDetermination = new TermDetermination(createCriterion(), getParameterAsInt(DecisionTreeLearner.PARAMETER_NUMERICAL_SAMPLE_SIZE));
+        TermDetermination termDetermination = new TermDetermination(createCriterion());
         ExampleSet trainingSet = (ExampleSet)exampleSet.clone();
         trainingSet.recalculateAttributeStatistics(label);
         
@@ -129,6 +126,7 @@ public class RuleLearner extends AbstractLearner {
                 if (term == null)
                     break;
 
+                // before adding: Check benefit if not added
                 double prunedBenefit = 0;
                 if (pruneSet.size() > 0)
                 	prunedBenefit = getPruneBenefit(rule, pruneSet);
@@ -139,16 +137,21 @@ public class RuleLearner extends AbstractLearner {
                 // pruning
                 if (pruneSet.size() > 0) {
                 	double unprunedBenefit = getPruneBenefit(rule, pruneSet);
-                	if (unprunedBenefit < prunedBenefit - getParameterAsDouble(PARAMETER_MINIMAL_PRUNE_BENEFIT)) {
+                	if (unprunedBenefit < prunedBenefit - minimalPruneBenefit) {
                 		rule.removeLastTerm();
+                		// if best new term is pruned: no further extension of the rule
                 		break;
                 	}
                 }
 
-                Attribute splitAttribute = growSet.getAttributes().get(term.getAttributeName());
-                growSet.getAttributes().remove(splitAttribute);
                 growOldSize = growSet.size();
+                // removing uncovered rules
                 growSet = rule.getCovered(growSet);
+                // removing attribute
+                Attribute splitAttribute = growSet.getAttributes().get(term.getAttributeName());
+                if (splitAttribute.isNominal()) {
+                	growSet.getAttributes().remove(splitAttribute);
+                }
                 checkForStop();
             }
             
@@ -161,12 +164,11 @@ public class RuleLearner extends AbstractLearner {
             		frequencies[counter++] = (int)growSet.getStatistics(label, Statistics.COUNT, value);
             	rule.setFrequencies(frequencies);
             	ruleModel.addRule(rule);
-                
-                trainingSet = rule.removeCovered(oldTrainingSet);
+
+                trainingSet = rule.removeCovered(oldTrainingSet);             
             } else {
             	break;
             }
-            
             trainingSet.recalculateAttributeStatistics(label);
             checkForStop();
         }
@@ -285,7 +287,6 @@ public class RuleLearner extends AbstractLearner {
         type.setExpert(false);
         types.add(type);
         types.add(new ParameterTypeDouble(SimpleRuleLearner.PARAMETER_PURENESS, "The desired pureness, i.e. the necessary amount of the major class in a covered subset in order become pure.", 0.0d, 1.0d, 0.9d));
-        types.add(new ParameterTypeInt(DecisionTreeLearner.PARAMETER_NUMERICAL_SAMPLE_SIZE, "Indicates the number of samples used to determine the best split point for numerical values (-1: use all examples).", -1, Integer.MAX_VALUE, 100));
         types.add(new ParameterTypeDouble(PARAMETER_MINIMAL_PRUNE_BENEFIT, "The minimum amount of benefit which must be exceeded over unpruned benefit in order to be pruned.", 0.0d, 1.0d, 0.25d));
         return types;
     }

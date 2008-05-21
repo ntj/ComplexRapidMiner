@@ -1,7 +1,7 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2006 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2007 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *

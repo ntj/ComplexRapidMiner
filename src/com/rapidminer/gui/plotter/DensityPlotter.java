@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.plotter;
 
@@ -38,13 +36,16 @@ import java.util.Random;
 
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableRow;
+import com.rapidminer.gui.plotter.conditions.MissingValuesPlotterCondition;
+import com.rapidminer.gui.plotter.conditions.PlotterCondition;
+import com.rapidminer.tools.math.MathFunctions;
 
 
 /** The density plotter does not only plot the single plot points but also tries to calculate 
  *  a color for all pixels in between. 
  *  
  *  @author Ingo Mierswa
- *  @version $Id: DensityPlotter.java,v 1.1 2007/05/27 21:59:05 ingomierswa Exp $
+ *  @version $Id: DensityPlotter.java,v 1.4 2008/05/09 19:22:51 ingomierswa Exp $
  */
 public class DensityPlotter extends PlotterAdapter {
 
@@ -200,20 +201,20 @@ public class DensityPlotter extends PlotterAdapter {
     			double densityColor = row.getValue(densityColorIndex);
     			double xValue = row.getValue(axes[X_AXIS]);
     			double yValue = row.getValue(axes[Y_AXIS]);
-    			this.minDensityColor = Math.min(this.minDensityColor, densityColor);
-    			this.maxDensityColor = Math.max(this.maxDensityColor, densityColor);
-    			this.min[X_AXIS] = Math.min(this.min[X_AXIS], xValue);
-    			this.max[X_AXIS] = Math.max(this.max[X_AXIS], xValue);
-    			this.min[Y_AXIS] = Math.min(this.min[Y_AXIS], yValue);
-    			this.max[Y_AXIS] = Math.max(this.max[Y_AXIS], yValue);
+    			this.minDensityColor = MathFunctions.robustMin(this.minDensityColor, densityColor);
+    			this.maxDensityColor = MathFunctions.robustMax(this.maxDensityColor, densityColor);
+    			this.min[X_AXIS] = MathFunctions.robustMin(this.min[X_AXIS], xValue);
+    			this.max[X_AXIS] = MathFunctions.robustMax(this.max[X_AXIS], xValue);
+    			this.min[Y_AXIS] = MathFunctions.robustMin(this.min[Y_AXIS], yValue);
+    			this.max[Y_AXIS] = MathFunctions.robustMax(this.max[Y_AXIS], yValue);
                 double pointColor = 0.0d;
                 Color borderColor = Color.BLACK;
     			if (pointColorIndex >= 0) {
     				pointColor = row.getValue(pointColorIndex);
                     borderColor = getPointBorderColor(this.dataTable, row, pointColorIndex);
     			}
-                this.minPointColor = Math.min(this.minPointColor, pointColor);
-                this.maxPointColor = Math.max(this.maxPointColor, pointColor);
+                this.minPointColor = MathFunctions.robustMin(this.minPointColor, pointColor);
+                this.maxPointColor = MathFunctions.robustMax(this.maxPointColor, pointColor);
     			points.add(new Point(xValue, yValue, densityColor, pointColor, borderColor, row.getId()));
     		}
             
@@ -246,9 +247,9 @@ public class DensityPlotter extends PlotterAdapter {
         			continue;
         		int xDiff = x - matrixX;
         		int yDiff = y - matrixY;        		
-        		double distanceFactor = Math.max(0, ((maxDistance - Math.sqrt(xDiff * xDiff + yDiff * yDiff)) / maxDistance));
+        		double distanceFactor = MathFunctions.robustMax(0, ((maxDistance - Math.sqrt(xDiff * xDiff + yDiff * yDiff)) / maxDistance));
         		double colorDiff = color - colorMatrix[x][y];
-        		colorMatrix[x][y] = Math.max(0.0d, Math.min(1.0d, colorMatrix[x][y] + distanceFactor * colorDiff));
+        		colorMatrix[x][y] = MathFunctions.robustMax(0.0d, MathFunctions.robustMin(1.0d, colorMatrix[x][y] + distanceFactor * colorDiff));
         	}    		
     	}
     }
@@ -346,7 +347,9 @@ public class DensityPlotter extends PlotterAdapter {
             setToolTip(null, 0.0d, 0.0d);
         }
     }
-    
+    public PlotterCondition getPlotterCondition() {
+        return new MissingValuesPlotterCondition();
+    }
     private void setToolTip(String toolTip, double x, double y) {
         this.currentToolTip = toolTip;
         this.toolTipX = x;

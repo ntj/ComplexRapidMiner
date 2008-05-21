@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools.math.optimization.ec.es;
 
@@ -60,22 +58,22 @@ public class TournamentSelection implements PopulationOperator {
 
 	public void operate(Population population) {
 		List<Individual> newGeneration = new LinkedList<Individual>();
+		if (population.getNumberOfIndividuals() > 0) {
+		    int tournamentSize = Math.max((int) Math.round(population.getNumberOfIndividuals() * tournamentFraction), 1);
+		    if (keepBest && (population.getBestEver() != null)) {
+		        newGeneration.add(population.getBestEver());
+		    }
 
-		int tournamentSize = Math.max((int) Math.round(population.getNumberOfIndividuals() * tournamentFraction), 1);
-		if (keepBest && (population.getBestEver() != null)) {
-			newGeneration.add(population.getBestEver());
-		}
-
-		while (newGeneration.size() < this.popSize) {
-			Individual winner = null;
-			for (int k = 0; k < tournamentSize; k++) {
-				Individual current = population.get(random.nextInt(population.getNumberOfIndividuals()));
-				if ((winner == null) || (current.getFitnessValues()[0] > winner.getFitnessValues()[0]))
-					winner = current;
-			}
-			newGeneration.add(winner);
-		}
-
+		    while (newGeneration.size() < this.popSize) {
+		        Individual winner = null;
+		        for (int k = 0; k < tournamentSize; k++) {
+		            Individual current = population.get(random.nextInt(population.getNumberOfIndividuals()));
+		            if ((winner == null) || (current.getFitnessValues()[0] > winner.getFitnessValues()[0]))
+		                winner = current;
+		        }
+		        newGeneration.add(winner);
+		    }
+        }
 		population.clear();
 		population.addAll(newGeneration);
 	}

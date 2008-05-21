@@ -1,32 +1,31 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.processeditor;
 
 import java.awt.BorderLayout;
 import java.util.Properties;
 
+import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -43,6 +42,8 @@ import com.rapidminer.gui.properties.OperatorPropertyTable;
 import com.rapidminer.gui.properties.PropertyTable;
 import com.rapidminer.gui.properties.SettingsChangeListener;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.ExtendedJTabbedPane;
+import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.tools.Tools;
 
@@ -54,7 +55,7 @@ import com.rapidminer.tools.Tools;
  * currently selected operators are shown.
  * 
  * @author Ingo Mierswa
- * @version $Id: MainProcessEditor.java,v 1.4 2007/06/20 22:13:13 ingomierswa Exp $
+ * @version $Id: MainProcessEditor.java,v 1.11 2008/05/09 19:23:16 ingomierswa Exp $
  */
 public class MainProcessEditor extends JSplitPane implements ProcessEditor, ChangeListener, SettingsChangeListener {
     
@@ -62,20 +63,40 @@ public class MainProcessEditor extends JSplitPane implements ProcessEditor, Chan
 	
 	public static final int PARAMETERS   = 0;
 	public static final int XML          = 1;
-	public static final int DESCRIPTION  = 2;
+	public static final int COMMENT      = 2;
 	public static final int NEW_OPERATOR = 3;
+	
+	private static final String OPERATOR_TREE_ICON_NAME = "branch.png";
+	private static final String PROPERTY_ICON_NAME = "form_blue_edit.png";
+	private static final String XML_ICON_NAME = "text_code.png";
+	private static final String COMMENT_ICON_NAME = "document_text.png";
+	private static final String NEW_OPERATOR_ICON_NAME = "element_new.png";
+	
+	private static Icon operatorTreeIcon = null;
+	private static Icon propertyIcon = null;
+	private static Icon xmlIcon = null;
+	private static Icon commentIcon = null;
+	private static Icon newOperatorIcon = null;
+	
+	static {
+		operatorTreeIcon = SwingTools.createIcon("16/" + OPERATOR_TREE_ICON_NAME);
+		propertyIcon = SwingTools.createIcon("16/" + PROPERTY_ICON_NAME);
+		xmlIcon = SwingTools.createIcon("16/" + XML_ICON_NAME);
+		commentIcon = SwingTools.createIcon("16/" + COMMENT_ICON_NAME);
+		newOperatorIcon = SwingTools.createIcon("16/" + NEW_OPERATOR_ICON_NAME);
+	}
 	
 	private OperatorTree operatorTree;
 
-    private JTabbedPane operatorTreeTabs = new JTabbedPane();
+    private JTabbedPane operatorTreeTabs = new ExtendedJTabbedPane();
     
-	private JTabbedPane editorTabs = new JTabbedPane();
+	private JTabbedPane editorTabs = new ExtendedJTabbedPane();
 
 	private OperatorPropertyTable propertyTable;
 
 	private XMLEditor xmlEditor;
 	
-	private DescriptionEditor descriptionEditor;
+	private CommentEditor commentEditor;
 	
 	private NewOperatorEditor newOperatorEditor;
 	
@@ -97,44 +118,39 @@ public class MainProcessEditor extends JSplitPane implements ProcessEditor, Chan
 		this.operatorTree.setBorder(null);
 		this.propertyTable = new OperatorPropertyTable(mainFrame, this.propertyMessageLabel);
 		this.xmlEditor = new XMLEditor(mainFrame);
-		this.descriptionEditor = new DescriptionEditor();
+		this.commentEditor = new CommentEditor();
 		this.newOperatorEditor = new NewOperatorEditor();
 		
 		JScrollPane treeScrollPane = new ExtendedJScrollPane(operatorTree);
 		treeScrollPane.setBorder(null);
-		operatorTreeTabs.add(treeScrollPane, "Operator Tree");
+		operatorTreeTabs.addTab("Operator Tree", operatorTreeIcon, treeScrollPane, "The operator tree of the current process.");
 		add(operatorTreeTabs);
         
 		// create tabs
-		int counter = 0;
 		JPanel propertyPanel = new JPanel(new BorderLayout());
         this.propertyTable.setOpaque(false);
 		propertyPanel.add(this.propertyTable, BorderLayout.CENTER);
 		propertyPanel.add(this.propertyMessageLabel, BorderLayout.SOUTH);
 		JScrollPane propertyPane = new ExtendedJScrollPane(propertyPanel);
-		editorTabs.add(propertyPane, "Parameters");
-		editorTabs.setToolTipTextAt(counter++, "Shows the parameters of the currently selected operator.");
-        
-		editorTabs.add(this.xmlEditor, "XML");
-		editorTabs.setToolTipTextAt(counter++, "Shows the XML definition of the current process setup.");
-		editorTabs.add(this.descriptionEditor, "Comment");
-		editorTabs.setToolTipTextAt(counter++, "Shows a comment editor for the currently selected operator.");
-		editorTabs.add(newOperatorEditor, "New Operator");
-		editorTabs.setToolTipTextAt(counter++, "Shows a grouped view of all available operators for dragging them into the operator tree.");
-        add(editorTabs);
 		
+		editorTabs.addTab("Parameters", propertyIcon, propertyPane, "Shows the parameters of the currently selected operator.");
+		editorTabs.addTab("XML", xmlIcon, this.xmlEditor, "Shows the XML definition of the current process setup.");
+		editorTabs.addTab("Comment", commentIcon, this.commentEditor, "Shows a comment editor for the currently selected operator.");
+		editorTabs.addTab("New Operator", newOperatorIcon, newOperatorEditor, "Shows a grouped view of all available operators for dragging them into the operator tree.");
+        add(editorTabs);
+        
 		// important that this method is invoked as last
 		editorTabs.addChangeListener(this);
 	}
 	    
 	/** Currently, the only process editor beside the operator tree is the XML editor. Therefore,
-	 *  this editor is returnes if the index matches XML and null is returned otherwise. */
+	 *  this editor is returns if the index matches XML and null is returned otherwise. */
 	private ProcessEditor getProcessEditor(int index) {
 		switch (index) {
 		case XML:
 			return xmlEditor;
-		case DESCRIPTION:
-			return descriptionEditor;
+		case COMMENT:
+			return commentEditor;
 		default:
 			return null;	
 		}
@@ -152,13 +168,13 @@ public class MainProcessEditor extends JSplitPane implements ProcessEditor, Chan
 		this.operatorTree.setOperator(operator);
 		this.propertyTable.setOperator(null);
 		this.xmlEditor.processChanged(operator);
-		this.descriptionEditor.setCurrentOperator(null);
+		this.commentEditor.setCurrentOperator(null);
 	}
 	
 	public void setCurrentOperator(Operator current) {
 		this.propertyTable.setOperator(current);
 		this.xmlEditor.setCurrentOperator(current);
-		this.descriptionEditor.setCurrentOperator(current);
+		this.commentEditor.setCurrentOperator(current);
 	}
 	
 	public void validateProcess() {}
@@ -181,7 +197,7 @@ public class MainProcessEditor extends JSplitPane implements ProcessEditor, Chan
 	}
 
 	public boolean isDescriptionViewActive() {
-		return (editorTabs.getSelectedIndex() == DESCRIPTION);
+		return (editorTabs.getSelectedIndex() == COMMENT);
 	}
 	
 	public void changeToXMLEditor() {

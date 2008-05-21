@@ -1,35 +1,35 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.functions.kernel;
 
 import java.util.Iterator;
 
 import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.FastExample2SparseTransform;
+import com.rapidminer.operator.UserError;
 import com.rapidminer.tools.Tools;
 
 import libsvm.Svm;
@@ -42,7 +42,7 @@ import libsvm.svm_node;
  * Chang and Chih-Jen Lin.
  * 
  * @author Ingo Mierswa
- * @version $Id: LibSVMModel.java,v 1.6 2007/07/18 11:15:29 ingomierswa Exp $
+ * @version $Id: LibSVMModel.java,v 1.14 2008/05/09 19:23:01 ingomierswa Exp $
  */
 public class LibSVMModel extends KernelModel {
 
@@ -52,10 +52,13 @@ public class LibSVMModel extends KernelModel {
 
     private int numberOfAttributes;
 
-	public LibSVMModel(ExampleSet exampleSet, svm_model model, int numberOfAttributes) {
+    private boolean confidenceForMultiClass = true;
+    
+	public LibSVMModel(ExampleSet exampleSet, svm_model model, int numberOfAttributes, boolean confidenceForMultiClass) {
 		super(exampleSet);
 		this.model = model;
         this.numberOfAttributes = numberOfAttributes;
+        this.confidenceForMultiClass = confidenceForMultiClass;
 	}
     
     public boolean isClassificationModel() {
@@ -79,7 +82,10 @@ public class LibSVMModel extends KernelModel {
     }
     
 	public double getBias() {
-		return this.model.rho[0];
+		if (this.model.rho.length > 0)
+			return this.model.rho[0];
+		else
+			return 0.0d;
 	}
 
 	public SupportVector getSupportVector(int index) {
@@ -124,12 +130,24 @@ public class LibSVMModel extends KernelModel {
         }
     }
     
-	public void performPrediction(ExampleSet exampleSet, Attribute predictedLabel) {
+	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabel) throws UserError {
 		FastExample2SparseTransform ripper = new FastExample2SparseTransform(exampleSet);
 		Iterator<Example> i = exampleSet.iterator();
+		
+		Attribute label = getLabel();
+
+		Attribute[] confidenceAttributes = null;
+		if (label.isNominal()) {
+			confidenceAttributes = new Attribute[model.label.length];
+			for (int j = 0; j < model.label.length; j++) {
+				String labelName = label.getMapping().mapIndex(model.label[j]);
+				confidenceAttributes[j] = exampleSet.getAttributes().getSpecial(Attributes.CONFIDENCE_NAME + "_" +  labelName);
+			}
+		}
+		
 		while (i.hasNext()) {
 			Example e = i.next();
-			if (getLabel().isNominal()) {
+			if (label.isNominal()) {
 				// set prediction
 				svm_node[] currentNodes = LibSVMLearner.makeNodes(e, ripper);
 				
@@ -153,23 +171,33 @@ public class LibSVMModel extends KernelModel {
 					Svm.multiclass_probability(nr_class, pairwise_prob, classProbs);
 
 					for (k = 0; k < nr_class; k++) {
-						e.setConfidence(getLabel().getMapping().mapIndex(model.label[k]), classProbs[k]);
+						e.setValue(confidenceAttributes[k], classProbs[k]);
 					}
 					
-					double predictedClass = Svm.svm_predict_probability(model, currentNodes, classProbs);
-					e.setValue(predictedLabel, predictedClass);
+					if (confidenceForMultiClass) { // use highest confidence
+						double predictedClass = Svm.svm_predict_probability(model, currentNodes, classProbs);
+						e.setValue(predictedLabel, predictedClass);
+					} else { // binary majority vote over 1-vs-1 classifiers
+						double predictedClass = Svm.svm_predict(model, currentNodes);	 
+                        e.setValue(predictedLabel, predictedClass);
+					}
 				} else {
 					double predictedClass = Svm.svm_predict(model, currentNodes);
 					e.setValue(predictedLabel, predictedClass);
 					// use simple calculation for binary cases...
-					if (getLabel().getMapping().size() == 2) { 
+					if (label.getMapping().size() == 2) { 
 						double[] functionValues = new double[model.nr_class];
 						Svm.svm_predict_values(model, currentNodes, functionValues);
 						double prediction = functionValues[0];
-						e.setConfidence(getLabel().getMapping().mapIndex(model.label[0]), 1.0d / (1.0d + java.lang.Math.exp(-prediction)));
-						e.setConfidence(getLabel().getMapping().mapIndex(model.label[1]), 1.0d / (1.0d + java.lang.Math.exp(prediction)));
+						if ((confidenceAttributes != null) && (confidenceAttributes.length > 0)) {
+							e.setValue(confidenceAttributes[0], 1.0d / (1.0d + java.lang.Math.exp(-prediction)));
+							if (confidenceAttributes.length > 1) {
+								e.setValue(confidenceAttributes[1], 1.0d / (1.0d + java.lang.Math.exp(prediction)));
+							}
+						}
 					} else {
 						// ...or no proper confidence value for the multi class setting
+						// here the confidence attribute calculated above cannot be used
 						e.setConfidence(getLabel().getMapping().mapIndex((int)predictedClass), 1.0d);
 					}
 				}
@@ -177,6 +205,8 @@ public class LibSVMModel extends KernelModel {
 				e.setValue(predictedLabel, Svm.svm_predict(model, LibSVMLearner.makeNodes(e, ripper))); 
 			}
 		}
+		
+		return exampleSet;
 	}
 	
 	public String toString() {

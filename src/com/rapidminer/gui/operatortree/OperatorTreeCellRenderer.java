@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.operatortree;
 
@@ -30,14 +28,12 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Polygon;
 import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTree;
@@ -49,6 +45,7 @@ import com.rapidminer.BreakpointListener;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -64,15 +61,15 @@ public class OperatorTreeCellRenderer extends DefaultTreeCellRenderer {
 	/** The panel which will be used for the actual rendering. */
 	private static class OperatorPanel extends JPanel {
 
-		private static final String BREAKPOINT_BEFORE = "icons/24/breakpoint_up.png";
+		private static final String BREAKPOINT_BEFORE = "24/breakpoint_up.png";
 		
-		private static final String BREAKPOINT_AFTER = "icons/24/breakpoint_down.png";
+		private static final String BREAKPOINT_AFTER = "24/breakpoint_down.png";
 		
-		private static final String BREAKPOINT_WITHIN = "icons/24/breakpoint.png";
+		private static final String BREAKPOINT_WITHIN = "24/breakpoint.png";
 		
-		private static final String BREAKPOINTS = "icons/24/breakpoints.png";
+		private static final String BREAKPOINTS = "24/breakpoints.png";
 		
-		private static final String WARNINGS = "icons/24/warning.png";
+		private static final String WARNINGS = "24/warning.png";
 		
 		
 		private static final long serialVersionUID = -7680223153786362865L;
@@ -209,9 +206,9 @@ public class OperatorTreeCellRenderer extends DefaultTreeCellRenderer {
 
 			dndMarker = ((OperatorTree) tree).getAssociatedDnDSupport().getOperatorMarker(operator.getName());
 			OperatorDescription descr = operator.getOperatorDescription();
-			Image img = descr.getIcon();
-			if (img != null)
-				iconLabel.setIcon(new ImageIcon(img));
+			Icon icon = descr.getIcon();
+			if (icon != null)
+				iconLabel.setIcon(icon);
 			else
 				iconLabel.setIcon(null);
 			iconLabel.setEnabled(operator.isEnabled());
@@ -247,10 +244,21 @@ public class OperatorTreeCellRenderer extends DefaultTreeCellRenderer {
 			List errors = operator.getErrorList();
 			if (errors.size() > 0) {
 				error.setIcon(warningsIcon);
-				setToolTipText(SwingTools.transformToolTipText("Error: " + (String) errors.get(0)));
+				setToolTipText(SwingTools.transformToolTipText("<b>Error: </b>" + (String) errors.get(0)));
 			} else {
 				error.setIcon(null);
-				setToolTipText(SwingTools.transformToolTipText(descr.getDescription()));
+				
+				String descriptionText = descr.getLongDescriptionHTML();
+				if (descriptionText == null) {
+					descriptionText = descr.getShortDescription();
+				}
+				
+				StringBuffer toolTipText = new StringBuffer("<b>Description: </b>" + descriptionText);
+				if (operator != null) {
+		        	toolTipText.append(Tools.getLineSeparator() + "<b>Input:</b> " + SwingTools.getStringFromClassArray(operator.getInputClasses()));
+		        	toolTipText.append(Tools.getLineSeparator() + "<b>Output:</b> " + SwingTools.getStringFromClassArray(operator.getOutputClasses()));
+		        }
+				setToolTipText(SwingTools.transformToolTipText(toolTipText.toString()));
 			}
 			error.setEnabled(operator.isEnabled());
 

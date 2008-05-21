@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.dialog;
 
@@ -30,6 +28,8 @@ import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -65,16 +65,26 @@ public class AnovaCalculatorDialog extends JDialog {
 		private static final long serialVersionUID = -2904775003271582149L;
 
 		public AnovaTableModel() {
-			super(new String[] { "mean", "variance", "number" }, 0);
+			super(new String[] { "Mean", "Variance", "Number" }, 0);
 		}
 
+		public Class<?> getColumnClass(int c) {
+			if (c == 2) {
+				return Integer.class;
+			} else {
+				return Double.class;
+			}
+		}
+		
 		public boolean isCellEditable(int row, int column) {
-			return false;
+			return true;
 		}
 	}
 
 	private transient AnovaCalculator calculator = new AnovaCalculator();
 
+	private JTextField alphaField = new JTextField("0.05");
+	
 	private AnovaTableModel tableModel;
 
 	public AnovaCalculatorDialog(Frame owner) {
@@ -152,7 +162,7 @@ public class AnovaCalculatorDialog extends JDialog {
 				}
 
 				if ((!Double.isNaN(mean)) && (!Double.isNaN(variance)) && (number > 1)) {
-					tableModel.addRow(new Object[] { new Double(mean), new Double(variance), Integer.valueOf(number) });
+					tableModel.addRow(new Object[] { mean, variance, number });
 				}
 			}
 		});
@@ -161,7 +171,11 @@ public class AnovaCalculatorDialog extends JDialog {
 		getContentPane().add(inputPanel, BorderLayout.NORTH);
 
 		// button panel
-		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		Box buttonPanel = new Box(BoxLayout.X_AXIS);
+		JLabel alphaLabel = new JLabel("Significance Level: ");
+		buttonPanel.add(alphaLabel);
+		buttonPanel.add(alphaField);
+		buttonPanel.add(Box.createHorizontalGlue());
 		JButton calculateButton = new JButton("Calculate...");
 		calculateButton.addActionListener(new ActionListener() {
 
@@ -212,19 +226,32 @@ public class AnovaCalculatorDialog extends JDialog {
 	}
 
 	private void calculateANOVA() throws SignificanceCalculationException {
-		this.calculator.clearGroups();
-		for (int i = 0; i < tableModel.getRowCount(); i++) {
-			int number = ((Integer) tableModel.getValueAt(i, 2)).intValue();
-			double mean = ((Double) tableModel.getValueAt(i, 0)).doubleValue();
-			double variance = ((Double) tableModel.getValueAt(i, 1)).doubleValue();
-			calculator.addGroup(number, mean, variance);
+		double alpha = -1;
+		String alphaString = alphaField.getText();
+		try {
+			alpha = Double.parseDouble(alphaString);
+		} catch (NumberFormatException e) {
+			SwingTools.showVerySimpleErrorMessage("Significance level must be a number between 0 and 1.");
 		}
-		if (tableModel.getRowCount() < 2) {
-			SwingTools.showVerySimpleErrorMessage("You need to add at least two rows in order to calculate an ANOVA test.");
-			return;
-		}
+		
+		if ((alpha < 0) || (alpha > 1)) {
+			SwingTools.showVerySimpleErrorMessage("Significance level must be a number between 0 and 1.");			
+		} else {
+			this.calculator.clearGroups();
+			this.calculator.setAlpha(alpha);
+			for (int i = 0; i < tableModel.getRowCount(); i++) {
+				int number = ((Integer) tableModel.getValueAt(i, 2)).intValue();
+				double mean = ((Double) tableModel.getValueAt(i, 0)).doubleValue();
+				double variance = ((Double) tableModel.getValueAt(i, 1)).doubleValue();
+				calculator.addGroup(number, mean, variance);
+			}
+			if (tableModel.getRowCount() < 2) {
+				SwingTools.showVerySimpleErrorMessage("You need to add at least two rows in order to calculate an ANOVA test.");
+				return;
+			}
 
-		SignificanceTestResult result = calculator.performSignificanceTest();
-		JOptionPane.showMessageDialog(this, result.getVisualizationComponent(null), "ANOVA result", JOptionPane.PLAIN_MESSAGE);
+			SignificanceTestResult result = calculator.performSignificanceTest();
+			JOptionPane.showMessageDialog(this, result.getVisualizationComponent(null), "ANOVA result", JOptionPane.PLAIN_MESSAGE);
+		}
 	}
 }

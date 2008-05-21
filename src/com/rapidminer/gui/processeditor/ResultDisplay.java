@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.processeditor;
 
@@ -35,6 +33,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import javax.swing.Action;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -42,6 +41,8 @@ import javax.swing.JTabbedPane;
 
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.ExtendedJTabbedPane;
+import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.viewer.DataTableViewer;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.MissingIOObjectException;
@@ -55,15 +56,26 @@ import com.rapidminer.operator.ResultObject;
  * e.g. performance against generation, these are plotted online.
  * 
  * @author Ingo Mierswa
- * @version $Id: ResultDisplay.java,v 1.1 2007/06/07 17:12:24 ingomierswa Exp $
+ * @version $Id: ResultDisplay.java,v 1.9 2008/05/09 19:23:16 ingomierswa Exp $
  */
 public class ResultDisplay extends JPanel {
 
 	private static final long serialVersionUID = 1970923271834221630L;
 
+	private static final String OPERATOR_TREE_ICON_NAME = "table.png";
+	private static final String DEFAULT_RESULT_ICON_NAME = "presentation_chart.png";
+	
+	private static Icon dataTableIcon = null;
+	private static Icon defaultResultIcon = null;
+	
+	static {
+		dataTableIcon = SwingTools.createIcon("16/" + OPERATOR_TREE_ICON_NAME);
+		defaultResultIcon = SwingTools.createIcon("16/" + DEFAULT_RESULT_ICON_NAME);
+	}
+	
 	private List<ResultObject> results = new LinkedList<ResultObject>();
 
-	private JTabbedPane tabs = new JTabbedPane();
+	private JTabbedPane tabs = new ExtendedJTabbedPane();
 
 	private JLabel label = new JLabel("Results");;
 
@@ -93,7 +105,7 @@ public class ResultDisplay extends JPanel {
 		Iterator<DataTable> i = dataTables.iterator();
 		while (i.hasNext()) {
 			DataTable table = i.next();
-			tabs.addTab(table.getName(), new DataTableViewer(table, true, DataTableViewer.PLOT_MODE));
+			tabs.addTab(table.getName(), dataTableIcon, new DataTableViewer(table, true, DataTableViewer.PLOT_MODE), "The data table '"+table.getName()+"'.");
 		}
 	}
 
@@ -108,22 +120,21 @@ public class ResultDisplay extends JPanel {
 		}
 
 		this.results = convertToList(resultContainer);
-        
-        // check for double names
-        Set<String> doubleUsedNames = new TreeSet<String>();
-        Set<String> usedResultNames = new TreeSet<String>();
-        Iterator<ResultObject> r = results.iterator();
-        while (r.hasNext()) {
-            ResultObject resultObject = r.next();
-            if (usedResultNames.contains(resultObject.getName())) {
-                doubleUsedNames.add(resultObject.getName());
-            }
-            usedResultNames.add(resultObject.getName());
-        }
-        
+
+		// check for double names
+		Set<String> doubleUsedNames = new TreeSet<String>();
+		Set<String> usedResultNames = new TreeSet<String>();
+		Iterator<ResultObject> r = results.iterator();
+		while (r.hasNext()) {
+			ResultObject resultObject = r.next();
+			if (usedResultNames.contains(resultObject.getName())) {
+				doubleUsedNames.add(resultObject.getName());
+			}
+			usedResultNames.add(resultObject.getName());
+		}
+
 		if (this.results.size() > 0) {
 			label.setText(null);
-			int counter = 0;
 			Iterator<ResultObject> i = this.results.iterator();
 			while (i.hasNext()) {
 				ResultObject result = i.next();
@@ -131,24 +142,28 @@ public class ResultDisplay extends JPanel {
 				// result panel
 				JPanel resultPanel = new JPanel(new BorderLayout());
 				Component visualisationComponent = result.getVisualizationComponent(resultContainer);
-                if (visualisationComponent instanceof JLabel)
-                    visualisationComponent = new ExtendedJScrollPane(visualisationComponent);
+				if (visualisationComponent instanceof JLabel)
+					visualisationComponent = new ExtendedJScrollPane(visualisationComponent);
 				resultPanel.putClientProperty("main.component", visualisationComponent);
-                resultPanel.add(visualisationComponent, BorderLayout.CENTER);
-                
-                // action buttons
-                JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-                Iterator action = result.getActions().iterator();
-                while (action.hasNext()) {
-                	buttonPanel.add(new JButton((Action) action.next()));
-                }
-                resultPanel.add(buttonPanel, BorderLayout.SOUTH);
-                String tabName = result.getName();
-                if (doubleUsedNames.contains(result.getName())) {
-                    tabName = result.getName() + " (" + result.getSource() + ")";
-                }
-				tabs.addTab(tabName, resultPanel);
-				tabs.setToolTipTextAt(counter++, "Show the result '" + result.getName() + "'.");
+				resultPanel.add(visualisationComponent, BorderLayout.CENTER);
+
+				// action buttons
+				JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+				Iterator action = result.getActions().iterator();
+				while (action.hasNext()) {
+					buttonPanel.add(new JButton((Action) action.next()));
+				}
+				resultPanel.add(buttonPanel, BorderLayout.SOUTH);
+				String tabName = result.getName();
+				if (doubleUsedNames.contains(result.getName())) {
+					tabName = result.getName() + " (" + result.getSource() + ")";
+				}
+				
+				Icon resultIcon = result.getResultIcon();
+				if (resultIcon == null) {
+					resultIcon = defaultResultIcon;
+				}
+				tabs.addTab(tabName, resultIcon, resultPanel, "Show the result '" + result.getName() + "'.");
 			}
 		} else {
 			label.setText("No results produced.");
@@ -162,6 +177,14 @@ public class ResultDisplay extends JPanel {
 		}
 	}
 
+	public Component getCurrentlyDisplayedComponent() {
+		if (tabs.getTabCount() == 0) {
+			return tabs;
+		} else {
+			return tabs.getSelectedComponent();
+		}
+	}
+	
 	private static List<ResultObject> convertToList(IOContainer container) {
 		List<ResultObject> list = new LinkedList<ResultObject>();
 		if (container != null) {

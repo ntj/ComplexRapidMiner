@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.plotter;
 
@@ -40,12 +38,13 @@ import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableRow;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.math.MathFunctions;
 
 
 /** This plotter can be used to create colorized quartile plots for one of the columns. 
  * 
  *  @author Ingo Mierswa
- *  @version $Id: ColorQuartilePlotter.java,v 1.2 2007/06/15 16:58:37 ingomierswa Exp $
+ *  @version $Id: ColorQuartilePlotter.java,v 1.5 2008/05/09 19:22:51 ingomierswa Exp $
  */
 public class ColorQuartilePlotter extends PlotterAdapter {
 
@@ -175,8 +174,8 @@ public class ColorQuartilePlotter extends PlotterAdapter {
                             Color color = getPointColor(colorValue / (valueMap.size() - 1.0d));
                             color = new Color(color.getRed(), color.getGreen(), color.getBlue(), RectangleStyle.ALPHA);
                             Quartile quartile = Quartile.calculateQuartile(e.getValue());
-                            this.globalMin = Math.min(this.globalMin, quartile.getMin());
-                            this.globalMax = Math.max(this.globalMax, quartile.getMax());
+                            this.globalMin = MathFunctions.robustMin(this.globalMin, quartile.getMin());
+                            this.globalMax = MathFunctions.robustMax(this.globalMax, quartile.getMax());
                             quartile.setColor(color);
                             allQuartiles.add(quartile);
                         }

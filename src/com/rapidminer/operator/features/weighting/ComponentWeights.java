@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.weighting;
 
@@ -35,6 +33,7 @@ import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.features.transformation.ComponentWeightsCreatable;
 import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeInt;
 
 
@@ -44,11 +43,15 @@ import com.rapidminer.parameter.ParameterTypeInt;
  * from a component.
  * 
  * @author Daniel Hakenjos, Ingo Mierswa
- * @version $Id: ComponentWeights.java,v 1.2 2007/06/09 14:09:15 ingomierswa Exp $
+ * @version $Id: ComponentWeights.java,v 1.5 2008/05/09 19:23:22 ingomierswa Exp $
  */
 public class ComponentWeights extends Operator {
 
-    public static final String PARAMETER_COMPONENT_NUMBER = "component_number";
+	/** The parameter name for &quot;Activates the normalization of all weights.&quot; */
+	public static final String PARAMETER_NORMALIZE_WEIGHTS = "normalize_weights";
+	
+	/** The parameter name for &quot;Create the weights of this component.&quot; */
+	public static final String PARAMETER_COMPONENT_NUMBER = "component_number";
     
 	private static final Class[] INPUT_CLASSES = new Class[] { Model.class };
 
@@ -76,7 +79,9 @@ public class ComponentWeights extends Operator {
 		AttributeWeights weights = ((ComponentWeightsCreatable) model).getWeightsOfComponent(component);
 
 		// normalize
-		weights.normalize();
+		if (getParameterAsBoolean(PARAMETER_NORMALIZE_WEIGHTS)) {
+			weights.normalize();
+		}
 		
 		return new IOObject[] { model, weights };
 	}
@@ -91,6 +96,7 @@ public class ComponentWeights extends Operator {
 
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> list = super.getParameterTypes();
+		list.add(new ParameterTypeBoolean(PARAMETER_NORMALIZE_WEIGHTS, "Activates the normalization of all weights.", false));
 		list.add(new ParameterTypeInt(PARAMETER_COMPONENT_NUMBER, "Create the weights of this component.", 1, Integer.MAX_VALUE, 1));
 		return list;
 	}

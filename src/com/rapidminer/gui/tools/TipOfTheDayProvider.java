@@ -1,29 +1,29 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +37,7 @@ import com.rapidminer.tools.Tools;
  * {@link #nextTip()} returns a new randomly chosen tip string.
  *
  * @author Ingo Mierswa
- * @version $Id: TipOfTheDayProvider.java,v 1.1 2007/06/03 16:39:03 ingomierswa Exp $
+ * @version $Id: TipOfTheDayProvider.java,v 1.4 2008/05/09 19:22:58 ingomierswa Exp $
  */
 public class TipOfTheDayProvider {
 
@@ -53,22 +53,27 @@ public class TipOfTheDayProvider {
 			StringBuffer current = new StringBuffer();
             URL totdURL = Tools.getResource("totd.txt");
             if (totdURL != null) {
-            	java.io.BufferedReader in = new java.io.BufferedReader(new java.io.InputStreamReader(totdURL.openStream()));
-            	String line = null;
-            	while ((line = in.readLine()) != null) {
-            		line = line.trim();
-            		if (line.startsWith("#"))
-            			continue;
-            		if (line.length() == 0) { // start new tip
-            			String tip = current.toString();
-            			if (tip.length() > 0)
-            				allTips.add(tip);
-            			current = new StringBuffer();
-            		} else {
-            			current.append(line + "<lb>");
-            		}
-            	}
-            	in.close();
+              BufferedReader in = null;
+              try {
+                  in = new BufferedReader(new InputStreamReader(totdURL.openStream()));
+            	  String line = null;
+            	  while ((line = in.readLine()) != null) {
+            		  line = line.trim();
+            		  if (line.startsWith("#"))
+            			  continue;
+            		  if (line.length() == 0) { // start new tip
+            			  String tip = current.toString();
+            			  if (tip.length() > 0)
+            				  allTips.add(tip);
+            			  current = new StringBuffer();
+            		  } else {
+            			  current.append(line + "<lb>");
+            		  }
+            	  }
+              } finally {
+                  if (in != null)
+                    in.close();
+              }
             } else {
                 LogService.getGlobal().logWarning("Cannot show Tip of the Day: resource 'totd.txt' not found...");
             }

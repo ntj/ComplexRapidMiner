@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.clustering.constrained.constraints;
 
@@ -52,7 +50,7 @@ import com.rapidminer.tools.RandomGenerator;
  * form a connected component.
  * 
  * @author Alexander Daxenberger
- * 
+ * @version $Id: ExampleSet2ClusterConstraintList.java,v 1.7 2008/05/09 19:23:17 ingomierswa Exp $
  */
 public class ExampleSet2ClusterConstraintList extends Operator {
 
@@ -190,7 +188,7 @@ public class ExampleSet2ClusterConstraintList extends Operator {
 						while (e1 == e2) {
 							e2 = getRandomExample(exList.get(list2));
 						}
-						newConstraint = new LinkClusterConstraint(String.valueOf(e1.getValue(id)), String.valueOf(e2.getValue(id)), weight,
+						newConstraint = new LinkClusterConstraint(e1.getValueAsString(id), e2.getValueAsString(id), weight,
 								LinkClusterConstraint.CANNOT_LINK);
 						if (constraintList.addConstraint(newConstraint)) {
 							maxcannot--;
@@ -203,7 +201,7 @@ public class ExampleSet2ClusterConstraintList extends Operator {
 						while (e1 == e2) {
 							e2 = getRandomExample(exList.get(list2));
 						}
-						newConstraint = new LinkClusterConstraint(String.valueOf(e1.getValue(id)), String.valueOf(e2.getValue(id)), this.weight,
+						newConstraint = new LinkClusterConstraint(e1.getValueAsString(id), e2.getValueAsString(id), this.weight,
 								LinkClusterConstraint.MUST_LINK);
 						if (constraintList.addConstraint(newConstraint)) {
 							this.maxmust--;
@@ -279,7 +277,7 @@ public class ExampleSet2ClusterConstraintList extends Operator {
 							while (e1 == e2)
 								e2 = this.getRandomExample(exList.get(list2));
 						}
-						newConstraint = new LinkClusterConstraint(String.valueOf(e1.getValue(id)), String.valueOf(e2.getValue(id)), this.weight,
+						newConstraint = new LinkClusterConstraint(e1.getValueAsString(id), e2.getValueAsString(id), this.weight,
 								LinkClusterConstraint.CANNOT_LINK);
 						if (constraintList.addConstraint(newConstraint)) {
 							this.maxcannot--;
@@ -298,7 +296,7 @@ public class ExampleSet2ClusterConstraintList extends Operator {
 						e2 = this.getRandomExample(exList.get(list2));
 						while (e1 == e2)
 							e2 = this.getRandomExample(exList.get(list2));
-						newConstraint = new LinkClusterConstraint(String.valueOf(e1.getValue(id)), String.valueOf(e2.getValue(id)), this.weight,
+						newConstraint = new LinkClusterConstraint(e1.getValueAsString(id), e2.getValueAsString(id), this.weight,
 								LinkClusterConstraint.MUST_LINK);
 						if (constraintList.addConstraint(newConstraint)) {
 							this.maxmust--;
@@ -371,8 +369,8 @@ public class ExampleSet2ClusterConstraintList extends Operator {
 					if ((list1 != list2) && (this.maxcannot > 0) && cannotLinkListIterator[list1][list2].hasNext()) {
 						examples = cannotLinkListIterator[list1][list2].next();
 						example = (Object[]) examples;
-						newConstraint = new LinkClusterConstraint(String.valueOf(((Example) example[0]).getValue(id)), String.valueOf(((Example) example[1])
-								.getValue(id)), this.weight, LinkClusterConstraint.CANNOT_LINK);
+						newConstraint = new LinkClusterConstraint(((Example) example[0]).getValueAsString(id), ((Example) example[1])
+								.getValueAsString(id), this.weight, LinkClusterConstraint.CANNOT_LINK);
 						if (constraintList.addConstraint(newConstraint)) {
 							this.maxcannot--;
 						}
@@ -382,8 +380,8 @@ public class ExampleSet2ClusterConstraintList extends Operator {
 					if ((this.maxmust > 0) && mustLinkListIterator[list2].hasNext()) {
 						examples = mustLinkListIterator[list2].next();
 						example = (Object[]) examples;
-						newConstraint = new LinkClusterConstraint(String.valueOf(((Example) example[0]).getValue(id)), String.valueOf(((Example) example[1])
-								.getValue(id)), this.weight, LinkClusterConstraint.MUST_LINK);
+						newConstraint = new LinkClusterConstraint(((Example) example[0]).getValueAsString(id), ((Example) example[1])
+								.getValueAsString(id), this.weight, LinkClusterConstraint.MUST_LINK);
 						if (constraintList.addConstraint(newConstraint)) {
 							this.maxmust--;
 						}
@@ -436,7 +434,7 @@ public class ExampleSet2ClusterConstraintList extends Operator {
 	 * @author Alexander Daxenberger
 	 * 
 	 */
-	public class ListIteratorsIterator implements Iterator {
+	private static class ListIteratorsIterator implements Iterator {
 
 		protected List[] list;
 

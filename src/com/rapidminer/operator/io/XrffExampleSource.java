@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.io;
 
@@ -28,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -50,9 +49,12 @@ import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeCategory;
+import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeFile;
+import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.RandomGenerator;
 
 
 /**
@@ -140,10 +142,9 @@ import com.rapidminer.tools.Ontology;
  * 
  * @rapidminer.index xrff
  * @author Ingo Mierswa
- * @version $Id: XrffExampleSource.java,v 1.2 2007/06/15 16:58:37 ingomierswa Exp $
+ * @version $Id: XrffExampleSource.java,v 1.6 2008/05/09 19:22:37 ingomierswa Exp $
  */
 public class XrffExampleSource extends Operator {
-
 
 	/** The parameter name for &quot;The path to the data file.&quot; */
 	public static final String PARAMETER_DATA_FILE = "data_file";
@@ -153,6 +154,19 @@ public class XrffExampleSource extends Operator {
 
 	/** The parameter name for &quot;Determines, how the data is represented internally.&quot; */
 	public static final String PARAMETER_DATAMANAGEMENT = "datamanagement";
+
+	/** The parameter name for &quot;Character that is used as decimal point.&quot; */
+	public static final String PARAMETER_DECIMAL_POINT_CHARACTER = "decimal_point_character";
+	
+    /** The parameter name for &quot;The fraction of the data set which should be read (1 = all; only used if sample_size = -1)&quot; */
+    public static final String PARAMETER_SAMPLE_RATIO = "sample_ratio";
+
+    /** The parameter name for &quot;The exact number of samples which should be read (-1 = use sample ratio; if not -1, sample_ratio will not have any effect)&quot; */
+    public static final String PARAMETER_SAMPLE_SIZE = "sample_size";
+
+    /** The parameter name for &quot;Use the given random seed instead of global random numbers (only for permutation, -1: use global).&quot; */
+    public static final String PARAMETER_LOCAL_RANDOM_SEED = "local_random_seed";
+    
     public XrffExampleSource(OperatorDescription description) {
         super(description);
     }
@@ -241,12 +255,16 @@ public class XrffExampleSource extends Operator {
             
             // read data
             table = new MemoryExampleTable(attributeList);
-            DataRowFactory factory = new DataRowFactory(getParameterAsInt(PARAMETER_DATAMANAGEMENT));
+            DataRowFactory factory = new DataRowFactory(getParameterAsInt(PARAMETER_DATAMANAGEMENT), getParameterAsString(PARAMETER_DECIMAL_POINT_CHARACTER).charAt(0));
             Attribute[] attributeArray = new Attribute[attributeList.size()];
             attributeList.toArray(attributeArray);
             Element bodyElement = retrieveSingleNode(datasetElement, "body");
             Element instancesElement = retrieveSingleNode(bodyElement, "instances");
             NodeList instances = instancesElement.getChildNodes();
+            int maxRows = getParameterAsInt(PARAMETER_SAMPLE_SIZE);
+            double sampleProb = getParameterAsDouble(PARAMETER_SAMPLE_RATIO);
+            Random random = RandomGenerator.getRandomGenerator(getParameterAsInt(PARAMETER_LOCAL_RANDOM_SEED));
+            int counter = 0;
             
             for (int i = 0; i < instances.getLength(); i++) {
                 Node node = instances.item(i);
@@ -289,6 +307,16 @@ public class XrffExampleSource extends Operator {
                         valueArray[valueArray.length - 1] = "1.0";
                     }
                     
+                    if ((maxRows > -1) && (counter >= maxRows))
+                        break;
+                    
+                    counter++;
+                    
+                    if (maxRows == -1) {
+                        if (random.nextDouble() > sampleProb)
+                            continue;
+                    }
+
                     table.addDataRow(factory.create(valueArray, attributeArray));
                 }
             }   
@@ -357,6 +385,12 @@ public class XrffExampleSource extends Operator {
         types.add(new ParameterTypeFile(PARAMETER_DATA_FILE, "The path to the data file.", "xrff", false));
         types.add(new ParameterTypeString(PARAMETER_ID_ATTRIBUTE, "The (case sensitive) name of the id attribute"));
         types.add(new ParameterTypeCategory(PARAMETER_DATAMANAGEMENT, "Determines, how the data is represented internally.", DataRowFactory.TYPE_NAMES, DataRowFactory.TYPE_DOUBLE_ARRAY));
+		types.add(new ParameterTypeString(PARAMETER_DECIMAL_POINT_CHARACTER, "Character that is used as decimal point.", "."));
+        ParameterType type = new ParameterTypeDouble(PARAMETER_SAMPLE_RATIO, "The fraction of the data set which should be read (1 = all; only used if sample_size = -1)", 0.0d, 1.0d, 1.0d);
+        type.setExpert(false);
+        types.add(type);
+        types.add(new ParameterTypeInt(PARAMETER_SAMPLE_SIZE, "The exact number of samples which should be read (-1 = use sample ratio; if not -1, sample_ratio will not have any effect)", -1, Integer.MAX_VALUE, -1));
+        types.add(new ParameterTypeInt(PARAMETER_LOCAL_RANDOM_SEED, "Use the given random seed instead of global random numbers (only for permutation, -1: use global).", -1, Integer.MAX_VALUE, -1));
         return types;
     }
 }

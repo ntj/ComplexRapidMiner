@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.meta;
 
@@ -137,17 +135,17 @@ public class BayesianBoosting extends AbstractMetaLearner {
 	/** Discard models with an advantage of less than the specified value. */
 	public static final double MIN_ADVANTAGE = 0.001;
 
-	// A model to initialise the example weights.
+	/** A model to initialise the example weights. */
 	private Model startModel;
 
-	// field for visualizing performance
+	/** Field for visualizing performance. */
 	protected int currentIteration;
 
-	// A performance measure to be visualized. Not yet implemented!
+	/** A performance measure to be visualized. */
 	private double performance = 0;
 
-	// A backup of the original weights of the training set to restore them
-	// after learning.
+	/** A backup of the original weights of the training set to restore them 
+	 *  after learning. */
 	private double[] oldWeights;
 
 	/** Constructor. */
@@ -354,14 +352,14 @@ public class BayesianBoosting extends AbstractMetaLearner {
 		// If the input contains a model already, initialise the example weights.
 		if (this.startModel != null) {
 
-			this.startModel.apply(trainingSet);
+			ExampleSet resultSet = this.startModel.apply((ExampleSet)trainingSet.clone());
 
 			// Initial values and the input model are stored in the output model.
-			WeightedPerformanceMeasures wp = new WeightedPerformanceMeasures(trainingSet);
+			WeightedPerformanceMeasures wp = new WeightedPerformanceMeasures(resultSet);
 
-			this.reweightExamples(wp, trainingSet);
+			this.reweightExamples(wp, resultSet);
 			modelInfo.add(new BayBoostBaseModelInfo(this.startModel, wp.getContingencyMatrix()));
-			PredictionModel.removePredictedLabel(trainingSet);
+			PredictionModel.removePredictedLabel(resultSet);
 		}
 	}
 
@@ -384,15 +382,6 @@ public class BayesianBoosting extends AbstractMetaLearner {
 		if (bootstrap == true) {
 			splittedSet = new SplittedExampleSet(trainingSet, splitRatio, SplittedExampleSet.SHUFFLED_SAMPLING, -1);
 		}
-		
-		// final int optimizeWeightsNum =
-		// this.getParameterAsInt(ADJUST_WEIGHTS);
-		// LogService.logMessage((optimizeWeightsNum > 0)
-		// ? "Weights are optimized after each " + optimizeWeightsNum + "
-		// iterations."
-		// : "Weight optimization is off.", LogService.STATUS);
-		//
-		// boolean canOptimiseWeights = true;
 
 		// maximum number of iterations
 		final int iterations = this.getParameterAsInt(PARAMETER_ITERATIONS);
@@ -401,13 +390,14 @@ public class BayesianBoosting extends AbstractMetaLearner {
 
 			Model model;
 			WeightedPerformanceMeasures wp;
+			ExampleSet iterationSet = (ExampleSet)trainingSet.clone();
 			if (bootstrap == true) {
 				
 				splittedSet.selectSingleSubset(0); // switch to learning subset 
 				model = this.trainBaseModel(splittedSet);
 
 				// apply model to all examples
-				model.apply(trainingSet);
+				iterationSet = model.apply(iterationSet);
 				
 				// reweight learning subset
 				wp = new WeightedPerformanceMeasures(splittedSet);
@@ -422,18 +412,19 @@ public class BayesianBoosting extends AbstractMetaLearner {
 			}
 			else {
 				// train one model per iteration
-				model = this.trainBaseModel(trainingSet);
-				model.apply(trainingSet);
+				model = this.trainBaseModel(iterationSet);
+				iterationSet = model.apply(iterationSet);
 
 				// get the weighted performance value of the example set with
 				// respect to the model
-				wp = new WeightedPerformanceMeasures(trainingSet);
+				wp = new WeightedPerformanceMeasures(iterationSet);
 
 				// Reweight the example set with respect to the weighted
 				// performance values:
-				this.performance = this.reweightExamples(wp, trainingSet);
+				this.performance = this.reweightExamples(wp, iterationSet);
 			}
-			PredictionModel.removePredictedLabel(trainingSet);
+			
+			PredictionModel.removePredictedLabel(iterationSet);
 
 			if (classPriors.length == 2) {
 				//this.debugMessage(wp);
@@ -467,13 +458,6 @@ public class BayesianBoosting extends AbstractMetaLearner {
 			if (this.performance == 0) {
 				break L;
 			}
-
-			// Optimize weights if turned on.
-			// The iteration counter starts from 0, so (i + 1) mod optimizeWeightNum needs to be 0.
-			// if ((optimizeWeightsNum > 0) && (canOptimiseWeights)
-			//      && ((i + 1) % optimizeWeightsNum == 0)) {
-			//    canOptimiseWeights = this.adjustBaseModelWeights(trainingSet, modelInfo, classPriors);
-			// }
             
             inApplyLoop();
 		}
@@ -482,15 +466,6 @@ public class BayesianBoosting extends AbstractMetaLearner {
 		// always true.
 		return new BayBoostModel(trainingSet, modelInfo, classPriors);
 	}
-
-    /*
-	private void debugMessage(WeightedPerformanceMeasures wp) {
-		String message = Tools.getLineSeparator() + "Model learned - training performance of base learner:" + Tools.getLineSeparator() + "TPR: " + wp.getProbability(0, 0) + " FPR: " + wp.getProbability(1, 0) + " | Positively predicted: " + (wp.getProbability(1, 0) + wp.getProbability(0, 0)) + Tools.getLineSeparator() + "FNR: " + wp.getProbability(0, 1) + " TNR: "
-				+ wp.getProbability(1, 1) + " | Negatively predicted: " + (wp.getProbability(0, 1) + wp.getProbability(1, 1)) + Tools.getLineSeparator() + "Positively labelled: " + (wp.getProbability(0, 0) + wp.getProbability(0, 1)) + Tools.getLineSeparator() + "Negatively labelled: " + (wp.getProbability(1, 0) + wp.getProbability(1, 1));
-
-		LogService.logMessage(message, LogService.STATUS);
-	}
-    */
 
 	/**
 	 * This method reweights the example set with respect to the
@@ -515,147 +490,9 @@ public class BayesianBoosting extends AbstractMetaLearner {
 		return remainingWeight;
 	}
 
-	
-	/**
-	 * This helper method takes as input the traing set plus class priors, and
-	 * the set of models trained so far. It optimises the weights iteratively,
-	 * which means that it changes the contents of the modelInfo container.
-	 * Works with crisp base classifiers, only!
-	 * 
-	 * @param exampleSet
-	 *            the training set to be used to tune the weights
-	 * @param modelInfo
-	 *            the modelInfos with old weights
-	 * @param classPriors
-	 *            the prior of all classes in the originally unweighted training
-	 *            set
-	 * @return <code>true</code> if optimisation was successful, and
-	 *         <code>false</code> if a non-crisp base classifier was found.
-	 */
-	
-	/*
-	private boolean adjustBaseModelWeights(ExampleSet exampleSet, Vector<BayBoostBaseModelInfo> modelInfo, double[] classPriors) throws OperatorException {
-		double totalWeight = 0;
-		if (modelInfo.size() <= 1)
-			return true; // nothing to do
-
-		final double[] weightedPriors; // class priors after the optional
-										// initial step of reweighting
-		if (this.getParameterAsBoolean(BayesianBoosting.EQUALLY_PROB_LABELS) == true) {
-			// If the parameter to rescale priors has been set, then all classes
-			// are equally likely by now.
-			weightedPriors = new double[classPriors.length];
-			for (int i = 0; i < weightedPriors.length; i++) {
-				// The odds of p = 0.5 are 0.5 / ( 1 - 0.5 ) = 1, so this makes
-				// the term drop out in the
-				// method
-				// WeightedPerformanceMeasures.reweightExamples(ExampleSet,
-				// double[][], double[]).
-				weightedPriors[i] = 0.5;
-			}
-		} else { // Otherwise the initially computed priors remain valid.
-			weightedPriors = classPriors;
-		}
-
-		// *********** Optimisation loop: ***********
-
-		// for (int j=modelInfo.size()-2; j>=0; j--)
-		L: for (int j = 0; j < modelInfo.size(); j++) {
-			// p("** Retraining model: " + j + Tools.getLineSeparator());
-
-			// initial weighting:
-			this.setInitialWeights(exampleSet, classPriors);
-			// p("Initial weights in adjustBaseModelWeights:" + Tools.getLineSeparator());
-			// firstTenWeights(exampleSet);
-
-			// apply all models but the considered one:
-			if (applyAllButJthModel(exampleSet, modelInfo, j, weightedPriors) == false)
-				return false; // found an unsupported soft classifier
-
-			// p("** Applying considered model." + Tools.getLineSeparator());
-			Model consideredModel = modelInfo.get(j).getModel();
-			consideredModel.apply(exampleSet);
-
-			WeightedPerformanceMeasures wp = new WeightedPerformanceMeasures(exampleSet);
-
-			totalWeight = this.reweightExamples(wp, exampleSet);
-			if (totalWeight <= 0) { // only re-estimate if remaining total
-									// weight is > 0
-				break L;
-			}
-			modelInfo.set(j, new BayBoostBaseModelInfo(consideredModel, wp.getContingencyMatrix()));
-
-			PredictionModel.removePredictedLabel(exampleSet);
-		}
-		this.performance = totalWeight;
-		return true;
-	}
-*/
-	/**
-	 * Helper method.
-	 * 
-	 * @param exampleSet
-	 *            the example set to be reweighted by the models plus lift
-	 *            estimates
-	 * @param modelInfo
-	 *            the set of models and corresponding lift estimates
-	 * @param j
-	 *            the number of model not to be applied classPriors the class
-	 *            priors computed by <code>WeightedPerformanceMeasures</code>
-	 * @return <code>true</code> iff the modelInfo contains no (invalid) soft
-	 *         classifier
-	 * @throws OperatorException
-	 */
-	/*
-	private boolean applyAllButJthModel(ExampleSet exampleSet, Vector<BayBoostBaseModelInfo> modelInfo, int j, double[] classPriors) throws OperatorException {
-		// apply all model but the j-th, then estimate parameters for j-th model
-		for (int index = 0; index < modelInfo.size(); index++) {
-			if (index != j) {
-				BayBoostBaseModelInfo currentModelInfo = modelInfo.get(index);
-				currentModelInfo.getModel().apply(exampleSet);
-				BayesianBoosting.reweightExamples(exampleSet, currentModelInfo.getContingencyMatrix());
-				PredictionModel.removePredictedLabel(exampleSet);
-			}
-		}
-		return true;
-	}
-	*/
-	
-	/**
-	 * Helper method.
-	 * 
-	 * @param exampleSet
-	 *            the example set which needs to be prepared with the initial
-	 *            weighting
-	 * @param classPriors
-	 *            Array of class priors. This parameter only has an effect if
-	 *            the parameter <code>EQUALLY_PROB_LABELS</code> is set,
-	 *            otherwise all examples are assigned a weight of 1.
-	 */
-	/*
-	private void setInitialWeights(ExampleSet exampleSet, double[] classPriors) {
-		double[] weights = new double[classPriors.length];
-		if (this.getParameterAsBoolean(BayesianBoosting.EQUALLY_PROB_LABELS) == true) {
-			for (int k = 0; k < weights.length; k++) {
-				weights[k] = ((double) 1.0) / (((double) weights.length) * (classPriors[k]));
-			}
-		} else {
-			for (int k = 0; k < weights.length; k++) {
-				weights[k] = 1;
-			}
-		}
-
-		Iterator<Example> exRead = exampleSet.getExampleReader();
-		while (exRead.hasNext()) {
-			Example example = exRead.next();
-			example.setWeight(weights[(int) (example.getLabel())]);
-		}
-	}
-	*/
-
 	/**
 	 * Helper method to decide whether a model improves the training error
-	 * enough to be considered.
+	 * enough to be considered. Returns always true.
 	 * 
 	 * @param cm
 	 *            the lift ratio matrix as returned by the getter of the
@@ -667,16 +504,6 @@ public class BayesianBoosting extends AbstractMetaLearner {
 		// should rather be decided offline by properly setting
 		// the number of iterations
 		return true; 
-		/*
-		for (int row=0; row<cm.getNumberOfClasses(); row++) {
-			for (int col=0; col<cm.getNumberOfPredictions(); col++) {
-				double current = cm.getLift(row, col);
-				if (current > MIN_ADVANTAGE)
-					return true;
-			}
-		}
-		return false;
-		*/ 
 	}
 
     /**
@@ -689,9 +516,6 @@ public class BayesianBoosting extends AbstractMetaLearner {
         types.add(new ParameterTypeDouble(PARAMETER_USE_SUBSET_FOR_TRAINING, "Fraction of examples used for training, remaining ones are used to estimate the confusion matrix. Set to 1 to turn off test set.", 0, 1, 1));
         types.add(new ParameterTypeInt(PARAMETER_ITERATIONS, "The maximum number of iterations.", 1, Integer.MAX_VALUE, 10));
         types.add(new ParameterTypeBoolean(PARAMETER_ALLOW_MARGINAL_SKEWS, "Allow to skew the marginal distribution (P(x)) during learning.", true));
-        // types.add(new ParameterTypeInt(ADJUST_WEIGHTS, "If set to a value
-        // greater than 0 then classifier weights are optimised every that
-        // number of iterations has passed.", 0, Integer.MAX_VALUE, 0));
         return types;
     }
 }

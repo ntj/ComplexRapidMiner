@@ -1,32 +1,31 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.preprocessing.filter;
 
 import java.util.List;
 
 import com.rapidminer.example.Attribute;
+import com.rapidminer.example.AttributeRole;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.parameter.ParameterType;
@@ -45,12 +44,12 @@ import com.rapidminer.tools.Ontology;
  */
 public class FeatureValueTypeFilter extends FeatureFilter {
 
-
 	/** The parameter name for &quot;All features of this type will be deselected.&quot; */
 	public static final String PARAMETER_SKIP_FEATURES_OF_TYPE = "skip_features_of_type";
 
 	/** The parameter name for &quot;All features of this type will not be deselected.&quot; */
 	public static final String PARAMETER_EXCEPT_FEATURES_OF_TYPE = "except_features_of_type";
+	
 	public FeatureValueTypeFilter(OperatorDescription description) {
 		super(description);
 	}
@@ -61,12 +60,14 @@ public class FeatureValueTypeFilter extends FeatureFilter {
 	 * returned (otherwise FALSE). If no parameter was provided, FALSE is always
 	 * returned, so no feature is switched off.
 	 * 
-	 * @param feature
+	 * @param role
 	 *            Feature to check.
 	 * @return TRUE if this feature should <b>not</b> be active in the output
 	 *         example set of this operator. FALSE otherwise.
 	 */
-	public boolean switchOffFeature(Attribute feature) throws OperatorException {
+	public boolean switchOffFeature(AttributeRole role) throws OperatorException {
+		Attribute feature = role.getAttribute();
+		
         // first type (most general) was omitted in parameters 
 		int type = getParameterAsInt(PARAMETER_SKIP_FEATURES_OF_TYPE) + 1;
         

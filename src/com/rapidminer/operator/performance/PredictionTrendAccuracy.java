@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.performance;
 
@@ -36,8 +34,8 @@ import com.rapidminer.tools.math.Averagable;
  * This performance measure assumes that the attributes of each example represents the 
  * values of a time window, the label is a value after a certain horizon which should
  * be predicted. All examples build a consecutive series description, i.e. the labels
- * of all examples build the series itself (at least it would for windowing step size 
- * of 1). This format will be delivered by the Series2ExampleSet operators provided by
+ * of all examples build the series itself (this is, for example, the case for a windowing 
+ * step size of 1). This format will be delivered by the Series2ExampleSet operators provided by
  * RapidMiner.</p>
  * 
  * <p>Example: Lets think of a series v1...v10 and a sliding window with window width 3, 
@@ -66,15 +64,15 @@ import com.rapidminer.tools.math.Averagable;
  * total number of examples, i.e. [(v4-v3)*(p1-v3)+(v5-v4)*(p2-v4)+...] / 7 in this example.</p>     
  * 
  * @author Ingo Mierswa
- * @version $Id: PredictionTrendAccuracy.java,v 1.1 2007/05/27 21:59:12 ingomierswa Exp $
+ * @version $Id: PredictionTrendAccuracy.java,v 1.5 2008/05/09 19:22:43 ingomierswa Exp $
  */
 public class PredictionTrendAccuracy extends MeasuredPerformance {
 
     private static final long serialVersionUID = 4275593122138248581L;
 
-	private int length = 1;
+	private double length = 1.0d;
     
-    private int correctCounter = 0;
+    private double correctCounter = 0.0d;
     
     public PredictionTrendAccuracy() {}
 
@@ -90,31 +88,41 @@ public class PredictionTrendAccuracy extends MeasuredPerformance {
         return "Measures the average of times a regression prediction was able to correctly predict the trend of the regression.";
     }
 
-    public void startCounting(ExampleSet eSet) throws OperatorException {
-        super.startCounting(eSet);
+    public void startCounting(ExampleSet eSet, boolean useExampleWeights) throws OperatorException {
+        super.startCounting(eSet, useExampleWeights);
         if (eSet.getAttributes().size() > 0) {
         	// get last attribute
         	Attribute attribute = null;
         	for (Attribute current : eSet.getAttributes()) {
         		attribute = current;
         	}
+        	Attribute labelAttribute = eSet.getAttributes().getLabel();
+        	Attribute predictedLabelAttribute = eSet.getAttributes().getPredictedLabel();
+        	Attribute weightAttribute = null;
+        	if (useExampleWeights)
+        		weightAttribute = eSet.getAttributes().getWeight();
             
             for (Example example : eSet) {
-                double currentLabel = example.getLabel();
-                double currentPrediction = example.getPredictedLabel();
+            	double weight = 1.0d;
+            	if (weightAttribute != null)
+            		weight = example.getValue(weightAttribute);
+            	
+                double currentLabel = example.getValue(labelAttribute);
+                double currentPrediction = example.getValue(predictedLabelAttribute);
                 double lastValueBefore = example.getValue(attribute);
             
                 double actualTrend = currentLabel - lastValueBefore;
                 double predictionTrend = currentPrediction - lastValueBefore;
-                if (actualTrend * predictionTrend >= 0)
-                    correctCounter++;
-                length++;
+                if (actualTrend * predictionTrend >= 0) {
+                    correctCounter += weight;
+                }
+                length += weight;
             }
         }
     }
 
-    public int getExampleCount() {
-        return 1;
+    public double getExampleCount() {
+        return length;
     }
 
     public void countExample(Example example) {}
@@ -124,7 +132,7 @@ public class PredictionTrendAccuracy extends MeasuredPerformance {
     }
 
     public double getMikroAverage() {
-        return correctCounter / (double)length;
+        return correctCounter / length;
     }
 
     public double getMikroVariance() {

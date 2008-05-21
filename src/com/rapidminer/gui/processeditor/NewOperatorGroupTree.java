@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.processeditor;
 
@@ -42,7 +40,7 @@ import javax.swing.tree.TreePath;
 
 import com.rapidminer.gui.processeditor.actions.ClearFilterAction;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.ExtendedToolBar;
+import com.rapidminer.gui.tools.ExtendedJToolBar;
 import com.rapidminer.tools.GroupTree;
 import com.rapidminer.tools.OperatorService;
 
@@ -50,7 +48,7 @@ import com.rapidminer.tools.OperatorService;
  * This tree displays all groups and can be used to change the selected operators. 
  * 
  * @author Ingo Mierswa
- * @version $Id: NewOperatorGroupTree.java,v 1.5 2007/07/06 14:17:25 ingomierswa Exp $
+ * @version $Id: NewOperatorGroupTree.java,v 1.9 2008/05/09 19:23:16 ingomierswa Exp $
  */
 public class NewOperatorGroupTree extends JPanel {
     
@@ -60,7 +58,7 @@ public class NewOperatorGroupTree extends JPanel {
 	
     private JTextField filterField = new JTextField(12);
     
-    private NewOperatorGroupTreeModel model = new NewOperatorGroupTreeModel(OperatorService.getGroups());
+    private transient NewOperatorGroupTreeModel model = new NewOperatorGroupTreeModel(OperatorService.getGroups());
     
     private JTree operatorGroupTree = new JTree(model);
     
@@ -106,7 +104,7 @@ public class NewOperatorGroupTree extends JPanel {
             }
         });
         
-        JToolBar clearBar = new ExtendedToolBar();
+        JToolBar clearBar = new ExtendedJToolBar();
         clearBar.add(filterField);
         clearBar.add(new ClearFilterAction(this));
         clearBar.setBorder(null);

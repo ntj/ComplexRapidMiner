@@ -1,43 +1,43 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.operatormenu;
 
-import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Iterator;
 
-import javax.swing.ImageIcon;
+import javax.swing.Icon;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
+import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.tools.GroupTree;
 import com.rapidminer.tools.OperatorService;
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -47,7 +47,7 @@ import com.rapidminer.tools.OperatorService;
  * {@link ReplaceOperatorMenu}).
  * 
  * @author Simon Fischer, Ingo Mierswa
- * @version $Id: OperatorMenu.java,v 1.1 2007/05/27 22:04:00 ingomierswa Exp $
+ * @version $Id: OperatorMenu.java,v 1.5 2008/05/09 19:23:19 ingomierswa Exp $
  */
 public abstract class OperatorMenu extends JMenu {
 
@@ -76,12 +76,28 @@ public abstract class OperatorMenu extends JMenu {
 			final OperatorDescription description = (OperatorDescription) i.next();
 			if ((!onlyChains) || OperatorChain.class.isAssignableFrom(description.getOperatorClass())) {
 				JMenuItem item = null;
-				Image icon = description.getIcon();
+				Icon icon = description.getIcon();
 				if (icon == null)
 					item = new JMenuItem(description.getName());
 				else
-					item = new JMenuItem(description.getName(), new ImageIcon(icon));
-				item.setToolTipText(SwingTools.transformToolTipText(description.getDescription()));
+					item = new JMenuItem(description.getName(), icon);
+				String descriptionText = description.getLongDescriptionHTML();
+				if (descriptionText == null) {
+					descriptionText = description.getShortDescription();
+				}
+				
+				StringBuffer toolTipText = new StringBuffer("<b>Description: </b>" + descriptionText);
+				Operator operator = null;
+				try {
+					operator = description.createOperatorInstance();
+				} catch (OperatorCreationException e1) {
+					// do nothing
+				}
+		        if (operator != null) {
+		        	toolTipText.append(Tools.getLineSeparator() + "<b>Input:</b> " + SwingTools.getStringFromClassArray(operator.getInputClasses()));
+		        	toolTipText.append(Tools.getLineSeparator() + "<b>Output:</b> " + SwingTools.getStringFromClassArray(operator.getOutputClasses()));
+		        }
+				item.setToolTipText(SwingTools.transformToolTipText(toolTipText.toString()));
 				item.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 						performAction(description);

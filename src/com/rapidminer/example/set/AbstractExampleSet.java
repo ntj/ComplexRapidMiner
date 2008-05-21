@@ -1,30 +1,29 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.example.set;
 
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -35,6 +34,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -46,6 +46,7 @@ import java.util.zip.GZIPOutputStream;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ButtonGroup;
+import javax.swing.Icon;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -69,7 +70,6 @@ import com.rapidminer.gui.viewer.MetaDataViewer;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.MissingIOObjectException;
-import com.rapidminer.operator.ProcessRootOperator;
 import com.rapidminer.operator.ResultObjectAdapter;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
@@ -89,16 +89,33 @@ import com.rapidminer.tools.Tools;
  */
 public abstract class AbstractExampleSet extends ResultObjectAdapter implements ExampleSet {
 
+	private static final String RESULT_ICON_NAME = "data.png";
+	
+	private static Icon resultIcon = null;
+	
+	static {
+		resultIcon = SwingTools.createIcon("16/" + RESULT_ICON_NAME);
+	}
+	
     /** Maps attribute names to list of statistics objects. */
     private Map<String, List<Statistics>> statisticsMap = new HashMap<String, List<Statistics>>();
     
+	/** Maps the id values on the line index in the example table. */
+	private Map<Double, Integer> idMap = new HashMap<Double, Integer>();
+	
     /** This method overrides the implementation of ResultObjectAdapter and returns "ExampleSet". */
     public String getName() {
         return "ExampleSet";
     }
 	
-    
-    
+	public Example getExampleFromId(double id) {
+		Integer indexObject = idMap.get(id);		
+		if (indexObject == null)
+			return null;
+		else
+			return getExample(indexObject);
+	}
+	
 	// --- Visualisation and toString() methods ---
 
 	public String toString() {
@@ -130,7 +147,7 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
      *  returns an instance of {@link DataTableExampleSetAdapter}. The given IOContainer is used to check if 
      *  there are compatible attribute weights which would used as column weights of the returned table. 
      *  Subclasses might want to override this method in order to allow for other data tables. */
-    private final DataTable createDataTable(IOContainer container) {
+    public DataTable createDataTable(IOContainer container) {
         AttributeWeights weights = null;
         if (container != null) {
             try {
@@ -146,26 +163,43 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
         }
         return  new DataTableExampleSetAdapter(this, weights);
     }
-    
+
 	/**
 	 * Returns component with several views controlled by radio buttons. The first view is a meta data viewer, the
      * second a data viewer and the last one a plotter panel. For this plotter the data table created by {@link #createDataTable(IOContainer)}
      * is used.
 	 */
-	public Component getVisualizationComponent(final IOContainer container) {
-		final JPanel mainPanel = new JPanel();
-		mainPanel.setLayout(new BorderLayout());
+	public Component getVisualizationComponent(IOContainer container) {
+		return getVisualizationComponent(container, true);
+	}
+	
+	/**
+	 * Returns component with several views controlled by radio buttons. The first view is a meta data viewer, the
+     * second a data viewer and the last one a plotter panel. For this plotter the data table created by {@link #createDataTable(IOContainer)}
+     * is used.
+	 */
+	public Component getVisualizationComponent(final IOContainer container, boolean showOptions) {
+		final JPanel borderPanel = new JPanel(new BorderLayout());
         
 		// meta data html table view
-        final MetaDataViewer metaDataViewer = new MetaDataViewer(this);
+        final MetaDataViewer metaDataViewer = new MetaDataViewer(this, showOptions);
         
 		// data html table view
-		final DataViewer dataViewer = new DataViewer(this);
+		final DataViewer dataViewer = new DataViewer(this, showOptions);
 
 		// statistics plotter view
 		DataTable dataTable = createDataTable(container);
-
 		final PlotterPanel plotterComponent = new PlotterPanel(dataTable);
+		
+		final CardLayout cardLayout = new CardLayout();
+		final JPanel mainPanel = new JPanel(cardLayout);
+		final String metaString = "META";
+		final String dataString = "DATA";
+		final String plotString = "PLOT";
+		
+		mainPanel.add(metaDataViewer, metaString);
+		mainPanel.add(dataViewer, dataString);
+		mainPanel.add(plotterComponent, plotString);
 		
 		// toggle radio button for views
 		final JRadioButton metaDataButton = new JRadioButton("Meta Data View", true);
@@ -174,9 +208,7 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 
 			public void actionPerformed(ActionEvent e) {
 				if (metaDataButton.isSelected()) {
-					mainPanel.remove(1);
-					mainPanel.add(metaDataViewer, BorderLayout.CENTER);
-					mainPanel.repaint();
+					cardLayout.show(mainPanel, metaString);
 				}
 			}
 		});
@@ -187,9 +219,7 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 
 			public void actionPerformed(ActionEvent e) {
 				if (dataButton.isSelected()) {
-					mainPanel.remove(1);
-					mainPanel.add(dataViewer, BorderLayout.CENTER);
-					mainPanel.repaint();
+					cardLayout.show(mainPanel, dataString);
 				}
 			}
 		});
@@ -198,9 +228,7 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 		plotButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (plotButton.isSelected()) {
-					mainPanel.remove(1);
-					mainPanel.add(plotterComponent, BorderLayout.CENTER);
-					mainPanel.repaint();
+					cardLayout.show(mainPanel, plotString);
 				}
 			}
 		});
@@ -213,9 +241,13 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 		togglePanel.add(dataButton);
 		togglePanel.add(plotButton);
 
-		mainPanel.add(togglePanel, BorderLayout.NORTH);
-		mainPanel.add(metaDataViewer, BorderLayout.CENTER);
-		return mainPanel;
+		borderPanel.add(togglePanel, BorderLayout.NORTH);
+		borderPanel.add(mainPanel, BorderLayout.CENTER);
+		return borderPanel;
+	}
+	
+	public Icon getResultIcon() {
+		return resultIcon;
 	}
 
     public List<Action> getActions() {
@@ -230,11 +262,11 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
                 File dataFile = SwingTools.chooseFile(null, null, false, "dat", "example set data file");
                 try {
                     if (dataFile != null) {
-                    	String encoding = "UTF-8";
+                    	Charset encoding = RapidMinerGUI.getMainFrame().getProcess().getRootOperator().getEncoding();
                         writeDataFile(dataFile, NumericalAttribute.UNLIMITED_NUMBER_OF_DIGITS, true, false, false, encoding);
                         File attFile = SwingTools.chooseFile(null, dataFile, false, "aml", "attribute description file");
                         if (attFile != null) {
-                            writeAttributeFile(attFile, dataFile, RapidMinerGUI.getMainFrame().getProcess().getRootOperator().getParameterAsString(ProcessRootOperator.PARAMETER_ENCODING)); 
+                            writeAttributeFile(attFile, dataFile, encoding); 
                         }
                     }
                 } catch (Exception ex) {
@@ -247,37 +279,57 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
     	
 	// -------------------- File Writing --------------------
     
-	public void writeDataFile(File dataFile, int fractionDigits, boolean quoteWhitespace, boolean zipped, boolean append, String encoding) throws IOException {
+	public void writeDataFile(File dataFile, int fractionDigits, boolean quoteWhitespace, boolean zipped, boolean append, Charset encoding) throws IOException {
+		PrintWriter out = null;
 		OutputStream outStream = null;
-		if (zipped) {
-			outStream = new GZIPOutputStream(new FileOutputStream(dataFile, append));
-		} else {
-			outStream = new FileOutputStream(dataFile, append);
+		try {
+			if (zipped) {
+				outStream = new GZIPOutputStream(new FileOutputStream(dataFile, append));
+			} else {
+				outStream = new FileOutputStream(dataFile, append);
+			}
+			out = new PrintWriter(new OutputStreamWriter(outStream, encoding));
+			Iterator<Example> reader = iterator();
+			while (reader.hasNext()) {
+				out.println(reader.next().toDenseString(fractionDigits, quoteWhitespace));
+			}
+		} catch (IOException e) {
+			throw e;
+		} finally {
+			if (out != null) {
+				out.close();		
+			}
+			if (outStream != null) {
+				outStream.close();				
+			}
 		}
-		PrintWriter out = new PrintWriter(new OutputStreamWriter(outStream, encoding));
-		Iterator<Example> reader = iterator();
-		while (reader.hasNext()) {
-			out.println(reader.next().toDenseString(fractionDigits, quoteWhitespace));
-		}
-		out.close();
-		outStream.close();
 	}
 
     /** Writes the data into a sparse file format. */
-	public void writeSparseDataFile(File dataFile, int format, int fractionDigits, boolean quoteWhitespace, boolean zipped, boolean append, String encoding) throws IOException {
+	public void writeSparseDataFile(File dataFile, int format, int fractionDigits, boolean quoteWhitespace, boolean zipped, boolean append, Charset encoding) throws IOException {
+		PrintWriter out = null;
 		OutputStream outStream = null;
-		if (zipped) {
-			outStream = new GZIPOutputStream(new FileOutputStream(dataFile, append));
-		} else {
-			outStream = new FileOutputStream(dataFile, append);
+		try {
+			if (zipped) {
+				outStream = new GZIPOutputStream(new FileOutputStream(dataFile, append));
+			} else {
+				outStream = new FileOutputStream(dataFile, append);
+			}
+			out = new PrintWriter(new OutputStreamWriter(outStream, encoding));
+			Iterator<Example> reader = iterator();
+			while (reader.hasNext()) {
+				out.println(reader.next().toSparseString(format, fractionDigits, quoteWhitespace));
+			}
+		} catch (IOException e) {
+			throw e;
+		} finally {
+			if (out != null) {
+				out.close();		
+			}
+			if (outStream != null) {
+				outStream.close();		
+			}
 		}
-		PrintWriter out = new PrintWriter(new OutputStreamWriter(outStream, encoding));
-		Iterator<Example> reader = iterator();
-		while (reader.hasNext()) {
-			out.println(reader.next().toSparseString(format, fractionDigits, quoteWhitespace));
-		}
-		out.close();
-		outStream.close();
 	}
     
 	/**
@@ -286,7 +338,7 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 	 * write format of {@link Example#toString()}. Please note that the given 
      * data file will only be used to determine the relative position.
 	 */
-	public void writeAttributeFile(File attFile, File dataFile, String encoding) throws IOException {
+	public void writeAttributeFile(File attFile, File dataFile, Charset encoding) throws IOException {
 		// determine relative path
         if (dataFile == null)
             throw new IOException("ExampleSet writing: cannot determine path to data file: data file was not given!");
@@ -313,7 +365,7 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 	 * {@link Example#toSparseString(int, int, boolean)}. Please note that the given data 
      * file is only be used to determine the relative position.
 	 */
-	public void writeSparseAttributeFile(File attFile, File dataFile, int format, String encoding) throws IOException {
+	public void writeSparseAttributeFile(File attFile, File dataFile, int format, Charset encoding) throws IOException {
         if (dataFile == null)
             throw new IOException("ExampleSet sparse writing: cannot determine path to data file: data file was not given!");
         
@@ -354,8 +406,8 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
     
 	/** Writes the data of this attribute in the given stream. */
 	private void writeAttributeMetaData(String tag, Attribute attribute, int sourcecol, PrintWriter aout, boolean sparse) {
-		aout.println("  <" + tag);
-		aout.println("    name         = \"" + attribute.getName() + "\"");
+		aout.println("  <" + Tools.escapeXML(tag));
+		aout.println("    name         = \"" + Tools.escapeXML(attribute.getName()) + "\"");
 		if (!sparse || tag.equals("attribute")) {
 			aout.println("    sourcecol    = \"" + sourcecol + "\"");
 		}
@@ -366,11 +418,11 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
         if ((Ontology.ATTRIBUTE_VALUE_TYPE.isA(attribute.getValueType(), Ontology.NOMINAL)) && 
             (!tag.equals(Attributes.KNOWN_ATTRIBUTE_TYPES[Attributes.TYPE_ID]))) {
             aout.println(">");
-            Iterator i = attribute.getMapping().getValues().iterator();
+            Iterator<String> i = attribute.getMapping().getValues().iterator();
             while (i.hasNext()) {
-                aout.println("       <value>"+i.next()+"</value>");
+                aout.println("       <value>" + Tools.escapeXML(i.next()) + "</value>");
             }
-            aout.println("  </"+tag+">");
+            aout.println("  </" + Tools.escapeXML(tag) + ">");
         } else { // no values, simply end this attribute
             aout.println("/>");
         }
@@ -408,17 +460,35 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 		try {
 			Class<? extends AbstractExampleSet> clazz = getClass();
 			java.lang.reflect.Constructor cloneConstructor = clazz.getConstructor(new Class[] { clazz });
-			return cloneConstructor.newInstance(new Object[] { this });
+			AbstractExampleSet result = (AbstractExampleSet)cloneConstructor.newInstance(new Object[] { this });
+			result.idMap = this.idMap;
+			return result;
 		} catch (IllegalAccessException e) {
 			throw new RuntimeException("Cannot clone ExampleSet: " + e.getMessage());
 		} catch (NoSuchMethodException e) {
 			throw new RuntimeException("'" + getClass().getName() + "' does not implement clone constructor!");
 		} catch (java.lang.reflect.InvocationTargetException e) {
-			throw new RuntimeException("Cannot clone " + getClass().getName() + ": " + e + ". Target: " + e.getCause() + ". Cause: " + e.getTargetException() + ".");
+			throw new RuntimeException("Cannot clone " + getClass().getName() + ": " + e + ". Target: " + e.getTargetException() + ". Cause: " + e.getCause() + ".");
 		} catch (InstantiationException e) {
 			throw new RuntimeException("Cannot clone " + getClass().getName() + ": " + e);
 		}
 	}
+
+	// =============================================================================
+	
+	public void remapIds() {
+		idMap = new HashMap<Double, Integer>();
+		Attribute idAttribute = getAttributes().getSpecial(Attributes.ID_NAME);
+		if (idAttribute != null) {
+			int index = 0;
+			for (Example example : this) {
+				idMap.put(example.getValue(idAttribute), index);
+				index++;
+			}
+		}
+	}
+	
+	// =============================================================================
 	
 	/**
 	 * Recalculates the attribute statistics for all attributes. They are
@@ -449,22 +519,25 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 	 * for each example set.
 	 */
 	public void recalculateAttributeStatistics(List<Attribute> attributeList) {
+		// init statistics
+		for (Attribute attribute : attributeList) {
+			Iterator<Statistics> stats = attribute.getAllStatistics();
+			while (stats.hasNext()) {
+				Statistics statistics = stats.next();
+				statistics.startCounting(attribute);
+			}
+		}
+        
         // calculate statistics
-		Iterator<Example> reader = iterator();
-		Example example = null;
-        boolean first = true;
-		while ((example = reader.next()) != null) {
+		for (Example example : this) {
 			for (Attribute attribute : attributeList) {
 				double value = example.getValue(attribute);
 				Iterator<Statistics> stats = attribute.getAllStatistics();
                 while (stats.hasNext()) {
                     Statistics statistics = stats.next();
-                    if (first)
-                        statistics.startCounting(attribute);
                     statistics.count(value);
                 }
 			}
-            first = false;
 		}
         
         // store cloned statistics
@@ -488,7 +561,7 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 	}
     
     /** Returns the desired statistic for the given attribute. This method should be 
-     *  preferred over the deprecated method {@link Attribute#getStatistics(String)}
+     *  preferred over the deprecated method Attribute#getStatistics(String)
      *  since it correctly calculates and keep the statistics for the current example
      *  set and does not overwrite the statistics in the attribute. 
      *  Invokes the method {@link #getStatistics(Attribute, String, String)} with a null 
@@ -498,7 +571,7 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
     }
     
     /** Returns the desired statistic for the given attribute. This method should be 
-     *  preferred over the deprecated method {@link Attribute#getStatistics(String)}
+     *  preferred over the deprecated method Attribute#getStatistics(String)
      *  since it correctly calculates and keep the statistics for the current example
      *  set and does not overwrite the statistics in the attribute. If the statistics 
      *  were not calculated before (via one of the recalculate methods) this method
@@ -511,7 +584,7 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
         
         for (Statistics statistics : statisticsList) {
             if (statistics.handleStatistics(statisticsName)) {
-                return statistics.getStatistics(statisticsName, statisticsParameter);
+                return statistics.getStatistics(attribute, statisticsName, statisticsParameter);
             }
         }
         

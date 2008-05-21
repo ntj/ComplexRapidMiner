@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.functions.kernel.logistic;
 
@@ -37,7 +35,7 @@ import com.rapidminer.parameter.UndefinedParameterError;
  * The main class for the Kernel Logistic Regression.
  * 
  * @author Stefan Rueping
- * @version $Id: KLR.java,v 1.3 2007/06/15 18:44:37 ingomierswa Exp $
+ * @version $Id: KLR.java,v 1.7 2008/05/09 19:23:27 ingomierswa Exp $
  */
 public class KLR implements SVMInterface {
 
@@ -49,26 +47,26 @@ public class KLR implements SVMInterface {
 
 	double[] target;
 
-	int N1;
+	int n1;
 
-	int N2;
+	int n2;
 
 	// internal vars
 	double[] alphas;
 
-	double[] Hcache;
+	double[] hCache;
 
-	boolean[] at_bound;
+	boolean[] atBound;
 
-	int i_up;
+	int iUp;
 
-	int i_low;
+	int iLow;
 
 	double b;
 
-	double b_up;
+	double bUp;
 
-	double b_low;
+	double bLow;
 
 	// user-defined params
 	double tol = 1e-3; // Genauigkeit f?r b (convergence_epsilon)
@@ -79,7 +77,7 @@ public class KLR implements SVMInterface {
 
 	double mu; // Genauigkeit f?r bound (is_zero)
 
-	int max_iterations = 100000; // maximale Anzahl Iterationen im
+	int maxIterations = 100000; // maximale Anzahl Iterationen im
 									// Newton-Raphson-Schritt
 
 	public KLR() {}
@@ -87,7 +85,7 @@ public class KLR implements SVMInterface {
 	public KLR(Operator paramOperator) throws UndefinedParameterError {
 		C = paramOperator.getParameterAsDouble(AbstractMySVMLearner.PARAMETER_C); 
 		tol = paramOperator.getParameterAsDouble(AbstractMySVMLearner.PARAMETER_CONVERGENCE_EPSILON); 
-		max_iterations = paramOperator.getParameterAsInt(AbstractMySVMLearner.PARAMETER_MAX_ITERATIONS); 
+		maxIterations = paramOperator.getParameterAsInt(AbstractMySVMLearner.PARAMETER_MAX_ITERATIONS); 
 	}
 
 	public void init(Kernel new_kernel, SVMExamples new_examples) {
@@ -97,14 +95,13 @@ public class KLR implements SVMInterface {
 		// copy examples to local vars
 		target = examples.get_ys();
 		alphas = examples.get_alphas();
-		// System.out.println(alphas);
 		n = examples.count_examples();
 
 		epsilon = C * 1e-10; // C*getParam("is_zero")
 
 		mu = epsilon;
-		N1 = examples.count_pos_examples();
-		N2 = n - N1;
+		n1 = examples.count_pos_examples();
+		n2 = n - n1;
 	};
 
 	final double dG(double alpha) {
@@ -133,7 +130,7 @@ public class KLR implements SVMInterface {
 		// result *= t;
 		result = t * (Kii - 2.0 * Kij + Kjj);
 		result += ydG;
-		result += Hcache[i] - Hcache[j]; // value for t=0
+		result += hCache[i] - hCache[j]; // value for t=0
 
 		return result;
 	};
@@ -166,8 +163,8 @@ public class KLR implements SVMInterface {
 		double ajo = alphas[j];
 		double yi = target[i];
 		double yj = target[j];
-		double Hio = Hcache[i];
-		double Hjo = Hcache[j];
+		double Hio = hCache[i];
+		double Hjo = hCache[j];
 		double Kii = kernel_row_i[i];
 		double Kij = kernel_row_i[j];
 		double Kjj = kernel_row_j[j];
@@ -314,7 +311,7 @@ public class KLR implements SVMInterface {
 				alphas[j] += (mu - alphas[i]);
 			};
 			alphas[i] = mu;
-			at_bound[i] = true;
+			atBound[i] = true;
 		} else if (ai >= C - mu) {
 			if (((target[i] > 0) && (target[j] > 0)) || ((target[i] < 0) && (target[j] < 0))) {
 				alphas[j] -= (C - mu - alphas[i]);
@@ -322,9 +319,9 @@ public class KLR implements SVMInterface {
 				alphas[j] += (C - mu - alphas[i]);
 			};
 			alphas[i] = C - mu;
-			at_bound[i] = true;
+			atBound[i] = true;
 		} else {
-			at_bound[i] = false;
+			atBound[i] = false;
 		};
 		if (aj <= mu) {
 			if (((target[i] > 0) && (target[j] > 0)) || ((target[i] < 0) && (target[j] < 0))) {
@@ -333,7 +330,7 @@ public class KLR implements SVMInterface {
 				alphas[i] += (mu - alphas[j]);
 			};
 			alphas[j] = mu;
-			at_bound[j] = true;
+			atBound[j] = true;
 		} else if (aj >= C - mu) {
 			if (((target[i] > 0) && (target[j] > 0)) || ((target[i] < 0) && (target[j] < 0))) {
 				alphas[i] -= (C - mu - alphas[j]);
@@ -341,9 +338,9 @@ public class KLR implements SVMInterface {
 				alphas[i] += (C - mu - alphas[j]);
 			};
 			alphas[j] = C - mu;
-			at_bound[j] = true;
+			atBound[j] = true;
 		} else {
-			at_bound[j] = false;
+			atBound[j] = false;
 		};
 
 		t = ((alphas[i] - aio) * yi + (ajo - alphas[j]) * yj) / 2.0;
@@ -352,26 +349,26 @@ public class KLR implements SVMInterface {
 		Hj = Hjo + t * (Kij - Kjj) + yj * (Math.log(alphas[j] / (C - alphas[j])) - Math.log(ajo / (C - ajo)));
 
 		for (int k = 0; k < n; k++) {
-			Hcache[k] += t * (kernel_row_i[k] - kernel_row_j[k]);
+			hCache[k] += t * (kernel_row_i[k] - kernel_row_j[k]);
 		};
 
-		Hcache[i] = Hi;
-		Hcache[j] = Hj;
+		hCache[i] = Hi;
+		hCache[j] = Hj;
 
 		// Update i_low, i_up, b_low and b_up over indices of non-boundary group
-		b_up = Double.NEGATIVE_INFINITY;
-		b_low = Double.POSITIVE_INFINITY;
-		i_up = 0;
-		i_low = 0;
+		bUp = Double.NEGATIVE_INFINITY;
+		bLow = Double.POSITIVE_INFINITY;
+		iUp = 0;
+		iLow = 0;
 		for (int l = 0; l < n; l++) {
-			if (!at_bound[l]) {
-				if (Hcache[l] > b_up) {
-					b_up = Hcache[l];
-					i_up = l;
+			if (!atBound[l]) {
+				if (hCache[l] > bUp) {
+					bUp = hCache[l];
+					iUp = l;
 				};
-				if (Hcache[l] < b_low) {
-					b_low = Hcache[l];
-					i_low = l;
+				if (hCache[l] < bLow) {
+					bLow = hCache[l];
+					iLow = l;
 				};
 			};
 		};
@@ -385,30 +382,30 @@ public class KLR implements SVMInterface {
 		// precond: n, target, examples, kernel intialisiert
 		// alphas = new double[n];
 		examples.clearAlphas();
-		Hcache = new double[n];
-		at_bound = new boolean[n];
+		hCache = new double[n];
+		atBound = new boolean[n];
 
 		int i;
 		int j;
-		double alpha_pos = C / N1; // !!! N1 = # pos examples
-		double alpha_neg = C / N2; // !!! N2 = # neg examples
+		double alpha_pos = C / n1; // !!! N1 = # pos examples
+		double alpha_neg = C / n2; // !!! N2 = # neg examples
 		for (i = 0; i < n; i++) {
 			if (target[i] > 0) {
 				alphas[i] = alpha_pos;
 			} else {
 				alphas[i] = alpha_neg;
 			};
-			at_bound[i] = false;
+			atBound[i] = false;
 		};
 
 		// initialize all Hcache[i]
 		double sum_pos_K;
 		double sum_neg_K;
 		double[] kernel_row;
-		b_up = Double.NEGATIVE_INFINITY;
-		b_low = Double.POSITIVE_INFINITY;
-		i_up = 0;
-		i_low = 0;
+		bUp = Double.NEGATIVE_INFINITY;
+		bLow = Double.POSITIVE_INFINITY;
+		iUp = 0;
+		iLow = 0;
 		for (i = 0; i < n; i++) {
 			sum_pos_K = 0.0;
 			sum_neg_K = 0.0;
@@ -420,14 +417,14 @@ public class KLR implements SVMInterface {
 					sum_neg_K += kernel_row[j];
 				};
 			};
-			Hcache[i] = alpha_pos * sum_pos_K - alpha_neg * sum_neg_K + (target[i]) * dG(alphas[i]);
-			if (Hcache[i] > b_up) {
-				b_up = Hcache[i];
-				i_up = i;
+			hCache[i] = alpha_pos * sum_pos_K - alpha_neg * sum_neg_K + (target[i]) * dG(alphas[i]);
+			if (hCache[i] > bUp) {
+				bUp = hCache[i];
+				iUp = i;
 			};
-			if (Hcache[i] < b_low) {
-				b_low = Hcache[i];
-				i_low = i;
+			if (hCache[i] < bLow) {
+				bLow = hCache[i];
+				iLow = i;
 			};
 		};
 
@@ -435,14 +432,14 @@ public class KLR implements SVMInterface {
 		double Hi;
 		int numChange;
 
-		int it = max_iterations;
+		int it = maxIterations;
 
 		do {
 			// takestep with i_low and i_up
-			while (2.0 * tol < b_up - b_low) {
+			while (2.0 * tol < bUp - bLow) {
 				it--;
 
-				Flag = takeStep(i_low, i_up);
+				Flag = takeStep(iLow, iUp);
 				if (!Flag) {
 					break;
 				};
@@ -452,33 +449,31 @@ public class KLR implements SVMInterface {
 			// check optimality of boundary indices
 			numChange = 0;
 			for (i = 0; i < n; i++) {
-				if (at_bound[i]) {
-					Hi = Hcache[i];
-					if (Math.abs(Hi - b_low) >= Math.abs(Hi - b_up)) {
+				if (atBound[i]) {
+					Hi = hCache[i];
+					if (Math.abs(Hi - bLow) >= Math.abs(Hi - bUp)) {
 						it--;
-						Flag = takeStep(i, i_low);
+						Flag = takeStep(i, iLow);
 						if (!Flag) {
 							it--;
-							Flag = takeStep(i, i_up);
+							Flag = takeStep(i, iUp);
 						};
 					} else {
 						it--;
-						Flag = takeStep(i, i_up);
+						Flag = takeStep(i, iUp);
 						if (!Flag) {
 							it--;
-							Flag = takeStep(i, i_low);
+							Flag = takeStep(i, iLow);
 						};
 					};
-					if (!at_bound[i]) {
+					if (!atBound[i]) {
 						numChange++;
 					};
 				};
 			};
 		} while ((numChange != 0) && (it > 0));
 
-		// System.out.println("...done, KKT error = "+((b_up - b_low)/2.0));
-
-		b = (b_low + b_up) / 2.0;
+		b = (bLow + bUp) / 2.0;
 
 		// double targetf = 0.0;
 		// double tmp;
@@ -534,15 +529,12 @@ public class KLR implements SVMInterface {
 		// save y_i*alpha_i instead of alpha_i !!! IM 04/02/12 passiert aber
 		// nicht :-) !!!
 		examples.set_b(b);
-		//System.out.println("b = "+b);
 		for (int i = 0; i < n; i++) {
 			if (target[i] < 0) {
 				alphas[i] = -alphas[i];
 			};
-			//System.out.println(alphas[i]);
 
 		};
-		//System.out.println("alphas_spaeter: " + alphas);
 	};
 
 	/** Return the weights of the features. */

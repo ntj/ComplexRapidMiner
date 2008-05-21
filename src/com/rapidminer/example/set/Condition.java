@@ -1,42 +1,39 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.example.set;
 
 import java.io.Serializable;
 
 import com.rapidminer.example.Example;
-import com.rapidminer.example.ExampleReader;
 import com.rapidminer.example.ExampleSet;
 
 
 /**
  * Objects implementing this interface are used by
- * {@link ConditionExampleReader}s, a special sub class of
- * {@link ExampleReader} that skips all examples that do not fulfill this
+ * {@link com.rapidminer.example.set.ConditionedExampleSet}s, a special sub class of
+ * {@link com.rapidminer.example.ExampleSet} that skips all examples that do not fulfill this
  * condition. In order for the
- * {@link ConditionExampleReader#createCondition(String, ExampleSet, String)}
+ * {@link com.rapidminer.example.set.ConditionedExampleSet#createCondition(String, ExampleSet, String)}
  * factory method to be able to create instances of an implementation of
  * Condition, it must implement a two argument constructor taking an
  * {@link ExampleSet} and a parameter String. The meaning of the parameter
@@ -44,7 +41,7 @@ import com.rapidminer.example.ExampleSet;
  * it would be nice to print a warning.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: Condition.java,v 1.1 2007/05/27 21:59:00 ingomierswa Exp $
+ * @version $Id: Condition.java,v 1.5 2008/05/09 19:22:49 ingomierswa Exp $
  */
 public interface Condition extends Serializable {
 
@@ -54,7 +51,10 @@ public interface Condition extends Serializable {
 	/**
 	 * Returns a duplicate of this condition. Subclasses which cannot
 	 * dynamically changed can also return the same object.
+	 * 
+	 * @deprecated Conditions should not be able to be changed dynamically and hence there is no need for a copy
 	 */
+	@Deprecated
 	public Condition duplicate();
     
 }

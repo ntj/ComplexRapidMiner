@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.example.table;
 
@@ -34,7 +32,7 @@ import com.rapidminer.tools.LogService;
  * DataRowReader to create DataRows of arbitrary type.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: DataRowFactory.java,v 1.1 2007/05/27 22:01:19 ingomierswa Exp $
+ * @version $Id: DataRowFactory.java,v 1.9 2008/05/10 18:29:11 stiefelolm Exp $
  */
 public class DataRowFactory {
 
@@ -44,7 +42,7 @@ public class DataRowFactory {
  		"boolean_array", 
  		"double_sparse_array", "float_sparse_array", 
  		"long_sparse_array", "int_sparse_array", "short_sparse_array", "byte_sparse_array", 
- 		"type_boolean_sparse_array",
+ 		"boolean_sparse_array",
  		"sparse_map"
  	};
 
@@ -101,7 +99,9 @@ public class DataRowFactory {
 	 *            TYPE_DOUBLE_ARRAY, TYPE_FLOAT_ARRAY, TYPE_LONG_ARRAY, TYPE_INT_ARRAY, TYPE_SHORT_ARRAY, TYPE_BYTE_ARRAY, TYPE_BOOLEAN_ARRAY, 
 	 *            TYPE_DOUBLE_SPARSE_ARRAY, TYPE_FLOAT_SPARSE_ARRAY, TYPE_SHORT_SPARSE_ARRAY, TYPE_BYTE_SPARSE_ARRAY, TYPE_BOOLEAN_SPARSE_ARRAY,
 	 *            or TYPE_SPARSE_MAP.
+	 * @deprecated Please do not use this constructor any longer. Use the constructor {@link #DataRowFactory(int, char)} instead. 
 	 */
+	@Deprecated
 	public DataRowFactory(int type) {
 		this(type, '.');
 	}
@@ -227,18 +227,18 @@ public class DataRowFactory {
 		dataRow.trim();
 		return dataRow;
 	}
-	
+
 	/**
-	 * Creates a data row from an Object array. The classes of the object must
-	 * match the value type of the corresponding {@link Attribute}. If the
-	 * corresponding attribute is nominal, <code>data[i]</code> will be cast
-	 * to String. If it is numerical, it will be cast to Number.
-	 * 
-	 * @throws ClassCastException
-	 *             if data class does not match attribute type
-	 * @see DatabaseDataRowReader
-	 * @author Peter B. Volk
-	 */
+	* Creates a data row from an Object array. The classes of the object must
+	* match the value type of the corresponding {@link Attribute}. If the
+	* corresponding attribute is nominal, <code>data[i]</code> will be cast
+	* to String. If it is numerical, it will be cast to Number.
+	* 
+	* @throws ClassCastException
+	* if data class does not match attribute type
+	* @see DatabaseDataRowReader
+	* @author Peter B. Volk
+	*/
 	public DataRow create(Double[] data, Attribute[] attributes) {
 		DataRow dataRow = create(data.length);
 		for (int i = 0; i < data.length; i++) {
@@ -256,6 +256,7 @@ public class DataRowFactory {
 		return dataRow;
 	}
 
+	
 	/** Returns the type of the created data rows. */
 	public int getType() {
 		return type;
@@ -274,5 +275,4 @@ public class DataRowFactory {
 			return Double.NaN;
 		}
 	}
-
 }

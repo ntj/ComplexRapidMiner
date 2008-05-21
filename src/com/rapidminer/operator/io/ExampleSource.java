@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.io;
 
@@ -83,7 +81,7 @@ import com.rapidminer.tools.att.AttributeSet;
  * <ul>
  * <li>the character &quot;,&quot; followed by a whitespace of arbitrary length (also no white space)</li>
  * <li>the character &quot;;&quot; followed by a whitespace of arbitrary length (also no white space)</li>
- * <li>a whitespace of arbitrary length (min. 1)</li>
+ * <li>a whitespace of arbitrary length (min. 1)</li> 
  * </ul>
  * A logical XOR is defined by &quot;|&quot;. Other useful separators might be
  * &quot;\t&quot; for tabulars, &quot; &quot; for a single whitespace, and
@@ -91,19 +89,23 @@ import com.rapidminer.tools.att.AttributeSet;
  * </p>
  * 
  * <p>
- * Quoting is also possible with &quot;. However, using quotes slows down
- * parsing and is therefore not recommended. The user should ensure that the
+ * Quoting is also possible with &quot;. However, since using quotes might slow down
+ * the parsing it is therefore recommended to ensure that the
  * split characters are not included in the data columns and that quotes are not
- * needed. Additionally you can specify comment characters which can be used at
- * arbitrary locations of the data lines. Unknown attribute values can be marked
- * with empty strings or a question mark.
+ * needed.
+ * </p>
+ * 
+ * <p>
+ * Additionally you can specify comment characters which can be used at
+ * arbitrary locations of the data lines. Any content after the comment character
+ * will be ignored. Unknown attribute values can be marked with empty strings 
+ * (if this is possible for your column separators) or by a question mark (recommended).
  * </p>
  * 
  * @author Simon Fischer, Ingo Mierswa
- * @version $Id: ExampleSource.java,v 1.3 2007/06/23 00:09:30 ingomierswa Exp $
+ * @version $Id: ExampleSource.java,v 1.12 2008/05/09 19:22:37 ingomierswa Exp $
  */
 public class ExampleSource extends Operator {
-
 
 	/** The parameter name for &quot;Filename for the xml attribute description file. This file also contains the names of the files to read the data from.&quot; */
 	public static final String PARAMETER_ATTRIBUTES = "attributes";
@@ -120,6 +122,9 @@ public class ExampleSource extends Operator {
 	/** The parameter name for &quot;Column separators for data files (regular expression)&quot; */
 	public static final String PARAMETER_COLUMN_SEPARATORS = "column_separators";
 
+	/** The parameter name for &quot;Indicates if a comment character should be used&quot; */
+	public static final String PARAMETER_USE_COMMENT_CHARACTERS = "use_comment_characters";
+	
 	/** The parameter name for &quot;Lines beginning with these characters are ignored.&quot; */
 	public static final String PARAMETER_COMMENT_CHARS = "comment_chars";
 
@@ -134,6 +139,8 @@ public class ExampleSource extends Operator {
 
 	/** The parameter name for &quot;Use the given random seed instead of global random numbers (only for permutation, -1: use global).&quot; */
 	public static final String PARAMETER_LOCAL_RANDOM_SEED = "local_random_seed";
+    
+	
 	private static final Class[] INPUT_CLASSES = {};
 
 	private static final Class[] OUTPUT_CLASSES = { ExampleSet.class };
@@ -149,9 +156,11 @@ public class ExampleSource extends Operator {
 		File attributeFile = getParameterAsFile(PARAMETER_ATTRIBUTES);
 		try {
 			attributeDataSources = AttributeDataSource.createAttributeDataSources(attributeFile, true, this);
-			
-			reader = new FileDataRowReader(new DataRowFactory(getParameterAsInt(PARAMETER_DATAMANAGEMENT), getParameterAsString(PARAMETER_DECIMAL_POINT_CHARACTER).charAt(0)), attributeDataSources.getDataSources(), getParameterAsDouble(PARAMETER_SAMPLE_RATIO), getParameterAsInt(PARAMETER_SAMPLE_SIZE), getParameterAsString(PARAMETER_COLUMN_SEPARATORS), getParameterAsString(PARAMETER_COMMENT_CHARS)
-					.toCharArray(), getParameterAsBoolean(PARAMETER_USE_QUOTES), getEncoding(), RandomGenerator.getRandomGenerator(getParameterAsInt(PARAMETER_LOCAL_RANDOM_SEED)));
+			char[] commentCharacters = null;
+			if (getParameterAsBoolean(PARAMETER_USE_COMMENT_CHARACTERS)) {
+				commentCharacters = getParameterAsString(PARAMETER_COMMENT_CHARS).toCharArray(); 
+			}
+			reader = new FileDataRowReader(new DataRowFactory(getParameterAsInt(PARAMETER_DATAMANAGEMENT), getParameterAsString(PARAMETER_DECIMAL_POINT_CHARACTER).charAt(0)), attributeDataSources.getDataSources(), getParameterAsDouble(PARAMETER_SAMPLE_RATIO), getParameterAsInt(PARAMETER_SAMPLE_SIZE), getParameterAsString(PARAMETER_COLUMN_SEPARATORS), commentCharacters, getParameterAsBoolean(PARAMETER_USE_QUOTES), getEncoding(), RandomGenerator.getRandomGenerator(getParameterAsInt(PARAMETER_LOCAL_RANDOM_SEED)));
 		} catch (IOException e) {
 			throw new UserError(this, e, 302, new Object[] { attributeFile, e.getMessage() });
 		} catch (com.rapidminer.tools.XMLException e) {
@@ -192,9 +201,10 @@ public class ExampleSource extends Operator {
 		types.add(new ParameterTypeInt(PARAMETER_SAMPLE_SIZE, "The exact number of samples which should be read (-1 = use sample ratio; if not -1, sample_ratio will not have any effect)", -1, Integer.MAX_VALUE, -1));
 		types.add(new ParameterTypeCategory(PARAMETER_DATAMANAGEMENT, "Determines, how the data is represented internally.", DataRowFactory.TYPE_NAMES, DataRowFactory.TYPE_DOUBLE_ARRAY));
 		types.add(new ParameterTypeString(PARAMETER_COLUMN_SEPARATORS, "Column separators for data files (regular expression)", ",\\s*|;\\s*|\\s+"));
-		types.add(new ParameterTypeString(PARAMETER_COMMENT_CHARS, "Lines beginning with these characters are ignored.", "#"));
+		types.add(new ParameterTypeBoolean(PARAMETER_USE_COMMENT_CHARACTERS, "Indicates if qa comment character should be used.", true));
+		types.add(new ParameterTypeString(PARAMETER_COMMENT_CHARS, "Any content in a line after one of these characters will be ignored.", "#"));
 		types.add(new ParameterTypeString(PARAMETER_DECIMAL_POINT_CHARACTER, "Character that is used as decimal point.", "."));
-		types.add(new ParameterTypeBoolean(PARAMETER_USE_QUOTES, "Indicates if quotes should be regarded (slower!).", false));
+		types.add(new ParameterTypeBoolean(PARAMETER_USE_QUOTES, "Indicates if quotes should be regarded.", true));
 		types.add(new ParameterTypeBoolean(PARAMETER_PERMUTATE, "Indicates if the loaded data should be permutated.", false));
         types.add(new ParameterTypeInt(PARAMETER_LOCAL_RANDOM_SEED, "Use the given random seed instead of global random numbers (only for permutation, -1: use global).", -1, Integer.MAX_VALUE, -1));
 		return types;

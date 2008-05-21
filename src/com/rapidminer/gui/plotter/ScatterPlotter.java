@@ -1,29 +1,28 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.plotter;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -54,6 +53,7 @@ import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableRow;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.math.MathFunctions;
 
 
 /**
@@ -61,19 +61,23 @@ import com.rapidminer.tools.LogService;
  * indicate the third dimension.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: ScatterPlotter.java,v 1.3 2007/06/01 23:15:50 ingomierswa Exp $
+ * @version $Id: ScatterPlotter.java,v 1.11 2008/05/09 19:22:51 ingomierswa Exp $
  */
 public class ScatterPlotter extends PlotterAdapter {
 
 	private static final long serialVersionUID = -6640810053422867017L;
 
-	public static final String[] POINT_TYPES = new String[] { "lines", "points" };
-	
 	private static final Font SCALED_LABEL_FONT = LABEL_FONT.deriveFont(AffineTransform.getScaleInstance(1, -1));
 	
-	public static final int LINES = 0;
 	
-	public static final int POINTS = 1;
+	public static final String[] POINT_TYPES = new String[] { "lines_and_points", "lines", "points" };
+	
+	public static final int LINES_AND_POINTS = 0;
+	
+	public static final int LINES = 1;
+	
+	public static final int POINTS = 2;
+	
 	
 	public static final int X_AXIS = 0;
 
@@ -126,8 +130,6 @@ public class ScatterPlotter extends PlotterAdapter {
 	private boolean drawLabel = true;
 
 	private boolean draw2DLines = true;
-    
-    private boolean drawPoints = true;
 
 	private boolean drawLegend = true;
 	
@@ -135,7 +137,7 @@ public class ScatterPlotter extends PlotterAdapter {
 
 	private JComboBox pointTypeSelection;
 	
-	private int pointType = LINES;
+	private int pointType = LINES_AND_POINTS;
 	
 	private int jitterAmount = 0;
 	
@@ -169,7 +171,7 @@ public class ScatterPlotter extends PlotterAdapter {
 		columns = new boolean[dataTable.getNumberOfColumns()];
 	}
 
-	private void setPointType(int pointType) {
+	public void setPointType(int pointType) {
 		this.pointType = pointType;
 		repaint();
 	}
@@ -197,13 +199,16 @@ public class ScatterPlotter extends PlotterAdapter {
 		JFileChooser chooser = SwingTools.createFileChooser(null, false, new FileFilter[0]);
 		if (chooser.showSaveDialog(ScatterPlotter.this) == JFileChooser.APPROVE_OPTION) {
 			File file = chooser.getSelectedFile();
+            PrintWriter out = null;
 			try {
-				PrintWriter out = new PrintWriter(new FileWriter(file));
+				out = new PrintWriter(new FileWriter(file));
 				dataTable.write(out);
-				out.close();
 			} catch (Exception ex) {
 				SwingTools.showSimpleErrorMessage("Cannot write to file '" + file + "'", ex);
-			}
+			} finally {
+                if (out != null)
+                    out.close();
+            }
 		}
 	}
 
@@ -327,8 +332,8 @@ public class ScatterPlotter extends PlotterAdapter {
 						while (i.hasNext()) {
 							DataTableRow row = i.next();
 							double color = row.getValue(colorColumn);
-							minColor = Math.min(minColor, color);
-							maxColor = Math.max(maxColor, color);
+							minColor = MathFunctions.robustMin(minColor, color);
+							maxColor = MathFunctions.robustMax(maxColor, color);
 						}
 						i = dataTable.iterator();
 					}
@@ -523,20 +528,24 @@ public class ScatterPlotter extends PlotterAdapter {
 					plot.getLineStyle().set(g);
 					g.draw(path);
 				}
-                if (this.drawPoints) {
+                if ((this.pointType == LINES_AND_POINTS) || (this.pointType == POINTS)) {
                     // draw points
+                	g.setStroke(new BasicStroke());
                     i = plot.iterator();
                     while (i.hasNext()) {
                         ColorPlotterPoint plotterPoint = i.next();
                         Color pointColor = plot.getLineStyle().getColor();
+                        PointStyle pointStyle = plot.getPointStyle();
                         if (axis[Y_AXIS] >= 0) {
                             pointColor = getPointColor(plotterPoint.getColor());
+                            if (plots.size() <= 1)
+                            	pointStyle = ELLIPSOID_POINT_STYLE;
                         }
                         Color pointBorderColor = plotterPoint.getBorderColor();
                         try {
                             float gSpaceX = (float) ((xTransformation.transform(plotterPoint.getX()) + dx) * sx);
                             float gSpaceY = (float) ((yTransformation.transform(plotterPoint.getY()) + dy) * sy);
-                            drawPoint(g, gSpaceX, gSpaceY, pointColor, pointBorderColor);
+                            drawPoint(g, pointStyle, gSpaceX, gSpaceY, pointColor, pointBorderColor);
                         } catch (IllegalArgumentException e) {
                             LogService.getGlobal().log("Cannot apply axis scale transformation to point (" + plotterPoint.getX() + "," + plotterPoint.getY() + "), skipping...", LogService.WARNING);
                         }
@@ -710,35 +719,10 @@ public class ScatterPlotter extends PlotterAdapter {
 			g.drawString(xAxisLabel, MARGIN + (int) (pixWidth / 2.0d - stringBounds.getWidth() / 2.0d), MARGIN + (int) (pixHeight + stringBounds.getY()) + 3);
 		}
 
-		// y-axis label
-		int xOffset = 0;
-		if (drawLabel) {
-			StringBuffer yAxisLabel = new StringBuffer();
-			if (axis[Y_AXIS] >= 0)
-				yAxisLabel.append(dataTable.getColumnName(axis[Y_AXIS]));
-			else {
-				boolean first = true;
-				for (int column = 0; column < columns.length; column++) {
-					if (columns[column]) {
-						if (!first)
-							yAxisLabel.append(", ");
-						yAxisLabel.append(dataTable.getColumnName(column));
-						first = false;
-					}
-				}
-			}
-			if (yAxisLabel.length() == 0)
-				yAxisLabel.append("unknown");
-			Rectangle2D stringBounds = LABEL_FONT.getStringBounds(yAxisLabel.toString(), g.getFontRenderContext());
-			xOffset += stringBounds.getWidth() + 20;
-			g.drawString(yAxisLabel.toString(), MARGIN - 6, MARGIN - 6);
-		}
-
-		// key or legend
-		if (drawLegend && (axis[Y_AXIS] != -1) && (plots.size() == 1)) {
-			drawLegend(g, dataTable, colorColumn, xOffset, 255);
-		} else if (drawLegend && (axis[Y_AXIS] == -1) && (plots.size() > 1)) {
+		// y-axis label or key or legend
+		if (drawLegend && (axis[Y_AXIS] == -1) && (plots.size() > 1)) {
             String[] names = new String[plots.size()];
+            PointStyle[] pointStyles = new PointStyle[plots.size()];
             Color[] colors = new Color[plots.size()];
             Iterator<Plot> p = plots.iterator();
             int counter = 0;
@@ -746,9 +730,36 @@ public class ScatterPlotter extends PlotterAdapter {
                 Plot plot = p.next();
                 names[counter] = plot.getName();
                 colors[counter] = plot.getLineStyle().getColor();
+                pointStyles[counter] = plot.getPointStyle();
                 counter++;
             }
-            drawGenericNominalLegend(g, names, colors, xOffset, 255);
+            drawGenericNominalLegend(g, names, pointStyles, colors, 0, 255);
+        } else {
+            int xOffset = 0;
+            if (drawLabel) {
+                StringBuffer yAxisLabel = new StringBuffer();
+                if (axis[Y_AXIS] >= 0)
+                    yAxisLabel.append(dataTable.getColumnName(axis[Y_AXIS]));
+                else {
+                    boolean first = true;
+                    for (int column = 0; column < columns.length; column++) {
+                        if (columns[column]) {
+                            if (!first)
+                                yAxisLabel.append(", ");
+                            yAxisLabel.append(dataTable.getColumnName(column));
+                            first = false;
+                        }
+                    }
+                }
+                if (yAxisLabel.length() == 0)
+                    yAxisLabel.append("unknown");
+                Rectangle2D stringBounds = LABEL_FONT.getStringBounds(yAxisLabel.toString(), g.getFontRenderContext());
+                xOffset += stringBounds.getWidth() + 20;
+                g.drawString(yAxisLabel.toString(), MARGIN - 6, MARGIN - 6);
+            }
+            if (drawLegend && (axis[Y_AXIS] != -1) && (plots.size() == 1)) {
+                drawLegend(g, dataTable, colorColumn, xOffset, 255);
+            }
         }
 		
 		// draw key
@@ -775,14 +786,6 @@ public class ScatterPlotter extends PlotterAdapter {
 	public boolean getDraw2DLines() {
 		return this.draw2DLines;
 	}
-	
-    public void setDrawPoints(boolean drawPoints) {
-        this.drawPoints = drawPoints;
-    }
-    
-    public boolean getDrawPoints() {
-        return this.drawPoints;
-    }
     
 	public boolean isProvidingCoordinates() {
 		return true;

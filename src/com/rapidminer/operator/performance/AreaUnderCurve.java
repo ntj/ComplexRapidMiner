@@ -1,35 +1,39 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.performance;
 
-import java.util.List;
+import java.awt.Component;
+import java.awt.Graphics;
+import java.util.LinkedList;
 
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.gui.viewer.ROCViewer;
+import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.tools.Renderable;
 import com.rapidminer.tools.math.Averagable;
+import com.rapidminer.tools.math.ROCData;
 import com.rapidminer.tools.math.ROCDataGenerator;
 
 
@@ -37,21 +41,29 @@ import com.rapidminer.tools.math.ROCDataGenerator;
  * This criterion calculates the area under the ROC curve.
  * 
  * @author Ingo Mierswa, Martin Scholz
- * @version $Id: AreaUnderCurve.java,v 1.2 2007/07/13 22:52:13 ingomierswa Exp $
+ * @version $Id: AreaUnderCurve.java,v 1.8 2008/05/09 19:22:43 ingomierswa Exp $
  */
-public class AreaUnderCurve extends MeasuredPerformance {
+public class AreaUnderCurve extends MeasuredPerformance implements Renderable {
 
 	private static final long serialVersionUID = 6877715214974493828L;
 
 	/** The value of the AUC. */
 	private double auc = Double.NaN;
 
+    /** The data generator for this ROC curve. */
+    private ROCDataGenerator rocDataGenerator = new ROCDataGenerator(1.0d, 1.0d);
+    
+    /** The data for the ROC curve. */
+    private LinkedList<ROCData> rocData = new LinkedList<ROCData>();
+    
 	/** A counter for average building. */
 	private int counter = 1;
 
     /** The positive class name. */
     private String positiveClass;
     
+    /** The viewer used to show the rocPlot */
+    private ROCViewer viewer;
     
 	/** Clone constructor. */
 	public AreaUnderCurve() {}
@@ -64,19 +76,19 @@ public class AreaUnderCurve extends MeasuredPerformance {
 	}
 
 	/** Calculates the AUC. */
-	public void startCounting(ExampleSet exampleSet) throws OperatorException {
+	public void startCounting(ExampleSet exampleSet, boolean useExampleWeights) throws OperatorException {
+		super.startCounting(exampleSet, useExampleWeights);
 		// create ROC data
-		ROCDataGenerator rocDataGenerator = new ROCDataGenerator(1.0d, 1.0d);
-		List<double[]> rocData = rocDataGenerator.createROCDataList(exampleSet);
-		this.auc = rocDataGenerator.calculateAUC(rocData);
+		this.rocData.add(rocDataGenerator.createROCData(exampleSet, useExampleWeights));
+		this.auc = rocDataGenerator.calculateAUC(this.rocData.getLast());
         this.positiveClass = exampleSet.getAttributes().getPredictedLabel().getMapping().getPositiveString();
 	}
 
-	/** Does nothing. Everything is done in {@link #startCounting(ExampleSet)}. */
+	/** Does nothing. Everything is done in {@link #startCounting(ExampleSet, boolean)}. */
 	public void countExample(Example example) {}
 
-	public int getExampleCount() {
-		return 1;
+	public double getExampleCount() {
+		return 1.0d;
 	}
 
 	public double getMikroVariance() {
@@ -104,9 +116,28 @@ public class AreaUnderCurve extends MeasuredPerformance {
 		AreaUnderCurve other = (AreaUnderCurve) performance;
 		this.counter += other.counter;
 		this.auc += other.auc;
+        this.rocData.addAll(other.rocData);
 	}
+    
+    /** This implementation returns a confusion matrix viewer based on a JTable. */
+    public Component getVisualizationComponent(IOContainer ioContainer) {
+        viewer = new ROCViewer(toString(), this.rocDataGenerator, this.rocData);
+    	return viewer;
+    }
     
     public String toString() {
         return super.toString() + " (positive class: " + positiveClass + ")";
     }
+
+	public int getRenderHeight(int preferredHeight) {
+		return viewer.getRenderHeight(preferredHeight);
+	}
+
+	public int getRenderWidth(int preferredWidth) {
+		return viewer.getRenderWidth(preferredWidth);
+	}
+
+	public void render(Graphics graphics, int width, int height) {
+		viewer.render(graphics, width, height);
+	}
 }

@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.io;
 
@@ -102,7 +100,6 @@ import com.rapidminer.tools.att.AttributeSet;
  */
 public class SimpleExampleSource extends Operator {
 
-
 	/** The parameter name for &quot;Name of the label attribute (if empty, the column defined by label_column will be used)&quot; */
 	public static final String PARAMETER_LABEL_NAME = "label_name";
 
@@ -130,6 +127,9 @@ public class SimpleExampleSource extends Operator {
 	/** The parameter name for &quot;Determines, how the data is represented internally.&quot; */
 	public static final String PARAMETER_DATAMANAGEMENT = "datamanagement";
 
+	/** The parameter name for &quot;Indicates if a comment character should be used&quot; */
+	public static final String PARAMETER_USE_COMMENT_CHARACTERS = "use_comment_characters";
+	
 	/** The parameter name for &quot;Lines beginning with these characters are ignored.&quot; */
 	public static final String PARAMETER_COMMENT_CHARS = "comment_chars";
 
@@ -144,6 +144,7 @@ public class SimpleExampleSource extends Operator {
     
 	protected static final String PARAMETER_COLUMN_SEPARATORS = "column_separators";
 	
+	
 	public SimpleExampleSource(OperatorDescription description) {
 		super(description);
 	}
@@ -153,7 +154,10 @@ public class SimpleExampleSource extends Operator {
 		double sampleRatio = getParameterAsDouble(PARAMETER_SAMPLE_RATIO);
         int maxLines = getParameterAsInt(PARAMETER_SAMPLE_SIZE);
 		String separatorRegExpr = getParameterAsString(PARAMETER_COLUMN_SEPARATORS);
-		char[] comments = getParameterAsString(PARAMETER_COMMENT_CHARS).toCharArray();
+		char[] comments = null;
+		if (getParameterAsBoolean(PARAMETER_USE_COMMENT_CHARACTERS)) {
+			comments = getParameterAsString(PARAMETER_COMMENT_CHARS).toCharArray(); 
+		}
 		int dataRowType = getParameterAsInt(PARAMETER_DATAMANAGEMENT);
 		boolean useQuotes = getParameterAsBoolean(PARAMETER_USE_QUOTES);
 		char decimalPointCharacter = getParameterAsString(PARAMETER_DECIMAL_POINT_CHARACTER).charAt(0);
@@ -161,7 +165,7 @@ public class SimpleExampleSource extends Operator {
         // create attribute data sources and guess value types (performs a data scan)
 		AttributeDataSourceCreator adsCreator = new AttributeDataSourceCreator();
         try {
-            adsCreator.loadData(file, comments, separatorRegExpr, useQuotes, getParameterAsBoolean(PARAMETER_READ_ATTRIBUTE_NAMES), -1);
+            adsCreator.loadData(file, comments, separatorRegExpr, decimalPointCharacter, useQuotes, getParameterAsBoolean(PARAMETER_READ_ATTRIBUTE_NAMES), -1, getEncoding());
         } catch (IOException e) {
             throw new UserError(this, 302, file, e.getMessage());
         }
@@ -245,6 +249,7 @@ public class SimpleExampleSource extends Operator {
 		types.add(new ParameterTypeInt(PARAMETER_SAMPLE_SIZE, "The exact number of samples which should be read (-1 = use sample ratio; if not -1, sample_ratio will not have any effect)", -1, Integer.MAX_VALUE, -1));
 		types.add(new ParameterTypeCategory(PARAMETER_DATAMANAGEMENT, "Determines, how the data is represented internally.", DataRowFactory.TYPE_NAMES, DataRowFactory.TYPE_DOUBLE_ARRAY));
 		types.add(new ParameterTypeString(PARAMETER_COLUMN_SEPARATORS, "Column separators for data files (regular expression)", ",\\s*|;\\s*|\\s+"));
+		types.add(new ParameterTypeBoolean(PARAMETER_USE_COMMENT_CHARACTERS, "Indicates if qa comment character should be used.", true));
 		types.add(new ParameterTypeString(PARAMETER_COMMENT_CHARS, "Lines beginning with these characters are ignored.", "#"));
 		types.add(new ParameterTypeBoolean(PARAMETER_USE_QUOTES, "Indicates if quotes should be regarded (slower!).", false));
 		types.add(new ParameterTypeString(PARAMETER_DECIMAL_POINT_CHARACTER, "Character that is used as decimal point.", "."));

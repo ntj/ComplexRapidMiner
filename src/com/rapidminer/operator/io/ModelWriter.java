@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.io;
 
@@ -71,7 +69,7 @@ import static com.rapidminer.operator.io.OutputTypes.*;
  * RapidMiner like %{t} or %{a} (please refer to the tutorial section about macros).</p>
  * 
  * @author Ingo Mierswa
- * @version $Id: ModelWriter.java,v 1.3 2007/06/15 16:58:37 ingomierswa Exp $
+ * @version $Id: ModelWriter.java,v 1.6 2008/05/09 19:22:37 ingomierswa Exp $
  */
 public class ModelWriter extends Operator {
 
@@ -97,48 +95,80 @@ public class ModelWriter extends Operator {
 		File modelFile = getParameterAsFile(PARAMETER_MODEL_FILE);
 		Model model = getInput(Model.class);
 
-		try {
-			if (!getParameterAsBoolean(PARAMETER_OVERWRITE_EXISTING_FILE)) {
-				if (modelFile.exists()) {
-					File newFile = null;
-					String fileName = modelFile.getAbsolutePath();
-					int counter = 1;
-					while (true) {
-						// create the new file name
-						String[] extension = fileName.split("\\.");
-						extension[extension.length - 2] += "_" + counter + ".";
-						String newFileName = stringArrayToString(extension);
-						newFile = new File(newFileName);
-						if (!newFile.exists()) {
-							break;
-						}
-						counter++;
+		if (!getParameterAsBoolean(PARAMETER_OVERWRITE_EXISTING_FILE)) {
+			if (modelFile.exists()) {
+				File newFile = null;
+				String fileName = modelFile.getAbsolutePath();
+				int counter = 1;
+				while (true) {
+					// create the new file name
+					String[] extension = fileName.split("\\.");
+					extension[extension.length - 2] += "_" + counter + ".";
+					String newFileName = stringArrayToString(extension);
+					newFile = new File(newFileName);
+					if (!newFile.exists()) {
+						break;
 					}
-					modelFile = newFile;
+					counter++;
+				}
+				modelFile = newFile;
+			}
+		}
+		int outputType = getParameterAsInt(PARAMETER_OUTPUT_TYPE);
+		switch (outputType) {
+		case OUTPUT_TYPE_XML:
+			OutputStream out = null;
+			try {
+				out = new FileOutputStream(modelFile);
+				model.write(out);
+			} catch (IOException e) {
+				throw new UserError(this, e, 303, new Object[] { modelFile, e.getMessage() });
+			} finally {
+				if (out != null) {
+					try {
+						out.close();
+					} catch (IOException e) {
+						logError("Cannot close stream to file " + modelFile);
+					}		
 				}
 			}
-			int outputType = getParameterAsInt(PARAMETER_OUTPUT_TYPE);
-            switch (outputType) {
-            case OUTPUT_TYPE_XML:
-            	OutputStream out = new FileOutputStream(modelFile);
-     			model.write(out);
-                out.close();
-            	break;
-            case OUTPUT_TYPE_XML_ZIPPED:
-            	out = new GZIPOutputStream(new FileOutputStream(modelFile));
-     			model.write(out);
-                out.close();
-            	break;
-            case OUTPUT_TYPE_BINARY:
-            	ObjectOutputStream objectOut = new ObjectOutputStream(new FileOutputStream(modelFile));
-     			objectOut.writeObject(model);
-     			objectOut.close();
-            	break;
-            default:
-            	break;
-            }
-		} catch (IOException e) {
-			throw new UserError(this, e, 303, new Object[] { modelFile, e.getMessage() });
+			break;
+		case OUTPUT_TYPE_XML_ZIPPED:
+			out = null;
+			try {
+				out = new GZIPOutputStream(new FileOutputStream(modelFile));
+				model.write(out);	
+			} catch (IOException e) {
+				throw new UserError(this, e, 303, new Object[] { modelFile, e.getMessage() });
+			} finally {
+				if (out != null) {
+					try {
+						out.close();
+					} catch (IOException e) {
+						logError("Cannot close stream to file " + modelFile);
+					}		
+				}
+			}
+			break;
+		case OUTPUT_TYPE_BINARY:
+			ObjectOutputStream objectOut = null;
+			try {
+				objectOut = new ObjectOutputStream(new FileOutputStream(modelFile));
+				objectOut.writeObject(model);
+			} catch (IOException e) {
+				throw new UserError(this, e, 303, new Object[] { modelFile, e.getMessage() });
+			} finally {
+				if (objectOut != null) {
+					try {
+						objectOut.close();
+					} catch (IOException e) {
+						logError("Cannot close stream to file " + modelFile);
+					}		
+				}
+			}
+			break;
+		default:
+			break;
 		}
 
 		return new IOObject[] { model };

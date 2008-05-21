@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.example;
 
@@ -31,14 +29,14 @@ import java.io.Serializable;
  * of the corresponding attribute.
  * 
  * @author Ingo Mierswa
- * @version $Id: ConstructionDescription.java,v 1.2 2007/05/28 21:23:34 ingomierswa Exp $
+ * @version $Id: ConstructionDescription.java,v 1.6 2008/05/09 19:22:43 ingomierswa Exp $
  */
 public class ConstructionDescription implements Serializable {
 
 	private static final long serialVersionUID = 3037807970685835836L;
 
 	/** Name of the function if this attribute was generated. */
-	private String generatingFunctionName;
+	private String generatingFunctionName = null;
 
 	/**
 	 * If this attribute was generated, this array of attributes holds the input
@@ -51,18 +49,38 @@ public class ConstructionDescription implements Serializable {
 	
 	
 	/** Creates a basic construction description. */
-	public ConstructionDescription(Attribute attribute, String name) {
-		this.generatingFunctionName = name;
+	public ConstructionDescription(Attribute attribute) {
 		this.attribute = attribute;
+	}
+	
+	private ConstructionDescription(ConstructionDescription other) {
+		this.attribute = other.attribute;
+		this.generatingFunctionName = other.generatingFunctionName;
+		if (other.generatingFunctionArguments != null) {
+			this.generatingFunctionArguments = new ConstructionDescription[other.generatingFunctionArguments.length];
+			for (int i = 0; i < other.generatingFunctionArguments.length; i++) {
+				this.generatingFunctionArguments[i] = (ConstructionDescription)other.generatingFunctionArguments[i].clone();
+			}
+		}			
+	}
+	
+	public Object clone() {
+		return new ConstructionDescription(this);
 	}
 	
 	public boolean equals(Object o) {
 		if (!(o instanceof ConstructionDescription)) {
 			return false;
 		}
+
 		ConstructionDescription other = (ConstructionDescription)o;
-		if (!generatingFunctionName.equals(other.generatingFunctionName))
-			return false;
+		if (generatingFunctionName == null) {
+			if (other.generatingFunctionName != null)
+				return false;
+		} else {
+			if (!generatingFunctionName.equals(other.generatingFunctionName))
+				return false;
+		}
 		if ((generatingFunctionArguments == null) && (other.generatingFunctionArguments != null))
 			return false;
 		if ((generatingFunctionArguments != null) && (other.generatingFunctionArguments == null))
@@ -128,16 +146,25 @@ public class ConstructionDescription implements Serializable {
 	 */
 	public String getDescription(boolean useInfix) {
 		boolean infixPossible = (generatingFunctionArguments != null) && (generatingFunctionArguments.length == 2);
-		if (generatingFunctionArguments == null)
-			return generatingFunctionName;
-		else if ((infixPossible) && (useInfix)) {
-			return "(" + generatingFunctionArguments[0].getDescription(useInfix) + generatingFunctionName + generatingFunctionArguments[1].getDescription(useInfix) + ")";
+		if (generatingFunctionArguments == null) {
+			if (generatingFunctionName != null)
+				return this.generatingFunctionName;
+			else
+				return this.attribute.getName();
 		} else {
-			StringBuffer cd = new StringBuffer(generatingFunctionName + "(");
-			for (int i = 0; i < generatingFunctionArguments.length; i++)
-				cd.append((i == 0 ? "" : ", ") + generatingFunctionArguments[i].getDescription(useInfix));
-			cd.append(")");
-			return cd.toString();
+			if (generatingFunctionName == null) {
+				return this.attribute.getName();
+			} else {
+				if ((infixPossible) && (useInfix)) {
+					return "(" + generatingFunctionArguments[0].getDescription(useInfix) + generatingFunctionName + generatingFunctionArguments[1].getDescription(useInfix) + ")";
+				} else {
+					StringBuffer cd = new StringBuffer(generatingFunctionName + "(");
+					for (int i = 0; i < generatingFunctionArguments.length; i++)
+						cd.append((i == 0 ? "" : ", ") + generatingFunctionArguments[i].getDescription(useInfix));
+					cd.append(")");
+					return cd.toString();
+				}
+			}
 		}
 	}
 
@@ -156,12 +183,12 @@ public class ConstructionDescription implements Serializable {
 
 	/** Returns true iff this attribute was generated. */
 	public boolean isGenerated() {
-		return generatingFunctionArguments != null;
+		return generatingFunctionName != null;
 	}
 	
 	/** Clears the construction description. */
 	public void clear() {
-		this.generatingFunctionName = this.attribute.getName();
+		this.generatingFunctionName = null;
 		this.generatingFunctionArguments = null;
 	}
 	

@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.dialog;
 
@@ -56,7 +54,7 @@ import com.rapidminer.tools.ParameterService;
  * can be performed and altered by the user.
  * 
  * @author Ingo Mierswa
- * @version $Id: Tutorial.java,v 1.3 2007/06/07 17:12:23 ingomierswa Exp $
+ * @version $Id: Tutorial.java,v 1.8 2008/05/09 19:23:20 ingomierswa Exp $
  */
 public class Tutorial extends JDialog {
 
@@ -96,7 +94,7 @@ public class Tutorial extends JDialog {
             "02_Learner" + File.separator + "18_SimpleCostSensitiveLearning.xml",
             "05_Features" + File.separator + "03_PrincipalComponents.xml",
             "05_Features" + File.separator + "10_ForwardSelection.xml",
-            "05_Features" + File.separator + "09_FeatureSelectionFilter.xml",
+            //"05_Features" + File.separator + "09_FeatureSelectionFilter.xml",
             "05_Features" + File.separator + "12_WeightGuidedFeatureSelection.xml",
             "05_Features" + File.separator + "18_MultiobjectiveSelection.xml",
             "04_Validation" + File.separator + "12_WrapperValidation.xml",
@@ -187,7 +185,9 @@ public class Tutorial extends JDialog {
 	}
 
 	private void setProcess(String process) {
-		File expFile = ParameterService.getSampleFile(process);
+		File expFile = ParameterService.getUserSampleFile(process);
+		if ((expFile == null) || (!expFile.exists()))
+			expFile = ParameterService.getSampleFile(process);
 		mainFrame.open(expFile, false);
 		description.setText(SwingTools.text2DisplayHtml(RapidMinerGUI.getMainFrame().getProcess().getRootOperator().getUserDescription()));
 		description.getCaret().setDot(0);
@@ -219,7 +219,7 @@ public class Tutorial extends JDialog {
 	}
 
 	private void close() {
-		mainFrame.setProcess(new Process());
+		mainFrame.setProcess(new Process(), true);
 		mainFrame.setTutorialMode(false);
 		dispose();
 	}

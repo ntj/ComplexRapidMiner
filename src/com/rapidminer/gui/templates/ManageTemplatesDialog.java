@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.templates;
 
@@ -49,6 +47,7 @@ import javax.swing.JScrollPane;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.ParameterService;
 
 
@@ -103,7 +102,7 @@ public class ManageTemplatesDialog extends JDialog {
 			try {
 				Template template = new Template(templateFiles[i]);
 				templateMap.put(template.getName(), template);
-			} catch (Throwable e) {
+			} catch (InstantiationException e) {
 				SwingTools.showSimpleErrorMessage("Cannot load template file '" + templateFiles[i] + "'", e);
 			}
 		}
@@ -166,8 +165,12 @@ public class ManageTemplatesDialog extends JDialog {
 			Template template = templateMap.remove(name);
 			File templateFile = template.getFile();
 			File expFile = new File(templateFile.getParent(), template.getFilename());
-			templateFile.delete();
-			expFile.delete();
+			boolean deleteResult = templateFile.delete();
+			if (!deleteResult)
+				LogService.getGlobal().logWarning("Unable to delete template file: " + templateFile);
+			deleteResult = expFile.delete();
+			if (!deleteResult)
+				LogService.getGlobal().logWarning("Unable to delete template experiment file: " + expFile);
 		}
 		update();
 	}

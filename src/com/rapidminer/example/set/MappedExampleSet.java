@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.example.set;
 
@@ -51,7 +49,7 @@ import com.rapidminer.example.table.ExampleTable;
  *  example.</p>
  *  
  *  @author Ingo Mierswa, Martin Scholz
- *  @version $Id: MappedExampleSet.java,v 1.2 2007/07/10 18:02:03 ingomierswa Exp $
+ *  @version $Id: MappedExampleSet.java,v 1.7 2008/05/09 19:22:49 ingomierswa Exp $
  */
 public class MappedExampleSet extends AbstractExampleSet {
 
@@ -72,9 +70,16 @@ public class MappedExampleSet extends AbstractExampleSet {
      *  useMappedExamples is false only examples which are not part of the original 
      *  mapping are used. */
     public MappedExampleSet(ExampleSet parent, int[] mapping, boolean useMappedExamples) {
-    	this.parent = parent;
+    	this(parent, mapping, useMappedExamples, true);
+    }
+    
+    /** Constructs an example set based on the given mapping. If the boolean flag 
+     *  useMappedExamples is false only examples which are not part of the original 
+     *  mapping are used. If the boolean flag sort is false the mapping is used as is.*/
+    public MappedExampleSet(ExampleSet parent, int[] mapping, boolean useMappedExamples, boolean sort) {
+    	this.parent = (ExampleSet)parent.clone();
         this.mapping = mapping; 
-        Arrays.sort(this.mapping);
+        if(sort) Arrays.sort(this.mapping);
         
         if (!useMappedExamples) {
             List<Integer> inverseIndexList = new ArrayList<Integer>();
@@ -143,18 +148,8 @@ public class MappedExampleSet extends AbstractExampleSet {
     	return parent.getAttributes();
     }
     
-    /**
-     * Returns the example with the given index.
-     */
-    public Example getExampleFromId(double id) {
-        return new Example(parent.getExampleFromId(id).getDataRow(), this);
-    }
-
 	public ExampleTable getExampleTable() {
 		return parent.getExampleTable();
-	}
-	public void remapIds() {
-		parent.remapIds();
 	}
 	
     /** Creates a new mapping for the given example set by sampling with replacement. */

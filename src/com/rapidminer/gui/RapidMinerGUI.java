@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui;
 
@@ -29,27 +27,23 @@ import java.awt.Toolkit;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
-import java.util.Vector;
 
+import javax.swing.JOptionPane;
 import javax.swing.LookAndFeel;
 import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
@@ -57,12 +51,17 @@ import javax.swing.UIManager;
 import com.rapidminer.NoOpUserError;
 import com.rapidminer.Process;
 import com.rapidminer.RapidMiner;
+import com.rapidminer.gui.dialog.InitialSettingsDialog;
 import com.rapidminer.gui.dialog.ResultHistory;
+import com.rapidminer.gui.look.RapidLookAndFeel;
+import com.rapidminer.gui.look.fc.BookmarkIO;
 import com.rapidminer.gui.tools.CheckForUpdatesThread;
 import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.operator.similarity.attributebased.Matrix;
+import com.rapidminer.gui.tools.VersionNumber;
 import com.rapidminer.parameter.ParameterTypeBoolean;
+import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.Tools;
 
@@ -72,7 +71,7 @@ import com.rapidminer.tools.Tools;
  * {@link MainFrame} and some other GUI relevant informations and methods.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: RapidMinerGUI.java,v 1.11 2007/07/15 22:06:25 ingomierswa Exp $
+ * @version $Id: RapidMinerGUI.java,v 1.34 2008/05/09 19:23:23 ingomierswa Exp $
  */
 public class RapidMinerGUI extends RapidMiner {
 
@@ -86,10 +85,20 @@ public class RapidMinerGUI extends RapidMiner {
     public static final String PROPERTY_GEOMETRY_DIVIDER_GROUPSELECTION = "rapidminer.gui.geometry.divider.groupselection";
     public static final String PROPERTY_EXPERT_MODE                     = "rapidminer.gui.expertmode";
             
-	public static final String PROPERTY_RAPIDMINER_GUI_UPDATE_CHECK = "rapidminer.gui.update.check";
-
+	public static final String PROPERTY_RAPIDMINER_GUI_UPDATE_CHECK  = "rapidminer.gui.update.check";
+	public static final String PROPERTY_RAPIDMINER_GUI_LOOK_AND_FEEL = "rapidminer.gui.look";
+	
+	public static final String[] LOOK_AND_FEELS = {
+		"modern",
+		"classic"
+	};
+	
+	public static final int LOOK_AND_FEEL_MODERN  = 0;
+	public static final int LOOK_AND_FEEL_CLASSIC = 1;
+	
 	static {
 		RapidMiner.registerRapidMinerProperty(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_GUI_UPDATE_CHECK, "Check for new RapidMiner versions at start up time?", true)); 
+		RapidMiner.registerRapidMinerProperty(new ParameterTypeCategory(PROPERTY_RAPIDMINER_GUI_LOOK_AND_FEEL, "Indicates which look and feel should be used (you have to restart RapidMiner in order to see changes).", LOOK_AND_FEELS, LOOK_AND_FEEL_MODERN));
 	}
 
 	private static final int NUMBER_OF_RECENT_FILES = 8;
@@ -106,79 +115,12 @@ public class RapidMinerGUI extends RapidMiner {
 	 * This thread listens for System shutdown and cleans up after shutdown.
 	 * This included saving the recent file list and other GUI properties.
 	 */
-	private static class ShutdownHook extends Thread {
+	protected static class ShutdownHook extends Thread {
 		public void run() {
 			LogService.getGlobal().log("Running shutdown sequence.", LogService.INIT);
 			RapidMinerGUI.saveRecentFileList();
 			RapidMinerGUI.saveGUIProperties();
 		}
-	}
-
-	private static void setupGUI() throws NoOpUserError {  
-		// check for favourites file and add basic favourites if necessary
-		File favouritesFile = new File(ParameterService.getUserRapidMinerDir(), ".TFileChooserFavourites");
-		if (!favouritesFile.exists()) {
-			Vector<Hashtable<String, String>> favouritesVector = new Vector<Hashtable<String, String>>();
-			Hashtable<String,String> sampleFavourite = new Hashtable<String,String>();
-			sampleFavourite.put("time", Long.valueOf((new Date()).getTime()).toString());
-			sampleFavourite.put("name", "samples");
-			sampleFavourite.put("path", ParameterService.getSampleDir().getAbsolutePath());
-			favouritesVector.add(sampleFavourite);
-			
-			Hashtable<String,String> dataFavourite = new Hashtable<String,String>();
-			dataFavourite.put("time", Long.valueOf((new Date()).getTime()).toString());
-			dataFavourite.put("name", "sample_data");
-			dataFavourite.put("path", ParameterService.getSampleFile("data").getAbsolutePath());
-			favouritesVector.add(dataFavourite);
-			
-			try {
-				ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(favouritesFile));
-				out.writeObject(favouritesVector);
-				out.close();
-			} catch (FileNotFoundException e) {
-				LogService.getGlobal().logWarning("Cannot write default favourites for file choose: " + e.getMessage());
-			} catch (IOException e) {
-				LogService.getGlobal().logWarning("Cannot write default favourites for file choose: " + e.getMessage());
-			}
-		}
-
-    	// set favourites dir
-    	System.setProperty("trendy.favourites.dir", ParameterService.getUserRapidMinerDir().getAbsolutePath());
-		
-		// setup pluggable look and feel
-        try {
-            Class<?> configurationClazz = Class.forName("com.Trendy.swing.plaf.TrendyConfiguration");
-            // enable antialiasing
-            Method antiAliasingMethod = configurationClazz.getMethod("setGlobal_ANTIALIASED_MINIMUM_FONT", new Class[] { Integer.class });
-            antiAliasingMethod.invoke(null, new Object[] { Integer.valueOf(0) } );  
-
-            // 1: round (default); -1: squared (nicer)
-            Field roundField = configurationClazz.getField("Component_RoundRect_Status");
-            String roundString = (String)roundField.get(null); 
-            UIManager.put("Button." + roundString, Integer.valueOf(-1)); // round buttons
-            UIManager.put("ToggleButton." + roundString, Integer.valueOf(-1)); // round toggle buttons
-            UIManager.put("ComboBox." + roundString, Integer.valueOf(-1)); // round combo boxes
-            
-            // init PLAF
-            Class<?> lookAndFeelClass = Class.forName("com.Trendy.swing.plaf.TrendyLookAndFeel");
-            LookAndFeel laf = (LookAndFeel)lookAndFeelClass.newInstance();
-            
-            // use enhanced color scheme (nice menus etc.)
-            Class themeClass = Class.forName("com.Trendy.swing.plaf.Themes.TrendyEnhancedDefaultTheme");
-            Class generalThemeClass = Class.forName("com.Trendy.swing.plaf.Themes.TrendyTheme"); 
-            Method themeMethod = lookAndFeelClass.getMethod("setCurrentTheme", new Class[] { generalThemeClass });
-            themeMethod.invoke(laf, themeClass.newInstance()); 
-            UIManager.setLookAndFeel(laf);
-            
-        } catch (Throwable e) {
-        	LogService.getGlobal().log("Cannot setup RapidMiner look and feel, using system default.", LogService.INIT);
-        }
-
-        // setup tool tip text manager
-        ToolTipManager manager = ToolTipManager.sharedInstance();
-        manager.setDismissDelay(25000); // original: 4000
-        manager.setInitialDelay(1500);   // original: 750
-        manager.setReshowDelay(50);    // original: 500
 	}
 
 	public void run(File file) throws Exception {		
@@ -193,8 +135,18 @@ public class RapidMinerGUI extends RapidMiner {
 		
 		RapidMiner.splashMessage("Basic Initialization");
 		RapidMiner.init();
-	
+		
+	    // set locale fix to US
+	    RapidMiner.splashMessage("Using US Local");
+	    Locale.setDefault(Locale.US);
+	    JOptionPane.setDefaultLocale(Locale.US);
+			
+		// check if this version is started for the first time
+		RapidMiner.splashMessage("Workspace Initialization");
+		performInitialSettings();
+		
 		RapidMiner.splashMessage("Setting up Look and Feel");
+		setupToolTipManager();
 		setupGUI();
 		
 		RapidMiner.splashMessage("Loading History");
@@ -244,6 +196,64 @@ public class RapidMinerGUI extends RapidMiner {
 		}
 	}
 
+	private void setupToolTipManager() {
+        // setup tool tip text manager
+        ToolTipManager manager = ToolTipManager.sharedInstance();
+        manager.setDismissDelay(25000); // original: 4000
+        manager.setInitialDelay(1500);   // original: 750
+        manager.setReshowDelay(50);    // original: 500
+	}
+	
+	/** This default implementation only setup the tool tip durations. Subclasses might
+	 *  override this method. */
+	protected void setupGUI() throws NoOpUserError {
+		String lookAndFeelString = System.getProperty(PROPERTY_RAPIDMINER_GUI_LOOK_AND_FEEL);
+		int lookAndFeel = LOOK_AND_FEEL_MODERN;
+		if (lookAndFeelString != null) {
+			try {
+				lookAndFeel = Integer.parseInt(lookAndFeelString);
+			} catch (NumberFormatException e) {
+				LogService.getGlobal().log("Cannot setup look and feel ('" + lookAndFeelString + "'), using default.", LogService.INIT);			
+			}
+		}
+		if (lookAndFeel == LOOK_AND_FEEL_CLASSIC) {
+			try {
+				Class<?> clazz = Class.forName("com.jgoodies.looks.plastic.PlasticLookAndFeel");
+				Method method = clazz.getMethod("setTabStyle", String.class);
+				method.invoke( null, new Object[]{ "Metal" } );
+
+				Class themeClazz = Class.forName("com.jgoodies.looks.plastic.PlasticTheme");
+
+				Class skyBluerClazz = Class.forName("com.jgoodies.looks.plastic.theme.SkyBluer");
+				Object theme = skyBluerClazz.newInstance();
+				method = clazz.getMethod("setPlasticTheme", themeClazz );
+				method.invoke( null, new Object[]{ theme } );
+
+				Class lafClazz = Class.forName("com.jgoodies.looks.plastic.Plastic3DLookAndFeel");
+				Object lafInstance = lafClazz.newInstance();
+
+				UIManager.setLookAndFeel((LookAndFeel) lafInstance);
+				SwingTools.setIconType(LOOK_AND_FEELS[LOOK_AND_FEEL_CLASSIC]);
+				OperatorService.reloadIcons();
+			} catch (Throwable e) {
+				LogService.getGlobal().log("Cannot setup classic look and feel, using default.", LogService.INIT);
+			} 
+		} else if (lookAndFeel == LOOK_AND_FEEL_MODERN) {
+			try {
+				System.setProperty(BookmarkIO.PROPERTY_BOOKMARKS_DIR, ParameterService.getUserRapidMinerDir().getAbsolutePath());
+				System.setProperty(BookmarkIO.PROPERTY_BOOKMARKS_FILE, ".bookmarks");
+				UIManager.setLookAndFeel(new RapidLookAndFeel());
+				SwingTools.setIconType(LOOK_AND_FEELS[LOOK_AND_FEEL_MODERN]);
+				OperatorService.reloadIcons();
+			} catch (Throwable e) {
+				e.printStackTrace();
+				LogService.getGlobal().log("Cannot setup modern look and feel, using default.", LogService.INIT);
+			} 
+		} else {
+			LogService.getGlobal().log("Cannot setup look and feel ('" + lookAndFeel + "'), using default.", LogService.INIT);
+		}
+	}
+	
 	public static void setMainFrame(MainFrame mf) {
 		mainFrame = mf;
 	}
@@ -252,6 +262,93 @@ public class RapidMinerGUI extends RapidMiner {
 		return mainFrame;
 	}
 
+	private void performInitialSettings() {
+		boolean firstStart = false;
+		VersionNumber lastVersionNumber = null;
+		VersionNumber currentVersionNumber = new VersionNumber(getVersion());
+		
+		File lastVersionFile = new File(ParameterService.getUserRapidMinerDir(), "lastversion");
+		if (!lastVersionFile.exists()) {
+			firstStart = true;
+		} else {
+			String versionString = null;
+			BufferedReader in = null;
+			try {
+				in = new BufferedReader(new FileReader(lastVersionFile));
+				versionString = in.readLine();
+			} catch (IOException e) {
+				LogService.getGlobal().logWarning("Cannot read global version file of last used version.");
+			} finally {
+				if (in != null) {
+					try {
+						in.close();
+					} catch (IOException e) {
+						LogService.getGlobal().logError("Cannnot close stream to file " + lastVersionFile);
+					}
+				}
+			}
+			
+			if (versionString != null) {
+				lastVersionNumber = new VersionNumber(versionString);			
+				if (currentVersionNumber.compareTo(lastVersionNumber) > 0) {
+					firstStart = true;
+				}
+			} else {
+				firstStart = true;
+			}
+		}
+		
+		// init this version (workspace etc.)
+		if (firstStart) {
+			performFirstInitialization(lastVersionNumber, currentVersionNumber);
+		}
+		
+		// write version file
+		writeLastVersion(lastVersionFile);	
+	}
+	
+	private void performFirstInitialization(VersionNumber lastVersion, VersionNumber currentVersion) {
+		if (currentVersion != null)
+			LogService.getGlobal().logNote("Performing upgrade" + (lastVersion != null ? " from version " + lastVersion : "") + " to version " + currentVersion);
+		
+		// copy old settings to new version file
+		ParameterService.copyMainUserConfigFile(lastVersion, currentVersion);
+		
+		// create workspace selection dialog
+		File oldWorkspace = ParameterService.getUserWorkspace();
+		String lookAndFeelString = System.getProperty(PROPERTY_RAPIDMINER_GUI_LOOK_AND_FEEL);
+		int lookAndFeel = LOOK_AND_FEEL_MODERN;
+		if (lookAndFeelString != null) {
+			try {
+				lookAndFeel = Integer.parseInt(lookAndFeelString);
+			} catch (NumberFormatException e) {
+				LogService.getGlobal().log("Cannot setup look and feel ('" + lookAndFeelString + "'), using default.", LogService.INIT);			
+			}
+		}
+		
+		InitialSettingsDialog dialog = new InitialSettingsDialog(getSplashScreenFrame(), oldWorkspace, "rm_workspace", null, lookAndFeel, true);
+		dialog.setVisible(true);
+		String newPath = dialog.getWorkspacePath();
+		File newWorkspace = new File(newPath);
+		ParameterService.setUserWorkspace(newWorkspace);
+		
+		int selectedLookAndFeel = dialog.getSelectedLookAndFeel();
+		ParameterService.writePropertyIntoMainUserConfigFile(PROPERTY_RAPIDMINER_GUI_LOOK_AND_FEEL, selectedLookAndFeel + "");
+	}
+	
+	private void writeLastVersion(File versionFile) {
+		PrintWriter out = null;
+		try {
+			out = new PrintWriter(new FileWriter(versionFile));
+			out.println(getVersion());
+		} catch (IOException e) {
+			LogService.getGlobal().logWarning("Cannot write current version into property file.");
+		} finally {
+			if (out != null)
+				out.close();
+		}
+	}
+	
 	public static void useProcessFile(Process process) {
 		File file = process.getProcessFile();
 		file = new File(file.getAbsolutePath());
@@ -272,48 +369,64 @@ public class RapidMinerGUI extends RapidMiner {
 	}
 
 	private static void loadRecentFileList() {
+		File file = ParameterService.getUserConfigFile("history");
+		if (!file.exists())
+			return;
+		BufferedReader in = null;
 		try {
-			File file = ParameterService.getUserConfigFile("history");
-			if (!file.exists())
-				return;
-			BufferedReader in = new BufferedReader(new FileReader(file));
+			in = new BufferedReader(new FileReader(file));
 			recentFiles.clear();
 			String line = null;
 			while ((line = in.readLine()) != null) {
 				recentFiles.add(new File(line));
 			}
-			in.close();
 		} catch (IOException e) {
 			// cannot happen
 			SwingTools.showSimpleErrorMessage("Cannot read history file", e);
+		} finally {
+			if (in != null) {
+				try {
+					in.close();
+				} catch (IOException e) {
+					SwingTools.showSimpleErrorMessage("Cannot close connection to history file.", e);
+				}
+			}
 		}
 	}
 
 	private static void saveRecentFileList() {
+		File file = ParameterService.getUserConfigFile("history");
+		PrintWriter out = null;
 		try {
-			File file = ParameterService.getUserConfigFile("history");
-			PrintWriter out = new PrintWriter(new FileWriter(file));
+			out = new PrintWriter(new FileWriter(file));
 			Iterator i = recentFiles.iterator();
 			while (i.hasNext()) {
 				out.println(((File) i.next()).getAbsolutePath());
 			}
-			out.close();
 		} catch (IOException e) {
 			SwingTools.showSimpleErrorMessage("Cannot write history file", e);
+		} finally {
+			if (out != null) {
+				out.close();
+			}
 		}
 	}
 
 	public static void saveLastUpdateCheckDate() {
 		File file = ParameterService.getUserConfigFile("updatecheck.date");
+		PrintWriter out = null;
 		try {
-			PrintWriter out = new PrintWriter(new FileWriter(file));
+			out = new PrintWriter(new FileWriter(file));
 			Calendar currentDate = Calendar.getInstance();
 			out.println(currentDate.get(Calendar.YEAR));
 			out.println(currentDate.get(Calendar.MONTH));
 			out.println(currentDate.get(Calendar.DAY_OF_MONTH));
-			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			if (out != null) {
+				out.close();
+			}
 		}
 	}
 
@@ -321,13 +434,16 @@ public class RapidMinerGUI extends RapidMiner {
 		File file = ParameterService.getUserConfigFile("updatecheck.date");
 		if (!file.exists())
 			return null;
+
+		Calendar lastCheck = null;
+        BufferedReader in = null;
 		try {
-			BufferedReader in = new BufferedReader(new FileReader(file));
+			in = new BufferedReader(new FileReader(file));
 			String yearLine = in.readLine();
 			String monthLine = in.readLine();
 			String dayLine = in.readLine();
-			in.close();
-			int year = 2001;
+
+            int year = 2001;
 			if (yearLine != null)
 				year = Integer.parseInt(yearLine.trim());
 			int month = 1;
@@ -336,15 +452,23 @@ public class RapidMinerGUI extends RapidMiner {
 			int day = 1;
 			if (dayLine != null)
 				day = Integer.parseInt(dayLine.trim());
-			Calendar lastCheck = Calendar.getInstance();
+			lastCheck = Calendar.getInstance();
 			lastCheck.set(Calendar.YEAR, year);
 			lastCheck.set(Calendar.MONTH, month);
 			lastCheck.set(Calendar.DAY_OF_MONTH, day);
-			return lastCheck;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
+		} catch (IOException e) {
+			LogService.getGlobal().logWarning("Cannot read last date of update check.");
+		} finally {
+			if (in != null) {
+				try {
+					in.close();
+				} catch (IOException e) {
+					// cannot happen
+				}
+			}
 		}
+		
+		return lastCheck;
 	}
 
 	public static void checkForUpdates(boolean showFailureDialog) {
@@ -366,13 +490,20 @@ public class RapidMinerGUI extends RapidMiner {
 			properties.setProperty(PROPERTY_GEOMETRY_DIVIDER_GROUPSELECTION, "" + mainFrame.getGroupSelectionDividerLocation());
 			properties.setProperty(PROPERTY_EXPERT_MODE, "" + mainFrame.getPropertyTable().isExpertMode());
 			File file = ParameterService.getUserConfigFile("gui.properties");
+            OutputStream out = null;
 			try {
-				OutputStream out = new FileOutputStream(file);
+				out = new FileOutputStream(file);
 				properties.store(out, "RapidMiner GUI properties");
-				out.close();
 			} catch (IOException e) {
-				e.printStackTrace();
-			}
+				LogService.getGlobal().logWarning("Cannot write GUI properties: " + e.getMessage());
+			} finally {
+                try {
+                    if (out != null)
+                        out.close();
+                } catch (IOException e) {
+                    throw new Error(e); // should not occur
+                }
+            }
 		}
 	}
 
@@ -380,13 +511,20 @@ public class RapidMinerGUI extends RapidMiner {
 		Properties properties = new Properties();
 		File file = ParameterService.getUserConfigFile("gui.properties");
 		if (file.exists()) {
+            InputStream in = null;
 			try {
-				InputStream in = new FileInputStream(file);
+				in = new FileInputStream(file);
 				properties.load(in);
-				in.close();
 			} catch (IOException e) {
 				setDefaultGUIProperties();
-			}
+			} finally {
+                try {
+                    if (in != null)
+                        in.close();
+                } catch (IOException e) {
+                    throw new Error(e); // should not occur
+                }
+            }
 			try {
 				mainFrame.setLocation(Integer.parseInt(properties.getProperty(PROPERTY_GEOMETRY_X)), Integer.parseInt(properties.getProperty(PROPERTY_GEOMETRY_Y)));
 				mainFrame.setSize(new Dimension(Integer.parseInt(properties.getProperty(PROPERTY_GEOMETRY_WIDTH)), Integer.parseInt(properties.getProperty(PROPERTY_GEOMETRY_HEIGHT))));

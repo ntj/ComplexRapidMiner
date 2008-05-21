@@ -1,31 +1,31 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
@@ -34,6 +34,7 @@ import com.rapidminer.ObjectVisualizer;
 import com.rapidminer.datatable.SimpleDataTable;
 import com.rapidminer.datatable.SimpleDataTableRow;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.gui.plotter.ScatterPlotter;
 import com.rapidminer.gui.plotter.SimplePlotterDialog;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.operator.features.selection.NonDominatedSortingSelection;
@@ -67,8 +68,12 @@ public class PopulationPlotter implements PopulationOperator, ObjectVisualizer {
 	private boolean drawDominated = true;
 
 	/** The last population. */
-	private Population lastPopulation;
+	//private Population lastPopulation;
 
+	/** Contains a copy of the individuals of the last generation. */
+	private Map<String, ExampleSet> lastPopulation = new HashMap<String, ExampleSet>();
+	
+	
 	/** Creates plotter panel which is repainted every generation. */
 	public PopulationPlotter() {
 		this(1, false, true);
@@ -104,7 +109,7 @@ public class PopulationPlotter implements PopulationOperator, ObjectVisualizer {
 		}
 
 		// fill table
-		int numberOfCriteria = fillDataTable(this.criteriaDataTable, pop, drawDominated);
+		int numberOfCriteria = fillDataTable(this.criteriaDataTable, this.lastPopulation, pop, drawDominated);
 
 		// create plotter
 		if (plotter == null) {
@@ -120,7 +125,7 @@ public class PopulationPlotter implements PopulationOperator, ObjectVisualizer {
 				plotter.setYAxis(1);
 				plotter.plotColumn(2, true);
 			}
-			plotter.setDraw2DLines(false);
+			plotter.setPointType(ScatterPlotter.POINTS);
 			plotter.setVisible(true);
 			plotter.addObjectVisualizer(this);
 		}
@@ -129,8 +134,6 @@ public class PopulationPlotter implements PopulationOperator, ObjectVisualizer {
 		if (setDrawRange)
 			plotter.setDrawRange(0.0d, 1.0d, 0.0d, 1.0d);
 		plotter.setKey("Generation " + pop.getGeneration());
-
-		this.lastPopulation = pop;
 	}
 
 	public static SimpleDataTable createDataTable(Population pop) {
@@ -139,7 +142,8 @@ public class PopulationPlotter implements PopulationOperator, ObjectVisualizer {
 		return dataTable;
 	}
 
-	public static int fillDataTable(SimpleDataTable dataTable, Population pop, boolean drawDominated) {
+	public static int fillDataTable(SimpleDataTable dataTable, Map<String,ExampleSet> lastPopulation, Population pop, boolean drawDominated) {
+		lastPopulation.clear();
 		dataTable.clear();
 		int numberOfCriteria = 0;
 		for (int i = 0; i < pop.getNumberOfIndividuals(); i++) {
@@ -168,6 +172,7 @@ public class PopulationPlotter implements PopulationOperator, ObjectVisualizer {
 				}
 				id.append(")");
 				dataTable.add(new SimpleDataTableRow(data, id.toString()));
+				lastPopulation.put(id.toString(), (ExampleSet)pop.get(i).getExampleSet().clone());
 			}
 		}
 		return numberOfCriteria;
@@ -176,8 +181,7 @@ public class PopulationPlotter implements PopulationOperator, ObjectVisualizer {
 	// ================================================================================
 
 	public boolean isCapableToVisualize(String id) {
-		int index = Integer.parseInt(id.substring(0, id.indexOf("(")).trim());
-		return ((index >= 0) && (index < lastPopulation.getNumberOfIndividuals()));
+		return this.lastPopulation.get(id) != null;
 	}
 
 	public String getTitle(String id) {
@@ -187,8 +191,7 @@ public class PopulationPlotter implements PopulationOperator, ObjectVisualizer {
 	public void stopVisualization(String id) {}
 
 	public void startVisualization(String id) {
-		int index = Integer.parseInt(id.substring(0, id.indexOf("(")).trim());
-		ExampleSet es = lastPopulation.get(index).getExampleSet().createCleanClone();
+		ExampleSet es = lastPopulation.get(id);
 		
 		// MetaDataViewer mdViewer = new MetaDataViewer(es, 50);
 		Component visualizationComponent = es.getVisualizationComponent(null);

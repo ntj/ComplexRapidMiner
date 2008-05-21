@@ -1,32 +1,35 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.graphs;
 
+import java.awt.Paint;
+
 import javax.swing.JComponent;
 
+import org.apache.commons.collections15.Transformer;
+
 import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.renderers.Renderer;
 
 /**
@@ -34,7 +37,7 @@ import edu.uci.ics.jung.visualization.renderers.Renderer;
  * of graph model combined with some methods tuning the displaying of nodes and edges in the graph.
  *
  * @author Ingo Mierswa
- * @version $Id: GraphCreator.java,v 1.7 2007/06/22 11:10:23 ingomierswa Exp $
+ * @version $Id: GraphCreator.java,v 1.10 2008/05/09 19:23:24 ingomierswa Exp $
  */
 public interface GraphCreator<V, E> {
 
@@ -66,6 +69,10 @@ public interface GraphCreator<V, E> {
     
     /** Returns true if the edge labels should be rotated. */
     public boolean isRotatingEdgeLabels();
+    
+    /** Returns the transformer which maps vertices to the paint (color) used for drawing. 
+     *  May return null. */
+    public Transformer<V, Paint> getVertexPaintTransformer(VisualizationViewer<V,E> viewer);
     
     /** Returns the renderer used for the nodes. May return null (use default renderer). */
 	public Renderer.Vertex<V, E> getVertexRenderer();

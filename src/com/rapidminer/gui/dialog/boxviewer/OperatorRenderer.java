@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.dialog.boxviewer;
 
@@ -31,6 +29,8 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.geom.Rectangle2D;
 
+import javax.swing.ImageIcon;
+
 import com.rapidminer.operator.Operator;
 
 
@@ -40,7 +40,7 @@ import com.rapidminer.operator.Operator;
  * in box view or in the wizard dialog.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: OperatorRenderer.java,v 1.1 2007/05/27 22:03:32 ingomierswa Exp $
+ * @version $Id: OperatorRenderer.java,v 1.4 2008/05/09 19:23:02 ingomierswa Exp $
  */
 public abstract class OperatorRenderer {
 
@@ -51,12 +51,13 @@ public abstract class OperatorRenderer {
 	public static final int ICON_GAP = 4;
 
 	public void drawName(Operator op, Graphics2D g) {
-		Image icon = op.getOperatorDescription().getIcon();
+		ImageIcon icon = op.getOperatorDescription().getIcon();
 		int x = 0;
 		int y = 0;
 		if (icon != null) {
-			g.drawImage(icon, 0, 0, null);
-			x += icon.getWidth(null) + ICON_GAP;
+			Image image = icon.getImage();
+			g.drawImage(image, 0, 0, null);
+			x += image.getWidth(null) + ICON_GAP;
 		}
 		g.setPaint(Color.black);
 		g.setFont(NAME_FONT);
@@ -74,10 +75,11 @@ public abstract class OperatorRenderer {
 		Rectangle2D rect2 = TYPE_FONT.getStringBounds(op.getOperatorDescription().getName(), g.getFontRenderContext());
 		double h = rect1.getHeight() + rect2.getHeight();
 		double w = Math.max(rect1.getWidth(), rect2.getWidth());
-		Image icon = op.getOperatorDescription().getIcon();
+		ImageIcon icon = op.getOperatorDescription().getIcon();
 		if (icon != null) {
-			h = Math.max(icon.getHeight(null), h);
-			w += icon.getWidth(null) + ICON_GAP;
+			Image image = icon.getImage();
+			h = Math.max(image.getHeight(null), h);
+			w += image.getWidth(null) + ICON_GAP;
 		}
 		return new Dimension((int) w, (int) h);
 	}

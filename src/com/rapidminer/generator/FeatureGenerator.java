@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.generator;
 
@@ -53,7 +51,7 @@ import com.rapidminer.tools.RandomGenerator;
  */
 public abstract class FeatureGenerator {
 
-	private static final String[] FUNCTION_NAMES = { "+", "-", "*", "/", "1/", "sin", "cos", "tan", "atan", "exp", "log", "min", "max", "floor", "ceil", "round", "sqrt", "abs", "pow" };
+	private static final String[] FUNCTION_NAMES = { "+", "-", "*", "/", "1/", "sin", "cos", "tan", "atan", "exp", "log", "min", "max", "floor", "ceil", "round", "sqrt", "abs", "sgn", "pow" };
 
 	/** The classes which corresponds to FUNCTION_NAMES. */
     private static final Class[] GENERATOR_CLASSES = {
@@ -74,7 +72,8 @@ public abstract class FeatureGenerator {
             FloorCeilGenerator.class, 
             FloorCeilGenerator.class,
             SquareRootGenerator.class, 
-            AbsoluteValueGenerator.class, 
+            AbsoluteValueGenerator.class,
+            SignumGenerator.class,
             PowerGenerator.class
     };
 
@@ -241,6 +240,8 @@ public abstract class FeatureGenerator {
 
 	/** Creates a new FeatureGenerator for a given function name. */
 	public static FeatureGenerator createGeneratorForFunction(String functionName) {
+		if (functionName == null)
+			return null;
 		Class genClass = generatorMap.get(functionName);
 		if (genClass == null) {
 			if (functionName.startsWith(ConstantGenerator.FUNCTION_NAME)) {
@@ -359,15 +360,15 @@ public abstract class FeatureGenerator {
 			generators[i].resultAttributes = new Attribute[outputAttribute.length];
 
 			for (int j = 0; j < outputAttribute.length; j++) {
-				Attribute newAttribute = getAttributeInTable(exampleTable, outputAttribute[j]);
-				if (newAttribute == null) {
+				//Attribute newAttribute = getAttributeInTable(exampleTable, outputAttribute[j]);
+				//if (newAttribute == null) {
 					newAttributeList.add(outputAttribute[j]);
 					generators[i].resultAttributes[j] = outputAttribute[j];
-				} else {
-					newAttributeList.add(newAttribute);
-					generators[i].resultAttributes[j] = newAttribute;
-					LogService.getGlobal().log("Attribute '" + outputAttribute[j].getConstruction() + "' already generated", LogService.WARNING);
-				}
+				//} else {
+					//newAttributeList.add(newAttribute);
+					//generators[i].resultAttributes[j] = newAttribute;
+					//LogService.getGlobal().log("Attribute '" + outputAttribute[j].getConstruction() + "' already generated", LogService.WARNING);
+				//}
 			}
 
 			// check the arguments
@@ -383,25 +384,19 @@ public abstract class FeatureGenerator {
 
 
 	/**
-	 * Returns an Attribute which is constructed in the same way as
-	 * <code>attribute</code>. <em>Attention</em>:
-	 * <ul>
-	 * <li>This method do not use the equals method of attribute which only
-	 * checks the name and table index (which is actually the meaning of equals)
-	 * but it compares the construction descriptions of both attributes. This is
-	 * especially useful for automatic feature construction algorithms which
-	 * should not regenerate the same attribute.</li>
-	 * <li>May return null (no attribute with this construction description is part of the table).</li>
-	 * </ul>
+	 * Returns the attribute with the name of the given attribute from the table.
+	 * May return null (no attribute with this name is part of the table).
 	 */
+	/*
 	public static Attribute getAttributeInTable(ExampleTable table, Attribute attribute) {
 		for (int i = 0; i < table.getNumberOfAttributes(); i++) {
 			Attribute a = table.getAttribute(i);
-			if ((a != null) && a.getConstruction().equals(attribute.getConstruction()))
+			if ((a != null) && (a.getName().equals(attribute.getName())))
 				return a;
 		}
 		return null;
 	}
+	*/
 	
 	public static int getSelectionMode() {
 		return selectionMode;

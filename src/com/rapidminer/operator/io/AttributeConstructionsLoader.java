@@ -1,34 +1,35 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.io;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.LinkedList;
 import java.util.List;
 
+import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeParser;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.IOObject;
@@ -71,19 +72,35 @@ public class AttributeConstructionsLoader extends Operator {
 	public IOObject[] apply() throws OperatorException {
 		ExampleSet exampleSet = (ExampleSet) getInput(ExampleSet.class).clone();
 
+		boolean keepAll = getParameterAsBoolean(PARAMETER_KEEP_ALL);
+		List<Attribute> oldAttributes = new LinkedList<Attribute>();
+		for (Attribute attribute : exampleSet.getAttributes()) {
+			oldAttributes.add(attribute);
+		}
+		
 		File file = getParameterAsFile(PARAMETER_ATTRIBUTE_CONSTRUCTIONS_FILE);
 		if (file != null) {
+			AttributeParser parser = new AttributeParser(exampleSet.getExampleTable());
+			InputStream in = null;
 			try {
-				AttributeParser parser = new AttributeParser(exampleSet.getExampleTable());
-                InputStream in = new FileInputStream(file);
-				parser.parseAll(in);
-                in.close();
-				if (!getParameterAsBoolean(PARAMETER_KEEP_ALL)) {
-					exampleSet.getAttributes().clearRegular();
-				}
-				parser.generateAll(exampleSet);
+                in = new FileInputStream(file);
+				parser.generateAll(this, exampleSet, in);
 			} catch (java.io.IOException e) {
 				throw new UserError(this, e, 302, new Object[] { file.getName(), e.getMessage() });
+			} finally {
+				if (in != null) {
+					try {
+						in.close();
+					} catch (IOException e) {
+						logError("Cannot close stream to file " + file);
+					}
+				}
+			}
+		}
+		
+		if (!keepAll) {
+			for (Attribute oldAttribute : oldAttributes) {
+				exampleSet.getAttributes().remove(oldAttribute);
 			}
 		}
 

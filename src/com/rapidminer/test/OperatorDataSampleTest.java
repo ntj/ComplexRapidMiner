@@ -1,31 +1,28 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.test;
 
 import java.io.File;
-import java.io.IOException;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -42,9 +39,9 @@ import com.rapidminer.tools.ParameterService;
  * process.
  * 
  * @author Marcin Skirzynski, Christian Lohmann, Tobias Beckers
- * @version $Id: OperatorDataSampleTest.java,v 1.32 2007/07/10 16:09:25 meltac Exp $
+ * @version $Id: OperatorDataSampleTest.java,v 1.50 2008/05/09 19:22:48 ingomierswa Exp $
  */
-public abstract class OperatorDataSampleTest extends TestCase {
+public abstract class OperatorDataSampleTest extends RapidMinerTestCase {
 
 	protected String file;
 
@@ -72,9 +69,10 @@ public abstract class OperatorDataSampleTest extends TestCase {
 	public static Test suite() throws Exception{
 		//initializes Rapidminer first before any test is run 
 		RapidMiner.init();
+		LogService.getGlobal().setVerbosityLevel(LogService.OFF);
 		
 		TestSuite suite = new TestSuite("Sample test");
-			
+		
 		// general
 		suite.addTest(new ExampleSetDataSampleTest("ModelApplier.xml", "confidence(positive)", new double[] {0.3333333333333333, 0.3333333333333333, 0.3333333333333333}));
 		
@@ -106,7 +104,7 @@ public abstract class OperatorDataSampleTest extends TestCase {
 		suite.addTest(new IOConsumingDataSampleTest("Core" + File.separator + "IOConsumer_delete_one.xml", 1));
 		suite.addTest(new ExampleSetDataSampleTest("IO" + File.separator + "Examples" + File.separator + "ArffExampleSource.xml", "label", new double[] {1.9528130464362032, -8.363305876037725, -3.1404801374055165}));
 
-		//Learner in "Learner\Supervised"
+		// Learner in "Learner\Supervised"
 		//					Bayes
 		suite.addTest(new DistributedModelSampleDataTest("Learner" + File.separator + "Supervised" + File.separator + "Bayes" + File.separator +  "NaiveBayes.xml", new double[] {0.12,0.04000000000000001,0.019999999999999997,0.12}));
 		//					Functions
@@ -129,8 +127,8 @@ public abstract class OperatorDataSampleTest extends TestCase {
 		//					Rules
 		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Supervised" + File.separator + "Rules" + File.separator +  "BasicRuleLearner.xml", "prediction(label)", new String[] {"cluster3", "cluster3", "cluster1"}));
 		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Supervised" + File.separator + "Rules" + File.separator +  "BestRuleInduction.xml", "prediction(label)", new String[] {"positive", "negative", "positive"}));
-		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Supervised" + File.separator + "Rules" + File.separator +  "IteratingGSS.xml", "confidence(positive)", new double[] {1.0, 0.6526315789473685, 0.7528089887640449}));
-		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Supervised" + File.separator + "Rules" + File.separator +  "OneR.xml", "prediction(label)", new String[] {"positive","positive","positive"}));
+		//suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Supervised" + File.separator + "Rules" + File.separator +  "IteratingGSS.xml", "confidence(positive)", new double[] {1.0, 0.5423977609676378, 0.7528089887640449,1.0,0.40880069500944627}));
+		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Supervised" + File.separator + "Rules" + File.separator +  "OneR.xml", "prediction(label)", new String[] {"positive","negative","positive"}));
 		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Supervised" + File.separator + "Rules" + File.separator +  "RuleLearner.xml", "prediction(label)", new String[] {"positive","negative","negative"}));
 		//					Meta
 		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Supervised" + File.separator + "Meta" + File.separator +  "AdaBoost.xml", "confidence(negative)", new double[] {0.5185185185185187, 0.5185185185185187, 0.5185185185185187, 0.5555555555555556}));
@@ -141,8 +139,8 @@ public abstract class OperatorDataSampleTest extends TestCase {
 		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Supervised" + File.separator + "Trees" + File.separator +  "ID3.xml", "confidence(negative)", new double[] {0.75,1.0,0.5714285714285714,0.0,0.5555555555555556}));
 		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Supervised" + File.separator + "Trees" + File.separator +  "ID3Numerical.xml", "confidence(negative)", new double[] {1.0,1.0,1.0,0.09090909090909091,1.0}));
 		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Supervised" + File.separator + "Trees" + File.separator +  "MultiCriterionDecisionStump.xml", "prediction(label)", new String[] {"negative","negative","negative","positive","negative","positive","negative","positive"}));
-	//	suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Supervised" + File.separator + "Trees" + File.separator +  "RandomForest.xml", "prediction(label)", new String[] {"core","first_ring","core","first_ring","first_ring","first_ring","first_ring","second_ring"}));
-	//	suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Supervised" + File.separator + "Trees" + File.separator +  "RandomTree.xml", "prediction(label)", new String[] {"first_ring","core","second_ring","core","first_ring","second_ring","second_ring","core"}));
+		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Supervised" + File.separator + "Trees" + File.separator +  "RandomForest.xml", "prediction(label)", new String[] {"core","first_ring","core","first_ring","first_ring","first_ring","first_ring","second_ring"}));
+		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Supervised" + File.separator + "Trees" + File.separator +  "RandomTree.xml", "prediction(label)", new String[] {"first_ring","core","second_ring","core","first_ring","second_ring","second_ring","core"}));
 		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Supervised" + File.separator + "Trees" + File.separator +  "RelevanceTree.xml", "prediction(label)", new String[] {"second_ring","core","second_ring","core","first_ring","core","first_ring","core"}));
 		//					Just a few WEKA-Operators
 		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Supervised" + File.separator + "Weka" + File.separator +  "W-J48.xml", "prediction(label)", new String[] {"first_ring","core","second_ring","core","first_ring","first_ring","first_ring","core"}));
@@ -153,8 +151,8 @@ public abstract class OperatorDataSampleTest extends TestCase {
 		//		Learners in "Learner\Unsupervised"
 		//					Clustering
 		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Unsupervised" + File.separator + "Clustering" + File.separator +  "AgglomerativeClustering.xml", "cluster", new String[] {"id 203","id 209","id 209","id 209","id 206","id 206","id 203"}));
-		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Unsupervised" + File.separator + "Clustering" + File.separator +  "AgglomerativeFlatClustering.xml", "cluster", new String[] {"id 1","id 6","id 6","id 6","id 0","id 0","id 1"}));
-		//ClusterModel2ExampleSet tested in the other Clusteringtests
+		suite.addTest(new ClusterModelDataSampleTest("Learner" + File.separator + "Unsupervised" + File.separator + "Clustering" + File.separator +  "AgglomerativeFlatClustering.xml", "cluster", new String[]{"68.0","136.0","81.0"}, new String[]{"64.0", "77.0", "134.0"}));
+	    //ClusterModel2ExampleSet tested in the other Clusteringtests
 		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Unsupervised" + File.separator + "Clustering" + File.separator +  "DBScanClustering.xml", "cluster", new String[] {"1","2","2","2","3","3","1"}));
 		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Unsupervised" + File.separator + "Clustering" + File.separator +  "ExampleSet2ClusterModel.xml", "cluster", new String[] {"1","2","2","2","3","3","1"}));
 		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Unsupervised" + File.separator + "Clustering" + File.separator +  "KMeans.xml", "cluster", new String[] {"2","0","0","0","1","1","2"}));
@@ -165,16 +163,36 @@ public abstract class OperatorDataSampleTest extends TestCase {
 		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Unsupervised" + File.separator + "Clustering" + File.separator +  "TopDownClustering.xml", "cluster", new String[] {"cl.1","cl.0.1","cl.0.0.0.1","cl.0.0.0.0","cl.2","cl.3","cl.0.2"}));
 		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Unsupervised" + File.separator + "Clustering" + File.separator +  "TopDownRandomClustering.xml", "cluster", new String[] {"cl.1.1.1.0.0","cl.1.1.0.0.2","cl.0.1.0.1.2","cl.0.0.1.1.0","cl.0.1.1.1.1","cl.1.2","cl.1.1.0.1.0"}));
 		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Unsupervised" + File.separator + "Clustering" + File.separator +  "UPGMAClustering.xml", "cluster", new String[] {"0.0","0.0","0.1.0","0.1.0","0.1.0","0.1.0","0.1.1"}));
-		
-		
-		
-		
-		
-		
-		
+		//						Similarity
+		suite.addTest(new SimilaritySampleDataTest("Learner" + File.separator + "Unsupervised" + File.separator + "Clustering" + File.separator + "Similarity" + File.separator +  "ClusterModel2Similarity.xml", "Tree", new	String[] {"1.0","1.0","1.0","1.0","1.0","1.0"}, new String[] {"10.0","11.0","12.0","13.0","14.0","15.0"}, new double[] {5.0,8.0,7.0,4.0,7.0,7.0}));
+		suite.addTest(new SimilaritySampleDataTest("Learner" + File.separator + "Unsupervised" + File.separator + "Clustering" + File.separator + "Similarity" + File.separator + "ExampleSet2Similarity.xml","Euclidean", new String[] {"1.0","1.0","1.0","1.0","1.0","1.0"}, new String[] {"10.0","11.0","12.0","13.0","14.0","15.0"}, new double[] {5.224399940962025,4.752549821148101,4.274206726751729,1.9786845654679088,3.8517510955684027,4.4244007394093945}));
+		suite.addTest(new SimilaritySampleDataTest("Learner" + File.separator + "Unsupervised" + File.separator + "Clustering" + File.separator + "Similarity" + File.separator + "SimilarityComparator.xml","Comparator", new String[] {}, new String[] {}, new double[] {3.821179892325819}));
+		//						Itemsets
+		suite.addTest(new FrequentItemSetsDataSampleTest("Learner" + File.separator + "Unsupervised" + File.separator + "Itemsets" + File.separator +  "FPGrowth.xml", 0, new String[] {"att3", "att4", "att2", "att5", "att1"}));
+		suite.addTest(new AssociationRuleGeneratorDataSampleTest("Learner" + File.separator + "Unsupervised" + File.separator + "Itemsets" + File.separator +  "AssociationRuleGenerator.xml", new double[] {1.0}));
+				
 		//					Weka
 		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Unsupervised" + File.separator + "Clustering" + File.separator +  "Weka" + File.separator + "W-SimpleKMeans.xml", "cluster", new String[] {"cluster1","cluster1","cluster0", "cluster0", "cluster0", "cluster0", "cluster0"}));
 		suite.addTest(new ExampleSetDataSampleTest("Learner" + File.separator + "Unsupervised" + File.separator + "Clustering" + File.separator +  "Weka" + File.separator + "W-FarthestFirst.xml", "cluster", new String[] {"cluster0","cluster0","cluster1", "cluster1", "cluster1", "cluster1", "cluster1"}));
+	
+
+		// Meta
+		//suite.addTest(new PerformanceDataSampleTest("Meta" + File.separator + "AverageBuilder_with_simple_validation.xml", new String[] { "accuracy", "precision", "recall", "AUC" }, new double[] { 0.5833333333333333,0.631578947368421,0.4,0.25333333333333335 }));
+		suite.addTest(new AttributeWeightsDataSampleTest("Meta" + File.separator + "AverageBuilder_with_attribute_weighting.xml",new String[] {"att1","att2","att3","att4","att5"}, new double[] {0.0296060589130663, 0.45370765617859954, 1.0, 0.0428611612601767643, 0.1929268735189445}));
+		suite.addTest(new ExampleSetDataSampleTest("Meta" + File.separator + "ClusterIteration.xml", "cluster", new double[] {0, 1, 0, 1, 0}));
+		suite.addTest(new ExampleSetsDataSampleTest("Meta" + File.separator + "ExampleSetIterator.xml", "att1", new String[][] {{"true", "false", "true", "true", "false"}, {"true", "false", "false", "false", "true"}}));
+		suite.addTest(new ExampleSetDataSampleTest("Meta" + File.separator +"ProcessEmbedder.xml", "prediction(label)", new double[] {-0.09501652738425875, 1.3171696991768367, 0.6471053689374655, -0.09501652738425875, 1.3171696991768367}));
+		suite.addTest(new ExampleSetDataSampleTest("Meta" + File.separator +"MultipleLabelIterator.xml", "label", new String[] {"up", "down", "up", "up", "down"}));
+		suite.addTest(new ExampleSetDataSampleTest("Meta" + File.separator +"OperatorEnabler.xml", "label", new double[] {1.6431634962865138, 1.9475844940566178, 2.218002556787387, 3.370940882491232, 3.4238369022633175}));
+		suite.addTest(new ExampleSetDataSampleTest("Meta" + File.separator +"OperatorEnabler_disabled.xml", "label", new double[] {10.976406523218103, 5.818347061981138, 8.429759931297243, 14.801574008444156, 2.218002556787387}));
+		suite.addTest(new ExampleSetDataSampleTest("Meta" + File.separator +"XVPrediction.xml", 1));
+		// Meta/Parameter
+		suite.addTest(new ParameterSetDataSampleTest("Meta" + File.separator +"Parameter" + File.separator + "EvolutionaryParameterOptimization.xml", 120.573));
+		suite.addTest(new ParameterSetDataSampleTest("Meta" + File.separator +"Parameter" + File.separator + "GridParameterOptimization.xml", 111.421));
+		suite.addTest(new ExampleSetDataSampleTest("Meta" + File.separator +"Parameter" + File.separator + "ParameterCloner.xml", 2));
+		suite.addTest(new ParameterIterationDataSampleTest("Meta" + File.separator + "Parameter" + File.separator + "ParameterIteration.xml", 6, new int[] {100,150,200,100,150,200}, new double[]{-3.1875059108590245,24.15281909749461,-13.194648154237068,0.2711377216669635,0.41740095709333125,0.6066513878406207}));
+		suite.addTest(new ExampleSetDataSampleTest("Meta" + File.separator +"Parameter" + File.separator + "ParameterSetter.xml", 1));
+		suite.addTest(new ParameterSetDataSampleTest("Meta" + File.separator +"Parameter" + File.separator + "QuadraticParameterOptimization.xml", 111.421));
 		
 		/*
 		// general
@@ -254,13 +272,10 @@ public abstract class OperatorDataSampleTest extends TestCase {
 	
 	public static void main(String[] argv) throws Exception{
 		// RapidMiner initialized only once (for performance reasons)
-		try {
-			LogService.getGlobal().setVerbosityLevel(LogService.OFF);
-			RapidMiner.init(true, false, false, false);
-			LogService.getGlobal().setVerbosityLevel(LogService.OFF);
-		} catch (IOException e) {
-			throw new RuntimeException("Cannot init RapidMiner: " + e.getMessage());
-		}
+		LogService.getGlobal().setVerbosityLevel(LogService.OFF);
+		RapidMiner.init(true, false, false, false);
+		LogService.getGlobal().setVerbosityLevel(LogService.OFF);
+
 		junit.textui.TestRunner.run(suite());
 	}
 	

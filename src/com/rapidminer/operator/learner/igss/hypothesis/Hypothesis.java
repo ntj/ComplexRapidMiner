@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.igss.hypothesis;
 
@@ -34,7 +32,7 @@ import com.rapidminer.example.Example;
 /** Abstract superclass for all possible kinds of hypothesis. 
  * 
  *  @author Dirk Dach 
- *  @version $Id: Hypothesis.java,v 1.1 2007/05/27 22:03:38 ingomierswa Exp $
+ *  @version $Id: Hypothesis.java,v 1.4 2008/05/09 19:23:25 ingomierswa Exp $
  */
 public abstract class Hypothesis implements Serializable {
 
@@ -50,12 +48,12 @@ public abstract class Hypothesis implements Serializable {
 	public static final int NEGATIVE_CLASS=0;
 
 	/** The label attribute.*/
-	private static Attribute label;
+	private Attribute label;
 	
 	/** Indicates if rejection sampling is used to draw the examples that this rule is applied to.
 	 * In this case (positive)example counter is incremented by one for every (positive)example the rule is applicable to.
 	 * In the other case(weights are used directly) the weight of the example is added to the counters. */
-	protected static boolean rejectionSampling;
+	protected boolean rejectionSampling;
 	
 	/** Stores the total weight of all examples covered by this hypothesis.*/
 	protected double coveredWeight;
@@ -64,7 +62,7 @@ public abstract class Hypothesis implements Serializable {
 	protected double positiveWeight;
 	
 	/** Create h->Y+/Y- or h->Y+ only.*/
-	protected static boolean createAllHypothesis; 
+	protected boolean createAllHypothesis; 
 	
 	/** Create a new dummy hypothesis to allow calling the 'init' method, 
 	 * initialize the regularAttributes, label and p0 fields.*/
@@ -85,7 +83,7 @@ public abstract class Hypothesis implements Serializable {
 	public abstract int getPrediction();
 	
 	/** Returns the label.*/
-	public static Attribute getLabel() {
+	public Attribute getLabel() {
 		return label;
 	}
 	/** Sets 'coveredWeight' and 'positiveWeight' back to 0.0d.*/

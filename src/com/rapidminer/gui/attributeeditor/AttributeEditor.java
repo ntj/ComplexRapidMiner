@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.attributeeditor;
 
@@ -29,10 +27,12 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -91,7 +91,7 @@ import com.rapidminer.tools.att.AttributeSet;
  * can be edited by the user.
  * 
  * @author Simon Fischer, Ingo Mierswa
- * @version $Id: AttributeEditor.java,v 1.7 2007/06/23 00:09:30 ingomierswa Exp $
+ * @version $Id: AttributeEditor.java,v 1.20 2008/05/09 19:23:21 ingomierswa Exp $
  */
 public class AttributeEditor extends ExtendedJTable implements MouseListener, DataControlListener {
 
@@ -186,20 +186,20 @@ public class AttributeEditor extends ExtendedJTable implements MouseListener, Da
 
 	private static final int COLUMN_WIDTH = 120;
 
-	protected Action REMOVE_COLUMN_ACTION_24 = new RemoveColumnAction(this, IconSize.SMALL);
-	protected Action REMOVE_COLUMN_ACTION_32 = new RemoveColumnAction(this, IconSize.MIDDLE);
+	protected transient Action REMOVE_COLUMN_ACTION_24 = new RemoveColumnAction(this, IconSize.SMALL);
+	protected transient Action REMOVE_COLUMN_ACTION_32 = new RemoveColumnAction(this, IconSize.MIDDLE);
 
-	protected Action REMOVE_ROW_ACTION_24 = new RemoveRowAction(this, IconSize.SMALL);
-	protected Action REMOVE_ROW_ACTION_32 = new RemoveRowAction(this, IconSize.MIDDLE);
+	protected transient Action REMOVE_ROW_ACTION_24 = new RemoveRowAction(this, IconSize.SMALL);
+	protected transient Action REMOVE_ROW_ACTION_32 = new RemoveRowAction(this, IconSize.MIDDLE);
     
-    protected Action USE_ROW_AS_NAMES_ACTION_24 = new UseRowAsNamesAction(this, IconSize.SMALL);
-    protected Action USE_ROW_AS_NAMES_ACTION_32 = new UseRowAsNamesAction(this, IconSize.MIDDLE);
+    protected transient Action USE_ROW_AS_NAMES_ACTION_24 = new UseRowAsNamesAction(this, IconSize.SMALL);
+    protected transient Action USE_ROW_AS_NAMES_ACTION_32 = new UseRowAsNamesAction(this, IconSize.MIDDLE);
 
-	protected Action GUESS_TYPE_ACTION_24 = new GuessTypeAction(this, IconSize.SMALL);
-	protected Action GUESS_TYPE_ACTION_32 = new GuessTypeAction(this, IconSize.MIDDLE);
+	protected transient Action GUESS_TYPE_ACTION_24 = new GuessTypeAction(this, IconSize.SMALL);
+	protected transient Action GUESS_TYPE_ACTION_32 = new GuessTypeAction(this, IconSize.MIDDLE);
     
-    protected Action GUESS_ALL_TYPES_ACTION_24 = new GuessAllTypesAction(this, IconSize.SMALL);
-    protected Action GUESS_ALL_TYPES_ACTION_32 = new GuessAllTypesAction(this, IconSize.MIDDLE);
+    protected transient Action GUESS_ALL_TYPES_ACTION_24 = new GuessAllTypesAction(this, IconSize.SMALL);
+    protected transient Action GUESS_ALL_TYPES_ACTION_32 = new GuessAllTypesAction(this, IconSize.MIDDLE);
 
 	private static final int NAME_ROW = 0;
 
@@ -286,7 +286,7 @@ public class AttributeEditor extends ExtendedJTable implements MouseListener, Da
 		Vector<String> col = dataColumnVector.get(column);
 		if (row >= col.size()) {
 			col.addElement(value);
-			if (row >= rowCount)
+			if (row > rowCount)
 				rowCount = row + 1;
 		} else {
 			col.setElementAt(value, row);
@@ -414,7 +414,7 @@ public class AttributeEditor extends ExtendedJTable implements MouseListener, Da
 				if ((!value.equals("?")) && (value.length() > 0)) {
 					try {
 						double d = Double.parseDouble(value);
-						if (d == (int) d) {
+						if (Tools.isEqual(Math.round(d), d)) {
 							valueType = Ontology.INTEGER;
 						} else {
 							valueType = Ontology.REAL;
@@ -455,9 +455,9 @@ public class AttributeEditor extends ExtendedJTable implements MouseListener, Da
 				getDataSource(i + columnOffset).getAttribute().setBlockType(Ontology.VALUE_SERIES);
 			}
 			getDataSource((valueTypes.size() - 1) + columnOffset).getAttribute().setBlockType(Ontology.VALUE_SERIES_END);
-		}
-
+		}		
 		update();
+		guessAllColumnTypes();
         this.dataChanged = false;
         this.metaDataChanged = true;
 	}
@@ -474,14 +474,21 @@ public class AttributeEditor extends ExtendedJTable implements MouseListener, Da
 	}
 	
 	private void autoSetValueType(int column) {
+		char decimalPointCharacter = '.';
+		try {
+			decimalPointCharacter = exampleSource.getParameterAsString(ExampleSource.PARAMETER_DECIMAL_POINT_CHARACTER).charAt(0);
+		} catch (UndefinedParameterError e) {
+			// cannot happen
+		}
 		int valueType = Ontology.INTEGER;
 		AttributeDataSource source = getDataSource(column);
 		for (int i = 0; i < rowCount; i++) {
 			String value = getDatum(i, column);
-			if ((value != null) && (!value.equals("?"))) {
+			if ((value != null) && (!value.equals("?")) && (value.trim().length() > 0)) {
 				try {
-					double d = Double.parseDouble(value);
-					if ((valueType == Ontology.INTEGER) && ((int) d != d)) {
+					String valueString = value.replace(decimalPointCharacter, '.');
+					double d = Double.parseDouble(valueString);
+					if ((valueType == Ontology.INTEGER) && (!Tools.isEqual(Math.round(d), d))) {
 						valueType = Ontology.REAL;
 					}
 				} catch (NumberFormatException e) {
@@ -664,23 +671,45 @@ public class AttributeEditor extends ExtendedJTable implements MouseListener, Da
 		if (sourceList.size() == 0)
 			return;
 
-		PrintWriter out = new PrintWriter(new FileWriter(file));
+    	Charset encoding = Tools.getDefaultEncoding();
+    	try {
+    		encoding = exampleSource.getEncoding();
+    	} catch (Exception e) {
+    		// do nothing and use default encoding
+    	}
+    	
+		PrintWriter out = null;
+		try {
+			out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), encoding));
 
-		for (int i = 0; i < sourceList.size(); i++) {
-			AttributeDataSource source = sourceList.get(i);
-			source.setSource(file, i);
-		}
-
-		for (int row = 0; row < rowCount; row++) {
-			for (int col = 0; col < sourceList.size(); col++) {
-				if (col != 0)
-					out.print("\t");
-				out.print(getDatum(row, col));
+			for (int i = 0; i < sourceList.size(); i++) {
+				AttributeDataSource source = sourceList.get(i);
+				source.setSource(file, i);
 			}
-			out.println();
+
+			for (int row = 0; row < rowCount; row++) {
+				for (int col = 0; col < sourceList.size(); col++) {
+					if (col != 0)
+						out.print("\t");
+					String value = getDatum(row, col); 
+					out.print(value);
+					Attribute attribute = sourceList.get(col).getAttribute();
+					if (attribute.isNominal()) {
+						if ((value != null) && (value.length() != 0) && (!value.equals("?")))
+							attribute.getMapping().mapString(value);
+					}
+				}
+				out.println();
+			}
+			
+			this.dataChanged = false;
+		} catch (IOException e) {
+			throw e;
+		} finally {
+			if (out != null) {
+				out.close();		
+			}
 		}
-		out.close();
-        this.dataChanged = false;
 	}
 
 	public void openAttributeFile() {
@@ -705,8 +734,22 @@ public class AttributeEditor extends ExtendedJTable implements MouseListener, Da
 
 			DataRowReader reader = null;
 			try {
-				reader = new FileDataRowReader(new DataRowFactory(DataRowFactory.TYPE_DOUBLE_ARRAY, exampleSource.getParameterAsString(ExampleSource.PARAMETER_DECIMAL_POINT_CHARACTER).charAt(0)), attributeDataSources.getDataSources(), 1.0d, -1, exampleSource.getParameterAsString(ExampleSource.PARAMETER_COLUMN_SEPARATORS), exampleSource.getParameterAsString(ExampleSource.PARAMETER_COMMENT_CHARS).toCharArray(), exampleSource
-						.getParameterAsBoolean(ExampleSource.PARAMETER_USE_QUOTES), exampleSource.getEncoding(), RandomGenerator.getRandomGenerator(-1)); 
+				char[] commentCharacters = null;
+				if (exampleSource.getParameterAsBoolean(ExampleSource.PARAMETER_USE_COMMENT_CHARACTERS)) {
+					commentCharacters = exampleSource.getParameterAsString(ExampleSource.PARAMETER_COMMENT_CHARS).toCharArray(); 
+				}
+				reader = 
+					new FileDataRowReader(new DataRowFactory(
+							exampleSource.getParameterAsInt(ExampleSource.PARAMETER_DATAMANAGEMENT), 
+							exampleSource.getParameterAsString(ExampleSource.PARAMETER_DECIMAL_POINT_CHARACTER).charAt(0)), 
+							attributeDataSources.getDataSources(), 
+							1.0d, 
+							-1, 
+							exampleSource.getParameterAsString(ExampleSource.PARAMETER_COLUMN_SEPARATORS), 
+							commentCharacters, 
+							exampleSource.getParameterAsBoolean(ExampleSource.PARAMETER_USE_QUOTES), 
+							exampleSource.getEncoding(), 
+							RandomGenerator.getRandomGenerator(-1)); 
 			} catch (IOException e) {
 				JOptionPane.showMessageDialog(this, "Cannot open data file: " + e, "Error", JOptionPane.ERROR_MESSAGE);
 				return;
@@ -752,7 +795,13 @@ public class AttributeEditor extends ExtendedJTable implements MouseListener, Da
 		if (file != null) {
 			this.file = file;
 			try {
-				writeXML(file);
+	        	Charset encoding = Tools.getDefaultEncoding();
+	        	try {
+	        		encoding = exampleSource.getEncoding();
+	        	} catch (Exception e) {
+	        		// do nothing and use default encoding
+	        	}
+				writeXML(file, encoding);
 			} catch (java.io.IOException e) {
 				JOptionPane.showMessageDialog(this, e.toString(), "Error saving attribute file " + file, JOptionPane.ERROR_MESSAGE);
 			}
@@ -760,25 +809,26 @@ public class AttributeEditor extends ExtendedJTable implements MouseListener, Da
         this.metaDataChanged = false;
 	}
 
-    private void writeXML(File attFile) throws IOException {
+    private void writeXML(File attFile, Charset encoding) throws IOException {
         if (sourceList.size() == 0)
             return;
-
-        PrintWriter out = new PrintWriter(new FileWriter(attFile));
+        PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(attFile), encoding));
         File defaultSource = getDataSource(0).getFile();
         String relativePath = Tools.getRelativePath(defaultSource, attFile);
-        out.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+        out.println("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>");
         out.println("<attributeset default_source=\"" + relativePath + "\">");
         Iterator i = sourceList.iterator();
         int c = 0;
         while (i.hasNext()) {
             AttributeDataSource ads = (AttributeDataSource) i.next();
+            /*
             Attribute attribute = ads.getAttribute();
             if (attribute.isNominal()) {
                 for (String nominalValue : dataColumnVector.get(c)) {
                     attribute.getMapping().mapString(nominalValue);
                 }
             }
+            */
             ads.writeXML(out, defaultSource);
             c++;
         }

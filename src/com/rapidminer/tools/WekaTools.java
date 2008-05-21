@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools;
 
@@ -48,6 +46,7 @@ import com.rapidminer.example.table.MemoryExampleTable;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
+import com.rapidminer.operator.OperatorException;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeDouble;
@@ -64,7 +63,7 @@ import weka.core.OptionHandler;
  * ExampleSet and vice versa.
  * 
  * @author Ingo Mierswa
- * @version $Id: WekaTools.java,v 1.5 2007/06/15 16:58:40 ingomierswa Exp $
+ * @version $Id: WekaTools.java,v 1.11 2008/05/09 19:22:55 ingomierswa Exp $
  */
 public class WekaTools {
 
@@ -141,7 +140,7 @@ public class WekaTools {
 
 		// 3. Read data
 		MemoryExampleTable table = new MemoryExampleTable(attributes);
-		DataRowFactory factory = new DataRowFactory(datamanagement);
+		DataRowFactory factory = new DataRowFactory(datamanagement, '.');
 		// create data
 		List<DataRow> dataList = new LinkedList<DataRow>();
 		int numberOfRapidMinerAttributes = instances.numAttributes();
@@ -158,6 +157,7 @@ public class WekaTools {
 					dataRow.set(attribute, wekaValue);
 				}
 			}
+			dataRow.trim();
 			dataList.add(dataRow);
 		}
 
@@ -176,7 +176,7 @@ public class WekaTools {
 	 * Creates Weka instances with the given name from the given example set.
 	 * The taskType defines for which task the instances object should be used.
 	 */
-	public static Instances toWekaInstances(ExampleSet exampleSet, String name, int taskType) {
+	public static Instances toWekaInstances(ExampleSet exampleSet, String name, int taskType) throws OperatorException {
 		return new WekaInstancesAdaptor(name, exampleSet, taskType);
 	}
 
@@ -514,7 +514,29 @@ public class WekaTools {
 				String deprecationInfo = null;
 				if (deprecationInfos != null)
 					deprecationInfo = deprecationInfos.get(classNames[i]);
-				OperatorDescription description = new OperatorDescription(classLoader, name, operatorClass, (infoString != null ? infoString : firstDescription.trim() + " " + name), (firstGroup.endsWith(".") ? firstGroup + group : firstGroup), icon, deprecationInfo);
+				String shortDescription = null;
+				String longDescription = null;
+				if (infoString != null) {
+					int pointIndex = infoString.indexOf('.');
+					if (pointIndex >= 0) {
+						String shortCandidate = infoString.substring(0, pointIndex + 1);
+						if (shortCandidate.length() > 10) {
+							shortDescription = shortCandidate;
+							longDescription = infoString;
+						} else {
+							shortDescription = firstDescription.trim() + " " + name;
+							longDescription = infoString;
+						}
+					} else {
+						shortDescription = firstDescription.trim() + " " + name;
+						longDescription = infoString;						
+					}
+				} else {
+					shortDescription = firstDescription.trim() + " " + name;
+					longDescription = firstDescription.trim() + " " + name;
+				}
+				
+				OperatorDescription description = new OperatorDescription(classLoader, name, operatorClass, shortDescription, longDescription, (firstGroup.endsWith(".") ? firstGroup + group : firstGroup), icon, deprecationInfo);
 				// ====================================================================
 				//    TODO: add the following command for testing new Weka versions !!!
                 // ====================================================================

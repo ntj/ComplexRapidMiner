@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.preprocessing.filter;
 
@@ -38,7 +36,6 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeString;
 
-
 /**
  * <p>
  * This operator sorts the given example set according to a single attribute. The example
@@ -47,16 +44,16 @@ import com.rapidminer.parameter.ParameterTypeString;
  * </p>
  * 
  * @author Ingo Mierswa
- * @version $Id: Sorting.java,v 1.2 2007/06/15 16:58:39 ingomierswa Exp $
+ * @version $Id: Sorting.java,v 1.5 2008/05/09 19:22:58 ingomierswa Exp $
  */
 public class Sorting extends Operator {
 	
-
 	/** The parameter name for &quot;Indicates the attribute which should be used for determining the sorting.&quot; */
 	public static final String PARAMETER_ATTRIBUTE_NAME = "attribute_name";
 
 	/** The parameter name for &quot;Indicates the direction of the sorting.&quot; */
 	public static final String PARAMETER_SORTING_DIRECTION = "sorting_direction";
+	
 	public Sorting(OperatorDescription description) {
 		super(description);
 	}
@@ -71,7 +68,8 @@ public class Sorting extends Operator {
 			throw new UserError(this, 111, getParameterAsString(PARAMETER_ATTRIBUTE_NAME));
 		}
 			
-		ExampleSet result = new SortedExampleSet(exampleSet, sortingAttribute, sortingDirection);		
+		ExampleSet result = new SortedExampleSet(exampleSet, sortingAttribute, sortingDirection);
+		
 		return new IOObject[] { result };
 	}
 

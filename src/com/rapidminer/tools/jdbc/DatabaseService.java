@@ -1,30 +1,29 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools.jdbc;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -59,19 +58,55 @@ import com.rapidminer.tools.Tools;
  * DriverManager.getConnection(...).
  *   
  * @author Ingo Mierswa
- * @version $Id: DatabaseService.java,v 1.1 2007/05/27 22:02:53 ingomierswa Exp $
+ * @version $Id: DatabaseService.java,v 1.7 2008/05/09 19:23:22 ingomierswa Exp $
  *
  */
 public class DatabaseService {
 
     private static List<JDBCProperties> jdbcProperties = new ArrayList<JDBCProperties>();
     
-	public static void init(boolean searchForJDBDriversInLibDirectory, 
-			                boolean searchForJDBCDriversInClasspath) throws IOException {
+	public static void init(boolean searchForJDBDriversInLibDirectory, boolean searchForJDBCDriversInClasspath) {
 		registerAllJDBCDrivers(searchForJDBDriversInLibDirectory, searchForJDBCDriversInClasspath);
-		URL propertyURL = Tools.getResource("jdbc_properties.xml");
-		if (propertyURL != null)
-			loadJDBCProperties(propertyURL.openStream(), "jdbc_properties.xml");
+		
+		// then try properties from the etc directory if available
+		File etcPropertyFile = ParameterService.getConfigFile("jdbc_properties.xml");
+		if ((etcPropertyFile != null) && (etcPropertyFile.exists())) {
+			InputStream in = null;
+			try {
+				in = new FileInputStream(etcPropertyFile);
+				loadJDBCProperties(in, "etc:jdbc_properties.xml");
+			} catch (IOException e) {
+				LogService.getGlobal().logError("Cannot load JDBC properties from etc directory.");
+			} finally {
+				if (in != null) {
+					try {
+						in.close();
+					} catch (IOException e) {
+						LogService.getGlobal().logError("Cannot close connection for JDBC properties file in the etc directory.");
+					}
+				}
+			}
+		} else {
+			// use the delivered default properties in the resources (e.g. in the jar file)
+			URL propertyURL = Tools.getResource("jdbc_properties.xml");
+			if (propertyURL != null) {
+				InputStream in = null;
+				try {
+					in = propertyURL.openStream();
+					loadJDBCProperties(in, "resources:jdbc_properties.xml");
+				} catch (IOException e) {
+					LogService.getGlobal().logError("Cannot load JDBC properties from program resources.");
+				} finally {
+					if (in != null) {
+						try {
+							in.close();
+						} catch (IOException e) {
+							LogService.getGlobal().logError("Cannot close connection for JDBC properties file in the resources.");
+						}
+					}
+				}
+			}
+		}
 	}
 	
 	private static void registerAllJDBCDrivers(boolean searchForJDBDriversInLibDirectory, boolean searchForJDBCDriversInClasspath) {
@@ -193,6 +228,8 @@ public class DatabaseService {
         Attr varcharNameAttr = driverElement.getAttributeNode("type_varchar");
         Attr integerNameAttr = driverElement.getAttributeNode("type_integer");
         Attr realNameAttr    = driverElement.getAttributeNode("type_real");
+        Attr quoteOpenAttr   = driverElement.getAttributeNode("identifier_quote_open");
+        Attr quoteCloseAttr  = driverElement.getAttributeNode("identifier_quote_close");
         
         if (nameAttr == null)
             throw new Exception("Missing name for <driver> tag");
@@ -224,6 +261,20 @@ public class DatabaseService {
             LogService.getGlobal().logWarning("No definition of 'type_real' found for driver " + nameAttr.getValue() + ", using default (REAL)...");
         }
         
+        String quoteOpenString = "\"";
+        if (quoteOpenAttr != null) {
+        	quoteOpenString = quoteOpenAttr.getValue();
+        } else {
+            LogService.getGlobal().logWarning("No definition of 'identifier_quote_open' found for driver " + nameAttr.getValue() + ", using default (\")...");
+        }
+
+        String quoteCloseString = "\"";
+        if (quoteCloseAttr != null) {
+        	quoteCloseString = quoteCloseAttr.getValue();
+        } else {
+            LogService.getGlobal().logWarning("No definition of 'identifier_quote_close' found for driver " + nameAttr.getValue() + ", using default (\")...");
+        }
+        
         JDBCProperties properties = 
             new JDBCProperties(nameAttr.getValue(), 
                                portAttr.getValue(), 
@@ -231,7 +282,9 @@ public class DatabaseService {
                                dbNameAttr.getValue(),
                                varcharString,
                                integerString,
-                               realString);
+                               realString,
+                               quoteOpenString,
+                               quoteCloseString);
         jdbcProperties.add(properties);
     }
     
@@ -239,21 +292,55 @@ public class DatabaseService {
 		return DriverManager.getDrivers();
 	}
 	
-	public static String[] getAllDriverNames() {
+	public static DriverInfo[] getAllDriverInfos() {
+		List<DriverInfo> predefinedDriverList = new LinkedList<DriverInfo>();
+		for (JDBCProperties properties : getJDBCProperties()) {
+			Enumeration<Driver> drivers = getAllDrivers();
+			boolean accepted = false;
+			while (drivers.hasMoreElements()) {
+			    Driver driver = drivers.nextElement();
+				try {
+					if (driver.acceptsURL(properties.getUrlPrefix())) {
+						DriverInfo info = new DriverInfo(driver);
+						info.setShortName(properties.getName());
+						predefinedDriverList.add(info);
+						accepted = true;
+						break;
+					}
+				} catch (SQLException e) {
+					// do nothing
+				}
+			}
+			if (!accepted) {
+				predefinedDriverList.add(new DriverInfo(properties.getName()));
+			}
+		}
+		
+		List<DriverInfo> driverList = new LinkedList<DriverInfo>();
 		Enumeration<Driver> drivers = getAllDrivers();
-		List<String> driverNameList = new LinkedList<String>();
 		while (drivers.hasMoreElements()) {
 		    Driver driver = drivers.nextElement();
-            if (driver instanceof DriverAdapter) {
-                driverNameList.add(driver.toString());                
-            } else {
-                driverNameList.add(driver.getClass().getName());
-            }
-        }
-
-        Collections.sort(driverNameList);
-		String[] driverArray = new String[driverNameList.size()];
-		driverNameList.toArray(driverArray);
+		    boolean accepted = true;
+		    for (DriverInfo predefinedInfo : predefinedDriverList) {
+		    	if ((predefinedInfo.getDriver() != null) && (predefinedInfo.getDriver().equals(driver))) {
+		    		accepted = false;
+		    		break;
+		    	}
+		    }
+		    if (accepted) {
+		    	DriverInfo info = new DriverInfo(driver);
+		    	if ((!info.getShortName().startsWith("NonRegistering")) &&
+		    			(!info.getShortName().startsWith("Replication"))) {
+		    		driverList.add(new DriverInfo(driver));
+		    	}
+		    }
+		}
+		
+		driverList.addAll(predefinedDriverList);		
+        Collections.sort(driverList);
+        
+		DriverInfo[] driverArray = new DriverInfo[driverList.size()];
+		driverList.toArray(driverArray);
 		return driverArray;
 	}
     

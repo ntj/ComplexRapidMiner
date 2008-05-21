@@ -1,34 +1,38 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.meta;
 
+import java.awt.BorderLayout;
+import java.awt.Component;
 import java.util.Iterator;
+
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.Model;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.learner.PredictionModel;
@@ -83,10 +87,10 @@ public class TransformedRegressionModel extends PredictionModel {
 	}
 
 	/** Iterates over all examples and applies this model. */
-	public void performPrediction(ExampleSet exampleSet, Attribute predictedLabelAttribute) throws OperatorException {
+	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabelAttribute) throws OperatorException {
 
 		ExampleSet eSet = (ExampleSet) exampleSet.clone();
-		model.apply(eSet);
+		eSet = model.apply(eSet);
 		Iterator<Example> reader = eSet.iterator();
 
 		Iterator<Example> originalReader = exampleSet.iterator();
@@ -164,11 +168,21 @@ public class TransformedRegressionModel extends PredictionModel {
 				// cannot happen
 				break;
 		}
+		
+		return exampleSet;
 	}
 
+	public Component getVisualizationComponent(IOContainer container) {
+		JPanel result = new JPanel();
+		result.setLayout(new BorderLayout());
+		result.add(new JLabel("Method: " + METHODS[method]), BorderLayout.NORTH);
+		result.add(model.getVisualizationComponent(container), BorderLayout.CENTER);
+		return result;
+	}
+	
 	public String toString() {
 		StringBuffer result = new StringBuffer(super.toString() + Tools.getLineSeparator());
-		result.append("method " + METHODS[method] + Tools.getLineSeparator());
+		result.append("Method: " + METHODS[method] + Tools.getLineSeparator());
 		result.append(model.toString());
 		return result.toString();
 	}

@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.viewer;
 
@@ -38,23 +36,36 @@ import com.rapidminer.operator.learner.associations.Item;
  * The table model for the association rules visualization.
  *
  * @author Ingo Mierswa
- * @version $Id: AssociationRuleTableModel.java,v 1.2 2007/06/22 22:14:16 ingomierswa Exp $
+ * @version $Id: AssociationRuleTableModel.java,v 1.8 2008/05/09 19:23:01 ingomierswa Exp $
  */
 public class AssociationRuleTableModel extends AbstractTableModel {
 
 	private static final long serialVersionUID = -4323147898914632476L;
-
+	
 	private static final String[] COLUMN_NAMES = {
+		"No.",
 		"Premises",
 		"Conclusion",
 		"Support",
-		"Confidence"
+		"Confidence",
+		"LaPlace",
+		"Gain",
+		"p-s",
+		"Lift",
+		"Conviction"
 	};
 	
-	private static final int COLUMN_PREMISES   = 0;
-	private static final int COLUMN_CONCLUSION = 1;
-	private static final int COLUMN_SUPPORT    = 2;
-	private static final int COLUMN_CONFIDENCE = 3;
+	private static final int COLUMN_RULE_ID    = 0;
+	private static final int COLUMN_PREMISES   = 1;
+	private static final int COLUMN_CONCLUSION = 2;
+	private static final int COLUMN_SUPPORT    = 3;
+	private static final int COLUMN_CONFIDENCE = 4;
+	private static final int COLUMN_LA_PLACE   = 5;
+	private static final int COLUMN_GAIN       = 6;
+	private static final int COLUMN_PS         = 7;
+	private static final int COLUMN_LIFT       = 8;
+	private static final int COLUMN_CONVICTION = 9;
+	
 	
 	private AssociationRules rules;
 	
@@ -66,8 +77,12 @@ public class AssociationRuleTableModel extends AbstractTableModel {
 	}
 
 	public Class<?> getColumnClass(int column) {
-		if ((column == COLUMN_CONFIDENCE) || (column == COLUMN_SUPPORT)) {
-			return Double.class;
+		if ((column != COLUMN_PREMISES) && (column != COLUMN_CONCLUSION)) {
+			if ((column == COLUMN_RULE_ID)) {
+				return Integer.class;
+			} else {					
+				return Double.class;
+			}
 		} else {
 			return String.class;
 		}
@@ -88,6 +103,8 @@ public class AssociationRuleTableModel extends AbstractTableModel {
 	public Object getValueAt(int rowIndex, int columnIndex) {
 		AssociationRule rule = rules.getRule(this.mapping[rowIndex]);
 		switch (columnIndex) {
+		case COLUMN_RULE_ID:
+			return Integer.valueOf(this.mapping[rowIndex] + 1);
 		case COLUMN_PREMISES:
 			return getItemString(rule.getPremiseItems());
 		case COLUMN_CONCLUSION:
@@ -96,6 +113,16 @@ public class AssociationRuleTableModel extends AbstractTableModel {
 			return Double.valueOf(rule.getTotalSupport());
 		case COLUMN_CONFIDENCE:
 			return Double.valueOf(rule.getConfidence());
+		case COLUMN_CONVICTION:
+			return Double.valueOf(rule.getConviction());
+		case COLUMN_GAIN:
+			return Double.valueOf(rule.getGain());
+		case COLUMN_PS:
+			return Double.valueOf(rule.getPs());
+		case COLUMN_LIFT:
+			return Double.valueOf(rule.getLift());
+		case COLUMN_LA_PLACE:
+			return Double.valueOf(rule.getLaplace());
 		default:
 			// cannot happen
 			return "?";
@@ -115,38 +142,22 @@ public class AssociationRuleTableModel extends AbstractTableModel {
 		return result.toString();
 	}
 	
-	public void setFilter(Item[] filter) {
-		if (filter == null) {
-			createCompleteMapping();
-		} else {
-			List<Integer> indices = new LinkedList<Integer>();
-			int counter = 0;
-			for (AssociationRule rule : this.rules) {
-				boolean found = false;
-				for (Item filterItem : filter) {
-					Iterator<Item> c = rule.getConclusionItems();
-					while (c.hasNext()) {
-						Item conclusionItem =  c.next();
-						if (filterItem.equals(conclusionItem)) {
-							indices.add(counter);
-							found = true;
-							break;
-						}
-					}
-					if (found)
-						break;
-				}
-				counter++;
-			}
-			this.mapping = new int[indices.size()];
-			Iterator<Integer> k = indices.iterator();
-			counter = 0;
-			while (k.hasNext()) {
-				this.mapping[counter++] = k.next();
-			}
+	public void setFilter(boolean[] filter) {				
+		List<Integer> indices = new LinkedList<Integer>();
+		for (int i = 0; i < filter.length; i++) {
+			if (filter[i])
+				indices.add(i);
 		}
+		this.mapping = new int[indices.size()];
+		Iterator<Integer> k = indices.iterator();
+		int counter = 0;
+		while (k.hasNext()) {
+			this.mapping[counter++] = k.next();
+		}
+			
 		fireTableStructureChanged();
 	}
+	
 	
 	private void createCompleteMapping() {
 		this.mapping = new int[this.rules.getNumberOfRules()];

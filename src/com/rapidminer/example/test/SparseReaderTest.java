@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.example.test;
 
@@ -34,7 +32,7 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.DataRowFactory;
 import com.rapidminer.example.table.MemoryExampleTable;
 import com.rapidminer.example.table.SparseFormatDataRowReader;
-import com.rapidminer.test.TestCase;
+import com.rapidminer.test.RapidMinerTestCase;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.att.AttributeSet;
 
@@ -43,9 +41,9 @@ import com.rapidminer.tools.att.AttributeSet;
  * Tests all formats of the {@link SparseFormatDataRowReader}
  * 
  * @author Simon Fischer, Ingo Mierswa
- * @version $Id: SparseReaderTest.java,v 1.2 2007/06/24 14:30:54 ingomierswa Exp $
+ * @version $Id: SparseReaderTest.java,v 1.5 2008/05/09 19:23:23 ingomierswa Exp $
  */
-public class SparseReaderTest extends TestCase {
+public class SparseReaderTest extends RapidMinerTestCase {
 
 	private static final String[] ATTRIBUTE_STRINGS = { "5:3.0 2:8.0", "1:cat 3:2.5 4:1.5e-1", "5:1.0", "1:dog 4:7.3e1" };
 

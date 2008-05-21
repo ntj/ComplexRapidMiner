@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.selection;
 
@@ -32,7 +30,6 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.set.AttributeWeightedExampleSet;
 import com.rapidminer.operator.features.Individual;
 import com.rapidminer.operator.features.IndividualOperator;
-
 
 /**
  * Inverts the used bit for every feature of every example set with a given
@@ -48,10 +45,19 @@ public class SelectionMutation extends IndividualOperator {
 
     private Random random;
     
+    private int minNumber;
     
-	public SelectionMutation(double probability, Random random) {
+    private int maxNumber;
+    
+    private int exactNumber;
+    
+    
+	public SelectionMutation(double probability, Random random, int minNumber, int maxNumber, int exactNumber) {
 		this.probability = probability;
-        this.random = random;
+        this.random      = random;
+        this.minNumber   = minNumber;
+        this.maxNumber   = maxNumber;
+        this.exactNumber = exactNumber;
 	}
 
 	public List<Individual> operate(Individual individual) {
@@ -63,9 +69,20 @@ public class SelectionMutation extends IndividualOperator {
 				clone.flipAttributeUsed(attribute);
 			}
 		}
-		if (clone.getNumberOfUsedAttributes() > 0) {
-			l.add(new Individual(clone));
+		
+		int numberOfFeatures = clone.getNumberOfUsedAttributes(); 
+		if (numberOfFeatures > 0) {
+			if (exactNumber > 0) {
+				if (numberOfFeatures == exactNumber) {
+					l.add(new Individual(clone));
+				}
+			} else {
+				if (((maxNumber < 1) || (numberOfFeatures <= maxNumber)) && (numberOfFeatures >= minNumber)) {
+					l.add(new Individual(clone));
+				}
+			}
 		}
+
 		// add also original ES
 		l.add(individual);
 		return l;

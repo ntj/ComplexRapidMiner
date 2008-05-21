@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools;
 
@@ -55,7 +53,7 @@ import com.rapidminer.parameter.UndefinedParameterError;
  * of lines is displayed.
  * 
  * @author Ingo Mierswa
- * @version $Id: LoggingViewer.java,v 1.5 2007/06/15 16:58:38 ingomierswa Exp $
+ * @version $Id: LoggingViewer.java,v 1.8 2008/05/09 19:22:59 ingomierswa Exp $
  */
 public class LoggingViewer extends ExtendedJScrollPane implements MouseListener {
 
@@ -64,14 +62,14 @@ public class LoggingViewer extends ExtendedJScrollPane implements MouseListener 
 	/** A stream that can be used to print to this text area. */
 	public transient LoggingViewerOutputStream outputStream;
 
-	public final Action CLEAR_MESSAGE_VIEWER_ACTION_24 = new ClearMessageAction(this, IconSize.SMALL);
-	public final Action CLEAR_MESSAGE_VIEWER_ACTION_32 = new ClearMessageAction(this, IconSize.MIDDLE);
+	public transient final Action CLEAR_MESSAGE_VIEWER_ACTION_24 = new ClearMessageAction(this, IconSize.SMALL);
+	public transient final Action CLEAR_MESSAGE_VIEWER_ACTION_32 = new ClearMessageAction(this, IconSize.MIDDLE);
 
-	public final Action SAVE_LOGFILE_ACTION_24 = new SaveLogFileAction(this, IconSize.SMALL);
-	public final Action SAVE_LOGFILE_ACTION_32 = new SaveLogFileAction(this, IconSize.MIDDLE);
+	public transient final Action SAVE_LOGFILE_ACTION_24 = new SaveLogFileAction(this, IconSize.SMALL);
+	public transient final Action SAVE_LOGFILE_ACTION_32 = new SaveLogFileAction(this, IconSize.MIDDLE);
 
-	public final Action SEARCH_ACTION_24 = new LoggingSearchAction(this, IconSize.SMALL);
-	public final Action SEARCH_ACTION_32 = new LoggingSearchAction(this, IconSize.MIDDLE);
+	public transient final Action SEARCH_ACTION_24 = new LoggingSearchAction(this, IconSize.SMALL);
+	public transient final Action SEARCH_ACTION_32 = new LoggingSearchAction(this, IconSize.MIDDLE);
 
 	private JTextPane textArea;
 
@@ -148,12 +146,16 @@ public class LoggingViewer extends ExtendedJScrollPane implements MouseListener 
 		}
 		file = SwingTools.chooseFile(this, file, false, "log", "log file");
 		if (file != null) {
+			PrintWriter out = null;
 			try {
-				PrintWriter out = new PrintWriter(new FileWriter(file));
+				out = new PrintWriter(new FileWriter(file));
 				out.println(textArea.getText());
-				out.close();
 			} catch (IOException ex) {
 				SwingTools.showSimpleErrorMessage("Cannot write log file.", ex);
+			} finally {
+				if (out != null) {
+					out.close();
+				}
 			}
 		}
 	}

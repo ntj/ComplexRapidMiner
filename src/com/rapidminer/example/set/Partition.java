@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.example.set;
 
@@ -39,7 +37,7 @@ import com.rapidminer.tools.LogService;
  * starts at 0.
  * 
  * @author Simon Fischer, Ingo Mierswa
- * @version $Id: Partition.java,v 1.2 2007/05/28 21:23:34 ingomierswa Exp $
+ * @version $Id: Partition.java,v 1.6 2008/05/09 19:22:49 ingomierswa Exp $
  */
 public class Partition implements Cloneable, Serializable {
 
@@ -52,7 +50,7 @@ public class Partition implements Cloneable, Serializable {
 	private int[] partitionSizes;
 
 	/** Maps every example to its partition index. */
-	private int[] splitPartition;
+	private int[] elements;
 
 	/**
 	 * Maps every example index to the true index of the data row in the example
@@ -83,15 +81,21 @@ public class Partition implements Cloneable, Serializable {
 	}
 
 	/** Creates a partition from the given one. Partition numbering starts at 0. */
-	public Partition(int[] splitPartition, int numberOfPartitions) {
-		init(splitPartition, numberOfPartitions);
+	public Partition(int[] elements, int numberOfPartitions) {
+		init(elements, numberOfPartitions);
 	}
 
 	/** Clone constructor. */
 	private Partition(Partition p) {
-		this.partitionSizes = p.partitionSizes.clone();
-		this.mask = p.mask.clone();
-		this.splitPartition = p.splitPartition.clone();
+		this.partitionSizes = new int[p.partitionSizes.length];
+		System.arraycopy(p.partitionSizes, 0, this.partitionSizes, 0, p.partitionSizes.length);
+		
+		this.mask = new boolean[p.mask.length];
+		System.arraycopy(p.mask, 0, this.mask, 0, p.mask.length);
+		
+		this.elements = new int[p.elements.length];
+		System.arraycopy(p.elements, 0, this.elements, 0, p.elements.length);
+
 		recalculateTableIndices();
 	}
 
@@ -101,18 +105,18 @@ public class Partition implements Cloneable, Serializable {
 	 */
 	private void init(double[] ratio, int size, PartitionBuilder builder) {
 		LogService.getGlobal().log("Create new partition using a '" + builder.getClass().getName() + "'.", LogService.STATUS);
-		splitPartition = builder.createPartition(ratio, size);
-		init(splitPartition, ratio.length);
+		elements = builder.createPartition(ratio, size);
+		init(elements, ratio.length);
 	}
 
 	/** Private initialization method used by constructors. */
-	private void init(int[] elements, int noOfPartitions) {
-		LogService.getGlobal().log("Create new partition with " + elements.length + " elements and " + noOfPartitions + " partitions.", LogService.STATUS);
+	private void init(int[] newElements, int noOfPartitions) {
+		LogService.getGlobal().log("Create new partition with " + newElements.length + " elements and " + noOfPartitions + " partitions.", LogService.STATUS);
 		partitionSizes = new int[noOfPartitions];
-		splitPartition = elements;
-		for (int i = 0; i < splitPartition.length; i++)
-			if (splitPartition[i] >= 0)
-				partitionSizes[splitPartition[i]]++;
+		elements = newElements;
+		for (int i = 0; i < elements.length; i++)
+			if (elements[i] >= 0)
+				partitionSizes[elements[i]]++;
 
 		mask = new boolean[noOfPartitions];
 		for (int i = 0; i < mask.length; i++)
@@ -130,8 +134,8 @@ public class Partition implements Cloneable, Serializable {
             if (this.mask[i] != other.mask[i])
                 return false;
 
-        for (int i = 0; i < splitPartition.length; i++)
-            if (this.splitPartition[i] != other.splitPartition[i])
+        for (int i = 0; i < elements.length; i++)
+            if (this.elements[i] != other.elements[i])
                 return false;
                 
         return true;
@@ -146,9 +150,9 @@ public class Partition implements Cloneable, Serializable {
            hc = hc * hashMultiplier + Boolean.valueOf(this.mask[i]).hashCode();
         }
         
-        hc = hc * hashMultiplier + this.splitPartition.length;
-        for (int i = 1; i < splitPartition.length; i <<= 1) {
-           hc = hc * hashMultiplier + Integer.valueOf(this.splitPartition[i]).hashCode();
+        hc = hc * hashMultiplier + this.elements.length;
+        for (int i = 1; i < elements.length; i <<= 1) {
+           hc = hc * hashMultiplier + Integer.valueOf(this.elements[i]).hashCode();
         }
         
         return hc; 
@@ -194,7 +198,7 @@ public class Partition implements Cloneable, Serializable {
 
 	/** Returns the total number of examples. */
 	public int getTotalSize() {
-		return splitPartition.length;
+		return elements.length;
 	}
 
 	/**
@@ -202,7 +206,7 @@ public class Partition implements Cloneable, Serializable {
 	 * to the current selection mask.
 	 */
 	public boolean isSelected(int index) {
-		return mask[splitPartition[index]];
+		return mask[elements[index]];
 	}
 
 	/**
@@ -211,8 +215,8 @@ public class Partition implements Cloneable, Serializable {
 	 */
 	private void recalculateTableIndices() {
 		List<Integer> indices = new LinkedList<Integer>();
-		for (int i = 0; i < splitPartition.length; i++) {
-			if (mask[splitPartition[i]]) {
+		for (int i = 0; i < elements.length; i++) {
+			if (mask[elements[i]]) {
 				indices.add(i);
 			}
 		}

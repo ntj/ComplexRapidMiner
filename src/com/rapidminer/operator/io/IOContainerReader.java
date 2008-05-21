@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.io;
 
@@ -129,16 +127,25 @@ public class IOContainerReader extends Operator {
 
 		// read and add log messages
 		if (getParameterAsString(PARAMETER_LOGFILE) != null) {
+			File logFile = getParameterAsFile(PARAMETER_LOGFILE);
+			BufferedReader logIn = null;
 			try {
-				BufferedReader logIn = new BufferedReader(new FileReader(getParameterAsFile(PARAMETER_LOGFILE)));
+				logIn = new BufferedReader(new FileReader(logFile));
 				String line = null;
 				while ((line = logIn.readLine()) != null) {
 					log(line);
 				}
-				logIn.close();
-			} catch (Exception e) {
+			} catch (IOException e) {
 				// only warn
 				logWarning("Could not read from logfile: " + e.toString());
+			} finally {
+				if (logIn != null) {
+					try {
+						logIn.close();
+					} catch (IOException e) {
+						logError("Cannot close stream to file " +  logFile);
+					}
+				}
 			}
 		}
 

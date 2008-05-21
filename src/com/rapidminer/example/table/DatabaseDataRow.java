@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.example.table;
 
@@ -28,14 +26,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import com.rapidminer.example.Attribute;
-import com.rapidminer.tools.jdbc.DatabaseHandler;
 
 
 /**
  * Reads datarows from a data base.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: DatabaseDataRow.java,v 1.1 2007/05/27 22:01:19 ingomierswa Exp $
+ * @version $Id: DatabaseDataRow.java,v 1.7 2008/05/09 19:22:44 ingomierswa Exp $
  */
 public class DatabaseDataRow extends DataRow {
 
@@ -43,8 +40,8 @@ public class DatabaseDataRow extends DataRow {
 
 	/** The result set which backs this data row. */
 	private transient ResultSet resultSet;
-
-	/** The current row of the result set. */
+	
+	/** The current row of the result set. Only used for checks*/
 	private int row;
     
 	/** The last attribute for which a query should be / was performed. */
@@ -91,7 +88,7 @@ public class DatabaseDataRow extends DataRow {
 		this.lastAttribute = null;
 	}
 	
-	/* pp */ double get(int index, double defaultValue) {
+	protected double get(int index, double defaultValue) {
 		if (lastAttribute == null) {
 			throw new RuntimeException("Cannot read data, please use get(Attribute) method instead of get(int, double) in DatabaseDataRow.");
 		} else {
@@ -104,9 +101,9 @@ public class DatabaseDataRow extends DataRow {
 	}
 
 
-	/* pp */ void set(int index, double value, double defaultValue) {
+	protected void set(int index, double value, double defaultValue) {
 		try {
-			String name = DatabaseHandler.getDatabaseName(this.lastAttribute);
+			String name = this.lastAttribute.getName();
 			if (Double.isNaN(value)) {
 				resultSet.updateNull(name);
 			} else {
@@ -123,7 +120,7 @@ public class DatabaseDataRow extends DataRow {
 	}
 	
 	/** Does nothing. */
-	/* pp */ void ensureNumberOfColumns(int numberOfColumns) {}
+	protected void ensureNumberOfColumns(int numberOfColumns) {}
 
 	/** Does nothing. */
 	public void trim() {}
@@ -134,7 +131,7 @@ public class DatabaseDataRow extends DataRow {
 	
 	/** Reads the data for the given attribute from the result set. */
 	public static double readColumn(ResultSet resultSet, Attribute attribute) throws SQLException {
-		String name = DatabaseHandler.getDatabaseName(attribute);
+		String name = attribute.getName();		
 		if (attribute.isNominal()) {
 			String dbString = resultSet.getString(name);
 			if (dbString == null)

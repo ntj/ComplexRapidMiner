@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.wizards;
 
@@ -62,6 +60,7 @@ import com.rapidminer.RapidMiner;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.JDBCDriverTable;
 import com.rapidminer.gui.tools.ProgressMonitor;
 import com.rapidminer.gui.tools.ProgressUtils;
 import com.rapidminer.gui.tools.SQLEditor;
@@ -70,8 +69,11 @@ import com.rapidminer.operator.io.DatabaseExampleSource;
 import com.rapidminer.parameter.Parameters;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.jdbc.ColumnIdentifier;
 import com.rapidminer.tools.jdbc.DatabaseHandler;
 import com.rapidminer.tools.jdbc.DatabaseService;
+import com.rapidminer.tools.jdbc.DriverInfo;
+import com.rapidminer.tools.jdbc.JDBCProperties;
 
 
 /**
@@ -79,7 +81,7 @@ import com.rapidminer.tools.jdbc.DatabaseService;
  * {@link DatabaseExampleSource} operators.
  * 
  * @author Ingo Mierswa
- * @version $Id: DBExampleSourceConfigurationWizard.java,v 1.1 2007/05/27 22:02:07 ingomierswa Exp $
+ * @version $Id: DBExampleSourceConfigurationWizard.java,v 1.8 2008/05/09 19:22:56 ingomierswa Exp $
  */
 public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWizard {
     
@@ -94,11 +96,14 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
     /** The database handler. */
     private transient DatabaseHandler handler = null;
     
+    /** The latest JDBC properties. */
+    private transient JDBCProperties properties = null;
+    
     /** Indicates if the handler is currently connected. */
     private boolean isConnected = false;
     
     /** All attribute names for the available tables. */
-    Map<String, List<String>> attributeNameMap = new LinkedHashMap<String, List<String>>();
+    Map<String, List<ColumnIdentifier>> attributeNameMap = new LinkedHashMap<String, List<ColumnIdentifier>>();
     
     /** This combo box contains all available database drivers. */
     private JComboBox systemComboBox;
@@ -137,7 +142,7 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
     private SQLEditor sqlQueryTextArea = new SQLEditor();
     
     /** This map contains all information for the attribute types. */
-    private Map<String, String> attributeTypeMap = new HashMap<String, String>(); 
+    private Map<ColumnIdentifier, String> attributeTypeMap = new HashMap<ColumnIdentifier, String>(); 
     
     /** The definition of all attribute types. */
     private DBExampleSourceConfigurationWizardDataTable dataView = new DBExampleSourceConfigurationWizardDataTable();
@@ -166,13 +171,12 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
                 "<li>Selection of tables and attributes (SQL query)</li>" + 
                 "<li>Definition of special attributes like labels or IDs</li>" +
                 "</ul>");
-        String[] driverNames = DatabaseService.getAllDriverNames();
-        titleString.append("<br>The currently available JDBC drivers are:<ul>");
-        for (String s : driverNames)
-            titleString.append("<li>" + s + "</li>");
-        titleString.append("</ul>Please make sure to copy missing drivers into the directory lib/jdbc and restart RapidMiner in order to make additional drivers available.");
+        titleString.append("<br>The currently available JDBC drivers are listed below. Please make sure to copy missing drivers into the directory lib/jdbc and restart RapidMiner in order to make additional drivers available.");
         
-        JPanel panel = SwingTools.createTextPanel("Welcome to the Database Example Source Wizard", titleString.toString()); 
+        JPanel panel = SwingTools.createTextPanel("Welcome to the Database Example Source Wizard", titleString.toString());
+        DriverInfo[] drivers = DatabaseService.getAllDriverInfos();
+        JDBCDriverTable driverTable = new JDBCDriverTable(drivers);
+        panel.add(new JScrollPane(driverTable), BorderLayout.CENTER);
         addStep(panel);
     }
 
@@ -414,7 +418,9 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
         if (systemComboBox.getSelectedIndex() >= DatabaseService.getJDBCProperties().size()) {
             serverField.setEnabled(false);
             databaseNameField.setEnabled(false);
-            urlField.setText("");
+            JDBCProperties defaultProps = JDBCProperties.createDefaultJDBCProperties();
+            String defaultString = defaultProps.getUrlPrefix() + "server" + ":port" + defaultProps.getDbNameSeperator() + "database_name";
+            urlField.setText(defaultString);
         } else {
             serverField.setEnabled(true);
             databaseNameField.setEnabled(true);
@@ -465,11 +471,17 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
                 this.handler.disconnect();
                 this.handler = null;
             }
-            this.handler = new DatabaseHandler(urlString, DatabaseService.getJDBCProperties().get(systemComboBox.getSelectedIndex()));
+            int selectedSystem = systemComboBox.getSelectedIndex();
+            JDBCProperties jdbcProperties = JDBCProperties.createDefaultJDBCProperties();
+            if ((selectedSystem >= 0) && (selectedSystem < DatabaseService.getJDBCProperties().size() - 1)) {
+            	jdbcProperties = DatabaseService.getJDBCProperties().get(systemComboBox.getSelectedIndex());
+            }
+            this.handler = new DatabaseHandler(urlString, jdbcProperties);
+            this.properties = this.handler.getProperties();
             String userName = null;
             String passwd = null;
             // "hack" to allow convenient MS SQL authentication
-            if (urlString.indexOf("AuthenticationMethod") <= 0) {
+            if (urlString.indexOf("AuthenticationMethod") < 0) {
             	userName = userNameField.getText().trim();
             	if ((userName == null) || (userName.length() == 0)) {
             		SwingTools.showVerySimpleErrorMessage("Please specify a user name!");
@@ -517,7 +529,7 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
                 	// retrieve data
                     attributeNameMap.clear();
                     if (handler != null) {
-                        Map<String, List<String>> newAttributeMap;
+                        Map<String, List<ColumnIdentifier>> newAttributeMap;
 						try {
 							newAttributeMap = handler.getAllTableMetaData();
 	                        attributeNameMap.putAll(newAttributeMap);
@@ -549,50 +561,46 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
     }
     
     private void updateAttributeNames() {
-        boolean singleTable = tableList.getSelectedValues().length == 1;
-        List<String> allAttributeNames = new LinkedList<String>();
+        //boolean singleTable = tableList.getSelectedValues().length == 1;
+        List<ColumnIdentifier> allColumnIdentifiers = new LinkedList<ColumnIdentifier>();
         Object[] selection = tableList.getSelectedValues();
         for (Object o : selection) {
             String tableName = (String)o;
-            List<String> attributeNames = this.attributeNameMap.get(tableName);
+            List<ColumnIdentifier> attributeNames = this.attributeNameMap.get(tableName);
             if (attributeNames != null) {
-                Iterator<String> i = attributeNames.iterator();
+                Iterator<ColumnIdentifier> i = attributeNames.iterator();
                 while (i.hasNext()) {
-                    String currentAttributeName = i.next();
-                    if (singleTable)
-                        allAttributeNames.add(createAttributeName(currentAttributeName, singleTable));
-                    else
-                        allAttributeNames.add(currentAttributeName);
+                    ColumnIdentifier currentIdentifier = i.next();
+                    allColumnIdentifiers.add(currentIdentifier);
                 }
             }
         }
         attributeList.removeAll();
-        String[] nameArray = new String[allAttributeNames.size()];
-        allAttributeNames.toArray(nameArray);
-        attributeList.setListData(nameArray);
+        ColumnIdentifier[] identifierArray = new ColumnIdentifier[allColumnIdentifiers.size()];
+        allColumnIdentifiers.toArray(identifierArray);
+        attributeList.setListData(identifierArray);
     }
     
     private void updateDataView() throws SQLException {
         // update attribute types
         attributeTypeMap.clear();
         Object[] attributeSelection = attributeList.getSelectedValues();
-        String[] usedAttributeNames = null;
-        boolean singleTable = tableList.getSelectedValues().length == 1;
+        ColumnIdentifier[] usedAttributes = null;
         if (attributeSelection.length == 0) {
             // use all
-            usedAttributeNames = new String[attributeList.getModel().getSize()];
+            usedAttributes = new ColumnIdentifier[attributeList.getModel().getSize()];
             for (int i = 0; i < attributeList.getModel().getSize(); i++) {
-                String currentName = (String)attributeList.getModel().getElementAt(i);
-                usedAttributeNames[i] = createAttributeName(currentName, singleTable);
-                attributeTypeMap.put(usedAttributeNames[i], Attributes.ATTRIBUTE_NAME);
+                ColumnIdentifier currentColumn = (ColumnIdentifier)attributeList.getModel().getElementAt(i);
+                usedAttributes[i] = currentColumn;
+                attributeTypeMap.put(currentColumn, Attributes.ATTRIBUTE_NAME);
             }
         } else {
             // use only selected
-            usedAttributeNames = new String[attributeSelection.length];
+            usedAttributes = new ColumnIdentifier[attributeSelection.length];
             for (int i = 0; i < attributeSelection.length; i++) {
-                String currentName = (String)attributeSelection[i];
-                usedAttributeNames[i] = createAttributeName(currentName, singleTable);
-                attributeTypeMap.put(usedAttributeNames[i], Attributes.ATTRIBUTE_NAME);
+                ColumnIdentifier currentColumn = (ColumnIdentifier)attributeSelection[i];
+                usedAttributes[i] = currentColumn;
+                attributeTypeMap.put(currentColumn, Attributes.ATTRIBUTE_NAME);
             }
         }
         // update data sample
@@ -603,7 +611,7 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
             ResultSet resultSet = statement.executeQuery(getQueryString());
             int counter = 0;
             while ((resultSet.next()) && (counter < 10)) {
-                String[] row = new String[usedAttributeNames.length];
+                String[] row = new String[usedAttributes.length];
                 for (int c = 0; c < row.length; c++)
                     row[c] = resultSet.getString(c+1);
                 data.add(row);
@@ -612,18 +620,17 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
             statement.close();
         }
         disconnect();
-        dataView.update(usedAttributeNames, data, attributeTypeMap);
+        dataView.update(usedAttributes, data, attributeTypeMap);
     }
     
-    private void appendAttributeName(StringBuffer result, Object o, boolean first, boolean singleTable) {
+    private void appendAttributeName(StringBuffer result, ColumnIdentifier identifier, boolean first, boolean singleTable) {
         if (!first) {
             result.append(", ");
         }
-        String attributeName = (String)o;
         if (singleTable) {
-            result.append(createAttributeName(attributeName, singleTable));
+            result.append(identifier.getFullName(properties, singleTable));
         } else {
-            result.append(attributeName + " AS " + createAttributeName(attributeName, singleTable));
+            result.append(identifier.getFullName(properties, singleTable) + " AS " + identifier.getAliasName(properties, singleTable));
         }        
     }
     
@@ -636,6 +643,7 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
         
         boolean singleTable = tableSelection.length == 1;
         
+        // SELECT
         StringBuffer result = new StringBuffer("SELECT ");
         Object[] attributeSelection = attributeList.getSelectedValues();
         if (singleTable && (((attributeSelection.length == 0) || (attributeSelection.length == attributeList.getModel().getSize())))) {
@@ -644,18 +652,21 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
             if ((attributeSelection.length == 0) || (attributeSelection.length == attributeList.getModel().getSize())) {
                 boolean first = true;
                 for (int i = 0; i < attributeList.getModel().getSize(); i++) {
-                    Object o = attributeList.getModel().getElementAt(i);
-                    appendAttributeName(result, o, first, singleTable);
+                    ColumnIdentifier identifier = (ColumnIdentifier)attributeList.getModel().getElementAt(i);
+                    appendAttributeName(result, identifier, first, singleTable);
                     first = false;
                 }                
             } else {
                 boolean first = true;
                 for (Object o : attributeSelection) {
-                    appendAttributeName(result, o, first, singleTable);
+                	ColumnIdentifier identifier = (ColumnIdentifier)o;
+                    appendAttributeName(result, identifier, first, singleTable);
                     first = false;
                 }
             }
         }
+        
+        // FROM
         result.append(Tools.getLineSeparator() + "FROM ");
         boolean first = true;
         for (Object o : tableSelection) {
@@ -665,8 +676,10 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
                 result.append(", ");
             }
             String tableName = (String)o;
-            result.append(tableName);
+            result.append(properties.getIdentifierQuoteOpen() + tableName + properties.getIdentifierQuoteClose());
         }
+        
+        // WHERE
         String whereText = whereTextArea.getText().trim();
         if (whereText.length() > 0) {
             result.append(Tools.getLineSeparator() + "WHERE " + whereText);
@@ -709,7 +722,7 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
             parameters.setParameter("username", userName);
             parameters.setParameterWithoutCheck("password", null);
             if (passwordFromTextField) {
-                parameters.setParameter("password", new String(passwordField.getPassword()));
+                parameters.setParameterWithoutCheck("password", new String(passwordField.getPassword()));
             }
 
             // query string
@@ -725,11 +738,12 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
                 ensureAttributeTypeIsUnique(Attributes.KNOWN_ATTRIBUTE_TYPES[i]);
 
             boolean singleTable = tableList.getSelectedValues().length == 1;
-            Iterator<String> i = attributeTypeMap.keySet().iterator();
+            Iterator<ColumnIdentifier> i = attributeTypeMap.keySet().iterator();
             while (i.hasNext()) {
-                String attName = i.next();
-                String attType = attributeTypeMap.get(attName);
-                String maskedAttributeName = createAttributeName(attName, singleTable);
+                ColumnIdentifier attributeIdentifier = i.next();
+                String attType = attributeTypeMap.get(attributeIdentifier);
+                String maskedAttributeName = attributeIdentifier.getAliasName(properties, singleTable);
+                maskedAttributeName = maskedAttributeName.substring(1, maskedAttributeName.length() - 1);
                 if (attType.equals(Attributes.LABEL_NAME)) {
                     parameters.setParameter("label_attribute", maskedAttributeName);        
                 } else if (attType.equals(Attributes.ID_NAME)) {
@@ -746,32 +760,32 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
     }
     
     private void ensureAttributeTypeIsUnique(String type) {
-        List<String> columns = new LinkedList<String>();
+        List<ColumnIdentifier> columns = new LinkedList<ColumnIdentifier>();
         List<Integer> columnNumbers = new LinkedList<Integer>();
-        Iterator<String> i = attributeTypeMap.keySet().iterator();
+        Iterator<ColumnIdentifier> i = attributeTypeMap.keySet().iterator();
         int j = 0;
         while (i.hasNext()) {
-            String attName = i.next(); 
-            String attType = attributeTypeMap.get(attName);
+            ColumnIdentifier attributeIdentifier = i.next(); 
+            String attType = attributeTypeMap.get(attributeIdentifier);
             if (attType.equals(type)) {
-                columns.add(attName);
+                columns.add(attributeIdentifier);
                 columnNumbers.add(j);
             }
             j++;
         }
         if (columns.size() > 1) {
-            String[] names = new String[columns.size()];
-            columns.toArray(names);
+            ColumnIdentifier[] identifiers = new ColumnIdentifier[columns.size()];
+            columns.toArray(identifiers);
             javax.swing.JTextArea message = new javax.swing.JTextArea("The special attribute " + type + " is multiply defined. Please select one of the data columns (others will be changed to regular attributes). Press \"Cancel\" to ignore.", 4, 40);
             message.setEditable(false);
             message.setLineWrap(true);
             message.setWrapStyleWord(true);
             message.setBackground(new javax.swing.JLabel("").getBackground());
-            String selection = (String) JOptionPane.showInputDialog(this, message, type + " multiply defined", JOptionPane.WARNING_MESSAGE, null, names, names[0]);
+            ColumnIdentifier selection = (ColumnIdentifier) JOptionPane.showInputDialog(this, message, type + " multiply defined", JOptionPane.WARNING_MESSAGE, null, identifiers, identifiers[0]);
             if (selection != null) {
                 i = columns.iterator();
                 while (i.hasNext()) {
-                    String name = i.next();
+                    ColumnIdentifier name = i.next();
                     if (!name.equals(selection)) {
                         attributeTypeMap.remove(name);
                         attributeTypeMap.put(name, Attributes.ATTRIBUTE_NAME);
@@ -779,16 +793,6 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
                 }
             }
         }
-    }
-
-    private String createAttributeName(String attributeName, boolean singleTable) {
-        String[] nameParts = attributeName.split("\\.");
-        if (nameParts.length == 1)
-            return attributeName;
-        if (singleTable)
-            return nameParts[1];
-        else
-            return nameParts[0] + "__" + nameParts[1];
     }
     
     protected void cancel() {

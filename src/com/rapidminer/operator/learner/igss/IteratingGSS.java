@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.igss;
 
@@ -68,7 +66,7 @@ import com.rapidminer.tools.RandomGenerator;
  * University of Dortmund.
  * 
  * @author Dirk Dach
- * @version $Id: IteratingGSS.java,v 1.5 2007/07/13 22:52:15 ingomierswa Exp $
+ * @version $Id: IteratingGSS.java,v 1.9 2008/05/09 19:23:18 ingomierswa Exp $
  */
 public class IteratingGSS extends AbstractLearner {
 
@@ -419,7 +417,6 @@ public class IteratingGSS extends AbstractLearner {
                             delta_h_m = delta / (2.0d * hypothesisList.size() * Math.ceil(m / stepsize));
                             if (hypo.equals(maxRest.getHypothesis()) && hypothesisList.size() > n) {
                                 this.updateLists(hypothesisList, n, totalWeight, totalPositiveWeight, delta_h_m);
-                                // System.out.println("gss():deleting best of rest: "+hypo.toString());
                             }
                         }
                     }
@@ -460,7 +457,7 @@ public class IteratingGSS extends AbstractLearner {
      * Reweights the examples according to knowledge based sampling. Normalizes weights to [0,1] if the parameter normalize is set to true.
      */
     public ContingencyMatrix reweight(ExampleSet exampleSet, Model model, boolean normalize) throws OperatorException {
-        model.apply(exampleSet); // apply and create predicted label
+        exampleSet = model.apply(exampleSet); // apply and create predicted label
         WeightedPerformanceMeasures wpm = new WeightedPerformanceMeasures(exampleSet);
         WeightedPerformanceMeasures.reweightExamples(exampleSet, wpm.getContingencyMatrix(), false);
 
@@ -478,7 +475,6 @@ public class IteratingGSS extends AbstractLearner {
             while (reader.hasNext()) {
                 Example e = reader.next();
                 e.setValue(e.getAttributes().getWeight(), e.getWeight() / maxWeight);
-                // System.out.println(e.getWeight());
             }
         }
 
@@ -726,7 +722,6 @@ public class IteratingGSS extends AbstractLearner {
             case IteratingGSS.TYPE_EXAMPLE:
 
                 if (otherResults.size() == 0 || otherResults.size() < min_model_number) {
-                    // System.out.println("useful? true(min model number not reached)");
                     return true;
                 }
 

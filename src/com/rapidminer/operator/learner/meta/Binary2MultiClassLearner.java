@@ -1,31 +1,30 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.meta;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
@@ -52,14 +51,14 @@ import com.rapidminer.tools.RandomGenerator;
  * capable of using error-correcting output codes for increased accuracy.  
  * 
  * @author Helge Homburg
- * @version $Id: Binary2MultiClassLearner.java,v 1.6 2007/07/15 13:40:58 ingomierswa Exp $
+ * @version $Id: Binary2MultiClassLearner.java,v 1.11 2008/05/09 19:22:46 ingomierswa Exp $
  */
 public class Binary2MultiClassLearner extends AbstractMetaLearner {
 
 	/** The parameter name for &quot;What strategy should be used for multi class classifications?&quot; */
 	public static final String PARAMETER_CLASSIFICATION_STRATEGIES = "classification_strategies";
 
-	/** The parameter name for &quot;A multiplicator regulating the codeword length in random code modus.&quot; */
+	/** The parameter name for &quot;A multiplier regulating the codeword length in random code modus.&quot; */
 	public static final String PARAMETER_RANDOM_CODE_MULTIPLICATOR = "random_code_multiplicator";
 
 	/** The parameter name for &quot;Use the given random seed instead of global random numbers (-1: use global)&quot; */
@@ -75,6 +74,9 @@ public class Binary2MultiClassLearner extends AbstractMetaLearner {
 	
 	private static final int RANDOM_CODE = 3;	
 	
+	/** This List stores a short description for the generated models. */
+	private LinkedList<String> modelNames = new LinkedList<String>();
+	
 	/**
 	 * A class which stores all necessary information to train a series of models
 	 * according to a certain classification strategy.
@@ -82,18 +84,16 @@ public class Binary2MultiClassLearner extends AbstractMetaLearner {
 	private static class CodePattern {
 	
 		String[][] data;
-		boolean[][] partitionEnabled;
-		//int classificationStrategy;
+		boolean[][] partitionEnabled;		
 		
-		public CodePattern(int numberOfClasses, int numberOfFunctions) { //, int classificationStrategy) {
+		public CodePattern(int numberOfClasses, int numberOfFunctions) { 
 			data = new String[numberOfClasses][numberOfFunctions];
 			partitionEnabled = new boolean[numberOfClasses][numberOfFunctions];
 			for (int i = 0; i < numberOfClasses; i++) {
 				for (int j = 0; j < numberOfFunctions; j++) {
 					partitionEnabled[i][j] = true; 
 				}
-			}
-			//this.classificationStrategy = classificationStrategy;
+			}		
 		}
 	}
 	
@@ -176,14 +176,17 @@ public class Binary2MultiClassLearner extends AbstractMetaLearner {
 	private CodePattern buildCodePattern_ONE_VS_ALL(Attribute classLabel) {
 		int numberOfClasses = classLabel.getMapping().size();		
 		CodePattern cP = new CodePattern(numberOfClasses, numberOfClasses); //, ONE_AGAINST_ALL); 
-		Iterator<String> classIt = classLabel.getMapping().getValues().iterator();
+		Iterator<String> classIt = classLabel.getMapping().getValues().iterator();	
+		modelNames.clear();
 		
 		for (int i = 0; i < numberOfClasses; i++) {
 			for (int j = 0; j < numberOfClasses; j++) { 
 				if (i == j) {
-					cP.data[i][j] = classIt.next();
+					String currentClass = classIt.next();
+					modelNames.add(currentClass+" vs. all other");
+					cP.data[i][j] = currentClass;
 				} else {
-					cP.data[i][j] = "AllOtherClasses";
+					cP.data[i][j] = "all_other_classes";
 				}
 			}
 		}
@@ -198,6 +201,7 @@ public class Binary2MultiClassLearner extends AbstractMetaLearner {
 		int numberOfCombinations = (numberOfClasses * (numberOfClasses -1)) / 2;
 		String[] classIndexMap = new String[numberOfClasses];
 		CodePattern cP = new CodePattern(numberOfClasses, numberOfCombinations); //, ONE_AGAINST_ONE);
+		modelNames.clear();
 		
 		for (int i = 0; i < numberOfClasses; i++) {
 			for (int j = 0; j < numberOfCombinations; j++) {
@@ -222,8 +226,12 @@ public class Binary2MultiClassLearner extends AbstractMetaLearner {
 			}									
 			cP.partitionEnabled[currentClassA][counter] = true;
 			cP.partitionEnabled[currentClassB][counter] = true;
-			cP.data[currentClassA][counter] = classIndexMap[currentClassA];
-			cP.data[currentClassB][counter] = classIndexMap[currentClassB];			
+			String currentClassNameA = classIndexMap[currentClassA];
+			String currentClassNameB = classIndexMap[currentClassB];
+			cP.data[currentClassA][counter] = currentClassNameA;
+			cP.data[currentClassB][counter] = currentClassNameB;			
+			
+			modelNames.add(currentClassNameA+" vs. "+currentClassNameB);
 			
 			currentClassB++;			
 		}
@@ -270,7 +278,7 @@ public class Binary2MultiClassLearner extends AbstractMetaLearner {
 		
 		//TODO: Improve random codeword quality
 		
-		// Ensure that each column shows at least one occurance of "1" (true) or "0" (false),
+		// Ensure that each column shows at least one occurrence of "1" (true) or "0" (false),
 		// otherwise the following two-class classification procedure fails.		
 		for (int i = 0; i < cP.data[0].length; i++) {				
 			boolean containsNoOne = true, containsNoZero = true;
@@ -292,10 +300,16 @@ public class Binary2MultiClassLearner extends AbstractMetaLearner {
 	}
 		
 	public Model learn(ExampleSet inputSet) throws OperatorException {
+		Attribute classLabel = inputSet.getAttributes().getLabel();		
+		
+		if (classLabel.getMapping().size() == 2) {
+			return applyInnerLearner(inputSet);
+		}
+		
 		int classificationStrategy = getParameterAsInt(PARAMETER_CLASSIFICATION_STRATEGIES);		
 		CodePattern cP;		
 		Model[] models;		
-		Attribute classLabel = inputSet.getAttributes().getLabel();				
+		
 		SplittedExampleSet seSet = constructClassPartitionSet(inputSet);
 		
 		switch (classificationStrategy) {
@@ -306,7 +320,7 @@ public class Binary2MultiClassLearner extends AbstractMetaLearner {
 				cP = buildCodePattern_ONE_VS_ALL(classLabel);
 				models = applyCodePattern(seSet, classLabel, cP);		
 				
-				return new Binary2MultiClassModel(inputSet, models, classificationStrategy);		
+				return new Binary2MultiClassModel(inputSet, models, classificationStrategy, modelNames);		
 			}
 			
 			case ONE_AGAINST_ONE: {
@@ -315,7 +329,7 @@ public class Binary2MultiClassLearner extends AbstractMetaLearner {
 				cP = buildCodePattern_ONE_VS_ONE(classLabel);
 				models = applyCodePattern(seSet, classLabel, cP);			
 				
-				return new Binary2MultiClassModel(inputSet, models, classificationStrategy);
+				return new Binary2MultiClassModel(inputSet, models, classificationStrategy, modelNames);
 			}
 			
 			case EXHAUSTIVE_CODE: {

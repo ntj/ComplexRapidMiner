@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.plotter.mathplot;
 
@@ -46,7 +44,7 @@ import com.rapidminer.gui.plotter.PlotterLegend;
  *  class can be used. Another method usually implemented is {@link #getNumberOfAxes()}.
  *  
  *  @author Ingo Mierswa, Sebastian Land
- *  @version $Id: JMathPlotter.java,v 1.2 2007/07/15 22:06:25 ingomierswa Exp $
+ *  @version $Id: JMathPlotter.java,v 1.7 2008/05/09 19:23:21 ingomierswa Exp $
  */
 public abstract class JMathPlotter extends PlotterAdapter {
 	
@@ -69,14 +67,11 @@ public abstract class JMathPlotter extends PlotterAdapter {
 	private int[] axis = new int[] { -1, -1 };
 	
 	
-	/** Creates a new JMathPlotter. Removes the data view button and adds the legend under the plotter panel
-	 *  if the method {@link #hasLegend()} returns true. If the method {@link #hasRapidMinerValueLegend()} returns
-	 *  true the usual RapidMiner color legend will be used ({@link PlotterLegend}). */
+	/** Creates a new JMathPlotter. If the method {@link #hasRapidMinerValueLegend()} returns
+	 *  true, the usual RapidMiner color legend will be used ({@link PlotterLegend}). */
 	public JMathPlotter() {
 		this.plotpanel = createPlotPanel();
-        // removes the icon for dataview in the toolbar
-		this.plotpanel.plotToolBar.remove(5);
-		this.plotpanel.removePlotToolBar();
+
 		if (hasLegend())
 			this.plotpanel.addLegend(LEGEND_POSITION);
 		
@@ -114,6 +109,8 @@ public abstract class JMathPlotter extends PlotterAdapter {
 	protected abstract PlotPanel createPlotPanel();
 	
 	protected abstract void update();
+	
+	protected abstract int getNumberOfOptionIcons();
 	
 	// =============================
 	// helper method for subclasses
@@ -208,16 +205,17 @@ public abstract class JMathPlotter extends PlotterAdapter {
 		return columns[index];
 	}
 
+	/** Removes the data view button and adds the legend under the plotter panel
+	 *  if the method {@link #hasLegend()} returns true. */
 	public JComponent getOptionsComponent(int index) {
 		if (index == 0) {
+	        // removes the icon for dataview in the toolbar
+			while (this.plotpanel.plotToolBar.getComponentCount() > getNumberOfOptionIcons())
+				this.plotpanel.plotToolBar.remove(this.plotpanel.plotToolBar.getComponentCount() - 1);
 			return this.plotpanel.plotToolBar;
 		} else {
 			return null;
 		}
-	}
-
-	public boolean hasSaveImageButton() {
-		return true;
 	}
 	
 	public void repaint() {

@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools.math.som;
 
@@ -32,7 +30,7 @@ import java.util.Random;
  * This class can be used to train a Kohonen net.
  * 
  * @author Sebastian Land
- * @version $Id: KohonenNet.java,v 1.1 2007/05/27 22:01:57 ingomierswa Exp $
+ * @version $Id: KohonenNet.java,v 1.5 2008/05/09 19:23:19 ingomierswa Exp $
  */
 public class KohonenNet extends Thread {
 
@@ -40,10 +38,8 @@ public class KohonenNet extends Thread {
 
 	private int netDimension;
 
-	// private int dataDimension;
 	private int[] netDimensions;
 
-	// private boolean hexagonal;
 	private int phase;
 
 	private int trainingSteps = 80;
@@ -54,7 +50,7 @@ public class KohonenNet extends Thread {
 
 	private DistanceFunction distanceFunction;
 
-	private AdaptionFunction adaptionFunction;
+	private AdaptationFunction adaptationFunction;
 
 	private KohonenTrainingsData data;
 
@@ -70,7 +66,7 @@ public class KohonenNet extends Thread {
 
 	public KohonenNet(KohonenTrainingsData data) {
 		this.distanceFunction = new EuclideanDistance();
-		this.adaptionFunction = new RitterAdaption();
+		this.adaptationFunction = new RitterAdaptation();
 		this.data = data;
 	}
 
@@ -126,7 +122,7 @@ public class KohonenNet extends Thread {
 					fittingNode = getBestFittingNode(exampleWeights);
 					int[] stimulusCoords = getCoordinatesOfIndex(fittingNode);
 					// adapting every node in range to stimulus
-					int range = 2 * (int) Math.round(adaptionFunction.getAdaptionRadius(null, step, trainingSteps));
+					int range = 2 * (int) Math.round(adaptationFunction.getAdaptationRadius(null, step, trainingSteps));
 					cube(range, stimulusCoords);
 					while (cubeHasNext()) {
 						// running over the number of nodes in the hypercube
@@ -134,7 +130,7 @@ public class KohonenNet extends Thread {
 						// calculating distance in net to stimulus
 						double currentDistance = distanceFunction.getDistance(stimulusCoords, getCoordinatesOfIndex(currentNode), netDimensions);
 						// adjusting weight of node
-						nodes[currentNode].setWeights(adaptionFunction.adapt(exampleWeights, nodes[currentNode].getWeights(), currentDistance, step,
+						nodes[currentNode].setWeights(adaptationFunction.adapt(exampleWeights, nodes[currentNode].getWeights(), currentDistance, step,
 								trainingSteps));
 					}
 				}
@@ -199,9 +195,9 @@ public class KohonenNet extends Thread {
 		}
 	}
 
-	public void setAdaptionFunction(AdaptionFunction function) {
+	public void setAdaptationFunction(AdaptationFunction function) {
 		if (phase == 0) {
-			this.adaptionFunction = function;
+			this.adaptationFunction = function;
 		}
 	}
 

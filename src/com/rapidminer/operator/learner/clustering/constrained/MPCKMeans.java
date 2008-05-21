@@ -1,29 +1,28 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.clustering.constrained;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -64,10 +63,26 @@ import com.rapidminer.tools.RandomGenerator;
  * euklidean distance metric.
  * 
  * @author Alexander Daxenberger
- * 
+ * @version $Id: MPCKMeans.java,v 1.11 2008/05/09 19:23:27 ingomierswa Exp $
  */
 public class MPCKMeans extends AbstractKMethod {
 
+	private static class DoubleComparator implements Comparator<Double>, Serializable {
+
+		private static final long serialVersionUID = 7686843163121077401L;
+
+		public int compare(Double s1, Double s2) {
+			if (s1.doubleValue() < s2.doubleValue())
+				return -1;
+			else if (s1.doubleValue() > s2.doubleValue())
+				return 1;
+			else if (s1.doubleValue() != s2.doubleValue())
+				return 1;
+			else
+				return 0;
+		}
+	}
+	
 	private double[][] centroid;
 
 	private String[][] farthestPair;
@@ -122,6 +137,8 @@ public class MPCKMeans extends AbstractKMethod {
 	}
 	
 	public ClusterModel createClusterModel(ExampleSet exampleSet) throws OperatorException {
+		exampleSet.remapIds();
+		
 		// initializing random generator
 		int seed = getParameterAsInt(PARAMETER_LOCAL_RANDOM_SEED); 
 		if (seed == -1 ) {
@@ -150,7 +167,7 @@ public class MPCKMeans extends AbstractKMethod {
 		this.update = this.getParameterAsInt("metric_update");
 		this.mode = this.getParameterAsInt("metric_mode");
 
-		centroid = new double[maxK][];
+		this.centroid = new double[maxK][];
 		farthestPair = new String[maxK][2];
 		metric = new ParameterizedEuclideanDistance[maxK];
 
@@ -166,13 +183,11 @@ public class MPCKMeans extends AbstractKMethod {
 	 */
 	protected void initKMethod(List<String> ids, int k) throws OperatorException {
 		ArrayList<Set<String>> neighSets = conList.getNeighbourhoodSets();
-		double[][] centroid = null;
 		double[] weight;
-		DefaultCluster cluster;
 		int len = ids.size();
 		int rnd;
 		String id;
-
+		double[][] centroidData = null;
 		this.idList = ids;
 
 		for (int i = 0; i < k; i++) {
@@ -184,21 +199,20 @@ public class MPCKMeans extends AbstractKMethod {
 		}
 
 		if (neighSets.size() > 0) {
-			centroid = new double[neighSets.size()][];
+			centroidData = new double[neighSets.size()][];
 			weight = new double[neighSets.size()];
 
 			for (int i = 0; i < neighSets.size(); i++) {
-				cluster = new DefaultCluster(neighSets.get(i));
-				cluster = new DefaultCluster(neighSets.get(i));
-				centroid[i] = this.calculateClusterCentroid(cluster);
+				DefaultCluster cluster = new DefaultCluster(neighSets.get(i));
+				centroidData[i] = this.calculateClusterCentroid(cluster);
 				weight[i] = cluster.getNumberOfObjects();
 			}
 
-			centroid = this.getWeightedFarthestFirst(centroid, weight, this.metric[0]);
+			centroidData = this.getWeightedFarthestFirst(centroidData, weight, this.metric[0]);
 
 			for (int i = 0; i < k; i++) {
-				if (i < centroid.length) {
-					this.centroid[i] = centroid[i];
+				if (i < centroidData.length) {
+					this.centroid[i] = centroidData[i];
 				} else {
 					this.centroid[i] = this.getRandomCentroid(null);
 				}
@@ -313,10 +327,6 @@ public class MPCKMeans extends AbstractKMethod {
 					}
 					if (m != null)
 						this.metric[i].setMatrix(m);
-
-					// if (debug) System.out.println("learnt matrix
-					// "+i+":\n"+this.matrixToString(this.metric[i].getMatrix()));
-
 				}
 			} else {
 				c = new Cluster[cl.getNumberOfClusters()];
@@ -330,9 +340,6 @@ public class MPCKMeans extends AbstractKMethod {
 				}
 				if (m != null)
 					this.metric[0].setMatrix(m);
-
-				// if (debug) System.out.println("learnt single
-				// matrix:\n"+this.matrixToString(this.metric[0].getMatrix()));
 			}
 		}
 
@@ -413,7 +420,7 @@ public class MPCKMeans extends AbstractKMethod {
 
 	private double[] calculateClusterCentroid(Cluster c) {
 		Example e;
-		Iterator iter = c.getObjects();
+		Iterator<String> iter = c.getObjects();
 		int numExamples = c.getNumberOfObjects();
 		double[] centroid = new double[es.getAttributes().size()];
 
@@ -422,7 +429,8 @@ public class MPCKMeans extends AbstractKMethod {
 				centroid[i] = 0.0;
 			}
 			while (iter.hasNext()) {
-				e = IdUtils.getExampleFromId(this.es, (String) iter.next());
+				String id = iter.next();
+				e = IdUtils.getExampleFromId(this.es, id);
 				int i = 0;
 				for (Attribute attribute : es.getAttributes()) {
 					centroid[i] += e.getValue(attribute);
@@ -700,7 +708,7 @@ public class MPCKMeans extends AbstractKMethod {
 
 			maxId = list.get(0);
 
-			while (maxId != old) {
+			while (!maxId.equals(old)) {
 				old = id;
 				id = maxId;
 				maxDist = 0.0;
@@ -735,11 +743,9 @@ public class MPCKMeans extends AbstractKMethod {
 	 */
 	private double[][] getWeightedFarthestFirst(double[][] centroids, double[] weights, AbstractRealValueBasedSimilarity simi) {
 		TreeMap<Double, Integer> sortedMap = new TreeMap<Double, Integer>(new DoubleComparator());
-		Iterator iter;
-		double[][] sorted = new double[centroids.length][];
 		double minDist;
 		double dist;
-		int c = centroids.length - 1;
+
 		for (int i = 0; i < centroids.length; i++) {
 			minDist = Double.MAX_VALUE;
 			for (int j = 0; j < centroids.length; j++) {
@@ -750,12 +756,14 @@ public class MPCKMeans extends AbstractKMethod {
 					}
 				}
 			}
-			sortedMap.put(new Double(minDist), new Integer(i));
+			sortedMap.put(minDist, i);
 		}
-		iter = sortedMap.values().iterator();
+		
+		double[][] sorted = new double[sortedMap.size()][];
+		int c = sorted.length - 1;
+		Iterator<Integer> iter = sortedMap.values().iterator();
 		while (iter.hasNext()) {
-			sorted[c] = centroids[((Integer) iter.next()).intValue()];
-			c--;
+			sorted[c--] = centroids[iter.next()];
 		}
 
 		return sorted;
@@ -791,26 +799,5 @@ public class MPCKMeans extends AbstractKMethod {
 			}
 		}
 		return -1;
-	}
-
-	private class DoubleComparator implements Comparator<Double> {
-
-		public int compare(Double s1, Double s2) {
-			if (s1.doubleValue() < s2.doubleValue())
-				return -1;
-			else if (s1.doubleValue() > s2.doubleValue())
-				return 1;
-			else if (s1 != s2)
-				return 1;
-			else
-				return 0;
-		}
-
-		public boolean equals(Object obj) {
-			if (obj instanceof DoubleComparator)
-				return true;
-			else
-				return false;
-		}
 	}
 }

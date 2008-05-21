@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools.math.optimization.ec.es;
 
@@ -43,15 +41,9 @@ import com.rapidminer.tools.math.optimization.Optimization;
  * Evolutionary Strategy approach for all real-valued optimization tasks.
  * 
  * @author Ingo Mierswa
- * @version $Id: ESOptimization.java,v 1.1 2007/05/27 22:03:34 ingomierswa Exp $
+ * @version $Id: ESOptimization.java,v 1.6 2008/05/09 19:23:16 ingomierswa Exp $
  */
 public abstract class ESOptimization implements Optimization {
-
-    /** This constant indicated that a corresponding dimension is actually built from double values. */
-    public static final int VALUE_TYPE_DOUBLE = 0;
-    
-    /** This constant indicates that the dimension is actually built from integers instead of doubles. */
-    public static final int VALUE_TYPE_INT = 1;
     
     /** The names of all available selection schemes. */
     public static final String[] SELECTION_TYPES = { "uniform", "cut", "roulette wheel", "stochastic universal sampling", "Boltzmann", "rank", "tournament", "non dominated sorting" };
@@ -114,7 +106,7 @@ public abstract class ESOptimization implements Optimization {
     private double[] max;
 
     /** The value types, either DOUBLE (default) or INT. */
-    private int[] valueTypes;
+    private OptimizationValueType[] valueTypes;
     
     /** The number of individuals. */
     private int populationSize;
@@ -134,8 +126,11 @@ public abstract class ESOptimization implements Optimization {
     /** The type of the mutation. */
     private int mutationType = GAUSSIAN_MUTATION;
     
+    /** The population plotter (if enabled). */
+    private PopulationPlotter populationPlotter = null;
+    
     /** The mutation operator. */
-    private PopulationOperator mutation;
+    private Mutation mutation;
     
     /** The current population. */
     private Population population;
@@ -191,7 +186,10 @@ public abstract class ESOptimization implements Optimization {
         this.individualSize = individualSize;
         this.min = minValues;
         this.max = maxValues;
-        this.valueTypes = new int[individualSize];
+        this.valueTypes = new OptimizationValueType[individualSize];
+        for (int i = 0; i <  this.valueTypes.length; i++) {
+        	this.valueTypes[i] = OptimizationValueType.VALUE_TYPE_DOUBLE;
+        }
         this.initType = initType;
         this.maxGenerations = maxGenerations;
         this.generationsWithoutImprovement = generationsWithoutImprovement < 1 ? this.maxGenerations : generationsWithoutImprovement;
@@ -223,7 +221,8 @@ public abstract class ESOptimization implements Optimization {
                 break;
             case NON_DOMINATED_SORTING_SELECTION:
                 popOps.add(new NonDominatedSortingSelection(populationSize));
-                popOps.add(new PopulationPlotter());
+                this.populationPlotter = new PopulationPlotter();
+                popOps.add(this.populationPlotter);
                 break;
         }
         popOps.add(new Crossover(crossoverProb, random));
@@ -292,9 +291,14 @@ public abstract class ESOptimization implements Optimization {
     	mutation.setSigma(sigma);
     }
     
-    public int getValueType(int index) { return this.valueTypes[index]; }
+    public OptimizationValueType getValueType(int index) { 
+    	return this.valueTypes[index]; 
+    }
     
-    public void setValueType(int index, int type) { this.valueTypes[index] = type; }
+    public void setValueType(int index, OptimizationValueType type) { 
+    	this.valueTypes[index] = type; 
+       	mutation.setValueType(index, type);
+    }
     
     // ================================================================================
     // O P T I M I Z A T I O N
@@ -366,6 +370,10 @@ public abstract class ESOptimization implements Optimization {
             plotter.dispose();
         }
 
+        if (populationPlotter != null) {
+        	this.populationPlotter.setCreateOtherPlottersEnabled(true);
+        }
+        
         logging.log("ES Evaluations: " + actualEvalCounter + " / " + totalEvalCounter);
     }
 
@@ -461,8 +469,20 @@ public abstract class ESOptimization implements Optimization {
         Population population = new Population();
         for (int p = 0; p < this.populationSize; p++) {
             double[] alphas = new double[this.individualSize];
-            for (int j = 0; j < alphas.length; j++)
-                alphas[j] = random.nextDoubleInRange(this.min[j], this.max[j]);
+            for (int j = 0; j < alphas.length; j++) {
+            	if (getValueType(j).equals(OptimizationValueType.VALUE_TYPE_INT)) {
+            		alphas[j] = (int)Math.round(random.nextDoubleInRange(this.min[j], this.max[j]));
+            	} else if (getValueType(j).equals(OptimizationValueType.VALUE_TYPE_BOUNDS)) {
+            		boolean upper = random.nextBoolean();
+            		if (upper) {
+            			alphas[j] = this.max[j];
+            		} else {
+            			alphas[j] = this.min[j];
+            		}
+            	} else {
+            		alphas[j] = random.nextDoubleInRange(this.min[j], this.max[j]);
+            	}
+            }
             population.add(new Individual(alphas));
         }
         return population;

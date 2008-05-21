@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.viewer;
 
@@ -32,22 +30,22 @@ import com.rapidminer.tools.Tools;
 /** The model for the {@link com.rapidminer.gui.viewer.ConfusionMatrixViewerTable}. 
  * 
  *  @author Ingo Mierswa
- *  @version $Id: ConfusionMatrixViewerTableModel.java,v 1.3 2007/07/15 22:06:25 ingomierswa Exp $
+ *  @version $Id: ConfusionMatrixViewerTableModel.java,v 1.7 2008/05/09 19:23:01 ingomierswa Exp $
  */
 public class ConfusionMatrixViewerTableModel extends AbstractTableModel {
     
     private static final long serialVersionUID = 1206988933244249851L;
     
 	private String[] classNames;
-    private int[][] counter;
-    private int[] rowSums;
-    private int[] columnSums;
+    private double[][] counter;
+    private double[] rowSums;
+    private double[] columnSums;
     
-    public ConfusionMatrixViewerTableModel(String[] classNames, int[][] counter) {
+    public ConfusionMatrixViewerTableModel(String[] classNames, double[][] counter) {
         this.classNames = classNames;
         this.counter = counter;
-        this.rowSums    = new int[classNames.length];
-        this.columnSums = new int[classNames.length];
+        this.rowSums    = new double[classNames.length];
+        this.columnSums = new double[classNames.length];
         for (int i = 0; i < classNames.length; i++) {
         	for (int j = 0; j < classNames.length; j++) {
         		this.columnSums[i] += counter[i][j];
@@ -80,7 +78,10 @@ public class ConfusionMatrixViewerTableModel extends AbstractTableModel {
     			return "";
     		} else {
     			double recall = counter[col - 1][col - 1] / (double)columnSums[col - 1];
-    			return Tools.formatPercent(recall);
+    			if (Double.isNaN(recall))
+    				return Tools.formatPercent(0);
+    			else
+    				return Tools.formatPercent(recall);
     		}	
     	} else {
     		if (col == 0) {
@@ -90,10 +91,13 @@ public class ConfusionMatrixViewerTableModel extends AbstractTableModel {
     				return "";
     		} else if (col == getColumnCount() - 1) {
     			double precision = counter[row - 1][row - 1] / (double)rowSums[row - 1];
-    			return Tools.formatPercent(precision);
+    			if (Double.isNaN(precision))
+    				return Tools.formatPercent(0);
+    			else
+    				return Tools.formatPercent(precision);
     		} else {
     			if ((col - 1 >= 0) && (row - 1 >= 0))
-    				return counter[col - 1][row - 1];
+    				return Tools.formatIntegerIfPossible(counter[col - 1][row - 1]);
     			else
     				return "";
     		}	    		

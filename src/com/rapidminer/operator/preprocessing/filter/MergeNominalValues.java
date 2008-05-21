@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.preprocessing.filter;
 
@@ -31,6 +29,7 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
+import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
@@ -49,7 +48,6 @@ import com.rapidminer.parameter.ParameterTypeString;
  */
 public class MergeNominalValues extends Operator {
 
-
 	/** The parameter name for &quot;The name of the nominal attribute which values should be merged.&quot; */
 	public static final String PARAMETER_ATTRIBUTE_NAME = "attribute_name";
 
@@ -58,6 +56,7 @@ public class MergeNominalValues extends Operator {
 
 	/** The parameter name for &quot;The second value which should be merged.&quot; */
 	public static final String PARAMETER_SECOND_VALUE = "second_value";
+	
 	public MergeNominalValues(OperatorDescription description) {
 		super(description);
 	}
@@ -90,7 +89,11 @@ public class MergeNominalValues extends Operator {
 	private void mergeValues(ExampleSet exampleSet, Attribute attribute, String firstValue, String secondValue) 
 	    throws OperatorException {
 		Attribute newAttribute = AttributeFactory.createAttribute(attribute, "merged");
-		newAttribute.getMapping().clear();
+		// clone is necessary here!
+		NominalMapping mapping = (NominalMapping)attribute.getMapping().clone();
+		mapping.clear();
+		newAttribute.setMapping(mapping);
+		
 		exampleSet.getExampleTable().addAttribute(newAttribute);
 		exampleSet.getAttributes().addRegular(newAttribute);
 

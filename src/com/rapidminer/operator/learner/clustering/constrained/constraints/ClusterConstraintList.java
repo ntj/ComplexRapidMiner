@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.clustering.constrained.constraints;
 
@@ -37,7 +35,7 @@ import com.rapidminer.tools.Tools;
  * these constraints for violations.
  * 
  * @author Alexander Daxenberger
- * 
+ * @version $Id: ClusterConstraintList.java,v 1.7 2008/05/09 19:23:17 ingomierswa Exp $
  */
 public class ClusterConstraintList extends ResultObjectAdapter {
 
@@ -64,7 +62,6 @@ public class ClusterConstraintList extends ResultObjectAdapter {
 	 * Returns a list of all violated constraints for the given ClusterModel.
 	 * 
 	 * @param cm
-	 * @return
 	 */
 	public ArrayList<ClusterConstraint> getViolatedConstraints(ClusterModel cm) {
 		ArrayList<ClusterConstraint> list = new ArrayList<ClusterConstraint>(
@@ -84,7 +81,6 @@ public class ClusterConstraintList extends ResultObjectAdapter {
 	 * Returns the number of violated constraints for the given ClusterModel.
 	 * 
 	 * @param cm
-	 * @return
 	 */
 	public int numberOfViolatedConstraints(ClusterModel cm) {
 		ClusterConstraint c;
@@ -104,7 +100,6 @@ public class ClusterConstraintList extends ResultObjectAdapter {
 	 * ClusterModel.
 	 * 
 	 * @param cm
-	 * @return
 	 */
 	public double weightOfViolatedConstraints(ClusterModel cm) {
 		ClusterConstraint c;
@@ -120,14 +115,9 @@ public class ClusterConstraintList extends ResultObjectAdapter {
 	}
 
 	public IOObject copy() {
-		ClusterConstraintList ccl = null;
-		try {
-			ccl = this.getClass().newInstance();
-			for (int i = 0; i < this.constraintList.size(); i++) {
-				ccl.addConstraint(this.constraintList.get(i).clone());
-			}
-		} catch (Exception e) {
-			//TODO correct error handling?			
+		ClusterConstraintList ccl = new ClusterConstraintList(this.name);
+		for (int i = 0; i < this.constraintList.size(); i++) {
+			ccl.addConstraint(this.constraintList.get(i).clone());
 		}
 		return ccl;
 	}
@@ -177,7 +167,7 @@ public class ClusterConstraintList extends ResultObjectAdapter {
 	public String toResultString() {
 		StringBuffer sb = new StringBuffer();
 		sb.append(this.name);
-		sb.append(": ");
+		sb.append(":" + Tools.getLineSeparator());
 		for (int i = 0; i < this.constraintList.size(); i++) {
 			if (i > 0)
 				sb.append("," + Tools.getLineSeparator());
@@ -190,7 +180,6 @@ public class ClusterConstraintList extends ResultObjectAdapter {
 	 * Returns the first constraint, that is equal to 'cc' or null.
 	 * 
 	 * @param cc
-	 * @return
 	 */
 	private ClusterConstraint findEqualConstraint(ClusterConstraint cc) {
 		for (int i = 0; i < this.constraintList.size(); i++) {

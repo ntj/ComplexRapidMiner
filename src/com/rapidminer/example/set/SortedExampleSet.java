@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.example.set;
 
@@ -49,7 +47,7 @@ import com.rapidminer.example.table.ExampleTable;
  *  </p>
  *  
  *  @author Ingo Mierswa
- *  @version $Id: SortedExampleSet.java,v 1.3 2007/07/13 22:52:12 ingomierswa Exp $
+ *  @version $Id: SortedExampleSet.java,v 1.9 2008/05/09 19:22:49 ingomierswa Exp $
  */
 public class SortedExampleSet extends AbstractExampleSet {
 
@@ -117,7 +115,7 @@ public class SortedExampleSet extends AbstractExampleSet {
     private int[] mapping;
     
     public SortedExampleSet(ExampleSet parent, Attribute sortingAttribute, int sortingDirection) {
-    	this.parent = parent;
+    	this.parent = (ExampleSet)parent.clone();
 		List<SortingIndex> sortingIndex = new ArrayList<SortingIndex>(parent.size());
 		
 		int counter = 0;
@@ -150,18 +148,17 @@ public class SortedExampleSet extends AbstractExampleSet {
 		this.mapping = mapping;
     }
     
-    /** Constructs an example set based on the given sort mapping. If the boolean flag 
-     *  useMappedExamples is false only examples which are not part of the original 
-     *  mapping are used. */
+    /** Constructs an example set based on the given sort mapping. */
     public SortedExampleSet(ExampleSet parent, int[] mapping) {
-    	this.parent = parent;
+    	this.parent = (ExampleSet)parent.clone();
         this.mapping = mapping; 
     }
 
     /** Clone constructor. */
     public SortedExampleSet(SortedExampleSet exampleSet) {
     	this.parent = (ExampleSet)exampleSet.parent.clone();
-        this.mapping = exampleSet.mapping;
+        this.mapping = new int[exampleSet.mapping.length];
+        System.arraycopy(exampleSet.mapping, 0, this.mapping, 0, exampleSet.mapping.length);
     }
 
     public boolean equals(Object o) {
@@ -185,7 +182,7 @@ public class SortedExampleSet extends AbstractExampleSet {
     
     /** Returns a {@link SortedExampleReader}. */
     public Iterator<Example> iterator() {
-        return new SortedExampleReader(this.parent, this.mapping);
+        return new SortedExampleReader(this);
     }
 
     /** Returns the i-th example in the mapping. */
@@ -206,18 +203,7 @@ public class SortedExampleSet extends AbstractExampleSet {
 		return this.parent.getAttributes();
 	}
 
-    /**
-     * Returns the example with the given index.
-     */
-    public Example getExampleFromId(double id) {
-        return new Example(parent.getExampleFromId(id).getDataRow(), this);
-    }
-
 	public ExampleTable getExampleTable() {
-		return parent.getExampleTable();
-	}
-
-	public void remapIds() {
-		parent.remapIds();
+		return this.parent.getExampleTable();
 	}
 }

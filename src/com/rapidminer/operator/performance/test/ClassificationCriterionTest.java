@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.performance.test;
 
@@ -58,7 +56,7 @@ public class ClassificationCriterionTest extends CriterionTestCase {
 		int yes = label.getMapping().mapString("yes"); // positive class
 		List<Attribute> attributeList = new LinkedList<Attribute>();
 		attributeList.add(label);
-		MemoryExampleTable exampleTable = new MemoryExampleTable(attributeList, ExampleTestTools.createDataRowReader(new DataRowFactory(DataRowFactory.TYPE_DOUBLE_ARRAY), new Attribute[] { label }, new String[][] { { "no" }, { "yes" }, { "yes" }, { "no" }, { "yes" }, { "no" }, { "yes" }, { "yes" },
+		MemoryExampleTable exampleTable = new MemoryExampleTable(attributeList, ExampleTestTools.createDataRowReader(new DataRowFactory(DataRowFactory.TYPE_DOUBLE_ARRAY, '.'), new Attribute[] { label }, new String[][] { { "no" }, { "yes" }, { "yes" }, { "no" }, { "yes" }, { "no" }, { "yes" }, { "yes" },
 				{ "yes" }, { "no" }, { "no" }, { "yes" } }));
 
 		AttributeSet attributeSet = new AttributeSet();
@@ -104,7 +102,7 @@ public class ClassificationCriterionTest extends CriterionTestCase {
 			pv.addCriterion(new MultiClassificationPerformance(i));
 		for (int i = 0; i < BinaryClassificationPerformance.NAMES.length; i++)
 			pv.addCriterion(new BinaryClassificationPerformance(i));
-		AbstractPerformanceEvaluator.evaluate(null, eSet, pv, new LinkedList<PerformanceCriterion>(), false);
+		AbstractPerformanceEvaluator.evaluate(null, eSet, pv, new LinkedList<PerformanceCriterion>(), false, true);
 
 		assertEquals("accuracy", 7.0 / 12.0, pv.getCriterion(MultiClassificationPerformance.NAMES[MultiClassificationPerformance.ACCURACY]).getAverage(), 0.00000001);
 		assertEquals("classification_error", 5.0 / 12.0, pv.getCriterion(MultiClassificationPerformance.NAMES[MultiClassificationPerformance.ERROR]).getAverage(), 0.00000001);
@@ -118,7 +116,7 @@ public class ClassificationCriterionTest extends CriterionTestCase {
 	}
 
 	public void testUCCClone() {
-		int counter[][] = { { 3, 5 }, { 4, 6 } };
+		double counter[][] = { { 3, 5 }, { 4, 6 } };
 		cloneTest("", new BinaryClassificationPerformance(BinaryClassificationPerformance.TRUE_POSITIVE, counter));
 		cloneTest("", new BinaryClassificationPerformance(BinaryClassificationPerformance.TRUE_NEGATIVE, counter));
 		cloneTest("", new BinaryClassificationPerformance(BinaryClassificationPerformance.FALSE_POSITIVE, counter));
@@ -127,9 +125,9 @@ public class ClassificationCriterionTest extends CriterionTestCase {
 	}
 
 	public void testUCCAverage() {
-		int counter1[][] = { { 3, 5 }, { 4, 6 } };
-		int counter2[][] = { { 5, 8 }, { 2, 9 } };
-		int sum[][] = { { 8, 13 }, { 6, 15 } };
+		double counter1[][] = { { 3, 5 }, { 4, 6 } };
+		double counter2[][] = { { 5, 8 }, { 2, 9 } };
+		double sum[][] = { { 8, 13 }, { 6, 15 } };
 		BinaryClassificationPerformance[] ucc1 = new BinaryClassificationPerformance[4];
 		ucc1[0] = new BinaryClassificationPerformance(BinaryClassificationPerformance.TRUE_POSITIVE, counter1);
 		ucc1[1] = new BinaryClassificationPerformance(BinaryClassificationPerformance.TRUE_NEGATIVE, counter1);

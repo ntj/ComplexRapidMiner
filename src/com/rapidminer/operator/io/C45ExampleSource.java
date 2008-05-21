@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.io;
 
@@ -46,6 +44,7 @@ import com.rapidminer.operator.UserError;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeFile;
+import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
 
@@ -122,16 +121,19 @@ import com.rapidminer.tools.Tools;
  * </pre>
  * 
  * @author Ingo Mierswa
- * @version $Id: C45ExampleSource.java,v 1.3 2007/06/23 00:09:30 ingomierswa Exp $
+ * @version $Id: C45ExampleSource.java,v 1.8 2008/05/09 19:22:37 ingomierswa Exp $
  */
 public class C45ExampleSource extends Operator {
-
 
 	/** The parameter name for &quot;The path to either the C4.5 names file, the data file, or the filestem (without extensions). Both files must be in the same directory.&quot; */
 	public static final String PARAMETER_C45_FILESTEM = "c45_filestem";
 
 	/** The parameter name for &quot;Determines, how the data is represented internally.&quot; */
 	public static final String PARAMETER_DATAMANAGEMENT = "datamanagement";
+
+	/** The parameter name for &quot;Character that is used as decimal point.&quot; */
+	public static final String PARAMETER_DECIMAL_POINT_CHARACTER = "decimal_point_character";
+	
 	public C45ExampleSource(OperatorDescription description) {
 		super(description);
 	}
@@ -139,18 +141,15 @@ public class C45ExampleSource extends Operator {
 	public IOObject[] apply() throws OperatorException {
 		File file = getParameterAsFile(PARAMETER_C45_FILESTEM);
         
+        // create attribute objects from names file
+        Attribute label = AttributeFactory.createAttribute("label", Ontology.NOMINAL);
+        List<Attribute> attributes = new LinkedList<Attribute>();
+        
         File nameFile = getFile(file, "names");        
         BufferedReader in = null;
         try {
             in = new BufferedReader(new InputStreamReader(new FileInputStream(nameFile), getEncoding()));
-        } catch (IOException e) {
-            throw new UserError(this, 301, nameFile);
-        }
         
-        // create attribute objects from names file
-        Attribute label = AttributeFactory.createAttribute("label", Ontology.NOMINAL);
-        List<Attribute> attributes = new LinkedList<Attribute>();
-        try {
             String line = null;
             while ((line = in.readLine()) != null) {
 
@@ -177,7 +176,7 @@ public class C45ExampleSource extends Operator {
                     String attributeName = line.substring(0, colonIndex).trim();
                     String typeString = line.substring(colonIndex + 1).trim();
                     int valueType = Ontology.NOMINAL;
-                    if (typeString.equals("continous")) {
+                    if (typeString.equals("continuous")) {
                         valueType = Ontology.REAL;
                     }
                     Attribute attribute = AttributeFactory.createAttribute(attributeName, valueType);
@@ -200,15 +199,22 @@ public class C45ExampleSource extends Operator {
                     // label: do not here but later (see below)
                 }
             }
-            
-            in.close();
         } catch (IOException e) {
             throw new UserError(this, 302, nameFile, e.getMessage());
+        } finally {
+        	if (in != null) {
+                try {
+					in.close();
+				} catch (IOException e) {
+					logError("Cannot close stream to file " + file);
+				}
+        	}
         }
+        
         // important: label is the last column in the data file
         attributes.add(label);
         
-        // create and fille example table from data file
+        // create and fill example table from data file
         File dataFile = getFile(file, "data");
         try {
             in = new BufferedReader(new InputStreamReader(new FileInputStream(dataFile),getEncoding()));
@@ -217,7 +223,7 @@ public class C45ExampleSource extends Operator {
         }
         
         MemoryExampleTable table = new MemoryExampleTable(attributes);
-        DataRowFactory factory = new DataRowFactory(getParameterAsInt(PARAMETER_DATAMANAGEMENT));
+        DataRowFactory factory = new DataRowFactory(getParameterAsInt(PARAMETER_DATAMANAGEMENT), getParameterAsString(PARAMETER_DECIMAL_POINT_CHARACTER).charAt(0));
         Attribute[] attributeArray = new Attribute[attributes.size()];
         attributes.toArray(attributeArray);
         try {
@@ -287,6 +293,7 @@ public class C45ExampleSource extends Operator {
 		List<ParameterType> types = super.getParameterTypes();
 		types.add(new ParameterTypeFile(PARAMETER_C45_FILESTEM, "The path to either the C4.5 names file, the data file, or the filestem (without extensions). Both files must be in the same directory.", null, false));
         types.add(new ParameterTypeCategory(PARAMETER_DATAMANAGEMENT, "Determines, how the data is represented internally.", DataRowFactory.TYPE_NAMES, DataRowFactory.TYPE_DOUBLE_ARRAY));
+        types.add(new ParameterTypeString(PARAMETER_DECIMAL_POINT_CHARACTER, "Character that is used as decimal point.", "."));
 		return types;
 	}
 }

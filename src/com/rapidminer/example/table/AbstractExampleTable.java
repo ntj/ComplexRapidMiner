@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.example.table;
 
@@ -48,7 +46,7 @@ import com.rapidminer.tools.att.AttributeSet;
  * can use the same data and access the attribute values by reference.
  * 
  * @author Ingo Mierswa
- * @version $Id: AbstractExampleTable.java,v 1.2 2007/06/09 23:59:59 ingomierswa Exp $
+ * @version $Id: AbstractExampleTable.java,v 1.6 2008/05/09 19:22:44 ingomierswa Exp $
  */
 public abstract class AbstractExampleTable implements ExampleTable {
 
@@ -126,7 +124,7 @@ public abstract class AbstractExampleTable implements ExampleTable {
 
 	/**
 	 * Adds the attribute to the list of attributes assigning it a free column
-	 * index.
+	 * index. If the name is allready in use, the attribute will be renamed.
 	 */
 	public int addAttribute(Attribute a) {
 		int index = -1;
@@ -135,7 +133,7 @@ public abstract class AbstractExampleTable implements ExampleTable {
 			attributes.set(index, a);
 		} else {
 			index = attributes.size();
-			attributes.add(a);
+			attributes.add(a);	
 		}
         if (a != null)
             a.setTableIndex(index);

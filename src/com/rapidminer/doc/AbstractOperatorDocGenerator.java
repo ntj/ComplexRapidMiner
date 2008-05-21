@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.doc;
 
@@ -60,271 +58,271 @@ import com.sun.tools.doclets.Taglet;
  * operator. Subclasses can be implemented to deliver different target formats like LaTeX or HTML.
  * 
  * @author Simon Fischer, Ingo Mierswa
- * @version $Id: AbstractOperatorDocGenerator.java,v 1.3 2007/06/17 15:48:55 ingomierswa Exp $
+ * @version $Id: AbstractOperatorDocGenerator.java,v 1.6 2008/05/09 19:23:21 ingomierswa Exp $
  */
 public abstract class AbstractOperatorDocGenerator implements OperatorDocGenerator {
 
-        public final static int OPERATOR = 0;
+	public final static int OPERATOR = 0;
 
-        public final static int OPERATOR_NAME = 1;
+	public final static int OPERATOR_NAME = 1;
 
-        public final static int GROUP_NAME = 2;
+	public final static int GROUP_NAME = 2;
 
-        public final static int PARAMETER_LIST = 3;
+	public final static int PARAMETER_LIST = 3;
 
-        public final static int PARAMETER_ITEM = 4;
+	public final static int PARAMETER_ITEM = 4;
 
-        public final static int PARAMETER_NAME_REQ = 5;
+	public final static int PARAMETER_NAME_REQ = 5;
 
-        public final static int PARAMETER_NAME_OPT = 6;
+	public final static int PARAMETER_NAME_OPT = 6;
 
-        public final static int PARAMETER_DESCRIPTION = 7;
+	public final static int PARAMETER_DESCRIPTION = 7;
 
-        public final static int SHORT_DESCRIPTION = 8;
+	public final static int SHORT_DESCRIPTION = 8;
 
-        public final static int OPERATOR_DESCRIPTION = 9;
+	public final static int OPERATOR_DESCRIPTION = 9;
 
-        public final static int INPUT_CLASSES_LIST = 10;
+	public final static int INPUT_CLASSES_LIST = 10;
 
-        public final static int OUTPUT_CLASSES_LIST = 11;
+	public final static int OUTPUT_CLASSES_LIST = 11;
 
-        public final static int IO_CLASS = 12;
+	public final static int IO_CLASS = 12;
 
-        public final static int INNER_OPERATOR = 13;
+	public final static int INNER_OPERATOR = 13;
 
-        public final static int VALUE_LIST = 14;
+	public final static int VALUE_LIST = 14;
 
-        public final static int VALUE_ITEM = 15;
+	public final static int VALUE_ITEM = 15;
 
-        public final static int VALUE_NAME = 16;
+	public final static int VALUE_NAME = 16;
 
-        public final static int VALUE_DESCRIPTION = 17;
+	public final static int VALUE_DESCRIPTION = 17;
 
-        public final static int INDEX_ENTRY = 18;
+	public final static int INDEX_ENTRY = 18;
 
-        public final static int REFERENCE_SECTION = 19;
+	public final static int REFERENCE_SECTION = 19;
 
-        public final static int REFERENCE_ENTRY = 20;
+	public final static int REFERENCE_ENTRY = 20;
 
-        public final static int TECHNICAL_INFORMATION = 21;
+	public final static int TECHNICAL_INFORMATION = 21;
 
-        public final static int DEPRECATION_INFO = 22;
+	public final static int DEPRECATION_INFO = 22;
 
-        public final static int LEARNER_CAPABILITIES = 23;
+	public final static int LEARNER_CAPABILITIES = 23;
 
-        private Map<String, Taglet> tagletMap = new HashMap<String, Taglet>();
+	private Map<String, Taglet> tagletMap = new HashMap<String, Taglet>();
 
-        /**
-         * Transform the HTML-comment to the respective output language. The class and operator name are only given for
-         * debugging purposes.
-         */
-        public abstract String transformHTMLJavadocComment(String comment, Class clazz, String operatorName);
+	/**
+	 * Transform the HTML-comment to the respective output language. The class and operator name are only given for
+	 * debugging purposes.
+	 */
+	 public abstract String transformHTMLJavadocComment(String comment, Class clazz, String operatorName);
 
-        /** Replace any special characters by an escaped version. */
-        public abstract String escape(String toEscape);
+	 /** Replace any special characters by an escaped version. */
+	 public abstract String escape(String toEscape);
 
-        public abstract String getOpenTag(int tagNo);
+	 public abstract String getOpenTag(int tagNo);
 
-        public abstract String getCloseTag(int tagNo);
+	 public abstract String getCloseTag(int tagNo);
 
-        public abstract String marginIcon(String iconName);
+	 public abstract String marginIcon(String iconName);
 
-        public AbstractOperatorDocGenerator() {
-                CiteTaglet.register(tagletMap);
-                MathTaglet.register(tagletMap);
-                RefTaglet.register(tagletMap);
-                XMLExampleTaglet.register(tagletMap);
-        }
+	 public AbstractOperatorDocGenerator() {
+		 CiteTaglet.register(tagletMap);
+		 MathTaglet.register(tagletMap);
+		 RefTaglet.register(tagletMap);
+		 XMLExampleTaglet.register(tagletMap);
+	 }
 
-		@SuppressWarnings("unchecked")
-		public void generateDoc(Operator op, RootDoc rootDoc, PrintWriter out) {
-                ClassDoc opDoc = rootDoc.classNamed(op.getClass().getName());
+	 @SuppressWarnings("unchecked")
+	 public void generateDoc(Operator op, RootDoc rootDoc, PrintWriter out) {
+		 ClassDoc opDoc = rootDoc.classNamed(op.getClass().getName());
 
-                out.println(getOpenTag(OPERATOR));
-                printTags(out, op.getOperatorDescription().getName(), OPERATOR_NAME);
-                out.println();
+		 out.println(getOpenTag(OPERATOR));
+		 printTags(out, op.getOperatorDescription().getName(), OPERATOR_NAME);
+		 out.println();
 
-                if (op.getOperatorDescription().getIconPath() != null)
-                        out.println(marginIcon(op.getOperatorDescription().getIconPath()));
+		 if (op.getOperatorDescription().getIconPath() != null)
+			 out.println(marginIcon(op.getOperatorDescription().getIconPath()));
 
-                if ((op.getOperatorDescription().getGroup() != null) && (op.getOperatorDescription().getGroup().trim().length() > 0))
-                    printTags(out, op.getOperatorDescription().getGroup(), GROUP_NAME);
+		 if ((op.getOperatorDescription().getGroup() != null) && (op.getOperatorDescription().getGroup().trim().length() > 0))
+			 printTags(out, op.getOperatorDescription().getGroup(), GROUP_NAME);
 
-		if (opDoc != null) {
-                    Tag[] indexTags = opDoc.tags("rapidminer.index");
-		    for (int i = 0; i < indexTags.length; i++) {
-                        printTags(out, indexTags[i].text(), INDEX_ENTRY);
-		    }
-		}
+		 if (opDoc != null) {
+			 Tag[] indexTags = opDoc.tags("rapidminer.index");
+			 for (int i = 0; i < indexTags.length; i++) {
+				 printTags(out, indexTags[i].text(), INDEX_ENTRY);
+			 }
+		 }
 
-                if (op.getDeprecationInfo() != null) {
-                        printTags(out, op.getDeprecationInfo(), DEPRECATION_INFO);
-                        out.println();
-                }
+		 if (op.getDeprecationInfo() != null) {
+			 printTags(out, op.getDeprecationInfo(), DEPRECATION_INFO);
+			 out.println();
+		 }
 
-                Class[] input = op.getInputClasses();
-                if ((input != null) && (input.length > 0)) {
-                        out.println(getOpenTag(INPUT_CLASSES_LIST));
-                        for (int i = 0; i < input.length; i++) {
-                                printTags(out, Tools.classNameWOPackage(input[i]), IO_CLASS);
-                                out.println();
-                        }
-                        out.println(getCloseTag(INPUT_CLASSES_LIST));
-                }
+		 Class[] input = op.getInputClasses();
+		 if ((input != null) && (input.length > 0)) {
+			 out.println(getOpenTag(INPUT_CLASSES_LIST));
+			 for (int i = 0; i < input.length; i++) {
+				 printTags(out, Tools.classNameWOPackage(input[i]), IO_CLASS);
+				 out.println();
+			 }
+			 out.println(getCloseTag(INPUT_CLASSES_LIST));
+		 }
 
-                Class[] output = op.getOutputClasses();
-                if ((output != null) && (output.length > 0)) {
-                        out.println(getOpenTag(OUTPUT_CLASSES_LIST));
-                        for (int i = 0; i < output.length; i++) {
-                                printTags(out, Tools.classNameWOPackage(output[i]), IO_CLASS);
-                                out.println();
-                        }
-                        out.println(getCloseTag(OUTPUT_CLASSES_LIST));
-                }
+		 Class[] output = op.getOutputClasses();
+		 if ((output != null) && (output.length > 0)) {
+			 out.println(getOpenTag(OUTPUT_CLASSES_LIST));
+			 for (int i = 0; i < output.length; i++) {
+				 printTags(out, Tools.classNameWOPackage(output[i]), IO_CLASS);
+				 out.println();
+			 }
+			 out.println(getCloseTag(OUTPUT_CLASSES_LIST));
+		 }
 
-                List parameters = op.getParameterTypes();
-                if (parameters.size() > 0) {
-                        out.println(getOpenTag(PARAMETER_LIST));
-                        Iterator i = parameters.iterator();
-                        while (i.hasNext()) {
-                                ParameterType type = (ParameterType) i.next();
-                                out.print(getOpenTag(PARAMETER_ITEM));
-                                if (type.isOptional()) {
-                                        printTags(out, type.getKey(), PARAMETER_NAME_OPT);
-                                } else {
-                                        printTags(out, type.getKey(), PARAMETER_NAME_REQ);
-                                }
-                                if ((type instanceof ParameterTypeCategory) || (type instanceof ParameterTypeStringCategory)) {
-                                        printTags(out, type.getDescription(), PARAMETER_DESCRIPTION);
-                                } else {
-                                        printTags(out, type.getDescription() + (type.getRange() != null ? " (" + type.getRange() + ")" : ""), PARAMETER_DESCRIPTION);
-                                }
-                                out.println(getCloseTag(PARAMETER_ITEM));
-                        }
-                        out.println(getCloseTag(PARAMETER_LIST));
-                }
+		 List parameters = op.getParameterTypes();
+		 if (parameters.size() > 0) {
+			 out.println(getOpenTag(PARAMETER_LIST));
+			 Iterator i = parameters.iterator();
+			 while (i.hasNext()) {
+				 ParameterType type = (ParameterType) i.next();
+				 out.print(getOpenTag(PARAMETER_ITEM));
+				 if (type.isOptional()) {
+					 printTags(out, type.getKey(), PARAMETER_NAME_OPT);
+				 } else {
+					 printTags(out, type.getKey(), PARAMETER_NAME_REQ);
+				 }
+				 if ((type instanceof ParameterTypeCategory) || (type instanceof ParameterTypeStringCategory)) {
+					 printTags(out, type.getDescription(), PARAMETER_DESCRIPTION);
+				 } else {
+					 printTags(out, type.getDescription() + (type.getRange() != null ? " (" + type.getRange() + ")" : ""), PARAMETER_DESCRIPTION);
+				 }
+				 out.println(getCloseTag(PARAMETER_ITEM));
+			 }
+			 out.println(getCloseTag(PARAMETER_LIST));
+		 }
 
-                Collection<Value> values = op.getValues();
-                if (values.size() > 0) {
-                        out.println(getOpenTag(VALUE_LIST));
-                        Iterator<Value> i = values.iterator();
-                        while (i.hasNext()) {
-                                Value value = i.next();
-                                // if (!value.isDocumented()) continue;
-                                out.print(getOpenTag(VALUE_ITEM));
-                                printTags(out, value.getKey(), VALUE_NAME);
-                                printTags(out, value.getDescription(), VALUE_DESCRIPTION);
-                                out.println(getCloseTag(VALUE_ITEM));
-                        }
-                        out.println(getCloseTag(VALUE_LIST));
-                }
+		 Collection<Value> values = op.getValues();
+		 if (values.size() > 0) {
+			 out.println(getOpenTag(VALUE_LIST));
+			 Iterator<Value> i = values.iterator();
+			 while (i.hasNext()) {
+				 Value value = i.next();
+				 // if (!value.isDocumented()) continue;
+				 out.print(getOpenTag(VALUE_ITEM));
+				 printTags(out, value.getKey(), VALUE_NAME);
+				 printTags(out, value.getDescription(), VALUE_DESCRIPTION);
+				 out.println(getCloseTag(VALUE_ITEM));
+			 }
+			 out.println(getCloseTag(VALUE_LIST));
+		 }
 
-                if (op instanceof Learner) {
-                        Learner learner = (Learner) op;
-                        StringBuffer learnerCapabilities = new StringBuffer();
-                        Iterator<LearnerCapability> i = LearnerCapability.getAllCapabilities().iterator();
-                        boolean first = true;
-                        while (i.hasNext()) {
-                                LearnerCapability capability = i.next();
-                                try {
-                                        if (learner.supportsCapability(capability)) {
-                                                if (!first)
-                                                        learnerCapabilities.append(", ");
-                                                learnerCapabilities.append(capability.getDescription());
-                                                first = false;
-                                        }
-                                } catch (Exception e) {
-                                        break;
-                                }
-                        }
-                        String result = learnerCapabilities.toString();
-                        if (result.length() > 0) {
-                                out.print(getOpenTag(LEARNER_CAPABILITIES));
-                                out.print(result);
-                                out.print(getCloseTag(LEARNER_CAPABILITIES));
-                        }
-                }
+		 if (op instanceof Learner) {
+			 Learner learner = (Learner) op;
+			 StringBuffer learnerCapabilities = new StringBuffer();
+			 Iterator<LearnerCapability> i = LearnerCapability.getAllCapabilities().iterator();
+			 boolean first = true;
+			 while (i.hasNext()) {
+				 LearnerCapability capability = i.next();
+				 try {
+					 if (learner.supportsCapability(capability)) {
+						 if (!first)
+							 learnerCapabilities.append(", ");
+						 learnerCapabilities.append(capability.getDescription());
+						 first = false;
+					 }
+				 } catch (Exception e) {
+					 break;
+				 }
+			 }
+			 String result = learnerCapabilities.toString();
+			 if (result.length() > 0) {
+				 out.print(getOpenTag(LEARNER_CAPABILITIES));
+				 out.print(result);
+				 out.print(getCloseTag(LEARNER_CAPABILITIES));
+			 }
+		 }
 
-                StringBuffer classComment = new StringBuffer();
-		if (opDoc != null) {
-		    Tag[] inlineTags = opDoc.inlineTags();
-		    for (int i = 0; i < inlineTags.length; i++) {
-                        if (inlineTags[i] instanceof SeeTag) {
-			    try {
-				Class referencedClass = Class.forName(((SeeTag) inlineTags[i]).referencedClass().qualifiedName());
-				if (Operator.class.isAssignableFrom(referencedClass)) {
-				    if (java.lang.reflect.Modifier.isAbstract(referencedClass.getModifiers())) {
-					classComment.append("\\op{" + Tools.classNameWOPackage(referencedClass) + "}");
-				    } else {
-					try {
-					    Operator refOp = OperatorService.createOperator(referencedClass);
-					    classComment.append("\\refop{" + refOp.getOperatorDescription().getName() + "}");
-					} catch (OperatorCreationException e) {
-					    classComment.append("\\op{" + Tools.classNameWOPackage(referencedClass) + "}");
-					}
-				    }
-				} else if (IOObject.class.isAssignableFrom(referencedClass)) {
-				    classComment.append("\\ioobj{" + Tools.classNameWOPackage(referencedClass) + "}");
-				} else {
-				    classComment.append("\\java{" + Tools.classNameWOPackage(referencedClass) + "}");
-				}
-			    } catch (Throwable e) {
-				LogService.getGlobal().log("In see tag '" + inlineTags[i] + "' of " + op.getClass().getName() + ": " + e, LogService.ERROR);
-			    }
-                        } else {
-			    Taglet taglet = tagletMap.get(inlineTags[i].name().substring(1));
-			    if (taglet instanceof TexTaglet) {
-				classComment.append(((TexTaglet) taglet).toTex(inlineTags[i]));
-			    } else {
-				classComment.append(escape(inlineTags[i].text()));
-			    }
-                        }
-		    }
-		}
+		 StringBuffer classComment = new StringBuffer();
+		 if (opDoc != null) {
+			 Tag[] inlineTags = opDoc.inlineTags();
+			 for (int i = 0; i < inlineTags.length; i++) {
+				 if (inlineTags[i] instanceof SeeTag) {
+					 try {
+						 Class referencedClass = Class.forName(((SeeTag) inlineTags[i]).referencedClass().qualifiedName());
+						 if (Operator.class.isAssignableFrom(referencedClass)) {
+							 if (java.lang.reflect.Modifier.isAbstract(referencedClass.getModifiers())) {
+								 classComment.append("\\op{" + Tools.classNameWOPackage(referencedClass) + "}");
+							 } else {
+								 try {
+									 Operator refOp = OperatorService.createOperator(referencedClass);
+									 classComment.append("\\refop{" + refOp.getOperatorDescription().getName() + "}");
+								 } catch (OperatorCreationException e) {
+									 classComment.append("\\op{" + Tools.classNameWOPackage(referencedClass) + "}");
+								 }
+							 }
+						 } else if (IOObject.class.isAssignableFrom(referencedClass)) {
+							 classComment.append("\\ioobj{" + Tools.classNameWOPackage(referencedClass) + "}");
+						 } else {
+							 classComment.append("\\java{" + Tools.classNameWOPackage(referencedClass) + "}");
+						 }
+					 } catch (Throwable e) {
+						 LogService.getGlobal().log("In see tag '" + inlineTags[i] + "' of " + op.getClass().getName() + ": " + e, LogService.ERROR);
+					 }
+				 } else {
+					 Taglet taglet = tagletMap.get(inlineTags[i].name().substring(1));
+					 if (taglet instanceof TexTaglet) {
+						 classComment.append(((TexTaglet) taglet).toTex(inlineTags[i]));
+					 } else {
+						 classComment.append(escape(inlineTags[i].text()));
+					 }
+				 }
+			 }
+		 }
 
-                if (op instanceof OperatorChain) {
-                        InnerOperatorCondition condition = ((OperatorChain) op).getInnerOperatorCondition();
-                        if (condition != null) {
-                                out.println(getOpenTag(INNER_OPERATOR));
-                                out.print(transformHTMLJavadocComment(condition.toHTML(), op.getClass(), op.getName()));
-                                out.println(getCloseTag(INNER_OPERATOR));
-                        }
-                }
+		 if (op instanceof OperatorChain) {
+			 InnerOperatorCondition condition = ((OperatorChain) op).getInnerOperatorCondition();
+			 if (condition != null) {
+				 out.println(getOpenTag(INNER_OPERATOR));
+				 out.print(transformHTMLJavadocComment(condition.toHTML(), op.getClass(), op.getName()));
+				 out.println(getCloseTag(INNER_OPERATOR));
+			 }
+		 }
 
-                out.println(getOpenTag(SHORT_DESCRIPTION)
-                                + transformHTMLJavadocComment(op.getOperatorDescription().getDescription(), op.getClass(), op.getOperatorDescription().getName())
-                                + getCloseTag(SHORT_DESCRIPTION));
-                out.println();
+		 out.println(getOpenTag(SHORT_DESCRIPTION)
+				 + transformHTMLJavadocComment(op.getOperatorDescription().getShortDescription(), op.getClass(), op.getOperatorDescription().getName())
+				 + getCloseTag(SHORT_DESCRIPTION));
+		 out.println();
 
-                out.print(getOpenTag(OPERATOR_DESCRIPTION)
-                                + transformHTMLJavadocComment(classComment.toString(), op.getClass(), op.getOperatorDescription().getName())
-                                + getCloseTag(OPERATOR_DESCRIPTION));
-                out.println();
+		 out.print(getOpenTag(OPERATOR_DESCRIPTION)
+				 + transformHTMLJavadocComment(classComment.toString(), op.getClass(), op.getOperatorDescription().getName())
+				 + getCloseTag(OPERATOR_DESCRIPTION));
+		 out.println();
 
-                if (op instanceof TechnicalInformationHandler) {
-                        TechnicalInformation information = ((TechnicalInformationHandler) op).getTechnicalInformation();
-                        if (information != null) {
-                                out.println(getOpenTag(TECHNICAL_INFORMATION)
-                                                + transformHTMLJavadocComment(information.toString(), op.getClass(), op.getOperatorDescription().getName())
-                                                + getCloseTag(TECHNICAL_INFORMATION));
-                                out.println();
-                        }
-                }
+		 if (op instanceof TechnicalInformationHandler) {
+			 TechnicalInformation information = ((TechnicalInformationHandler) op).getTechnicalInformation();
+			 if (information != null) {
+				 out.println(getOpenTag(TECHNICAL_INFORMATION)
+						 + transformHTMLJavadocComment(information.toString(), op.getClass(), op.getOperatorDescription().getName())
+						 + getCloseTag(TECHNICAL_INFORMATION));
+				 out.println();
+			 }
+		 }
 
-		if (opDoc != null) {
-		    Tag[] citeTags = opDoc.tags("rapidminer.cite");
-		    if (citeTags.length > 0)
-                        out.println(getOpenTag(REFERENCE_SECTION));
-		    for (int i = 0; i < citeTags.length; i++) {
-                        printTags(out, citeTags[i].text(), REFERENCE_ENTRY);
-		    }
-		}
+		 if (opDoc != null) {
+			 Tag[] citeTags = opDoc.tags("rapidminer.cite");
+			 if (citeTags.length > 0)
+				 out.println(getOpenTag(REFERENCE_SECTION));
+			 for (int i = 0; i < citeTags.length; i++) {
+				 printTags(out, citeTags[i].text(), REFERENCE_ENTRY);
+			 }
+		 }
 
-                out.println(getCloseTag(OPERATOR));
-        }
+		 out.println(getCloseTag(OPERATOR));
+	 }
 
-        private void printTags(PrintWriter out, String text, int tagNo) {
-                out.print(getOpenTag(tagNo) + escape(text) + getCloseTag(tagNo));
-        }
+	 private void printTags(PrintWriter out, String text, int tagNo) {
+		 out.print(getOpenTag(tagNo) + escape(text) + getCloseTag(tagNo));
+	 }
 
 }

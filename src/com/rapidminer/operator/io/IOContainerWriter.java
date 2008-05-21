@@ -1,31 +1,30 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.io;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -68,27 +67,34 @@ public class IOContainerWriter extends Operator {
 
 	public Class[] getInputClasses() {
 		return new Class[0];
-	};
+	}
 
 	public Class[] getOutputClasses() {
 		return new Class[0];
-	};
+	}
 
 	public IOObject[] apply() throws OperatorException {
 		IOContainer input = getInput();
 		File file = getParameterAsFile(PARAMETER_FILENAME);
+		OutputStream out = null;
 		try {
-			OutputStream out = null;
 			if (getParameterAsBoolean(PARAMETER_ZIPPED)) {
 				out = new GZIPOutputStream(new FileOutputStream(file));
 			} else {
 				out = new FileOutputStream(file);
 			}
 			XMLSerialization.getXMLSerialization().writeXML(input, out);
-			out.close();
 			log(getName() + ": Input IOContainer written to file" + file);
-		} catch (Exception e) {
+		} catch (IOException e) {
 			throw new UserError(this, e, 303, new Object[] { file, e.getMessage() });
+		} finally {
+			if (out != null) {
+				try {
+					out.close();
+				} catch (IOException e) {
+					logError("Cannot close stream to file " + file);
+				}
+			}
 		}
 		return (new IOObject[0]);
 	}

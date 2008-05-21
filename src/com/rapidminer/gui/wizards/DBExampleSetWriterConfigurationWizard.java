@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.wizards;
 
@@ -42,10 +40,12 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
 import com.rapidminer.RapidMiner;
 import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.tools.JDBCDriverTable;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.io.DatabaseExampleSetWriter;
 import com.rapidminer.parameter.Parameters;
@@ -53,6 +53,7 @@ import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.jdbc.DatabaseHandler;
 import com.rapidminer.tools.jdbc.DatabaseService;
+import com.rapidminer.tools.jdbc.DriverInfo;
 
 
 /**
@@ -60,7 +61,7 @@ import com.rapidminer.tools.jdbc.DatabaseService;
  * {@link DatabaseExampleSetWriter} operators.
  * 
  * @author Ingo Mierswa
- * @version $Id: DBExampleSetWriterConfigurationWizard.java,v 1.1 2007/05/27 22:02:07 ingomierswa Exp $
+ * @version $Id: DBExampleSetWriterConfigurationWizard.java,v 1.6 2008/05/09 19:22:56 ingomierswa Exp $
  */
 public class DBExampleSetWriterConfigurationWizard extends AbstractConfigurationWizard {
     
@@ -125,13 +126,12 @@ public class DBExampleSetWriterConfigurationWizard extends AbstractConfiguration
                 "<li>Definition of the username and password</li>" + 
                 "<li>Definition of a table name</li>" + 
                 "</ul>");
-        String[] driverNames = DatabaseService.getAllDriverNames();
-        titleString.append("<br>The currently available JDBC drivers are:<ul>");
-        for (String s : driverNames)
-            titleString.append("<li>" + s + "</li>");
-        titleString.append("</ul>Please make sure to copy missing drivers into the directory lib/jdbc and restart RapidMiner in order to make additional drivers available.");
-        
-        JPanel panel = SwingTools.createTextPanel("Welcome to the Database Example Set Writer Wizard", titleString.toString()); 
+        titleString.append("<br>The currently available JDBC drivers are listed below. Please make sure to copy missing drivers into the directory lib/jdbc and restart RapidMiner in order to make additional drivers available.");
+
+        JPanel panel = SwingTools.createTextPanel("Welcome to the Database Example Set Writer Wizard", titleString.toString());
+        DriverInfo[] drivers = DatabaseService.getAllDriverInfos();
+        JDBCDriverTable driverTable = new JDBCDriverTable(drivers);
+        panel.add(new JScrollPane(driverTable), BorderLayout.CENTER);
         addStep(panel);
     }
 
@@ -363,7 +363,7 @@ public class DBExampleSetWriterConfigurationWizard extends AbstractConfiguration
             String userName = null;
             String passwd = null;
             // "hack" to allow convenient MS SQL authentication
-            if (urlString.indexOf("AuthenticationMethod") <= 0) {
+            if (urlString.indexOf("AuthenticationMethod") < 0) {
             	userName = userNameField.getText().trim();
             	if ((userName == null) || (userName.length() == 0)) {
             		SwingTools.showVerySimpleErrorMessage("Please specify a user name!");
@@ -421,7 +421,7 @@ public class DBExampleSetWriterConfigurationWizard extends AbstractConfiguration
             parameters.setParameterWithoutCheck("password", null);
             char[] password = passwordField.getPassword();
             if ((password != null) && (password.length > 0))
-                parameters.setParameter("password", new String(password));
+                parameters.setParameterWithoutCheck("password", new String(password));
 
             // query string
             parameters.setParameter("table_name", tableName);

@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.io;
 
@@ -40,6 +38,7 @@ import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeFile;
 import com.rapidminer.parameter.ParameterTypeInt;
@@ -52,7 +51,7 @@ import static com.rapidminer.operator.io.OutputTypes.*;
  * Generic writer for all types of IOObjects. Writes one of the input objects into a given file. 
  * 
  * @author Ingo Mierswa
- * @version $Id: IOObjectWriter.java,v 1.3 2007/06/15 16:58:37 ingomierswa Exp $
+ * @version $Id: IOObjectWriter.java,v 1.7 2008/05/09 19:22:37 ingomierswa Exp $
  */
 public class IOObjectWriter extends Operator {
 
@@ -68,6 +67,8 @@ public class IOObjectWriter extends Operator {
 
 	/** The parameter name for &quot;Indicates the type of the output&quot; */
 	public static final String PARAMETER_OUTPUT_TYPE = "output_type";
+
+	public static final String PARAMETER_CONTINUE_ON_ERROR = "continue_on_error";
 	private String[] objectArray = null;
 	
 	public IOObjectWriter(OperatorDescription description) {
@@ -89,29 +90,74 @@ public class IOObjectWriter extends Operator {
 			int number = getParameterAsInt(PARAMETER_WRITE_WHICH);
 			IOObject object = getInput().get(clazz, (number - 1));
 			File objectFile = getParameterAsFile(PARAMETER_OBJECT_FILE);
-			try {
-				int outputType = getParameterAsInt(PARAMETER_OUTPUT_TYPE);
-	            switch (outputType) {
-	            case OUTPUT_TYPE_XML:
-	            	OutputStream out = new FileOutputStream(objectFile);
-	     			object.write(out);
-	                out.close();
-	            	break;
-	            case OUTPUT_TYPE_XML_ZIPPED:
-	            	out = new GZIPOutputStream(new FileOutputStream(objectFile));
-	            	object.write(out);
-	                out.close();
-	            	break;
-	            case OUTPUT_TYPE_BINARY:
-	            	ObjectOutputStream objectOut = new ObjectOutputStream(new FileOutputStream(objectFile));
-	     			objectOut.writeObject(object);
-	     			objectOut.close();
-	            	break;
-	            default:
-	            	break;
-	            }
-			} catch (IOException e) {
-				throw new UserError(this, e, 303, new Object[] { objectFile, e.getMessage() });
+
+			int outputType = getParameterAsInt(PARAMETER_OUTPUT_TYPE);
+			switch (outputType) {
+			case OUTPUT_TYPE_XML:
+				OutputStream out = null;
+				try {
+					out = new FileOutputStream(objectFile);
+					object.write(out);
+				} catch (IOException e) {
+					if (!getParameterAsBoolean(PARAMETER_CONTINUE_ON_ERROR)) {
+						throw new UserError(this, e, 303, new Object[] { objectFile, e.getMessage() });
+					} else {
+						logError("Could not write IO Object to file " + objectFile + ": " + e.getMessage());
+					}
+				} finally {
+					if (out != null) {
+						try {
+							out.close();
+						} catch (IOException e) {
+							logError("Cannot close stream to file " + objectFile);
+						}
+					}
+				}
+				break;
+			case OUTPUT_TYPE_XML_ZIPPED:
+				out = null;
+				try {
+					out = new GZIPOutputStream(new FileOutputStream(objectFile));
+					object.write(out);
+				} catch (IOException e) {
+					if (!getParameterAsBoolean(PARAMETER_CONTINUE_ON_ERROR)) {
+						throw new UserError(this, e, 303, new Object[] { objectFile, e.getMessage() });
+					} else {
+						logError("Could not write IO Object to file " + objectFile + ": " + e.getMessage());
+					}
+				} finally {
+					if (out != null) {
+						try {
+							out.close();
+						} catch (IOException e) {
+							logError("Cannot close stream to file " + objectFile);
+						}
+					}
+				}
+				break;
+			case OUTPUT_TYPE_BINARY:
+				ObjectOutputStream objectOut = null;
+				try {
+					objectOut = new ObjectOutputStream(new FileOutputStream(objectFile));
+					objectOut.writeObject(object);
+				} catch (IOException e) {
+					if (!getParameterAsBoolean(PARAMETER_CONTINUE_ON_ERROR)) {
+						throw new UserError(this, e, 303, new Object[] { objectFile, e.getMessage() });
+					} else {
+						logError("Could not write IO Object to file " + objectFile + ": " + e.getMessage());
+					}
+				} finally {
+					if (objectOut != null) {
+						try {
+							objectOut.close();
+						} catch (IOException e) {
+							logError("Cannot close stream to file " + objectFile);
+						}
+					}
+				}
+				break;
+			default:
+				break;
 			}	
 		}
 		return new IOObject[0];
@@ -160,6 +206,7 @@ public class IOObjectWriter extends Operator {
 		types.add(type);
 		
         types.add(new ParameterTypeCategory(PARAMETER_OUTPUT_TYPE, "Indicates the type of the output", OUTPUT_TYPES, OutputTypes.OUTPUT_TYPE_XML_ZIPPED));
-		return types;
+		types.add(new ParameterTypeBoolean(PARAMETER_CONTINUE_ON_ERROR, "Defines behavior on errors", false));
+        return types;
 	}
 }

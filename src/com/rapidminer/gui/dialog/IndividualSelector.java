@@ -1,78 +1,78 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.dialog;
 
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.TableModel;
 
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.ExtendedJTable;
+import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.viewer.MetaDataViewer;
 import com.rapidminer.operator.features.Individual;
 import com.rapidminer.operator.features.Population;
-import com.rapidminer.operator.performance.PerformanceCriterion;
-import com.rapidminer.operator.performance.PerformanceVector;
-import com.rapidminer.tools.Tools;
 
 
 /**
  * This dialog can be used to select an individual from a population.
  * 
  * @author Ingo Mierswa
- * @version $Id: IndividualSelector.java,v 2.3 2006/03/21 15:35:40 ingomierswa
- *          Exp $
+ * @version $Id: IndividualSelector.java,v 1.6 2008/05/09 19:23:21 ingomierswa Exp $
  */
-public class IndividualSelector extends JDialog {
+public class IndividualSelector extends JDialog implements ListSelectionListener {
 
 	private static final long serialVersionUID = -6512675217777454316L;
 
 	private transient Population population;
 
-	private JList selectionList;
-
-	private JLabel performanceLabel = new JLabel();
-
+	private ExtendedJTable individualTable;
+	
 	private MetaDataViewer metaDataViewer = null;
 
+	private boolean selected = false;
+	
+	
 	public IndividualSelector(Population population) {
 		this(population, true);
 	}
@@ -86,96 +86,149 @@ public class IndividualSelector extends JDialog {
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		this.population = population;
 
-		// selection list
-		String[] listItems = new String[population.getNumberOfIndividuals()];
-		for (int i = 0; i < listItems.length; i++) {
-			listItems[i] = i + "";
-		}
-		this.selectionList = new JList(listItems);
-		selectionList.setBorder(BorderFactory.createLoweredBevelBorder());
-		selectionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		selectionList.addListSelectionListener(new ListSelectionListener() {
-
-			public void valueChanged(ListSelectionEvent e) {
-				setSelectedIndividual(selectionList.getSelectedIndex());
-			}
-		});
-		JScrollPane listScrollPane = new ExtendedJScrollPane(selectionList);
-		listScrollPane.setBorder(BorderFactory.createEmptyBorder(7, 7, 7, 7));
-		getContentPane().add(listScrollPane, BorderLayout.WEST);
-
-		// center panel
-		JPanel centerPanel = new JPanel();
-		GridBagLayout gridBag = new GridBagLayout();
-		centerPanel.setLayout(gridBag);
-		GridBagConstraints c = new GridBagConstraints();
-		c.fill = GridBagConstraints.BOTH;
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(2, 2, 2, 2);
-		c.weightx = 0;
-		c.weighty = 0;
-
-		// performanceLabel
-		gridBag.setConstraints(performanceLabel, c);
-		centerPanel.add(performanceLabel);
-
+		
+		individualTable = new ExtendedJTable(new IndividualSelectorTableModel(population), true);
+		individualTable.setBorder(BorderFactory.createLoweredBevelBorder());
+		individualTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		individualTable.setCellSelectionEnabled(false);
+		individualTable.setColumnSelectionAllowed(false);
+		individualTable.setRowSelectionAllowed(true);
+		individualTable.getSelectionModel().addListSelectionListener(this);
+		JScrollPane tablePane = new ExtendedJScrollPane(individualTable);
+		tablePane.setBorder(BorderFactory.createTitledBorder("All Individuals"));
+		
 		// meta data viewer
-		this.metaDataViewer = new MetaDataViewer(population.get(0).getExampleSet());
+		this.metaDataViewer = new MetaDataViewer(population.get(0).getExampleSet(), false);		
 		JScrollPane metaDataPane = new ExtendedJScrollPane(metaDataViewer);
-		c.weightx = 1;
-		c.weighty = 1;
-		gridBag.setConstraints(metaDataPane, c);
-		centerPanel.add(metaDataPane);
-		selectionList.setSelectedIndex(0);
+		metaDataPane.setBorder(BorderFactory.createTitledBorder("Selected Individual"));
+		
+		JSplitPane mainSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+		mainSplitPane.add(tablePane);
+		mainSplitPane.add(metaDataPane);
 
-		getContentPane().add(centerPanel, BorderLayout.CENTER);
+		getContentPane().add(mainSplitPane, BorderLayout.CENTER);
 
 		// button panel
-		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-		JButton okButton = new JButton("Ok");
-		okButton.addActionListener(new ActionListener() {
-
+		JPanel buttonPanel = new JPanel();
+		GridBagLayout buttonLayout = new GridBagLayout();
+		buttonPanel.setLayout(buttonLayout);
+		GridBagConstraints buttonC = new GridBagConstraints();
+		buttonC.fill = GridBagConstraints.BOTH;
+		buttonC.weightx = 0;
+		buttonC.insets = new Insets(4,4,4,4);
+		
+		JButton saveDataButton = new JButton("Save Data...");
+		saveDataButton.setToolTipText("Save the upper data table into a file in CSV format.");
+		saveDataButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				ok();
+				saveData();
 			}
 		});
-		buttonPanel.add(okButton);
+		buttonLayout.setConstraints(saveDataButton, buttonC);
+		buttonPanel.add(saveDataButton);
+
+		JPanel fillPanel = new JPanel();
+		buttonC.weightx = 1;
+		buttonLayout.setConstraints(fillPanel, buttonC);
+		buttonPanel.add(fillPanel);
+		
+		buttonC.weightx = 0;
+		JButton selectButton = new JButton("Select");
+		selectButton.setToolTipText("Use the currently selected individual as result instead of the best one according to the main criterion.");
+		selectButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				select();
+			}
+		});
+		buttonLayout.setConstraints(selectButton, buttonC);
+		buttonPanel.add(selectButton);
+		
+		JButton cancelButton = new JButton("Cancel");
+		cancelButton.setToolTipText("Do not use the currently selected individual but the best one according to the main criterion.");
+		cancelButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				cancel();
+			}
+		});
+		buttonLayout.setConstraints(cancelButton, buttonC);
+		buttonPanel.add(cancelButton);
+
 		getContentPane().add(buttonPanel, BorderLayout.SOUTH);
 
+		individualTable.addRowSelectionInterval(0, 0);
+		
 		// size and location
-		if ((width < 0) || (height < 0))
+		if ((width < 0) || (height < 0)) {
 			setSize(800, 600);
-		else
+			mainSplitPane.setDividerLocation(400);
+		} else {
 			setSize(width, height);
-
+			mainSplitPane.setDividerLocation(height / 2);
+		}
 		setLocationRelativeTo(owner);
 	}
 
-	private void ok() {
+	private void saveData() {
+		File file = SwingTools.chooseFile(this, null, false, "csv", "comma separated values");
+		if (file != null) {
+			PrintWriter out = null;
+			try {
+				out = new PrintWriter(new FileWriter(file));
+			} catch (IOException e) {
+				SwingTools.showSimpleErrorMessage("Cannot write data into file", e);
+			}
+			if (out != null) {
+				TableModel model = this.individualTable.getModel();
+				for (int c = 0; c < model.getColumnCount(); c++) {
+					if (c != 0)
+						out.print(";");
+					out.print(model.getColumnName(c));
+				}
+				out.println();
+				
+				for (int r = 0; r < model.getRowCount(); r++) {
+					for (int c = 0; c < model.getColumnCount(); c++) {
+						if (c != 0)
+							out.print(";");
+						out.print(model.getValueAt(r, c));
+					}
+					out.println();
+				}
+				out.close();
+			}
+		}
+	}
+	
+	private void select() {
+		selected = true;
 		dispose();
 	}
 
-	public void setSelectedIndividual(int index) {
-		Individual selected = population.get(index);
-		PerformanceVector performance = selected.getPerformance();
-		StringBuffer performanceString = new StringBuffer();
-		for (int i = 0; i < performance.getSize(); i++) {
-			if (i != 0)
-				performanceString.append(", ");
-			PerformanceCriterion pc = performance.getCriterion(i);
-			performanceString.append(pc.getName() + " = " + Tools.formatNumber(pc.getAverage()) + " (fitness: " + Tools.formatNumber(pc.getFitness()) + ")");
-		}
-		performanceLabel.setText(performanceString.toString());
-		performanceLabel.repaint();
-
-		metaDataViewer.setExampleSet(selected.getExampleSet());
+	private void cancel() {
+		dispose();
 	}
 
 	public Individual getSelectedIndividual() {
-		int index = selectionList.getSelectedIndex();
-		if ((index >= 0) && (index < population.getNumberOfIndividuals()))
-			return population.get(index);
-		else
+		if (!selected) {
 			return null;
+		} else {
+			int index = individualTable.getModelIndex(individualTable.getSelectedRow());
+			if ((index >= 0) && (index < population.getNumberOfIndividuals()))
+				return population.get(index);
+			else
+				return null;
+		}
+	}
+
+	public void valueChanged(ListSelectionEvent e) {
+		if (!e.getValueIsAdjusting()) {
+			int index = individualTable.getModelIndex(individualTable.getSelectedRow());
+			if ((index >= 0) && (index < population.getNumberOfIndividuals())) {
+				Individual selected = population.get(index);
+				metaDataViewer.setExampleSet(selected.getExampleSet());
+			} else {
+				metaDataViewer.setExampleSet(null);
+			}
+		}
 	}
 }

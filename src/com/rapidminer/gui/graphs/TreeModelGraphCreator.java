@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.graphs;
 
@@ -30,6 +28,7 @@ import java.util.Map;
 
 import org.apache.commons.collections15.Factory;
 
+import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.learner.tree.Edge;
 import com.rapidminer.operator.learner.tree.SplitCondition;
 import com.rapidminer.operator.learner.tree.Tree;
@@ -45,7 +44,7 @@ import edu.uci.ics.jung.visualization.renderers.Renderer.VertexLabel;
  * Creates a graph model for a learned tree model.
  *
  * @author Ingo Mierswa
- * @version $Id: TreeModelGraphCreator.java,v 1.10 2007/07/13 22:52:15 ingomierswa Exp $
+ * @version $Id: TreeModelGraphCreator.java,v 1.13 2008/05/09 19:23:24 ingomierswa Exp $
  */
 public class TreeModelGraphCreator extends GraphCreatorAdaptor {
 
@@ -104,7 +103,7 @@ public class TreeModelGraphCreator extends GraphCreatorAdaptor {
 			    if (labelString != null) {
 			        result.append("<html><b>Class:</b>&nbsp;" + labelString + "<br>");
 			        result.append("<b>Size:</b>&nbsp;" + tree.getFrequencySum() + "<br>");
-			        result.append("<b>Class Frequencies:</b>&nbsp;" + tree.getCounterMap().toString() + "</html>");
+			        result.append(SwingTools.transformToolTipText("<b>Class Frequencies:</b>&nbsp;" + tree.getCounterMap().toString()) + "</html>");
 			    }
             } else {
                 result.append("Inner Node");
@@ -158,9 +157,27 @@ public class TreeModelGraphCreator extends GraphCreatorAdaptor {
 	}
 
 	public Vertex<String, String> getVertexRenderer() {
-		return new TreeModelNodeRenderer<String,String>(this);
+		int maxSize = -1;
+		Tree root = model.getRoot();
+		maxSize = getMaximumLeafSize(root, maxSize);
+		return new TreeModelNodeRenderer<String,String>(this, maxSize);
 	}
 
+	private int getMaximumLeafSize(Tree tree, int max) {
+		if (tree.isLeaf()) {
+			return Math.max(max, tree.getFrequencySum());
+		} else {
+			Iterator<Edge> e = tree.childIterator();
+			int maximum = max;
+			while (e.hasNext()) {
+				Edge edge = e.next();
+				Tree child = edge.getChild();
+				maximum = Math.max(maximum, getMaximumLeafSize(child, maximum));
+			}
+			return maximum;
+		}
+	}
+	
 	public EdgeLabel<String, String> getEdgeLabelRenderer() {
 		return new TreeModelEdgeLabelRenderer<String,String>();
 	}

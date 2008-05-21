@@ -1,33 +1,32 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools.math;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+
+import javax.swing.JDialog;
 
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.SimpleDataTable;
@@ -37,7 +36,9 @@ import com.rapidminer.example.AttributeTypeException;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Statistics;
+import com.rapidminer.gui.plotter.ScatterPlotter;
 import com.rapidminer.gui.plotter.SimplePlotterDialog;
+import com.rapidminer.gui.viewer.ROCChartPlotter;
 
 
 /**
@@ -45,9 +46,11 @@ import com.rapidminer.gui.plotter.SimplePlotterDialog;
  * area under curve calculation.
  * 
  * @author Ingo Mierswa, Martin Scholz
- * @version $Id: ROCDataGenerator.java,v 1.2 2007/07/10 18:02:03 ingomierswa Exp $
+ * @version $Id: ROCDataGenerator.java,v 1.10 2008/05/09 19:23:03 ingomierswa Exp $
  */
-public class ROCDataGenerator {
+public class ROCDataGenerator implements Serializable {
+
+	private static final long serialVersionUID = -4473681331604071436L;
 
 	/** Defines the maximum amount of points which is plotted in the ROC curve. */
 	public static final int MAX_ROC_POINTS = 200;
@@ -55,12 +58,6 @@ public class ROCDataGenerator {
 	private double misclassificationCostsPositive = 1.0d;
 
 	private double misclassificationCostsNegative = 1.0d;
-
-	private double sumPos;
-
-	private double sumNeg;
-
-	private double bestIsometricsTpValue = 0;
 
 	private double slope = 1.0d;
 
@@ -80,17 +77,19 @@ public class ROCDataGenerator {
 		return bestThreshold;
 	}
 
-	/** Creates a list of ROC data poings from the given example set. The example set must have
+	/** Creates a list of ROC data points from the given example set. The example set must have
 	 *  a binary label attribute and confidence values for both values, i.e. a model must have been
 	 *  applied on the data. */
-	public List<double[]> createROCDataList(ExampleSet exampleSet) {
+	public ROCData createROCData(ExampleSet exampleSet, boolean useExampleWeights) {
 		Attribute label = exampleSet.getAttributes().getLabel();
 		exampleSet.recalculateAttributeStatistics(label);
 		Attribute predictedLabel = exampleSet.getAttributes().getPredictedLabel();
 		
 		// create sorted collection with all label values and example weights
 		WeightedConfidenceAndLabel[] calArray = new WeightedConfidenceAndLabel[exampleSet.size()];
-		Attribute weightAttr = exampleSet.getAttributes().getWeight();
+		Attribute weightAttr = null;
+		if (useExampleWeights)
+			weightAttr = exampleSet.getAttributes().getWeight();
 		Attribute labelAttr = exampleSet.getAttributes().getLabel();
 		String positiveClassName = null;
 		if (label.isNominal() && (label.getMapping().size() == 2)) {
@@ -130,13 +129,13 @@ public class ROCDataGenerator {
 		// the corresponding threshold is stored in bestThreshold.
 		double tp = 0.0d;
 		double sum = 0.0d;
-		bestIsometricsTpValue = 0;
+		double bestIsometricsTpValue = 0;
 		bestThreshold = Double.POSITIVE_INFINITY;
 		double oldConfidence = 1.0d;
-		List<double[]> tableData = new LinkedList<double[]>();
-		tableData.add(new double[] { 0.0d, 0.0d, 1.0d }); // add first point
-															// in ROC curve
-		double[] last = new double[] { 0.0d, 0.0d, 1.0d };
+        
+        ROCData rocData = new ROCData();
+		ROCPoint last = new ROCPoint(0.0d, 0.0d, 1.0d);
+        rocData.addPoint(last); // add first point in ROC curve
 
 		// Iterate through the example set sorted by predictions.
 		// In each iteration the example with next highest confidence of being
@@ -160,10 +159,10 @@ public class ROCDataGenerator {
 			}
 			double currentConfidence = wcl.getConfidence();
 			if (currentConfidence != oldConfidence) {
-				tableData.add(last);
+				rocData.addPoint(last);
 				oldConfidence = currentConfidence;
 			}
-			last = new double[] { fp, tp, currentConfidence };
+			last = new ROCPoint(fp, tp, currentConfidence);
 			sum += weight;
 		}
 
@@ -174,81 +173,85 @@ public class ROCDataGenerator {
 			bestIsometricsTpValue = c;
 		}
 
-		// scaling for plotting
-		sumPos = tp;
-		sumNeg = (sum - tp);
-		bestIsometricsTpValue /= sumPos;
+		rocData.addPoint(new ROCPoint(sum - tp, tp, 0.0d)); // add last point in ROC curve
 
-		tableData.add(new double[] { sumNeg, sumPos, 0.0d }); // add last
-																// point in ROC
-																// curve
-
-		return tableData;
+        // scaling for plotting
+        rocData.setTotalPositives(tp);
+        rocData.setTotalNegatives(sum - tp);
+        rocData.setBestIsometricsTPValue(bestIsometricsTpValue / tp);
+		return rocData;
 	}
 
-    public DataTable createDataTable(List<double[]> data, boolean showSlope, boolean showThresholds) {
+    private DataTable createDataTable(ROCData data, boolean showSlope, boolean showThresholds) {
         DataTable dataTable = new SimpleDataTable("ROC Plot", new String[] { "FP/N", "TP/P", "Slope", "Threshold" });
-        Iterator i = data.iterator();
+        Iterator<ROCPoint> i = data.iterator();
         int pointCounter = 0;
-        int eachPoint = Math.max(1, (int) Math.round((double) data.size() / (double) MAX_ROC_POINTS));
+        int eachPoint = Math.max(1, (int) Math.round((double) data.getNumberOfPoints() / (double) MAX_ROC_POINTS));
         while (i.hasNext()) {
-            double[] point = (double[]) i.next();
-            if ((pointCounter == 0) || ((pointCounter % eachPoint) == 0) || (!i.hasNext())) { // draw
-                                                                                                // only
-                                                                                                // MAX_ROC_POINTS
-                                                                                                // points
-                double fpDivN = point[0] / sumNeg; // false positives divided
-                                                    // by sum of all negatives
-                double tpDivP = point[1] / sumPos; // true positives divided by
-                                                    // sum of all positives
-                double threshold = point[2];
+            ROCPoint point = i.next();
+            if ((pointCounter == 0) || ((pointCounter % eachPoint) == 0) || (!i.hasNext())) { // draw only MAX_ROC_POINTS points
+                double fpRate = point.getFalsePositives() / data.getTotalNegatives();
+                double tpRate = point.getTruePositives() / data.getTotalPositives();
+                double threshold = point.getConfidence();
                 dataTable.add(new SimpleDataTableRow(new double[] { 
-                        fpDivN, // x: fp
-                        tpDivP, // y1: tp
-                        bestIsometricsTpValue + (fpDivN * slope * (sumNeg / sumPos)), // y2: slope
+                        fpRate, // x
+                        tpRate, // y1
+                        data.getBestIsometricsTPValue() + (fpRate * slope * (data.getTotalNegatives() / data.getTotalPositives())), // y2: slope
                         threshold // y3: threshold or confidence
-                    }));
+                }));
             }
             pointCounter++;
         }
         return dataTable;
     }
     
-	/** Creates a dialog containing a plotter for a given list of ROC data points. */
-	public void createROCPlot(List<double[]> data, boolean showSlope, boolean showThresholds) {
-	    DataTable dataTable = createDataTable(data, showSlope, showThresholds);
-        
-		// create plotter
-		SimplePlotterDialog plotter = new SimplePlotterDialog(dataTable);
-		plotter.setXAxis(0);
-		plotter.plotColumn(1, true);
-		if (showSlope)
-			plotter.plotColumn(2, true);
-		if (showThresholds)
-			plotter.plotColumn(3, true);
-		plotter.setDrawRange(0.0d, 1.0d, 0.0d, 1.0d);
-        plotter.setDrawPoints(false);
-		plotter.setSize(500, 500);
-		plotter.setLocationRelativeTo(plotter.getOwner());
-		plotter.setVisible(true);
-	}
+    /** Creates a dialog containing a plotter for a given list of ROC data points. */
+    public void createROCPlotDialog(ROCData data, boolean showSlope, boolean showThresholds) {
+        SimplePlotterDialog plotter = new SimplePlotterDialog(createDataTable(data, showSlope, showThresholds));
+        plotter.setXAxis(0);
+        plotter.plotColumn(1, true);
+        if (showSlope)
+            plotter.plotColumn(2, true);
+        if (showThresholds)
+            plotter.plotColumn(3, true);
+        plotter.setDrawRange(0.0d, 1.0d, 0.0d, 1.0d);
+        plotter.setPointType(ScatterPlotter.LINES);
+        plotter.setSize(500, 500);
+        plotter.setLocationRelativeTo(plotter.getOwner());
+        plotter.setVisible(true);
+    }
+    
+    /** Creates a dialog containing a plotter for a given list of ROC data points. */
+    public void createROCPlotDialog(ROCData data) {        
+        ROCChartPlotter plotter = new ROCChartPlotter();
+        plotter.addROCData("ROC", data);
+        JDialog dialog = new JDialog();
+        dialog.setTitle("ROC Plot");
+        dialog.add(plotter);
+        dialog.setSize(500, 500);
+        dialog.setLocationRelativeTo(null);
+        dialog.setVisible(true);
+    }
 
 	/** Calculates the area under the curve for a given list of ROC data points. */
-	public double calculateAUC(List<double[]> rocData) {
+	public double calculateAUC(ROCData rocData) {
 		// calculate AUC (area under curve)
 		double aucSum = 0.0d;
 		double[] last = null;
-		Iterator i = rocData.iterator();
+		Iterator<ROCPoint> i = rocData.iterator();
 		while (i.hasNext()) {
-			double[] point = (double[]) i.next();
-			double fpDivN = point[0] / sumNeg; // false positives divided by
-												// sum of all negatives
-			double tpDivP = point[1] / sumPos; // true positives divided by sum
-												// of all positives
-
+			ROCPoint point = i.next();
+			double fpDivN = point.getFalsePositives() / rocData.getTotalNegatives(); // false positives divided by sum of all negatives
+			double tpDivP = point.getTruePositives() / rocData.getTotalPositives(); // true positives divided by sum of all positives
+			
+            /*
 			if (last != null) {
 				aucSum += ((tpDivP - last[1]) * (fpDivN - last[0]) / 2.0d) + (last[1] * (fpDivN - last[0]));
 			}
+            */
+            if (last != null) {
+                aucSum += last[1] * (fpDivN - last[0]);
+            }
 			last = new double[] { fpDivN, tpDivP };
 		}
 

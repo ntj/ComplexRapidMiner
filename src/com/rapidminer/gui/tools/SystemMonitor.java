@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools;
 
@@ -41,7 +39,7 @@ import javax.swing.JPanel;
  * not possible to ask for the processor usage with methods from Java.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: SystemMonitor.java,v 1.1 2007/05/27 21:59:31 ingomierswa Exp $
+ * @version $Id: SystemMonitor.java,v 1.5 2008/05/09 19:22:58 ingomierswa Exp $
  */
 public class SystemMonitor extends JPanel {
 
@@ -49,13 +47,13 @@ public class SystemMonitor extends JPanel {
 
 	private static final Color BACKGROUND = Color.WHITE;
 
-	private static final Color TEXT_COLOR = SwingTools.DARK_BLUE;
+	private static final Color TEXT_COLOR = SwingTools.VERY_DARK_BLUE;
 	
 	private static final Color MEMORY_COLOR = SwingTools.LIGHTEST_BLUE;
 
 	private static final Color GRID_COLOR = Color.LIGHT_GRAY;
 	
-	private static final Color LINE_COLOR = SwingTools.DARK_BLUE;
+	private static final Color LINE_COLOR = SwingTools.VERY_DARK_BLUE;
 
 	private static final String[] MEMORY_UNITS = { "b", "kB", "MB", "GB", "TB" };
 
@@ -96,9 +94,23 @@ public class SystemMonitor extends JPanel {
 			public void run() {
 				setPriority(MIN_PRIORITY);
 				while (true) {
+					// memory
 					SystemMonitor.this.currentlyUsed = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 					SystemMonitor.this.memory[SystemMonitor.this.currentMeasurement] = (long)currentlyUsed;
 					SystemMonitor.this.currentMeasurement = (SystemMonitor.this.currentMeasurement + 1) % SystemMonitor.this.memory.length;
+					
+					// cpu
+					/*
+					java.lang.management.OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
+					System.out.println("LA: " + os.getSystemLoadAverage());
+					System.out.println("#Processors: " + os.getAvailableProcessors());
+					if (os instanceof com.sun.management.OperatingSystemMXBean) {
+					    long cpuTime = ((com.sun.management.OperatingSystemMXBean) os).getProcessCpuTime();
+					    System.out.println("CPU time = " + cpuTime);
+					}
+					
+					System.out.println();
+					*/
 					SystemMonitor.this.repaint();
 					try {
 						sleep(delay);

@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.validation.clustering.itemdistribution;
 
@@ -46,7 +44,7 @@ import com.rapidminer.tools.ClassNameMapper;
  * Evaluates flat cluster models on how well the items are distributed over the clusters.
  * 
  * @author Michael Wurst
- * @version $Id: ItemDistributionEvaluator.java,v 1.1 2007/05/27 22:03:39 ingomierswa Exp $
+ * @version $Id: ItemDistributionEvaluator.java,v 1.4 2008/05/09 19:22:37 ingomierswa Exp $
  * 
  */
 public class ItemDistributionEvaluator extends Operator {
@@ -64,7 +62,7 @@ public class ItemDistributionEvaluator extends Operator {
      */
     public ItemDistributionEvaluator(OperatorDescription description) {
         super(description);
-        addValue(new Value("clusternumber", "The number of clusters.", false) {
+        addValue(new Value("item_distribution", "The distribution of items over clusters.", false) {
             public double getValue() {
                 return itemDistribution;
             }
@@ -108,7 +106,10 @@ public class ItemDistributionEvaluator extends Operator {
         if (performance == null)
             performance = new PerformanceVector();
 
-        PerformanceCriterion pc = new EstimatedPerformance("Item distribution", distrMeasure.evaluate(count, totalNumberOfItems), 1, false);
+        
+        itemDistribution = distrMeasure.evaluate(count, totalNumberOfItems);
+        
+        PerformanceCriterion pc = new EstimatedPerformance("Item distribution", itemDistribution, 1, false);
         performance.addCriterion(pc);
 
         return new IOObject[] { performance };

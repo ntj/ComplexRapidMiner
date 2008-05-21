@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.preprocessing.filter;
 
@@ -46,13 +44,13 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
  * term frequency values (in this case no normalization will be done).
  * 
  * @author Ingo Mierswa
- * @version $Id: TFIDFFilter.java,v 1.2 2007/06/15 16:58:39 ingomierswa Exp $
+ * @version $Id: TFIDFFilter.java,v 1.5 2008/05/09 19:22:58 ingomierswa Exp $
  */
 public class TFIDFFilter extends Operator {
 
-
 	/** The parameter name for &quot;Indicates if term frequency values should be generated (must be done if input data is given as simple occurence counts).&quot; */
 	public static final String PARAMETER_CALCULATE_TERM_FREQUENCIES = "calculate_term_frequencies";
+	
 	private static final Class[] INPUT_CLASSES = { ExampleSet.class };
 
 	private static final Class[] OUTPUT_CLASSES = { ExampleSet.class };
@@ -121,7 +119,7 @@ public class TFIDFFilter extends Operator {
 				} else {
 					double tf = value;
 					if (calculateTermFrequencies)
-						value /= termFrequencySum[exampleCounter];
+						tf /= termFrequencySum[exampleCounter];
 					double idf = inverseDocumentFrequencies[i];
 					example.setValue(attribute, (tf * idf));
 				}

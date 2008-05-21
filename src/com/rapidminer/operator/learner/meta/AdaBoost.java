@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.meta;
 
@@ -48,7 +46,7 @@ import com.rapidminer.parameter.ParameterTypeInt;
  * the ones which originally are part of the Weka package.
  * 
  * @author Martin Scholz
- * @version $Id: AdaBoost.java,v 1.3 2007/07/13 22:52:12 ingomierswa Exp $
+ * @version $Id: AdaBoost.java,v 1.6 2008/05/09 19:22:46 ingomierswa Exp $
  */
 public class AdaBoost extends AbstractMetaLearner {
 
@@ -167,23 +165,24 @@ public class AdaBoost extends AbstractMetaLearner {
 		// Containers for models and weights:
 		Vector<Model> ensembleModels = new Vector<Model>();
 		Vector<Double> ensembleWeights = new Vector<Double>();
-
+		
 		// maximum number of iterations
 		final int iterations = this.getParameterAsInt(PARAMETER_ITERATIONS);
 		for (int i = 0; (i < iterations && this.performance > 0); i++) {
 			this.currentIteration = i;
-
+			
 			// train one model per iteration
-			Model model = applyInnerLearner(trainingSet);
-			model.apply(trainingSet);
+			ExampleSet iterationSet = (ExampleSet)trainingSet.clone();
+			Model model = applyInnerLearner(iterationSet);
+			iterationSet = model.apply(iterationSet);
 			// get the weighted performance value of the example set with
 			// respect to the model
-			AdaBoostPerformanceMeasures wp = new AdaBoostPerformanceMeasures(trainingSet);
+			AdaBoostPerformanceMeasures wp = new AdaBoostPerformanceMeasures(iterationSet);
 
 			// Reweight the example set with respect to the weighted performance
 			// values:
-			this.performance = wp.reweightExamples(trainingSet);
-			PredictionModel.removePredictedLabel(trainingSet);
+			this.performance = wp.reweightExamples(iterationSet);
+			PredictionModel.removePredictedLabel(iterationSet);
 
 			log("Total weight of example set after iteration " + (this.currentIteration + 1) + " is " + this.performance);
 
@@ -205,10 +204,12 @@ public class AdaBoost extends AbstractMetaLearner {
 			}
 			ensembleWeights.add(weight);
 		}
-
+		
 		// Build a Model object. Last parameter is "crispPredictions", nowadays
 		// always true.
-		return new AdaBoostModel(trainingSet, ensembleModels, ensembleWeights);
+		AdaBoostModel resultModel = new AdaBoostModel(trainingSet, ensembleModels, ensembleWeights);
+		
+		return resultModel;
 	}
 
 	/**

@@ -1,29 +1,28 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer;
 
+import java.awt.Frame;
 import java.awt.Image;
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,6 +45,9 @@ import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.XMLException;
 import com.rapidminer.tools.XMLSerialization;
+import com.rapidminer.tools.cipher.CipherTools;
+import com.rapidminer.tools.cipher.KeyGenerationException;
+import com.rapidminer.tools.cipher.KeyGeneratorTool;
 import com.rapidminer.tools.jdbc.DatabaseService;
 import com.rapidminer.tools.plugin.Plugin;
 
@@ -57,10 +59,13 @@ import com.rapidminer.tools.plugin.Plugin;
  * might drastically reduce runtime and / or initialization time.
  * 
  * @author Ingo Mierswa
- * @version $Id: RapidMiner.java,v 1.14 2007/07/18 12:17:30 ingomierswa Exp $
+ * @version $Id: RapidMiner.java,v 1.30 2008/05/09 19:23:19 ingomierswa Exp $
  */
 public class RapidMiner {
 
+    public static final String SYSTEM_ENCODING_NAME = "SYSTEM";
+    
+    
     // ---  GENERAL PROPERTIES  ---
     
     /** The name of the property indicating the home directory of RapidMiner. */
@@ -71,7 +76,7 @@ public class RapidMiner {
     
     /** The name of the property indicating the path to an additional operator description XML file. */
     public static final String PROPERTY_RAPIDMINER_OPERATORS_ADDITIONAL = "rapidminer.operators.additional";
-
+ 
     /** The name of the property indicating the path to an RC file (settings). */
     public static final String PROPERTY_RAPIDMINER_RC_FILE = "rapidminer.rcfile";
     
@@ -83,6 +88,7 @@ public class RapidMiner {
 
     /** The name of the property indicating the path to the global logging file. */
     public static final String PROPERTY_RAPIDMINER_GLOBAL_LOG_VERBOSITY = "rapidminer.global.logging.verbosity";
+    
     
     // ---  INIT PROPERTIES  ---
     
@@ -127,7 +133,7 @@ public class RapidMiner {
     
     /** The name of the property indicating the default encoding for files. */
     public static final String PROPERTY_RAPIDMINER_GENERAL_DEFAULT_ENCODING = "rapidminer.general.encoding";
-    
+
     
 	/**
 	 * A set of some non-gui and operator related system properties (starting with "rapidminer."). Properties
@@ -143,7 +149,7 @@ public class RapidMiner {
 		registerRapidMinerProperty(new ParameterTypeString(PROPERTY_RAPIDMINER_TOOLS_SENDMAIL_COMMAND, "Path to sendmail. Used for email notifications.", true));
 		registerRapidMinerProperty(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_GENERAL_LOGFILE_FORMAT, "Use unix special characters for logfile highlighting (requires new RapidMiner instance).", false));
 		registerRapidMinerProperty(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_GENERAL_DEBUGMODE, "Indicates if RapidMiner should be used in debug mode (print exception stacks and shows more technical error messages)", false));
-		registerRapidMinerProperty(new ParameterTypeString(PROPERTY_RAPIDMINER_GENERAL_DEFAULT_ENCODING, "The default encoding used for file operations.", "UTF-8"));
+		registerRapidMinerProperty(new ParameterTypeString(PROPERTY_RAPIDMINER_GENERAL_DEFAULT_ENCODING, "The default encoding used for file operations (default: 'SYSTEM' uses the underlying system encoding, 'UTF-8' or 'ISO-8859-1' are other common options)", SYSTEM_ENCODING_NAME));
 	}
 	
 	private static InputHandler inputHandler = new ConsoleInputHandler();
@@ -183,14 +189,34 @@ public class RapidMiner {
 	 * @param searchJDBCInLibDir indicates if JDBC drivers from the directory RAPID_MINER_HOME/lib/jdbc should be loaded
 	 * @param searchJDBCInClasspath indicates if JDBC drivers from the classpath libraries should be loaded
 	 * @param addPlugins indicates if the plugins should be loaded 
-	 * @throws IOException if something goes wrong during initialization
 	 */
 	public static void init(InputStream operatorsXMLStream, 
 			                File pluginDir, 
 			                boolean addWekaOperators, 
 			                boolean searchJDBCInLibDir, 
 			                boolean searchJDBCInClasspath, 
-			                boolean addPlugins) throws IOException {		
+			                boolean addPlugins) {
+		init(operatorsXMLStream, null, pluginDir, addWekaOperators, searchJDBCInLibDir, searchJDBCInClasspath, addPlugins);
+	}
+	
+	/**
+	 * Initializes RapidMiner.
+	 * 
+	 * @param operatorsXMLStream the stream to the core operators.xml (operator description), use core operators.xml if null
+	 * @param additionalXMLStream the stream to possibly additional operators.xml (operator description), use no additional if null
+	 * @param pluginDir the directory where plugins are located, use core plugin directory if null
+	 * @param addWekaOperators inidcates if the operator wrappers for Weka should be loaded
+	 * @param searchJDBCInLibDir indicates if JDBC drivers from the directory RAPID_MINER_HOME/lib/jdbc should be loaded
+	 * @param searchJDBCInClasspath indicates if JDBC drivers from the classpath libraries should be loaded
+	 * @param addPlugins indicates if the plugins should be loaded 
+	 */
+	public static void init(InputStream operatorsXMLStream,
+							InputStream additionalXMLStream,
+			                File pluginDir, 
+			                boolean addWekaOperators, 
+			                boolean searchJDBCInLibDir, 
+			                boolean searchJDBCInClasspath, 
+			                boolean addPlugins) {		
 	    // set locale fix to US
 	    RapidMiner.splashMessage("Using US Local");
 	    Locale.setDefault(Locale.US);
@@ -204,9 +230,13 @@ public class RapidMiner {
 		String wekaMessage = addWekaOperators + "";
 		if ((wekaJar == null) || (!wekaJar.exists())) {
 			wekaMessage = "weka not found";
+            addWekaOperators = false;
 		}
+		
+		LogService.getGlobal().log("----------------------------------------------------", LogService.INIT);
 		LogService.getGlobal().log("Initialization Settings", LogService.INIT);
 		LogService.getGlobal().log("----------------------------------------------------", LogService.INIT);
+		LogService.getGlobal().log("Default system encoding for IO: " + Tools.getDefaultEncoding(), LogService.INIT);
 		LogService.getGlobal().log("Load " + (operatorsXMLStream == null ? "core" : "specific") + " operators...", LogService.INIT);
 	    LogService.getGlobal().log("Load Weka operators: " + wekaMessage, LogService.INIT);
 		LogService.getGlobal().log("Load JDBC drivers from lib directory: " + searchJDBCInLibDir, LogService.INIT);
@@ -215,8 +245,8 @@ public class RapidMiner {
 	    LogService.getGlobal().log("Load plugins from '" + (pluginDir == null ? ParameterService.getPluginDir() : pluginDir) + "'", LogService.INIT);
 	    LogService.getGlobal().log("----------------------------------------------------", LogService.INIT);
 	    
-	    RapidMiner.splashMessage("Initialising Operators");
-		ParameterService.init(operatorsXMLStream, addWekaOperators);
+	    RapidMiner.splashMessage("Initializing Operators");
+		ParameterService.init(operatorsXMLStream, additionalXMLStream, addWekaOperators);
 		
 	    RapidMiner.splashMessage("Loading JDBC Drivers");
 	    DatabaseService.init(searchJDBCInLibDir, searchJDBCInClasspath);
@@ -231,6 +261,16 @@ public class RapidMiner {
 		
 		RapidMiner.splashMessage("Define XML Serialization Alias Pairs");
 		OperatorService.defineXMLAliasPairs();
+		
+		// generate encryption key if necessary
+		if (!CipherTools.isKeyAvailable()) {
+			RapidMiner.splashMessage("Generate Encryption Key");
+			try {
+				KeyGeneratorTool.createAndStoreKey();
+			} catch (KeyGenerationException e) {
+				LogService.getGlobal().logError("Cannot generate encryption key: " + e.getMessage());
+			}
+		}
 	}
 
 	/**
@@ -241,13 +281,12 @@ public class RapidMiner {
 	 * @param searchJDBCInLibDir indicates if JDBC drivers from the directory RAPID_MINER_HOME/lib/jdbc should be loaded
 	 * @param searchJDBCInClasspath indicates if JDBC drivers from the classpath libraries should be loaded
 	 * @param addPlugins indicates if the plugins should be loaded 
-	 * @throws IOException if something goes wrong during initialization
 	 */
 	public static void init(InputStream operatorsXMLStream, 
 			                boolean addWekaOperators, 
 			                boolean searchJDBCInLibDir, 
 			                boolean searchJDBCInClasspath, 
-			                boolean addPlugins) throws IOException {
+			                boolean addPlugins) {
 		init(operatorsXMLStream, null, addWekaOperators, searchJDBCInLibDir, searchJDBCInClasspath, addPlugins);
 	}
 
@@ -258,9 +297,8 @@ public class RapidMiner {
 	 * @param searchJDBCInLibDir indicates if JDBC drivers from the directory RAPID_MINER_HOME/lib/jdbc should be loaded
 	 * @param searchJDBCInClasspath indicates if JDBC drivers from the classpath libraries should be loaded
 	 * @param addPlugins indicates if the plugins should be loaded
-	 * @throws IOException if something goes wrong during initialization
 	 */
-	public static void init(boolean addWekaOperators, boolean searchJDBCInLibDir, boolean searchJDBCInClasspath, boolean addPlugins) throws IOException {
+	public static void init(boolean addWekaOperators, boolean searchJDBCInLibDir, boolean searchJDBCInClasspath, boolean addPlugins) {
 		init(null, addWekaOperators, searchJDBCInLibDir, searchJDBCInClasspath, addPlugins);
 	}
 
@@ -281,16 +319,8 @@ public class RapidMiner {
 	 * <li>rapidminer.init.jdbc.classpath</li>
 	 * <li>rapidminer.init.plugins</li>
 	 * </ul>
-	 * 
-	 * @throws IOException if something goes wrong during initialization
 	 */
-	public static void init() throws IOException {
-		InputStream operatorStream = null;
-		String operatorsXML = System.getProperty(PROPERTY_RAPIDMINER_INIT_OPERATORS);
-		if (operatorsXML != null) {
-			operatorStream = new FileInputStream(operatorsXML);
-		}
-		
+	public static void init() {		
 		File pluginDir = null;
 		String pluginDirString = System.getProperty(PROPERTY_RAPIDMINER_INIT_PLUGINS_LOCATION);
 		if (pluginDirString != null)
@@ -308,10 +338,24 @@ public class RapidMiner {
 	    String loadPluginsString = System.getProperty(PROPERTY_RAPIDMINER_INIT_PLUGINS);
 	    boolean loadPlugins = Tools.booleanValue(loadPluginsString, true);
 	    
-		init(operatorStream, pluginDir, loadWeka, loadJDBCDir, loadJDBCClasspath, loadPlugins);
-		
-		if (operatorStream != null)
-			operatorStream.close();
+		InputStream operatorStream = null;
+		try {
+			String operatorsXML = System.getProperty(PROPERTY_RAPIDMINER_INIT_OPERATORS);
+			if (operatorsXML != null) {
+				operatorStream = new FileInputStream(operatorsXML);
+			}
+			init(operatorStream, pluginDir, loadWeka, loadJDBCDir, loadJDBCClasspath, loadPlugins);
+		} catch (IOException e) {
+			
+		} finally {
+			if (operatorStream != null) {
+				try {
+					operatorStream.close();
+				} catch (IOException e) {
+					
+				}
+			}
+		}
 	}
 
 	/** Cleans up the object visualizers available for this process and clears the 
@@ -327,19 +371,23 @@ public class RapidMiner {
 	}
 
 	public static SplashScreen showSplash() {
+		URL url = Tools.getResource("rapidminer_logo.png");
+		Image logo = null;
 		try {
-			URL url = Tools.getResource("rapidminer_logo.png");
-			Image logo = null;
 			if (url != null) {
 				logo = ImageIO.read(url);
 			}
-			RapidMiner.splashScreen = new SplashScreen("RapidMiner", getVersion(), logo);
-			RapidMiner.splashScreen.showSplashScreen();
-			return RapidMiner.splashScreen;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
+		return showSplash(logo);
+	}
+	
+	public static SplashScreen showSplash(Image productLogo) {
+		RapidMiner.splashScreen = new SplashScreen(getVersion(), productLogo);
+		RapidMiner.splashScreen.showSplashScreen();
+		return RapidMiner.splashScreen;
 	}
 
 	public static void hideSplash() {
@@ -352,6 +400,13 @@ public class RapidMiner {
 		}
 	}
 
+	public static Frame getSplashScreenFrame() {
+		if (RapidMiner.splashScreen != null)
+			return RapidMiner.splashScreen.getSplashScreenFrame();
+		else
+			return null;
+	}
+	
 	public static void setInputHandler(InputHandler inputHandler) {
 		RapidMiner.inputHandler = inputHandler;
 	}
@@ -385,7 +440,11 @@ public class RapidMiner {
 	}
 
 	public static void quit(int errorcode) {
-		Runtime.getRuntime().runFinalization();
-		System.exit(errorcode);
+		try {
+			Runtime.getRuntime().runFinalization();
+		} catch (Exception e) {
+			System.out.println("ERROR during SHUTDOWN: " + e.getMessage());
+		}
+		System.exit(errorcode);	
 	}
 }

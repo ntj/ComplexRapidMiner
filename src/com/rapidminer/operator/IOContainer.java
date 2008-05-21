@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator;
 
@@ -43,7 +41,7 @@ import com.rapidminer.tools.Tools;
  * @see com.rapidminer.operator.IOObject
  * 
  * @author Simon Fischer, Ingo Mierswa
- * @version $Id: IOContainer.java,v 1.2 2007/06/01 16:04:54 ingomierswa Exp $
+ * @version $Id: IOContainer.java,v 1.6 2008/05/18 13:26:32 ingomierswa Exp $
  */
 public class IOContainer implements Serializable {
 
@@ -82,7 +80,7 @@ public class IOContainer implements Serializable {
 	 * Creates a new IOContainer containing the contents of the Collection which
 	 * must contain only IOObjects.
 	 */
-	public IOContainer(Collection<IOObject> objectCollection) {
+	public IOContainer(Collection<? extends IOObject> objectCollection) {
 		ioObjects = new ArrayList<IOObject>(objectCollection.size());
 		ioObjects.addAll(objectCollection);
 	}
@@ -91,7 +89,7 @@ public class IOContainer implements Serializable {
         this(new IOObject[] { singleObject });
     }
     
-	public IOContainer(IOObject[] objectArray) {
+	public IOContainer(IOObject... objectArray) {
 		ioObjects = new ArrayList<IOObject>(objectArray.length);
 		for (int i = 0; i < objectArray.length; i++)
 			ioObjects.add(objectArray[i]);
@@ -177,7 +175,7 @@ public class IOContainer implements Serializable {
 	@SuppressWarnings("unchecked")
 	private <T extends IOObject> T getInput(Class<T> cls, int nr, boolean remove) throws MissingIOObjectException {
 		int n = 0;
-		Iterator<IOObject> i = ioObjects.listIterator();
+		Iterator<IOObject> i = ioObjects.iterator();
 		while (i.hasNext()) {
 			IOObject object = i.next();
 			if ((object != null) && (cls.isAssignableFrom(object.getClass()))) {
@@ -249,5 +247,10 @@ public class IOContainer implements Serializable {
 			clones.add((i.next()).copy());
 		}
 		return new IOContainer(clones);
+	}
+
+	/** Removes all Objects from this IOContainer. */
+	public void removeAll() {
+		ioObjects.clear();		
 	}
 }

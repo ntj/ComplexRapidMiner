@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.properties;
 
@@ -70,7 +68,7 @@ import com.rapidminer.tools.LogService;
  * formatting and as a factory for CellEditors.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: PropertyTable.java,v 1.3 2007/06/04 12:52:21 ingomierswa Exp $
+ * @version $Id: PropertyTable.java,v 1.9 2008/05/09 19:22:46 ingomierswa Exp $
  */
 public abstract class PropertyTable extends ExtendedJTable {
 
@@ -143,20 +141,18 @@ public abstract class PropertyTable extends ExtendedJTable {
 	public DefaultTableModel getDefaultModel() {
 		return model;
 	}
-
-	protected void updateEditorsAndRenderers() {
-		valueEditors.clear();
-		keyEditors.clear();
-        toolTips.clear();
-		int numberOfRows = getModel().getRowCount();
+	
+	protected static void updateEditorsAndRenderers(PropertyTable propertyTable) {
+		propertyTable.valueEditors.clear();
+		propertyTable.keyEditors.clear();
+		propertyTable.toolTips.clear();
+		int numberOfRows = propertyTable.getModel().getRowCount();
 		for (int i = 0; i < numberOfRows; i++) {
-			ParameterType type = getParameterType(i);
-			valueEditors.add(createPropertyValueCellEditor(type, getOperator(i)));
-			PropertyKeyCellEditor keyEditor = createPropertyKeyCellEditor(type, getOperator(i));
-			if (keyEditor instanceof ParameterValueKeyCellEditor) {
-				((ParameterValueKeyCellEditor)keyEditor).setParameterChangeListener(changeListener, i);
-			}
-			keyEditors.add(keyEditor);
+			ParameterType type = propertyTable.getParameterType(i);
+			propertyTable.valueEditors.add(createPropertyValueCellEditor(type, propertyTable.getOperator(i)));
+			PropertyKeyCellEditor keyEditor = createPropertyKeyCellEditor(propertyTable, type, propertyTable.getOperator(i), propertyTable.changeListener);
+			propertyTable.keyEditors.add(keyEditor);
+			
             StringBuffer toolTip = new StringBuffer(type.getDescription());
             if ((!(type instanceof ParameterTypeCategory)) && (!(type instanceof ParameterTypeStringCategory))) {
                 String range = type.getRange();
@@ -166,7 +162,19 @@ public abstract class PropertyTable extends ExtendedJTable {
                     toolTip.append(")");
                 }
             }
-            toolTips.add(SwingTools.transformToolTipText(toolTip.toString()));
+            propertyTable.toolTips.add(SwingTools.transformToolTipText(toolTip.toString()));
+		}
+	}
+	
+	public int getNumberOfKeyEditors() {
+		return this.keyEditors.size();
+	}
+	
+	protected PropertyKeyCellEditor getKeyEditor(int index) {
+		if (keyEditors.size() == 0) {
+			return null;
+		} else {
+			return keyEditors.get(index);
 		}
 	}
 	
@@ -197,7 +205,11 @@ public abstract class PropertyTable extends ExtendedJTable {
 				return editor;
 			}
 		} else {
-            return keyEditors.get(row);
+			if (keyEditors.size() == 0) {
+				return null;
+			} else {
+				return keyEditors.get(row);
+			}
 		}
 	}
     
@@ -205,7 +217,7 @@ public abstract class PropertyTable extends ExtendedJTable {
         if ((row >= 0) && (row < toolTips.size()))
             return toolTips.get(row);
         else
-            return "";
+            return null;
     }
     
     /** This method ensures that the correct tool tip for the current table cell is delivered. */
@@ -284,7 +296,7 @@ public abstract class PropertyTable extends ExtendedJTable {
         }
 	}
 	
-    private static PropertyKeyCellEditor createPropertyKeyCellEditor(ParameterType type, Operator operator) {        
+    private static PropertyKeyCellEditor createPropertyKeyCellEditor(PropertyTable table, ParameterType type, Operator operator, PropertyTableParameterChangeListener changeListener) {        
         Class<? extends PropertyKeyCellEditor> clazz = knownKeyEditors.get(type.getClass());
         Class usedClass = type.getClass();
         if (clazz == null) {
@@ -300,7 +312,10 @@ public abstract class PropertyTable extends ExtendedJTable {
             try {
                 Constructor<? extends PropertyKeyCellEditor> constructor = clazz.getConstructor(new Class[] { usedClass });
                 PropertyKeyCellEditor editor = constructor.newInstance(new Object[] { type });
-                editor.setOperator(operator);
+    			if (editor instanceof ParameterValueKeyCellEditor) {
+    				((ParameterValueKeyCellEditor)editor).setParameterChangeListener(changeListener);
+    			}
+                editor.setOperator(operator, table);
                 return editor;
             } catch (InstantiationException e) {
                 LogService.getGlobal().log("Cannot construct property editor: " + e, LogService.ERROR);
@@ -317,12 +332,12 @@ public abstract class PropertyTable extends ExtendedJTable {
             }
             // no proper editor found --> return default editor
             PropertyKeyCellEditor editor = new DefaultPropertyKeyRenderer(type);
-            editor.setOperator(operator);
+            editor.setOperator(operator, table);
             return editor;
         } else {
             // no proper editor found --> return default editor
         	PropertyKeyCellEditor editor = new DefaultPropertyKeyRenderer(type);
-            editor.setOperator(operator);
+            editor.setOperator(operator, table);
             return editor;
         }
     }

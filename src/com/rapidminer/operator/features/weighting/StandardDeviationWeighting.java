@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.weighting;
 
@@ -30,8 +28,6 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Statistics;
-import com.rapidminer.operator.IOObject;
-import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.parameter.ParameterType;
@@ -48,11 +44,11 @@ import com.rapidminer.parameter.ParameterTypeCategory;
  * @version $Id: StandardDeviationWeighting.java,v 1.8 2006/03/27 13:22:00
  *          ingomierswa Exp $
  */
-public class StandardDeviationWeighting extends Operator {
-
+public class StandardDeviationWeighting extends AbstractWeighting {
 
 	/** The parameter name for &quot;Indicates if the standard deviation should be divided by the minimum, maximum, or average of the attribute.&quot; */
 	public static final String PARAMETER_NORMALIZE = "normalize";
+	
 	private static final String[] NORMALIZATIONS = { "none", "average", "minimum", "maximum" };
 
 	private static final int NONE = 0;
@@ -67,8 +63,7 @@ public class StandardDeviationWeighting extends Operator {
 		super(description);
 	}
 
-	public IOObject[] apply() throws OperatorException {
-		ExampleSet exampleSet = getInput(ExampleSet.class);
+	public AttributeWeights calculateWeights(ExampleSet exampleSet) throws OperatorException {		
 		exampleSet.recalculateAllAttributeStatistics();
 
 		int normalization = getParameterAsInt(PARAMETER_NORMALIZE);
@@ -95,20 +90,9 @@ public class StandardDeviationWeighting extends Operator {
 			weights.setWeight(attribute.getName(), data);
 		}
 
-		// normalize
-		weights.normalize();
-		
-		return new IOObject[] { exampleSet, weights };
+		return weights;
 	}
-
-	public Class[] getInputClasses() {
-		return new Class[] { ExampleSet.class };
-	}
-
-	public Class[] getOutputClasses() {
-	    return new Class[] { ExampleSet.class, AttributeWeights.class };
-	}
-
+	
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 		ParameterType type = new ParameterTypeCategory(PARAMETER_NORMALIZE, "Indicates if the standard deviation should be divided by the minimum, maximum, or average of the attribute.", NORMALIZATIONS, 0);

@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.weighting;
 
@@ -55,11 +53,13 @@ import com.rapidminer.tools.math.optimization.ec.pso.PSOOptimization;
  * approach.
  * 
  * @author Ingo Mierswa
- * @version $Id: PSOWeighting.java,v 1.3 2007/06/15 16:58:37 ingomierswa Exp $
+ * @version $Id: PSOWeighting.java,v 1.7 2008/05/09 19:23:22 ingomierswa Exp $
  */
 public class PSOWeighting extends OperatorChain {
 
-
+	/** The parameter name for &quot;Activates the normalization of all weights.&quot; */
+	public static final String PARAMETER_NORMALIZE_WEIGHTS = "normalize_weights";
+	
 	/** The parameter name for &quot;Number of individuals per generation.&quot; */
 	public static final String PARAMETER_POPULATION_SIZE = "population_size";
 
@@ -162,7 +162,9 @@ public class PSOWeighting extends OperatorChain {
 		}
 
 		// normalize
-		weights.normalize();
+		if (getParameterAsBoolean(PARAMETER_NORMALIZE_WEIGHTS)) {
+			weights.normalize();
+		}
 		
 		return new IOObject[] { result, weights, optimization.getBestPerformanceEver() };
 	}
@@ -197,7 +199,7 @@ public class PSOWeighting extends OperatorChain {
 	}
     
 	public InnerOperatorCondition getInnerOperatorCondition() {
-		return new LastInnerOperatorCondition(new Class[] { PerformanceVector.class });
+		return new LastInnerOperatorCondition(new Class[] { ExampleSet.class }, new Class[] { PerformanceVector.class });
 	}
 
 	public Class[] getOutputClasses() {
@@ -223,6 +225,7 @@ public class PSOWeighting extends OperatorChain {
 
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
+		types.add(new ParameterTypeBoolean(PARAMETER_NORMALIZE_WEIGHTS, "Activates the normalization of all weights.", false));
 		ParameterType type = new ParameterTypeInt(PARAMETER_POPULATION_SIZE, "Number of individuals per generation.", 1, Integer.MAX_VALUE, 5);
 		type.setExpert(false);
 		types.add(type);

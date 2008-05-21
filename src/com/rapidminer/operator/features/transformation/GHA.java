@@ -1,31 +1,30 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.transformation;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
@@ -41,6 +40,7 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.tools.RandomGenerator;
+import com.rapidminer.tools.math.matrix.CovarianceMatrix;
 
 import Jama.Matrix;
 
@@ -54,10 +54,9 @@ import Jama.Matrix;
  * can transform the features.
  * 
  * @author Daniel Hakenjos, Ingo Mierswa
- * @version $Id: GHA.java,v 1.4 2007/07/13 22:52:14 ingomierswa Exp $
+ * @version $Id: GHA.java,v 1.7 2008/05/09 19:22:52 ingomierswa Exp $
  */
 public class GHA extends Operator {
-
 
 	/** The parameter name for &quot;Number of components to compute. If '-1' nr of attributes is taken.'&quot; */
 	public static final String PARAMETER_NUMBER_OF_COMPONENTS = "number_of_components";
@@ -70,20 +69,7 @@ public class GHA extends Operator {
 
 	/** The parameter name for &quot;The local random seed for this operator, uses global random number generator if -1.&quot; */
 	public static final String PARAMETER_LOCAL_RANDOM_SEED = "local_random_seed";
-	private double learningRate;
-
-	private int numberOfComponents;
-
-	private int numberOfIterations;
-
-	private double[] means;
-
-	private double[][] data;
-
-	private Matrix W;
-
-    private RandomGenerator random;
-    
+ 
     
 	public GHA(OperatorDescription description) {
 		super(description);
@@ -91,11 +77,11 @@ public class GHA extends Operator {
 
 	public IOObject[] apply() throws OperatorException {
 		ExampleSet exampleSet = getInput(ExampleSet.class);
-        this.random = RandomGenerator.getRandomGenerator(getParameterAsInt(PARAMETER_LOCAL_RANDOM_SEED));
+        Random random = RandomGenerator.getRandomGenerator(getParameterAsInt(PARAMETER_LOCAL_RANDOM_SEED));
 		exampleSet.recalculateAllAttributeStatistics();
 
-		// 1) check wether all attributes are numerical
-		means = new double[exampleSet.getAttributes().size()];
+		// 1) check whether all attributes are numerical
+		double[] means = new double[exampleSet.getAttributes().size()];
 		int a = 0;
 		for (Attribute attribute : exampleSet.getAttributes()) {
 			if (attribute.isNominal()) {
@@ -105,10 +91,9 @@ public class GHA extends Operator {
 			a++;
 		}
 
+		// 2) create data and subtract the mean
 		log("Initialising the weight matrix...");
-        
-		// 2) create data and substract the mean
-		data = new double[exampleSet.size()][exampleSet.getAttributes().size()];
+		double[][] data = new double[exampleSet.size()][exampleSet.getAttributes().size()];
 
 		Iterator<Example> reader = exampleSet.iterator();
 		Example example;
@@ -123,11 +108,11 @@ public class GHA extends Operator {
 		}
 
 		// init
-		learningRate = getParameterAsDouble(PARAMETER_LEARNING_RATE);
-		numberOfComponents = getParameterAsInt(PARAMETER_NUMBER_OF_COMPONENTS);
+		double learningRate = getParameterAsDouble(PARAMETER_LEARNING_RATE);
+		int numberOfComponents = getParameterAsInt(PARAMETER_NUMBER_OF_COMPONENTS);
 		if (numberOfComponents < 0)
 			numberOfComponents = exampleSet.getAttributes().size();
-		numberOfIterations = getParameterAsInt(PARAMETER_NUMBER_OF_ITERATIONS);
+		int numberOfIterations = getParameterAsInt(PARAMETER_NUMBER_OF_ITERATIONS);
 
         double[][] randomMatrix = new double[numberOfComponents][exampleSet.getAttributes().size()];
         for (int i = 0; i < randomMatrix.length; i++) {
@@ -135,11 +120,11 @@ public class GHA extends Operator {
                 randomMatrix[i][j] = random.nextDouble();
             }            
         }
-        W = new Matrix(randomMatrix);
+        Matrix W = new Matrix(randomMatrix);
 		W.timesEquals(0.1d);
 
 		log("Training with learning rate: " + learningRate);
-		train();
+		train(data, W, numberOfIterations, learningRate, random);
 
 		log("Creating the model...");
 		// compute eigenvalues
@@ -147,24 +132,7 @@ public class GHA extends Operator {
 		// --> multiply with eigenvector
 		// --> calculate eigenvalue
 
-		double[][] covarianceMatrixEntries = new double[exampleSet.getAttributes().size()][exampleSet.getAttributes().size()];
-
-		// fill the covariancematrix
-		double covariance;
-		for (int i = 0; i < exampleSet.getAttributes().size(); i++) {
-			for (int j = 0; j < exampleSet.getAttributes().size(); j++) {
-				covariance = getCovariance(i, j);
-				if (i != j) {
-					covarianceMatrixEntries[i][j] = covariance;
-					covarianceMatrixEntries[j][i] = covariance;
-				} else {
-					covarianceMatrixEntries[i][j] = covariance;
-				}
-				checkForStop();
-			}
-		}
-
-		Matrix covarianceMatrix = new Matrix(covarianceMatrixEntries);
+		Matrix covarianceMatrix = CovarianceMatrix.getCovarianceMatrix(exampleSet);
 		Matrix tmp = W.times(covarianceMatrix);
 
 		double[][] weights = W.getArray();
@@ -191,16 +159,7 @@ public class GHA extends Operator {
 		return new IOObject[] { exampleSet, model };
 	}
 
-	private double getCovariance(int dim1, int dim2) {
-		double cov = 0.0d;
-		for (int sample = 0; sample < data.length; sample++) {
-			cov += data[sample][dim1] * data[sample][dim2];
-		}
-		cov = cov / (data.length - 1);
-		return cov;
-	}
-
-	private void train() throws OperatorException {
+	private void train(double[][] data, Matrix W, int numberOfIterations, double learningRate, Random random) throws OperatorException {
 		int sample;
 		Matrix x;
 		Matrix y;

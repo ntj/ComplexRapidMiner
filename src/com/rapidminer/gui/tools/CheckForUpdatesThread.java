@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools;
 
@@ -79,16 +77,23 @@ public class CheckForUpdatesThread extends Thread {
                 LogService.getGlobal().log("Cannot create update target url: " + e.getMessage(), LogService.ERROR);
             }
             if (url != null) {
+                BufferedReader in = null;
             	try {
-            		BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+            		in = new BufferedReader(new InputStreamReader(url.openStream()));
             		String remoteVersion = in.readLine();
             		if ((remoteVersion != null) && (remoteVersion.length() > 0) && (Character.isDigit(remoteVersion.charAt(0)))) {
             			remoteVersions.add(remoteVersion);
             		}
-            		in.close();
             	} catch (IOException e) {
                     LogService.getGlobal().log("Not able to check for updates. Maybe no internet connection.", LogService.WARNING);
-            	}
+            	} finally {
+                    try {
+                        if (in != null)
+                            in.close();
+                    } catch (IOException e) {
+                        throw new Error(e); // should not occur
+                    }
+                }
             }
 		}
         
@@ -118,38 +123,7 @@ public class CheckForUpdatesThread extends Thread {
 	}
 	
 	private VersionNumber getVersionNumber(String versionString) {
-		int majorVersion = 0;
-		int minorVersion = 0;
-		int patchLevel   = 0;
-		boolean beta     = false;
-		int betaNumber   = 0;
-		
-		String version = versionString.toLowerCase().trim();
-		int betaIndex = version.indexOf("beta");
-		if (betaIndex >= 0) { // beta
-			String[] numbers = version.substring(0, betaIndex).split("\\.");
-			if (numbers.length > 0)
-				majorVersion = Integer.parseInt(numbers[0]);
-			if (numbers.length > 1)
-				minorVersion = Integer.parseInt(numbers[1]);
-			if (numbers.length > 2)
-				patchLevel = Integer.parseInt(numbers[2]);
-			beta = true;
-			String betaNumberString = version.substring(betaIndex + "beta".length());
-			if (betaNumberString.length() > 0) {
-				betaNumber = Integer.parseInt(betaNumberString);
-			}
-		} else { // no beta
-			String[] numbers = version.split("\\.");
-			if (numbers.length > 0)
-				majorVersion = Integer.parseInt(numbers[0]);
-			if (numbers.length > 1)
-				minorVersion = Integer.parseInt(numbers[1]);
-			if (numbers.length > 2)
-				patchLevel = Integer.parseInt(numbers[2]);
-		}
-		
-		return new VersionNumber(majorVersion, minorVersion, patchLevel, beta, betaNumber);
+		return new VersionNumber(versionString);
 	}
 	
 	private boolean isNewer(VersionNumber remoteVersion, VersionNumber newestVersion) {

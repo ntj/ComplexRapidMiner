@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.validation;
 
@@ -56,13 +54,13 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
  * operator chain containing a model applier and a performance evaluator.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: ValidationChain.java,v 1.3 2007/06/24 17:20:41 ingomierswa Exp $
+ * @version $Id: ValidationChain.java,v 1.9 2008/05/09 19:22:54 ingomierswa Exp $
  */
 public abstract class ValidationChain extends OperatorChain {
 
-
 	/** The parameter name for &quot;Indicates if a model of the complete data set should be additionally build after estimation.&quot; */
 	public static final String PARAMETER_CREATE_COMPLETE_MODEL = "create_complete_model";
+	
 	private PerformanceCriterion lastPerformance;
 
 	private IOContainer learnResult;
@@ -150,7 +148,7 @@ public abstract class ValidationChain extends OperatorChain {
 	 * Returns the first encapsulated inner operator (or operator chain), i.e.
 	 * the learning operator (chain).
 	 */
-	private Operator getLearner() {
+	protected Operator getLearner() {
 		return getOperator(0);
 	}
 
@@ -172,7 +170,7 @@ public abstract class ValidationChain extends OperatorChain {
 		IOObject[] estimation = estimatePerformance(eSet);
 		IOObject[] result = estimation;
 		if (getParameterAsBoolean(PARAMETER_CREATE_COMPLETE_MODEL)) {
-			Model model = (getLearner().apply(new IOContainer(new IOObject[] { eSet })).get(Model.class));
+			Model model = learn(eSet).get(Model.class);
 			result = new IOObject[estimation.length + 1];
 			System.arraycopy(estimation, 0, result, 0, estimation.length);
 			result[result.length - 1] = model;
@@ -194,7 +192,7 @@ public abstract class ValidationChain extends OperatorChain {
 	 * The same applies for the confidence attributes in case of classification
 	 * learning.
 	 */
-	protected IOContainer evaluate(ExampleSet testSet) throws OperatorException {
+	protected IOContainer evaluate(ExampleSet testSet, IOContainer learnResult) throws OperatorException {
 		if (learnResult == null) {
 			throw new RuntimeException("Wrong use of ValidationChain.evaluate(ExampleSet): " + "No preceding invocation of learn(ExampleSet)!");
 		}
@@ -207,6 +205,23 @@ public abstract class ValidationChain extends OperatorChain {
 		if ((predictedAfter != null) && ((predictedBefore == null) || (predictedBefore.getTableIndex() != predictedAfter.getTableIndex()))) {
 			PredictionModel.removePredictedLabel(testSet);
 		}
+		return result;
+	}
+	
+	/**
+	 * Applies the applier and evaluator (= second encapsulated inner operator).
+	 * In order to reuse possibly created predicted label attributes, we do the
+	 * following: We compare the predicted label of <code>testSet</code>
+	 * before and after applying the inner operator. If it changed, the
+	 * predicted label is removed again. No outer operator could ever see it.
+	 * The same applies for the confidence attributes in case of classification
+	 * learning.
+	 */
+	protected IOContainer evaluate(ExampleSet testSet) throws OperatorException {
+		if (learnResult == null) {
+			throw new RuntimeException("Wrong use of ValidationChain.evaluate(ExampleSet): " + "No preceding invocation of learn(ExampleSet)!");
+		}
+		IOContainer result = evaluate(testSet, learnResult);
 		learnResult = null;
 		return result;
 	}

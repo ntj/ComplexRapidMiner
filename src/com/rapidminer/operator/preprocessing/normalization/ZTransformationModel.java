@@ -1,110 +1,78 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.preprocessing.normalization;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 
 import com.rapidminer.example.Attribute;
+import com.rapidminer.example.AttributeRole;
+import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
-import com.rapidminer.operator.AbstractModel;
+import com.rapidminer.example.SimpleAttributes;
+import com.rapidminer.example.table.ViewAttribute;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.preprocessing.PreprocessingModel;
+import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.Tupel;
 
 
 /** This model performs a z-Transformation on the given example set. 
  * 
  *  @author Ingo Mierswa
- *  @version $Id: ZTransformationModel.java,v 1.2 2007/07/13 22:52:14 ingomierswa Exp $
+ *  @version $Id: ZTransformationModel.java,v 1.7 2008/05/09 19:23:19 ingomierswa Exp $
  */
-public class ZTransformationModel extends AbstractModel {
+public class ZTransformationModel extends PreprocessingModel {
 
 	private static final long serialVersionUID = 7739929307307501706L;
 
-	/**
-     * This helper class stores the information about the mean and variance
-     * for an attribute.
-     */
-    private static class MeanVariance implements Serializable {
-
-		private static final long serialVersionUID = -5414956194248271071L;
-
-		/** The mean value. */
-        double mean = 0.0d;
-
-        /** The variance value. */
-        double variance = 1.0d;
-
-        /** Creates a new MeanVariance helper object. */
-        public MeanVariance(double mean, double variance) {
-            this.mean = mean;
-            this.variance = variance;
-        }
-    }
+	private HashMap<String, Tupel<Double, Double>> attributeMeanVarianceMap;
     
-	/**
-	 * This map contains all information about the mean and variance values
-	 * for all attributes. Maps attribute names to MeanVariance objects.
-	 */
-	private Map<String, MeanVariance> meanVarianceMap = new HashMap<String, MeanVariance>();
-
-
-    
-	public ZTransformationModel(ExampleSet exampleSet) {
+	public ZTransformationModel(ExampleSet exampleSet, HashMap<String, Tupel<Double, Double>> attributeMeanVarianceMap) {
 		super(exampleSet);
-	}
-
-	/**
-	 * Adds the mean and variance information for an attribute with the
-	 * given name.
-	 */
-	public void addMeanVariance(String name, double mean, double variance) {
-		meanVarianceMap.put(name, new MeanVariance(mean, variance));
+		this.attributeMeanVarianceMap = attributeMeanVarianceMap;
 	}
 
 	/** Performs the transformation. */
-	public void apply(ExampleSet exampleSet) throws OperatorException {
-		Iterator<Example> r = exampleSet.iterator();
-		while (r.hasNext()) {
-			Example example = r.next();
-			Iterator i = meanVarianceMap.keySet().iterator();
-			while (i.hasNext()) {
-				String name = (String) i.next();
-				MeanVariance mv = meanVarianceMap.get(name);
-				Attribute attribute = exampleSet.getAttributes().get(name);
-				if (mv.variance <= 0) {
-					example.setValue(attribute, 0);
-				} else {
-					double newValue = (example.getValue(attribute) - mv.mean) / (Math.sqrt(mv.variance));
-					example.setValue(attribute, newValue);
+	public ExampleSet applyOnData(ExampleSet exampleSet) throws OperatorException {
+		Attributes attributes = exampleSet.getAttributes();
+		for (Example example: exampleSet) {
+			for (Attribute attribute: attributes) {
+				if (attributeMeanVarianceMap.containsKey(attribute.getName())) {
+					Tupel<Double, Double> meanVarianceTupel = attributeMeanVarianceMap.get(attribute.getName());
+					if (meanVarianceTupel.getSecond().doubleValue() <= 0) {
+						example.setValue(attribute, 0);
+					} else {
+						double newValue = (example.getValue(attribute) - meanVarianceTupel.getFirst().doubleValue()) / (Math.sqrt(meanVarianceTupel.getSecond().doubleValue()));
+						example.setValue(attribute, newValue);
+					}
+					
 				}
 			}
 		}
+        return exampleSet;
 	}
 
 	/**
@@ -118,19 +86,48 @@ public class ZTransformationModel extends AbstractModel {
 	/** Returns a string representation of this model. */
 	public String toString() {
 		StringBuffer result = new StringBuffer();
-		result.append("Normalize " + meanVarianceMap.size() + " attributes to mean 0 and variance 1." + Tools.getLineSeparator() + "Using");
-		Iterator i = meanVarianceMap.keySet().iterator();
+		result.append("Normalize " + attributeMeanVarianceMap.size() + " attributes to mean 0 and variance 1." + Tools.getLineSeparator() + "Using");
 		int counter = 0;
-		while (i.hasNext()) {
+		for(String name: attributeMeanVarianceMap.keySet()) {
 			if (counter > 4) {
-				result.append(Tools.getLineSeparator() + "... " + (meanVarianceMap.size() - 5) + " more attributes ...");
+				result.append(Tools.getLineSeparator() + "... " + (attributeMeanVarianceMap.size() - 5) + " more attributes ...");
 				break;
 			}
-			String name = (String) i.next();
-			MeanVariance mv = meanVarianceMap.get(name);
-			result.append(Tools.getLineSeparator() + name + " --> mean: " + mv.mean + ", variance: " + mv.variance);
+			Tupel<Double, Double> meanVariance = attributeMeanVarianceMap.get(name);
+			result.append(Tools.getLineSeparator() + name + " --> mean: " + meanVariance.getFirst().doubleValue() + ", variance: " + meanVariance.getSecond().doubleValue());
 			counter++;
 		}
 		return result.toString();
+	}
+
+	public Attributes getTargetAttributes(ExampleSet viewParent) {
+		SimpleAttributes attributes = new SimpleAttributes();
+		// add special attributes to new attributes
+		Iterator<AttributeRole> roleIterator = viewParent.getAttributes().allAttributeRoles();
+		while (roleIterator.hasNext()) {
+			AttributeRole role = roleIterator.next();
+			if (role.isSpecial()) {
+				attributes.add(role);
+			}
+		}
+		// add regular attributes
+		for (Attribute attribute: viewParent.getAttributes()) {
+			if (attribute.isNominal() || !attributeMeanVarianceMap.containsKey(attribute.getName())) {
+				attributes.addRegular(attribute);
+			} else {
+				// giving new attributes old name: connection to rangesMap
+				attributes.addRegular(new ViewAttribute(this, attribute, attribute.getName(), Ontology.NUMERICAL, null));
+			}
+		}
+		return attributes;
+	}
+
+	public double getValue(Attribute targetAttribute, double value) {
+		Tupel<Double, Double> meanVarianceTupel = attributeMeanVarianceMap.get(targetAttribute.getName());
+		if (meanVarianceTupel.getSecond().doubleValue() <= 0) {
+			return(0);
+		} else {
+			 return(value - meanVarianceTupel.getFirst().doubleValue()) / (Math.sqrt(meanVarianceTupel.getSecond().doubleValue()));
+		}
 	}
 }

@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.meta;
 
@@ -63,7 +61,7 @@ import com.rapidminer.tools.math.RunVector;
  * </ul>
  * 
  * @author Martin Scholz
- * @version $Id: BayBoostStream.java,v 1.4 2007/07/13 22:52:12 ingomierswa Exp $
+ * @version $Id: BayBoostStream.java,v 1.10 2008/05/09 19:22:48 ingomierswa Exp $
  */
 public class BayBoostStream extends AbstractMetaLearner {
 
@@ -95,7 +93,10 @@ public class BayBoostStream extends AbstractMetaLearner {
 		/**
 		 * Since the condition cannot be altered after creation we can just
 		 * return the condition object itself.
+		 * 
+		 * @deprecated Conditions should not be able to be changed dynamically and hence there is no need for a copy
 		 */
+		@Deprecated
 		public Condition duplicate() {
 			return this;
 		}
@@ -262,12 +263,12 @@ public class BayBoostStream extends AbstractMetaLearner {
 			// phase), evaluate and store result
 			if (ensembleExtBatch != null) {
 				// apply extended batch model first:
-				ensembleExtBatch.apply(trainingSet);
+				trainingSet = (ConditionedExampleSet)ensembleExtBatch.apply(trainingSet);
 				this.performance = evaluatePredictions(trainingSet); // unweighted
 																		// performance;
 
 				// then apply new batch model:
-				ensembleNewBatch.apply(trainingSet);
+				trainingSet = (ConditionedExampleSet) ensembleNewBatch.apply(trainingSet);
 				double newBatchPerformance = evaluatePredictions(trainingSet);
 
 				// heuristic: use extended batch model for predicting
@@ -277,30 +278,21 @@ public class BayBoostStream extends AbstractMetaLearner {
 				else
 					estPerf = new EstimatedPerformance("accuracy", newBatchPerformance, trainingSet.size(), false);
 
-				System.out.print("Estimated acc for < new batch: " + newBatchPerformance + " > - < extended batch: " + this.performance + " > ==> ");
-				final double[] ensembleWeights;
+				//final double[] ensembleWeights;
 
 				// continue with the better model:
 				if (newBatchPerformance > this.performance) {
-					System.out.println("Starting new batch");
 					this.performance = newBatchPerformance;
 					firstOpenBatch = Math.max(1, this.currentIteration - 1);
-					ensembleWeights = ensembleNewBatch.getModelWeights();
+					//ensembleWeights = ensembleNewBatch.getModelWeights();
 				} else {
 					modelInfo.clear();
 					modelInfo.addAll(modelInfo2);
-					System.out.println("Extending batch. Last model used batches " + firstOpenBatch + " to " + (currentIteration - 1));
-					ensembleWeights = ensembleExtBatch.getModelWeights();
+					//ensembleWeights = ensembleExtBatch.getModelWeights();
 				}
-
-				System.out.print("[Weights of ensemble models:");
-				for (int i = 0; i < ensembleWeights.length; i++) {
-					System.out.print(" [" + i + ": " + ensembleWeights[i] + "]");
-				}
-				System.out.println("]");
 
 			} else if (ensembleNewBatch != null) {
-				ensembleNewBatch.apply(trainingSet);
+				trainingSet = (ConditionedExampleSet) ensembleNewBatch.apply(trainingSet);
 				this.performance = evaluatePredictions(trainingSet);
 				firstOpenBatch = Math.max(1, this.currentIteration - 1);
 				estPerf = new EstimatedPerformance("accuracy", this.performance, trainingSet.size(), false);
@@ -344,7 +336,8 @@ public class BayBoostStream extends AbstractMetaLearner {
 							holdOutExamples.add(example);
 						}
 					}
-					trainingSet.updateCondition();
+					// TODO: create new example set
+					//trainingSet.updateCondition();
 				}
 
 				// model 1: train one more base classifier
@@ -354,7 +347,7 @@ public class BayBoostStream extends AbstractMetaLearner {
 					// exceptions.
 					// Anyway, learning does not make sense, otherwise.
 					if (!this.trainAdditionalModel(trainingSet, modelInfo)) {
-						System.out.println("Model for new single batch discarded!");
+						//System.out.println("Model for new single batch discarded!");
 					}
 				}
 				ensembleNewBatch = new BayBoostModel(exampleSet, modelInfo, classPriors);
@@ -380,7 +373,6 @@ public class BayBoostStream extends AbstractMetaLearner {
 					if (success) {
 						ensembleExtBatch = new BayBoostModel(exampleSet, modelInfo2, classPriors);
 					} else {
-						System.out.println("Model for extended batch discarded!");
 						ensembleExtBatch = null;
 						estimateFavoursExtBatch = false;
 					}
@@ -391,10 +383,11 @@ public class BayBoostStream extends AbstractMetaLearner {
 					while (hoEit.hasNext()) {
 						((Example) hoEit.next()).setValue(streamControlAttribute, this.currentIteration);
 					}
-					trainingSet.updateCondition();
+					// TODO: create new example set
+					//trainingSet.updateCondition();
 
 					if (ensembleExtBatch != null) {
-						ensembleNewBatch.apply(trainingSet);
+						trainingSet = (ConditionedExampleSet) ensembleNewBatch.apply(trainingSet);
 						hoEit = holdOutExamples.iterator();
 						int errors = 0;
 						while (hoEit.hasNext()) {
@@ -404,7 +397,7 @@ public class BayBoostStream extends AbstractMetaLearner {
 						}
 						double newBatchErr = ((double) errors) / holdOutExamples.size();
 
-						ensembleExtBatch.apply(trainingSet);
+						trainingSet = (ConditionedExampleSet) ensembleExtBatch.apply(trainingSet);
 						hoEit = holdOutExamples.iterator();
 						errors = 0;
 						while (hoEit.hasNext()) {
@@ -413,8 +406,6 @@ public class BayBoostStream extends AbstractMetaLearner {
 								errors++;
 						}
 						double extBatchErr = ((double) errors) / holdOutExamples.size();
-
-						System.out.println("[Hold out estimates: <newBatch: " + (1 - newBatchErr) + "> - <extBatch: " + (1 - extBatchErr) + ">]");
 
 						estimateFavoursExtBatch = (extBatchErr <= newBatchErr);
 
@@ -445,11 +436,11 @@ public class BayBoostStream extends AbstractMetaLearner {
 			Model model = ensemble.getModel(i);
 			ContingencyMatrix cm = ensemble.getContingencyMatrix(i);
 			modelInfo.add(new BayBoostBaseModelInfo(model, cm));
-			model.apply(exampleSet);
+			exampleSet = model.apply(exampleSet);
 			WeightedPerformanceMeasures.reweightExamples(exampleSet, cm, false);
 		}
 		Model latestModel = ensemble.getModel(modelNum - 1);
-		latestModel.apply(exampleSet);
+		exampleSet = latestModel.apply(exampleSet);
 
 		// quite ugly:
 		double[] weights = new double[holdOutSet.size()];
@@ -531,7 +522,6 @@ public class BayBoostStream extends AbstractMetaLearner {
 	private Model trainBaseModel(ExampleSet exampleSet) throws OperatorException {
 		Model model = applyInnerLearner(exampleSet);
 		createOrReplacePredictedLabelFor(exampleSet, model);
-		model.apply(exampleSet);
 		return model;
 	}
 
@@ -610,7 +600,8 @@ public class BayBoostStream extends AbstractMetaLearner {
 	 */
 	private boolean trainAdditionalModel(ExampleSet trainingSet, Vector<BayBoostBaseModelInfo> modelInfo) throws OperatorException {
 		Model model = this.trainBaseModel(trainingSet);
-
+		trainingSet = model.apply(trainingSet);
+		
 		// get the weighted performance value of the example set with
 		// respect to the new model
 		WeightedPerformanceMeasures wp = new WeightedPerformanceMeasures(trainingSet);
@@ -650,7 +641,7 @@ public class BayBoostStream extends AbstractMetaLearner {
 			// double[][] oldBiasMatrix = (double[][]) consideredModelInfo[1];
 
 			BayBoostStream.createOrReplacePredictedLabelFor(exampleSet, consideredModel);
-			consideredModel.apply(exampleSet);
+			exampleSet = consideredModel.apply(exampleSet);
 			if (exampleSet.getAttributes().getPredictedLabel().isNominal() == false) {
 				// Only the case of nominal base classifiers is supported!
 				throw new UserError(this, 101, new Object[] { exampleSet.getAttributes().getLabel(), "BayBoostStream base learners" });

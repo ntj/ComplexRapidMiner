@@ -24,87 +24,93 @@ import com.rapidminer.operator.similarity.attributebased.uncertain.SimpleProbabi
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
+import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeFile;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.UndefinedParameterError;
 
-public abstract class AbstractPDFSampler extends Operator{
+public abstract class AbstractPDFSampler extends Operator {
 
 	protected static final String SAMPLE_STRATEGY = "Sampling Strategy";
 	protected static final int MONTE_CARLO = 1;
 	protected static final int SIMPLE = 0;
 	protected static final int PDF = 2;
 	protected static final int INVERTED_PDF = 3;
-	protected static final String[] SAMPLING_METHODS = new String[]{"Simple","Monte Carlo","PDF","Inverted PDF"};
+	protected static final String[] SAMPLING_METHODS = new String[] { "Simple",
+			"Monte Carlo", "PDF", "Inverted PDF" };
+	protected static final String[] SAMPLE_DISTRIBUTION = new String[] {
+			"One ExampleSet", "Round Robin Distribution", "Random Distribution" };
 	protected static final String SAMPLE_FREQUENCY = "Sampling Frequncy";
 	protected static final String GLOBAL_UNCERTAINTY = "Global Uncertainty";
 	protected static final String ADD_ORIGINAL_POINT = "Add original measurement";
 	protected static final String ABSOLUTE_ERROR = "Absolute error";
+	protected static final String SPLIT_TO_NEW_EXAMPLE_SETS = "Splitt";
 
-	
 	public AbstractPDFSampler(OperatorDescription description) {
 		super(description);
-		
 	}
 
 	@Override
 	public IOObject[] apply() throws OperatorException {
-		SimpleExampleSet es = (SimpleExampleSet)getInput(ExampleSet.class);
+		SimpleExampleSet es = (SimpleExampleSet) getInput(ExampleSet.class);
 		List<Attribute> listAtt = new LinkedList<Attribute>();
-		//create list 
+		// create list
 		Iterator<Attribute> iAt = es.getAttributes().iterator();
-		while(iAt.hasNext()){
+		while (iAt.hasNext()) {
 			Attribute a = iAt.next();
 			listAtt.add(a);
 		}
-		
-		
+
 		MemoryExampleTable newMT = new MemoryExampleTable(listAtt);
 		AbstractSampleStrategy st = getSamplingStrategy();
-		//copy to data to a new instance of the example set
+		// copy to data to a new instance of the example set
 		st.setSampleRate(getParameterAsInt(SAMPLE_FREQUENCY));
-		
-		
-		
-		for(Example e : es){
+
+		for (Example e : es) {
 			st.setValue(getValues(e));
 			Double[][] newExamples = st.getSamples();
-			
-			if(newExamples.length>0){
-				Attribute[] attributeArray = es.getExampleTable().getAttributes();
+			if (newExamples.length > 0) {
+				Attribute[] attributeArray = es.getExampleTable()
+						.getAttributes();
 				DataRow dr = es.getExampleTable().getDataRow(0);
 				int dataManagement = 0;
 				if (dr instanceof DoubleArrayDataRow) {
 					dataManagement = DataRowFactory.TYPE_DOUBLE_ARRAY;
 				}
-		
-				DataRowFactory dataRowFactory = new DataRowFactory(dataManagement);
-				for(int i = 0;i< newExamples.length ; i++){
-					DataRow dataRow = dataRowFactory.create(newExamples[i], attributeArray);
-					if(getParameterAsBoolean(ADD_ORIGINAL_POINT)){
+				DataRowFactory dataRowFactory = new DataRowFactory(
+						dataManagement);
+				for (int i = 0; i < newExamples.length; i++) {
+
+					DataRow dataRow = dataRowFactory.create(newExamples[i],
+							attributeArray);
+					if (getParameterAsBoolean(ADD_ORIGINAL_POINT)) {
 						newMT.addDataRow(dataRow);
 					}
-					
 				}
 				newMT.addDataRow(dr);
 			}
 		}
-		return new IOObject[]{new SimpleExampleSet(newMT)};
-		
+		return new IOObject[] { new SimpleExampleSet(newMT) };
 	}
-	
-	protected abstract AbstractProbabilityDensityFunction getPDF() throws UndefinedParameterError;
-	
-	private AbstractSampleStrategy getSamplingStrategy(){
+
+	protected abstract AbstractProbabilityDensityFunction getPDF()
+			throws UndefinedParameterError;
+
+	private AbstractSampleStrategy getSamplingStrategy() {
 		try {
 			AbstractSampleStrategy st = null;
-			switch(getParameterAsInt(SAMPLE_STRATEGY)){
-				case MONTE_CARLO:{st =  new MonteCarloSampling(); break;}
-				case SIMPLE:{st =  new SimpleSampling();break;}
+			switch (getParameterAsInt(SAMPLE_STRATEGY)) {
+			case MONTE_CARLO: {
+				st = new MonteCarloSampling();
+				break;
+			}
+			case SIMPLE: {
+				st = new SimpleSampling();
+				break;
+			}
 			default:
 			}
-			
-			
+
 			st.setPdf(this.getPDF());
 			return st;
 		} catch (UndefinedParameterError e) {
@@ -137,26 +143,37 @@ public abstract class AbstractPDFSampler extends Operator{
 			values[index++] = e.getValue(attribute);
 		return values;
 	}
-	
+
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		ParameterType type = new ParameterTypeCategory(SAMPLE_STRATEGY, "Specifies the sampling method",SAMPLING_METHODS,1);
+		ParameterType type = new ParameterTypeCategory(SAMPLE_STRATEGY,
+				"Specifies the sampling method", SAMPLING_METHODS, 1);
 		type.setExpert(false);
 		types.add(type);
-		type = new ParameterTypeInt(SAMPLE_FREQUENCY, "Specifies the sampling frequency",0,10000000,1);
+		type = new ParameterTypeInt(SAMPLE_FREQUENCY,
+				"Specifies the sampling frequency", 0, 10000000, 1);
 		type.setExpert(false);
 		types.add(type);
-		type = new ParameterTypeInt(GLOBAL_UNCERTAINTY, "The uncertainty specification around the points",0,10000000,1);
+		type = new ParameterTypeDouble(GLOBAL_UNCERTAINTY,
+				"The uncertainty specification around the points", 0, 10000000,
+				1);
 		type.setExpert(false);
 		types.add(type);
-		type = new ParameterTypeBoolean(ADD_ORIGINAL_POINT, "Add the original Measurement in the sampled set",true);
+		type = new ParameterTypeBoolean(ADD_ORIGINAL_POINT,
+				"Add the original Measurement in the sampled set", true);
 		type.setExpert(false);
 		types.add(type);
-		
-		type = new ParameterTypeBoolean(ABSOLUTE_ERROR, "Specifies if the error is an absolute error",true);
+
+		type = new ParameterTypeBoolean(ABSOLUTE_ERROR,
+				"Specifies if the error is an absolute error", true);
 		type.setExpert(false);
 		types.add(type);
-		
+
+		type = new ParameterTypeCategory("Sample Distribution", "",
+				SAMPLE_DISTRIBUTION, 2);
+		type.setExpert(false);
+		types.add(type);
+
 		return types;
 	}
 }

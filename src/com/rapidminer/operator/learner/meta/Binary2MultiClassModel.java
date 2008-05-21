@@ -1,35 +1,39 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.meta;
 
+import java.awt.Component;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
+
+import javax.swing.JTabbedPane;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.gui.tools.ExtendedJTabbedPane;
+import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.Model;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.learner.PredictionModel;
@@ -43,7 +47,7 @@ import com.rapidminer.tools.Tools;
  * given data set with more than two classes.
  * 
  * @author Helge Homburg, Ingo Mierswa 
- * @version $Id: Binary2MultiClassModel.java,v 1.3 2007/07/13 22:52:11 ingomierswa Exp $
+ * @version $Id: Binary2MultiClassModel.java,v 1.7 2008/05/09 19:22:47 ingomierswa Exp $
  */
 public class Binary2MultiClassModel extends PredictionModel {
 
@@ -59,16 +63,19 @@ public class Binary2MultiClassModel extends PredictionModel {
 	
 	private Model[] models;
 	
+	private LinkedList<String> modelNames;
+	
 	private String[][] codeMatrix;
 	
 	private int classificationType;	
 		
-	public Binary2MultiClassModel(ExampleSet exampleSet, Model[] models, int classificationType) {
+	public Binary2MultiClassModel(ExampleSet exampleSet, Model[] models, int classificationType, LinkedList<String> modelNames) {
 		super(exampleSet);
 		this.models = models;		
-		this.classificationType = classificationType;		
+		this.classificationType = classificationType;
+		this.modelNames = modelNames;
 	}
-
+	
 	public Binary2MultiClassModel(ExampleSet exampleSet, Model[] models, int classificationType, String[][] codeMatrix) {
 		super(exampleSet);
 		this.models = models;		
@@ -84,6 +91,26 @@ public class Binary2MultiClassModel extends PredictionModel {
 	public Model getModel(int index) {
 		return models[index];
 	}	
+	
+	public Component getVisualizationComponent(IOContainer container) {
+		JTabbedPane tabPane = new ExtendedJTabbedPane();
+		
+		// determine the model labels (special names for 1vs1 and 1vsall, increasing numbers for ecoc models)
+		if (classificationType >= 2) {
+			int index = 1;
+			for (Model model : models) {
+				tabPane.add("Model " + index, model.getVisualizationComponent(container));
+				index++;
+			}			
+		} else { 
+			int index = 0;
+			for (Model model : models) {
+				tabPane.add(modelNames.get(index), model.getVisualizationComponent(container));
+				index++;
+			}			
+		}
+		return tabPane;
+	}
 	
 	/**
 	 * This method applies the models and evaluates the results of a multi class classification
@@ -115,7 +142,7 @@ public class Binary2MultiClassModel extends PredictionModel {
 		for (int k = 0; k < confidenceMatrix[0].length; k++) {
 			
 			Model model = getModel(k);			
-			model.apply(exampleSet);
+			exampleSet = model.apply(exampleSet);
 				
 			Iterator<Example> reader = exampleSet.iterator();
 			int counter = 0;
@@ -208,7 +235,7 @@ public class Binary2MultiClassModel extends PredictionModel {
 		for (int k = 0; k < confidenceMatrix[0].length; k++) {
 			
 			Model model = getModel(k);			
-			model.apply(exampleSet);
+			exampleSet = model.apply(exampleSet);
 			
 			Iterator<Example> reader = exampleSet.iterator();
 			int counter = 0;
@@ -261,7 +288,7 @@ public class Binary2MultiClassModel extends PredictionModel {
 	/**
 	 * Chooses the right evaluation procedure depending on classificationType.
 	 */
-	public void performPrediction(ExampleSet originalExampleSet, Attribute predictedLabel) throws OperatorException {	
+	public ExampleSet performPrediction(ExampleSet originalExampleSet, Attribute predictedLabel) throws OperatorException {	
 		
 		switch (classificationType) {
 		
@@ -288,11 +315,13 @@ public class Binary2MultiClassModel extends PredictionModel {
 			default: {			
 				throw new OperatorException("Unknown classification strategy selected");
 			}	
-		}		
+		}
+		
+		return originalExampleSet;
 	}
 	
 	public String toString() {
-		StringBuffer result = new StringBuffer(super.toString() + Tools.getLineSeparator());
+		StringBuffer result = new StringBuffer(super.toString() + Tools.getLineSeparators(2));
 		for (int i = 0; i < models.length; i++)
 			result.append((i > 0 ? Tools.getLineSeparator() : "") + models[i].toString());
 		return result.toString();

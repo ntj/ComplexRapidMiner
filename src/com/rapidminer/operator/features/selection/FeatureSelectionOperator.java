@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.selection;
 
@@ -122,7 +120,6 @@ import com.rapidminer.parameter.UndefinedParameterError;
  */
 public class FeatureSelectionOperator extends FeatureOperator {
 
-
 	/** The parameter name for &quot;Forward selection or backward elimination.&quot; */
 	public static final String PARAMETER_SELECTION_DIRECTION = "selection_direction";
 
@@ -134,6 +131,7 @@ public class FeatureSelectionOperator extends FeatureOperator {
 
 	/** The parameter name for &quot;Delivers the maximum amount of generations (-1: might use or deselect all features).&quot; */
 	public static final String PARAMETER_MAXIMUM_NUMBER_OF_GENERATIONS = "maximum_number_of_generations";
+	
 	public static final int FORWARD_SELECTION = 0;
 
 	public static final int BACKWARD_ELIMINATION = 1;
@@ -144,6 +142,7 @@ public class FeatureSelectionOperator extends FeatureOperator {
 
 	private int maxGenerations;
 
+	
 	public FeatureSelectionOperator(OperatorDescription description) {
 		super(description);
 	}
@@ -173,7 +172,6 @@ public class FeatureSelectionOperator extends FeatureOperator {
 		if (direction == FORWARD_SELECTION) {
 			AttributeWeightedExampleSet nes = new AttributeWeightedExampleSet((ExampleSet) es.clone());
 			nes.getAttributes().clearRegular();
-			
 			for (Attribute attribute : es.getAttributes()) {
 				AttributeWeightedExampleSet forwardES = (AttributeWeightedExampleSet) nes.clone();
 				forwardES.getAttributes().addRegular(attribute);

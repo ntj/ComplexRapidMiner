@@ -1,30 +1,32 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -73,7 +75,7 @@ import com.rapidminer.operator.performance.PerformanceCriterion;
  * operator factory.</p>
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: OperatorService.java,v 1.6 2007/07/15 19:04:34 ingomierswa Exp $
+ * @version $Id: OperatorService.java,v 1.10 2008/05/09 19:22:55 ingomierswa Exp $
  */
 public class OperatorService {
 
@@ -92,6 +94,10 @@ public class OperatorService {
 	
 	/** Registers all operators from a given XML input stream. */
 	public static void registerOperators(String name, InputStream operatorsXML, ClassLoader classLoader, boolean addWekaOperators) {
+		// create long descriptions map
+		Map<String, String> descriptionMap = loadDescriptionMap();
+		
+		// register operators
 		if (classLoader == null)
 			classLoader = OperatorService.class.getClassLoader();
 		LogService.getGlobal().log("Loading operators from '" + name + "'.", LogService.INIT);
@@ -146,7 +152,7 @@ public class OperatorService {
 			for (int i = 0; i < operatorTags.getLength(); i++) {
 				Element currentElement = (Element) operatorTags.item(i);
 				try {
-					registerOperator(currentElement, classLoader);
+					registerOperator(currentElement, classLoader, descriptionMap);
 				} catch (Throwable e) {
 					//e.printStackTrace();
 					Attr currentNameAttr = currentElement.getAttributeNode("name");
@@ -163,7 +169,7 @@ public class OperatorService {
 	 * Registers an operator description from an XML tag (operator description
 	 * file, mostly operators.xml).
 	 */
-	private static void registerOperator(Element operatorTag, ClassLoader classLoader) throws Exception {
+	private static void registerOperator(Element operatorTag, ClassLoader classLoader, Map<String, String> descriptionMap) throws Exception {
 		Attr nameAttr = operatorTag.getAttributeNode("name");
 		Attr classAttr = operatorTag.getAttributeNode("class");
 		if (nameAttr == null)
@@ -171,12 +177,17 @@ public class OperatorService {
 		if (classAttr == null)
 			throw new Exception("Missing class for <operator> tag");
 
-		registerOperator(classLoader, nameAttr.getValue(), classAttr.getValue(), operatorTag.getAttribute("description"), operatorTag.getAttribute("group"), operatorTag.getAttribute("icon"), operatorTag.getAttribute("deprecation"));
+		String name = nameAttr.getValue();
+		String shortDescription = operatorTag.getAttribute("description");
+		String longDescription = descriptionMap.get(name);
+		if (longDescription == null)
+			longDescription = shortDescription;
+		registerOperator(classLoader, nameAttr.getValue(), classAttr.getValue(), shortDescription, longDescription, operatorTag.getAttribute("group"), operatorTag.getAttribute("icon"), operatorTag.getAttribute("deprecation"));
 	}
 
 	/** Registers an operator description from the given meta data. */
-	private static void registerOperator(ClassLoader classLoader, String name, String clazz, String descr, String group, String icon, String deprecationInfo) throws Exception {
-		registerOperator(new OperatorDescription(classLoader, name, clazz, descr, group, icon, deprecationInfo));
+	private static void registerOperator(ClassLoader classLoader, String name, String clazz, String shortDescription, String longDescription, String group, String icon, String deprecationInfo) throws Exception {
+		registerOperator(new OperatorDescription(classLoader, name, clazz, shortDescription, longDescription, group, icon, deprecationInfo));
 	}
 
 	/**
@@ -215,6 +226,57 @@ public class OperatorService {
 		currentGroup.addOperatorDescription(description);
 	}
 
+	private static Map<String, String> loadDescriptionMap() {
+		URL descriptionUrl = Tools.getResource("long_documentation.txt");
+		Map<String, String> descriptionMap = new HashMap<String, String>();
+		if (descriptionUrl != null) {
+			BufferedReader in = null;
+			boolean beginNew = true;
+			try {
+				in = new BufferedReader(new InputStreamReader(descriptionUrl.openStream()));
+				String line = null;
+				String currentName = null;
+				StringBuffer currentDescription = null;
+				while ((line = in.readLine()) != null) {
+					if (line.trim().length() == 0)
+						continue;
+					if (beginNew) {
+						currentName = line;
+						currentDescription = new StringBuffer();
+						beginNew = false;
+					} else {
+						if (line.startsWith("#####")) {
+							if (currentName != null) {
+								descriptionMap.put(currentName, currentDescription.toString());
+								currentName = null;
+								currentDescription = null;
+								beginNew = true;
+							} else {
+								currentName = null;
+								currentDescription = null;
+								beginNew = true;
+							}
+						} else {
+							String transformed = Tools.removeAllLineSeparators(line);
+							currentDescription.append(transformed);
+						}
+					}
+				}
+			} catch (IOException e) {
+				LogService.getGlobal().logError("Cannot read long descriptions from resources.");
+			} finally {
+				if (in != null) {
+					try {
+						in.close();
+					} catch (IOException e) {
+						// do nothing
+					}
+				}
+			}
+		}
+		return descriptionMap;
+	}
+	
 	/** This method is only necessary since the operators deliver Class arrays (which
 	 *  cannot be instantiated with Generics) and can be removed after this was changed to 
 	 *  collections.
@@ -351,6 +413,14 @@ public class OperatorService {
 		return groupTree;
 	}
 
+	/** Reload all icons, e.g. after a look and feel change. */
+	public static void reloadIcons() {
+		for (String name : getOperatorNames()) {
+			OperatorDescription description = getOperatorDescription(name);
+			description.reloadIcon(null);
+		}
+	}
+	
 	// ================================================================================
 	// Operator Factory Methods
 	// ================================================================================

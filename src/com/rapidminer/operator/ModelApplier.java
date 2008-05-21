@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator;
 
@@ -28,10 +26,11 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.operator.preprocessing.PreprocessingOperator;
 import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeList;
 import com.rapidminer.parameter.ParameterTypeString;
-
 
 /**
  * This operator applies a {@link Model} to an {@link ExampleSet}. All
@@ -41,14 +40,18 @@ import com.rapidminer.parameter.ParameterTypeString;
  * a file by using a {@link com.rapidminer.operator.io.ModelLoader}.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: ModelApplier.java,v 1.2 2007/06/15 16:58:40 ingomierswa Exp $
+ * @version $Id: ModelApplier.java,v 1.9 2008/05/09 19:23:18 ingomierswa Exp $
  */
 public class ModelApplier extends Operator {
 
-
 	/** The parameter name for &quot;value&quot; */
 	public static final String PARAMETER_KEY = "key";
+	
+	/** The possible parameters used by the model during application time. */
 	public static final String PARAMETER_APPLICATION_PARAMETERS = "application_parameters";
+	
+	/** Indicates if preprocessing models should create a view instead of changing the data. */
+	private static final String PARAMETER_CREATE_VIEW = "create_view";
 	
 	public ModelApplier(OperatorDescription description) {
 		super(description);
@@ -69,16 +72,23 @@ public class ModelApplier extends Operator {
 			Object[] parameter = (Object[]) i.next();
 			model.setParameter((String) parameter[0], (String) parameter[1]);
 		}
-
+		
+		// handling PreprocessingModels: extra treatment for views
+		if (getParameterAsBoolean(PARAMETER_CREATE_VIEW)) {
+			model.setParameter(PreprocessingOperator.PARAMETER_CREATE_VIEW, true);
+		}
+		
 		log("Applying " + model.getClass().getName());
+        ExampleSet result = inputExampleSet;
 		try {
-			model.apply(inputExampleSet);
+			result = model.apply(inputExampleSet);
 		} catch (UserError e) {
 			if (e.getOperator() == null)
 				e.setOperator(this);
 			throw e;
 		}
-		return new IOObject[] { inputExampleSet };
+
+		return new IOObject[] { result };
 	}
 
 	/** Indicates that the consumption of Models can be user defined. */
@@ -101,6 +111,7 @@ public class ModelApplier extends Operator {
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 		types.add(new ParameterTypeList(PARAMETER_APPLICATION_PARAMETERS, "Model parameters for application (usually not needed).", new ParameterTypeString(PARAMETER_KEY, "value")));
+		types.add(new ParameterTypeBoolean(PARAMETER_CREATE_VIEW, "Indicates that preprocessing models should only create a new view on the data instead of actually changing the data itself.", false));
 		return types;
 	}
 }

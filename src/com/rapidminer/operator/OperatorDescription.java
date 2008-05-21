@@ -1,36 +1,30 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator;
 
-import java.awt.Image;
-import java.io.IOException;
-import java.net.URL;
+import javax.swing.ImageIcon;
 
-import javax.imageio.ImageIO;
-
-import com.rapidminer.tools.Tools;
+import com.rapidminer.gui.tools.SwingTools;
 
 
 /**
@@ -49,58 +43,58 @@ public final class OperatorDescription implements Comparable<OperatorDescription
 
 	private Class<?> clazz;
 
-	private String description;
+	private String shortDescription;
+	
+	private String longDescription;
 
 	private String group;
 
-	private Image icon = null;
-
+	private ImageIcon icon = null;
+	
 	private String iconPath;
 
 	private String deprecationInfo = null;
 
 	/** Creates a new operator description object. If the corresponding operator is not marked as deprecated the 
 	 *  deprecation info string should be null. If the icon string is null, the group icon will be used. */
-	public OperatorDescription(ClassLoader classLoader, String name, String className, String description, String group, String icon, String deprecationInfo) throws ClassNotFoundException {	
+	public OperatorDescription(ClassLoader classLoader, String name, String className, String shortDescription, String longDescription, String group, String iconName, String deprecationInfo) throws ClassNotFoundException {	
 		this.name = name;
 		this.clazz = Class.forName(className, true, classLoader);
-		this.description = description;
+		this.shortDescription = shortDescription;
+		this.longDescription = longDescription;
 		this.group = group;
 		this.deprecationInfo = deprecationInfo;
 		if ((this.deprecationInfo != null) && (this.deprecationInfo.trim().length() == 0))
 			this.deprecationInfo = null;
 		
-		URL url = null;
-        
-        // NOTE: resources must use '/' instead of File.separator!
-		if ((icon != null) && (icon.length() > 0)) {
-			url = Tools.getResource("icons/operators/24/" + icon + ".png");
-			this.iconPath = "/operators/24/" + icon + ".png";
-		} else {
-			// try group from most special to most general group
-			String groupIconName = group.toLowerCase();
-			url = Tools.getResource("icons/groups/24/" + groupIconName + ".png");
-			while ((url == null) && (groupIconName.length() > 0)) {
-				if (groupIconName.indexOf(".") >= 0) {
-					groupIconName = groupIconName.substring(0, groupIconName.lastIndexOf(".")).toLowerCase();
-					url = Tools.getResource("icons/groups/24/" + groupIconName + ".png");
-				} else {
-					groupIconName = "";
-				}
-			}
-			this.iconPath = "/groups/24/" + groupIconName + ".png";
-		}
-		if (url != null) {
-			try {
-				this.icon = ImageIO.read(url);
-			} catch (IOException e) {
-				this.iconPath = null;
-			}
-		} else {
-			this.iconPath = null;
-		}
+		reloadIcon(iconName);
 	}
 
+	public void reloadIcon(String iconName) {
+        // NOTE: resources must use '/' instead of File.separator!
+		if (this.iconPath == null) {
+			if ((iconName != null) && (iconName.length() > 0)) {
+				this.icon = SwingTools.createIcon("operators/24/" + iconName + ".png");
+				this.iconPath = "operators/24/" + iconName + ".png";
+			} else {
+				// try group from most special to most general group
+				String groupIconName = group.toLowerCase();
+				this.icon = SwingTools.createIcon("groups/24/" + groupIconName + ".png");
+				while ((this.icon == null) && (groupIconName.length() > 0)) {
+					if (groupIconName.indexOf(".") >= 0) {
+						groupIconName = groupIconName.substring(0, groupIconName.lastIndexOf(".")).toLowerCase();
+						this.icon = SwingTools.createIcon("groups/24/" + groupIconName + ".png");
+					} else {
+						groupIconName = "";
+					}
+				}
+				this.iconPath = "groups/24/" + groupIconName + ".png";
+			}
+		} else {
+			this.icon = SwingTools.createIcon(this.iconPath);
+		}
+	}
+	
 	public String getName() {
 		return name;
 	}
@@ -109,16 +103,20 @@ public final class OperatorDescription implements Comparable<OperatorDescription
 		return clazz;
 	}
 
-	public String getDescription() {
-		return description;
+	public String getShortDescription() {
+		return this.shortDescription;
+	}
+	
+	public String getLongDescriptionHTML() {
+		return this.longDescription;
 	}
 
 	public String getGroup() {
 		return group;
 	}
 
-	public Image getIcon() {
-		return icon;
+	public ImageIcon getIcon() {
+		return this.icon;
 	}
 
 	public String getIconPath() {
@@ -130,7 +128,7 @@ public final class OperatorDescription implements Comparable<OperatorDescription
 	}
 	
 	public String toString() {
-		return "operator '" + name + "' loaded from " + clazz + ", description: " + description + ", group: " + group + ", icon: " + iconPath;
+		return "operator '" + name + "' loaded from " + clazz + ", description: " + shortDescription + ", group: " + group + ", icon: " + iconPath;
 	}
 
 	public int compareTo(OperatorDescription d) {

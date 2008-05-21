@@ -17,9 +17,7 @@ public class PDFSampler extends AbstractPDFSampler {
 			throws UndefinedParameterError {
 
 		return new SimpleProbabilityDensityFunction(
-				getParameterAsInt(GLOBAL_UNCERTAINTY),
+				getParameterAsDouble(GLOBAL_UNCERTAINTY),
 				getParameterAsBoolean(ABSOLUTE_ERROR));
-
 	}
-
 }

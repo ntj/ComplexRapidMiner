@@ -1,32 +1,31 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools.jdbc;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -61,7 +60,7 @@ import com.rapidminer.tools.Tools;
  * terminator.</p>
  * 
  * @author Ingo Mierswa
- * @version $Id: DatabaseHandler.java,v 1.2 2007/05/28 21:23:34 ingomierswa Exp $
+ * @version $Id: DatabaseHandler.java,v 1.8 2008/05/09 19:23:22 ingomierswa Exp $
  */
 public class DatabaseHandler {
 
@@ -102,6 +101,11 @@ public class DatabaseHandler {
 		logging.log("Connecting to '" + databaseURL + "'.");
 		databaseHandler.connect(username, password, true);
 		return databaseHandler;
+	}
+	
+	/** Returns the JDBC properties associated with this handler. */
+	public JDBCProperties getProperties() {
+		return this.properties;
 	}
 	
 	/**
@@ -145,19 +149,31 @@ public class DatabaseHandler {
 	}
 	
 	/** Create a statement where result sets will have the properties 
-	 *  TYPE_SCROLL_INSENSITIVE and CONCUR_UPDATABLE. This means that the
-	 *  ResultSet is scrollable, but not updatable. It will not show changes to
-	 *  the database made by others after this ResultSet was obtained.
+	 *  TYPE_SCROLL_SENSITIVE and CONCUR_UPDATABLE. This means that the
+	 *  ResultSet is scrollable and also updatable. It will also directly show 
+	 *  all changes to the database made by others after this ResultSet was obtained.
 	 *  Will throw an {@link SQLException} if the handler is not connected. */
 	public Statement createStatement() throws SQLException {
 		if (connection == null) {
 			throw new SQLException("Could not create a statement for '" + databaseURL + "': not connected.");
 		}
-		return connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+		return connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+	}
+
+	/** Create a prepared statement where result sets will have the properties 
+	 *  TYPE_SCROLL_SENSITIVE and CONCUR_UPDATABLE. This means that the
+	 *  ResultSet is scrollable and also updatable. It will also directly show 
+	 *  all changes to the database made by others after this ResultSet was obtained.
+	 *  Will throw an {@link SQLException} if the handler is not connected. */
+	public PreparedStatement createPreparedStatement(String sqlString) throws SQLException {
+		if (connection == null) {
+			throw new SQLException("Could not create a prepared statement for '" + databaseURL + "': not connected.");
+		}
+		return connection.prepareStatement(sqlString, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
 	}
 	
     /**
-     * Makes all changes to the database permanent. Invoking this method explicitely is
+     * Makes all changes to the database permanent. Invoking this method explicit is
      * usually not necessary if the connection was created with AUTO_COMMIT set to true.
      */
     public void commit() throws SQLException {
@@ -193,10 +209,41 @@ public class DatabaseHandler {
     
 	/** Adds a column for the given attribute to the table with name tableName. */
 	public void addColumn(Attribute attribute, String tableName) throws SQLException {
-		Statement st = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
-		String query = "ALTER TABLE " + tableName + " ADD COLUMN " + getDatabaseName(attribute) + " " + (attribute.isNominal() ? (properties.getVarcharName() + "(256)") : properties.getRealName());
-		st.execute(query);
-        st.close();
+		// drop the column if necessary 
+		Statement statement = createStatement();
+		boolean exists = false;
+		try {
+            // check if column already exists (no exception and more than zero rows :-)
+			ResultSet existingResultSet = statement.executeQuery("SELECT " + properties.getIdentifierQuoteOpen() + attribute.getName() + properties.getIdentifierQuoteClose() + " FROM " + properties.getIdentifierQuoteOpen() + tableName + properties.getIdentifierQuoteClose() + " WHERE 0 = 1");
+            if (existingResultSet.getMetaData().getColumnCount() > 0)
+                exists = true;
+			existingResultSet.close();
+		} catch (SQLException e) {
+			// exception will be thrown if the column does not exist
+		}
+		statement.close();
+		
+        if (exists) {
+        	removeColumn(attribute, tableName);
+        }
+        
+        // create new column
+		Statement st = null;
+		try {
+			st = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
+			String query = 
+				"ALTER TABLE " + 
+				properties.getIdentifierQuoteOpen() + tableName + properties.getIdentifierQuoteClose() + 
+				" ADD COLUMN " + 
+				properties.getIdentifierQuoteOpen() + attribute.getName() + properties.getIdentifierQuoteClose() + 
+				" " + (attribute.isNominal() ? (properties.getVarcharName() + "(256)") : properties.getRealName());
+			st.execute(query);
+		} catch (SQLException e) {
+			throw e;
+		} finally {
+			if (st != null)
+				st.close();
+		}
 	}
 
 	/**
@@ -204,10 +251,21 @@ public class DatabaseHandler {
 	 * tableName.
 	 */
 	public void removeColumn(Attribute attribute, String tableName) throws SQLException {
-        Statement st = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
-		String query = "ALTER TABLE " + tableName + " DROP COLUMN " + getDatabaseName(attribute);
-		st.execute(query);
-        st.close();
+        Statement st = null;
+        try {
+        	st = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
+        	String query = 
+        		"ALTER TABLE " + 
+        		properties.getIdentifierQuoteOpen() + tableName + properties.getIdentifierQuoteClose() + 
+        		" DROP COLUMN " + 
+        		properties.getIdentifierQuoteOpen() + attribute.getName() + properties.getIdentifierQuoteClose();
+        	st.execute(query);
+        } catch (SQLException e) {
+        	throw e;
+        } finally {
+        	if (st != null)
+                st.close();
+        }
 	}
 
 	/** Creates a new table in this connection and fills it with the provided data. 
@@ -220,7 +278,7 @@ public class DatabaseHandler {
 		boolean exists = false;
 		try {
             // check if table already exists (no exception and more than zero columns :-)
-			ResultSet existingResultSet = statement.executeQuery("SELECT * FROM " + tableName + " WHERE 0 = 1");
+			ResultSet existingResultSet = statement.executeQuery("SELECT * FROM " + properties.getIdentifierQuoteOpen() + tableName + properties.getIdentifierQuoteClose() + " WHERE 0 = 1");
             if (existingResultSet.getMetaData().getColumnCount() > 0)
                 exists = true;
 			existingResultSet.close();
@@ -229,7 +287,7 @@ public class DatabaseHandler {
 		}
         if (exists) {
         	if (overwrite) {
-        		statement.executeUpdate("DROP TABLE " + tableName);
+        		statement.executeUpdate("DROP TABLE " + properties.getIdentifierQuoteOpen() + tableName + properties.getIdentifierQuoteClose());
         	} else {
         		throw new SQLException("Table with name '"+tableName+"' already exists and overwriting mode is not activated." + Tools.getLineSeparator() + 
         				               "Please change table name or activate overwriting mode.");
@@ -240,45 +298,58 @@ public class DatabaseHandler {
         exampleSet.recalculateAllAttributeStatistics(); // necessary for updating the possible nominal values
         String createTableString = getCreateTableString(exampleSet, tableName);
 		statement.executeUpdate(createTableString);
+        statement.close();
         
         // fill table
+		PreparedStatement insertStatement = getInsertIntoTableStatement(tableName, exampleSet.getAttributes().allSize());
 		for (Example example : exampleSet) {
-			String insertIntoTableString = 
-				getInsertIntoTableString(tableName, example, exampleSet.getAttributes().allAttributeRoles());
-			statement.executeUpdate(insertIntoTableString);
+			applyInsertIntoTable(insertStatement, example, exampleSet.getAttributes().allAttributeRoles());
 		}
-		
-		// close the statement
-		statement.close();		
+		insertStatement.close();		
 	}
-	
-	private String getInsertIntoTableString(String tableName, Example example, Iterator<AttributeRole> attributes) {
-		StringBuffer result = new StringBuffer("INSERT INTO " + tableName + " VALUES (");
-		boolean first = true;
-		while (attributes.hasNext()) {
-			if (!first)
+
+	private PreparedStatement getInsertIntoTableStatement(String tableName, int size) throws SQLException {
+		StringBuffer result = new StringBuffer("INSERT INTO " + properties.getIdentifierQuoteOpen() + tableName + properties.getIdentifierQuoteClose() + " VALUES (");
+		for (int i = 0; i < size; i++) {
+			if (i != 0)
 				result.append(", ");
-			first = false;
+			result.append("?");
+		}
+		result.append(")");
+		return createPreparedStatement(result.toString());
+	}
+
+	private void applyInsertIntoTable(PreparedStatement statement, Example example, Iterator<AttributeRole> attributes) throws SQLException {
+		int counter = 1;
+		while (attributes.hasNext()) {
 			Attribute attribute = attributes.next().getAttribute();
 			double value = example.getValue(attribute);
 			if (Double.isNaN(value)) {
-					result.append("NULL");
+				int sqlType = Types.VARCHAR;
+				if (!attribute.isNominal()) {
+					if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(attribute.getValueType(), Ontology.INTEGER)) {
+						sqlType = Types.INTEGER;
+					} else {
+						sqlType = Types.REAL;
+					}
+				}
+				statement.setNull(counter, sqlType);
 			} else {
 				if (attribute.isNominal()) {
-					result.append("'" + attribute.getMapping().mapIndex((int)value) + "'");
+					statement.setString(counter, attribute.getMapping().mapIndex((int)value));
 				} else {
-					result.append(example.getValue(attribute));
+					statement.setDouble(counter, value);
 				}
 			}
+			counter++;
 		}
-		result.append(")");
-		return result.toString();
+		statement.executeUpdate();
 	}
 	
 	private String getCreateTableString(ExampleSet exampleSet, String tableName) {
 		// define all attribute names and types
 		StringBuffer result = new StringBuffer();
-		result.append("CREATE TABLE " + tableName + "(");
+		result.append("CREATE TABLE " + properties.getIdentifierQuoteOpen() + tableName + properties.getIdentifierQuoteClose() + "(");
 		Iterator<AttributeRole> a = exampleSet.getAttributes().allAttributeRoles();
 		boolean first = true;
 		while (a.hasNext()) {
@@ -292,7 +363,7 @@ public class DatabaseHandler {
 		// set primary key
 		Attribute idAttribute = exampleSet.getAttributes().getId(); 
 		if (idAttribute != null) {
-			result.append(", PRIMARY KEY( " + getDatabaseName(idAttribute) + " )");
+			result.append(", PRIMARY KEY( " + properties.getIdentifierQuoteOpen() + idAttribute.getName() + properties.getIdentifierQuoteClose() + " )");
 		}
 		
 		result.append(")");
@@ -304,7 +375,7 @@ public class DatabaseHandler {
 	 */
 	private String getCreateAttributeString(AttributeRole attributeRole) {
 		Attribute attribute = attributeRole.getAttribute();
-		StringBuffer result = new StringBuffer(getDatabaseName(attribute) + " ");
+		StringBuffer result = new StringBuffer(properties.getIdentifierQuoteOpen() + attribute.getName() + properties.getIdentifierQuoteClose() + " ");
 		if (attribute.isNominal()) {
 			int varCharLength = 1; // at least length 1
 			for (String value : attribute.getMapping().getValues()) {
@@ -410,7 +481,7 @@ public class DatabaseHandler {
 		int numberOfColumns = metadata.getColumnCount();
 
 		for (int column = 1; column <= numberOfColumns; column++) {
-			String name = metadata.getColumnName(column);
+			String name = metadata.getColumnLabel(column);
 			Attribute attribute = AttributeFactory.createAttribute(name, getRapidMinerTypeIndex(metadata.getColumnType(column)));
 			attributes.add(attribute);
 		}
@@ -418,6 +489,10 @@ public class DatabaseHandler {
 		return attributes;
 	}
 
+	/** 
+	 * @deprecated Use the open and close quotes for identifiers from the properties instead 
+	 */
+	@Deprecated
 	public static String getDatabaseName(Attribute attribute) {
 		String name = attribute.getName();
 		//name = name.toUpperCase();
@@ -428,7 +503,7 @@ public class DatabaseHandler {
 		return name;
 	}
 
-    public Map<String, List<String>> getAllTableMetaData() throws SQLException {
+    public Map<String, List<ColumnIdentifier>> getAllTableMetaData() throws SQLException {
         if ((connection == null) || connection.isClosed()) {
             throw new SQLException("Could not retrieve all table names: no open connection to database '" + databaseURL + "' !");
         }
@@ -442,13 +517,13 @@ public class DatabaseHandler {
             tableNameList.add(tableName);
         }
         
-        Map<String, List<String>> result = new LinkedHashMap<String, List<String>>();
+        Map<String, List<ColumnIdentifier>> result = new LinkedHashMap<String, List<ColumnIdentifier>>();
         Iterator<String> i = tableNameList.iterator();
         while (i.hasNext()) {
             String tableName = i.next();
             try {
                 // test: will fail if user can not use this table
-                List<String> columnNames = getAllColumnNames(tableName);
+                List<ColumnIdentifier> columnNames = getAllColumnNames(tableName);
                 result.put(tableName, columnNames);
             } catch (SQLException e) {
             	// does nothing
@@ -457,29 +532,37 @@ public class DatabaseHandler {
         return result;
     }
     
-    private List<String> getAllColumnNames(String tableName) throws SQLException {
+    private List<ColumnIdentifier> getAllColumnNames(String tableName) throws SQLException {
         if (tableName == null) {
             throw new SQLException("Cannot read column names: table name must not be null!");
         }
 
-        Statement statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
-        ResultSet rs = statement.executeQuery("SELECT * FROM " + tableName);
-        List<String> result = new LinkedList<String>();
-
-        ResultSetMetaData metadata;
+        Statement statement = null;
         try {
-            metadata = rs.getMetaData();
-        } catch (NullPointerException npe) {
-            throw new SQLException("Could not create column name list: ResultSet object seems closed.");
-        }
+        	statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
+        	ResultSet rs = statement.executeQuery("SELECT * FROM " + properties.getIdentifierQuoteOpen() + tableName + properties.getIdentifierQuoteClose());
+        	List<ColumnIdentifier> result = new LinkedList<ColumnIdentifier>();
 
-        int numberOfColumns = metadata.getColumnCount();
+        	ResultSetMetaData metadata;
+        	try {
+        		metadata = rs.getMetaData();
+        	} catch (NullPointerException npe) {
+        		throw new SQLException("Could not create column name list: ResultSet object seems closed.");
+        	}
 
-        for (int column = 1; column <= numberOfColumns; column++) {
-            String name = metadata.getColumnName(column);
-            result.add(tableName + "." + name);
+        	int numberOfColumns = metadata.getColumnCount();
+
+        	for (int column = 1; column <= numberOfColumns; column++) {
+        		String name = metadata.getColumnLabel(column);
+        		result.add(new ColumnIdentifier(tableName, name));
+        	}
+        	
+            return result;
+        } catch (SQLException e) {
+        	throw e;
+        } finally {
+        	if (statement != null)
+                statement.close();
         }
-        statement.close();
-        return result;       
     }
 }

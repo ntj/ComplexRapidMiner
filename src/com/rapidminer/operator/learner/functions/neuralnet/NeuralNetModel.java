@@ -1,40 +1,32 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.functions.neuralnet;
 
-import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Vector;
 
-import javax.swing.ButtonGroup;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 
 import org.joone.engine.Layer;
@@ -47,6 +39,7 @@ import org.joone.net.NeuralNet;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.gui.JRadioSelectionPanel;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.OperatorException;
@@ -58,13 +51,15 @@ import com.rapidminer.tools.Tools;
  * This is the model for the neural net learner.
  * 
  * @author Ingo Mierswa
- * @version $Id: NeuralNetModel.java,v 1.3 2007/07/13 22:52:15 ingomierswa Exp $
+ * @version $Id: NeuralNetModel.java,v 1.9 2008/05/09 19:23:25 ingomierswa Exp $
  */
 public class NeuralNetModel extends PredictionModel {
-	
-	private static final long serialVersionUID = 2973355500655266534L;
+
+	private static final long serialVersionUID = 776221623930869372L;
 
 	private NeuralNet neuralNet;
+	
+	private String[] attributeNames;
 	
 	private int numberOfInputAttributes;
 	
@@ -74,13 +69,14 @@ public class NeuralNetModel extends PredictionModel {
 	
 	public NeuralNetModel(ExampleSet exampleSet, NeuralNet neuralNet, int numberOfInputAttributes, double minLabel, double maxLabel) {
 		super(exampleSet);
+		this.attributeNames = com.rapidminer.example.Tools.getRegularAttributeNames(exampleSet);
 		this.neuralNet = neuralNet;
 		this.numberOfInputAttributes = numberOfInputAttributes;
 		this.minLabel = minLabel;
 		this.maxLabel = maxLabel;
 	}
 	
-	public void performPrediction(ExampleSet exampleSet, Attribute predictedLabel) throws OperatorException {
+	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabel) throws OperatorException {
 		// remove input layer inputs
 		Layer input = this.neuralNet.getInputLayer();
 		input.removeAllInputs();
@@ -119,6 +115,8 @@ public class NeuralNetModel extends PredictionModel {
 			}
 			counter++;
 		}
+		
+		return exampleSet;
 	}
 
 	private double[] recall(NeuralNet net) {
@@ -154,60 +152,31 @@ public class NeuralNetModel extends PredictionModel {
 	}
 		
 	public Component getVisualizationComponent(final IOContainer ioContainer) {
-        final JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new BorderLayout());
-        
-        final JScrollPane graphView = new ExtendedJScrollPane(new NeuralNetVisualizer(this.neuralNet));
-        
-        final JRadioButton graphViewButton = new JRadioButton("Graph View", true);
-        graphViewButton.setToolTipText("Changes to a graphical view of this model.");
-        graphViewButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                if (graphViewButton.isSelected()) {
-                    mainPanel.remove(1);
-                    mainPanel.add(graphView, BorderLayout.CENTER);
-                    mainPanel.repaint();
-                }
-            }
-        });
-
-        final Component textView = super.getVisualizationComponent(ioContainer);
-        final JRadioButton textViewButton = new JRadioButton("Text View", true);
-        textViewButton.setToolTipText("Changes to a textual view of this model.");
-        textViewButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                if (textViewButton.isSelected()) {
-                    mainPanel.remove(1);
-                    mainPanel.add(textView, BorderLayout.CENTER);
-                    mainPanel.repaint();
-                }
-            }
-        });
-        
-        ButtonGroup group = new ButtonGroup();
-        group.add(textViewButton);
-        group.add(graphViewButton);
-        JPanel togglePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        togglePanel.add(textViewButton);
-        togglePanel.add(graphViewButton);
-
-        mainPanel.add(togglePanel, BorderLayout.NORTH);
-        mainPanel.add(graphView, BorderLayout.CENTER);
-        graphViewButton.setSelected(true);
+        JRadioSelectionPanel mainPanel = new JRadioSelectionPanel();
+        JScrollPane graphView = new ExtendedJScrollPane(new NeuralNetVisualizer(this.neuralNet, this.attributeNames));
+        Component textView = super.getVisualizationComponent(ioContainer);
+        mainPanel.addComponent("Graph View", graphView, "Changes to a graphical view of this model.");
+        mainPanel.addComponent("Text View", textView, "Changes to a textual description of this model.");
         
         return mainPanel;
 	}
 	
 	public String toString() {
-		StringBuffer result = new StringBuffer("NeuralNet" + Tools.getLineSeparator());
+		StringBuffer result = new StringBuffer();
 		Vector layers = this.neuralNet.getLayers();
 		Iterator i = layers.iterator();
 		int layerIndex = 0;
 		while (i.hasNext()) {
 			Layer layer = (Layer)i.next();
 			String nodeString = layer.getRows() == 1 ? "1 node" : layer.getRows() + " nodes";
-			result.append("Layer '" + layer.getLayerName() + "' (" + nodeString + ")" + Tools.getLineSeparator());
-			if (layerIndex > 0) {
+			String titleString = "Layer '" + layer.getLayerName() + "' (" + nodeString + ")";
+			result.append(titleString + Tools.getLineSeparator());
+			for (int t = 0; t < titleString.length(); t++)
+				result.append("-");
+			result.append(Tools.getLineSeparator());
+			if (layerIndex == 0) {
+				result.append(Arrays.asList(this.attributeNames).toString() + Tools.getLineSeparator());
+			} else {
 				result.append("Input Weights:" + Tools.getLineSeparator());
 				Vector inputs = layer.getAllInputs();
 				Iterator o = inputs.iterator();
@@ -231,6 +200,7 @@ public class NeuralNetModel extends PredictionModel {
 					}
 				}
 			}
+			result.append(Tools.getLineSeparator());
 			layerIndex++;
 		}
 		return result.toString();

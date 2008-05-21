@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.datatable;
 
@@ -33,6 +31,10 @@ import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.SplittedExampleSet;
+import com.rapidminer.example.table.AttributeFactory;
+import com.rapidminer.example.table.DoubleArrayDataRow;
+import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.tools.Ontology;
 
 
 /**
@@ -41,7 +43,7 @@ import com.rapidminer.example.set.SplittedExampleSet;
  * for adding new rows is not supported by this type of data tables.
  * 
  * @author Ingo Mierswa
- * @version $Id: DataTableExampleSetAdapter.java,v 1.2 2007/06/10 23:18:53 ingomierswa Exp $
+ * @version $Id: DataTableExampleSetAdapter.java,v 1.6 2008/05/09 19:23:16 ingomierswa Exp $
  */
 public class DataTableExampleSetAdapter extends AbstractDataTable {
 
@@ -69,8 +71,9 @@ public class DataTableExampleSetAdapter extends AbstractDataTable {
         Iterator<AttributeRole> s = exampleSet.getAttributes().specialAttributes();
         while (s.hasNext()) {
         	Attribute specialAttribute = s.next().getAttribute();
-        	if ((idAttribute == null) || (!idAttribute.equals(specialAttribute)))
+        	if ((idAttribute == null) || (!idAttribute.getName().equals(specialAttribute.getName()))) {
         		allAttributes.add(specialAttribute);
+        	}
         }
         
         this.numberOfRegularAttributes = exampleSet.getAttributes().size();
@@ -146,5 +149,37 @@ public class DataTableExampleSetAdapter extends AbstractDataTable {
     	double ratio = (double)newSize / (double)getNumberOfRows(); 
         this.exampleSet = new SplittedExampleSet(exampleSet, ratio, SplittedExampleSet.SHUFFLED_SAMPLING, -1);
         ((SplittedExampleSet)this.exampleSet).selectSingleSubset(0);
+    }
+    
+    public static ExampleSet createExampleSetFromDataTable(DataTable table) {
+    	List<Attribute> attributes = new ArrayList<Attribute>();
+    	
+    	for (int i = 0; i < table.getNumberOfColumns(); i++) {
+    		if (table.isNominal(i)) {
+    			Attribute attribute = AttributeFactory.createAttribute(table.getColumnName(i), Ontology.NOMINAL);
+    			attributes.add(attribute);
+    		} else {
+    			Attribute attribute = AttributeFactory.createAttribute(table.getColumnName(i), Ontology.REAL);
+    			attributes.add(attribute);    			
+    		}
+    	}
+    	
+    	MemoryExampleTable exampleTable = new MemoryExampleTable(attributes);
+    	
+    	for (int i = 0; i < table.getNumberOfRows(); i++) {
+    		DataTableRow row = table.getRow(i);
+    		double[] values = new double[attributes.size()];
+    		for (int a = 0; a < values.length; a++) {
+    			Attribute attribute = attributes.get(a);
+    			if (attribute.isNominal()) {
+    				values[a] = attribute.getMapping().mapString(table.getValueAsString(row, a));
+    			} else {
+    				values[a] = row.getValue(a);
+    			}
+    		}
+    		exampleTable.addDataRow(new DoubleArrayDataRow(values));
+    	}
+
+    	return exampleTable.createExampleSet();
     }
 }

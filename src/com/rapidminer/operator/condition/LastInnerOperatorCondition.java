@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.condition;
 
@@ -53,12 +51,15 @@ public class LastInnerOperatorCondition implements InnerOperatorCondition {
 	private Class[] mustDeliver;
 
 	private Class[] willGet;
+	
+	private boolean allowEmptyChains = false;
 
 	/**
 	 * Creates an inner operator condition. The first operator in the chain gets
 	 * the input of the operator chain. Each operator must be able to handle the
 	 * output of the predecessor. The last operator must provide all classes in
 	 * the given <code>mustDeliver</code> class array.
+	 * Empty chains are not allowed.
 	 */
 	public LastInnerOperatorCondition(Class[] mustDeliver) {
 		this(null, mustDeliver);
@@ -69,17 +70,29 @@ public class LastInnerOperatorCondition implements InnerOperatorCondition {
 	 * the input of the operator chain and additionally the given classes
 	 * <code>willGet</code>. Each operator must be able to handle the output
 	 * of the predecessor. The last operator must provide all classes in the
-	 * given <code>mustDeliver</code> class array.
+	 * given <code>mustDeliver</code> class array. Empty chains are not allowed.
 	 */
 	public LastInnerOperatorCondition(Class[] willGet, Class[] mustDeliver) {
+		this(willGet, mustDeliver, false);
+	}
+	
+	/**
+	 * Creates an inner operator condition. The first operator in the chain gets
+	 * the input of the operator chain and additionally the given classes
+	 * <code>willGet</code>. Each operator must be able to handle the output
+	 * of the predecessor. The last operator must provide all classes in the
+	 * given <code>mustDeliver</code> class array.
+	 */
+	public LastInnerOperatorCondition(Class[] willGet, Class[] mustDeliver, boolean allowEmptyChains) {
 		this.willGet = willGet;
 		this.mustDeliver = mustDeliver;
+		this.allowEmptyChains = allowEmptyChains;
 	}
 
 	/** */
 	public Class[] checkIO(OperatorChain chain, Class[] input) throws IllegalInputException, WrongNumberOfInnerOperatorsException {
-		if (chain.getNumberOfOperators() == 0) {
-			throw new WrongNumberOfInnerOperatorsException(chain, chain.getMinNumberOfInnerOperators(), chain.getMinNumberOfInnerOperators(), 0);
+		if ((!allowEmptyChains) && (chain.getNumberOfOperators() == 0)) {
+			throw new WrongNumberOfInnerOperatorsException(chain, chain.getMinNumberOfInnerOperators(), chain.getMaxNumberOfInnerOperators(), 0);
 		}
 
 		Class[] output = input;
@@ -103,13 +116,29 @@ public class LastInnerOperatorCondition implements InnerOperatorCondition {
 	}
 
 	public String toHTML() {
-		StringBuffer result = new StringBuffer("The inner operators must deliver [");
-		for (int i = 0; i < mustDeliver.length; i++) {
-			if (i != 0)
-				result.append(", ");
-			result.append(Tools.classNameWOPackage(mustDeliver[i]));
+		StringBuffer result = new StringBuffer("The inner operators ");
+		if (willGet != null) {
+			result.append("must be able to handle [");
+			for (int i = 0; i < willGet.length; i++) {
+				if (i != 0)
+					result.append(", ");
+				result.append(Tools.classNameWOPackage(willGet[i]));
+			}
+			result.append("]");
+			if (mustDeliver != null)
+				result.append(" and ");
+			else
+				result.append(".");
 		}
-		result.append("].");
+		if (mustDeliver != null) {
+			result.append("must deliver [");
+			for (int i = 0; i < mustDeliver.length; i++) {
+				if (i != 0)
+					result.append(", ");
+				result.append(Tools.classNameWOPackage(mustDeliver[i]));
+			}
+			result.append("].");
+		}
 		return result.toString();
 	}
 }

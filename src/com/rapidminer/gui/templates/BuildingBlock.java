@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.templates;
 
@@ -30,6 +28,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+
+import com.rapidminer.tools.LogService;
 
 /**
  * A building block consisting of a name, a short description, and the XML description 
@@ -42,7 +42,7 @@ import java.io.PrintWriter;
  * </pre>
  * 
  * @author Ingo Mierswa
- * @version $Id: BuildingBlock.java,v 1.1 2007/05/27 22:03:40 ingomierswa Exp $
+ * @version $Id: BuildingBlock.java,v 1.6 2008/05/09 19:22:52 ingomierswa Exp $
  */
 public class BuildingBlock implements Comparable<BuildingBlock> {
 
@@ -56,9 +56,38 @@ public class BuildingBlock implements Comparable<BuildingBlock> {
 	
 	private String iconPath;
 	
-	public BuildingBlock(File file) throws IOException {
-		this.buildingBlockFile = file;
-		BufferedReader in = new BufferedReader(new FileReader(buildingBlockFile));
+	public BuildingBlock(File file) throws InstantiationException {
+		BufferedReader in = null;
+		try {
+			in = new BufferedReader(new FileReader(file));
+			init(in);
+			this.buildingBlockFile = file;
+		} catch (IOException e) {
+			LogService.getGlobal().logError("Cannot read building block file: " + e.getMessage());
+			throw new InstantiationException("Cannot instantiate building block: " + e.getMessage());
+		} finally {
+			if (in != null) {
+				try {
+					in.close();
+				} catch (IOException e) {
+					LogService.getGlobal().logError("Cannot close stream to building block file: " + e.getMessage());
+				}
+			}
+		}
+	}
+
+	public BuildingBlock(BufferedReader in) throws IOException {
+		init(in);
+	}
+	
+	public BuildingBlock(String name, String description, String iconPath, String xmlDescription) {
+		this.name = name;
+		this.description = description;
+		this.iconPath = iconPath;
+		this.xmlDescription = xmlDescription;
+	}
+
+	private void init(BufferedReader in) throws IOException {
 		this.name = in.readLine();
 		this.description = in.readLine();
 		this.iconPath = in.readLine();
@@ -68,17 +97,9 @@ public class BuildingBlock implements Comparable<BuildingBlock> {
 		while ((line = in.readLine()) != null) {
 			result.append(line);
 		}
-		this.xmlDescription = result.toString();
-		in.close();
+		this.xmlDescription = result.toString();		
 	}
-
-	public BuildingBlock(String name, String description, String iconPath, String xmlDescription) {
-		this.name = name;
-		this.description = description;
-		this.iconPath = iconPath;
-		this.xmlDescription = xmlDescription;
-	}
-
+	
 	public File getFile() {
 		return buildingBlockFile;
 	}
@@ -100,12 +121,20 @@ public class BuildingBlock implements Comparable<BuildingBlock> {
 	}
 	
 	public void save(File file) throws IOException {
-		PrintWriter out = new PrintWriter(new FileWriter(file));
-		out.println(name);
-		out.println(description);
-		out.println(iconPath);
-		out.println(xmlDescription);
-		out.close();
+		PrintWriter out = null;
+		try {
+			out = new PrintWriter(new FileWriter(file));
+			out.println(name);
+			out.println(description);
+			out.println(iconPath);
+			out.println(xmlDescription);
+		} catch (IOException e) {
+			throw e;
+		} finally {
+			if (out != null) {
+				out.close();		
+			}
+		}
 	}
 	
 	public String toString() {

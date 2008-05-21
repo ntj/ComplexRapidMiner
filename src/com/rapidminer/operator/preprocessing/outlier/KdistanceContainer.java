@@ -1,32 +1,32 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.preprocessing.outlier;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+
+import com.rapidminer.tools.Tools;
 
 /**
  * <p>This class represents a container for objects within a given distance from another object.</p>
@@ -38,7 +38,7 @@ import java.util.ListIterator;
  * However, in very dense clusters the number can increase significantly.</p>
  * 
  * @author Stephan Deutsch, Ingo Mierswa
- * @version $Id: KdistanceContainer.java,v 1.1 2007/05/27 22:03:28 ingomierswa Exp $
+ * @version $Id: KdistanceContainer.java,v 1.4 2008/05/09 19:22:55 ingomierswa Exp $
  */
 public class KdistanceContainer {
 
@@ -151,7 +151,7 @@ public class KdistanceContainer {
 			this.setNumberOfObjects(this.listOfObjects.size());
 			return true;
 		} else { // in the other case (container is not empty)
-			if (this.getDistance() == dist) { // check if distance of container is equal to dist of added object
+			if (Tools.isEqual(this.getDistance(), dist)) { // check if distance of container is equal to dist of added object
 				this.listOfObjects.add(so); // if yes, then add it
 				this.setDistance(dist);
 				this.setNumberOfObjects(this.listOfObjects.size());

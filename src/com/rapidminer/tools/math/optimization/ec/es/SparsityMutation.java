@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools.math.optimization.ec.es;
 
@@ -35,20 +33,20 @@ import com.rapidminer.tools.RandomGenerator;
  * to min and a min value to a random value between min and max.
  * 
  * @author Ingo Mierswa
- * @version $Id: SparsityMutation.java,v 1.1 2007/05/27 22:03:33 ingomierswa Exp $
+ * @version $Id: SparsityMutation.java,v 1.5 2008/05/09 19:23:16 ingomierswa Exp $
  */
-public class SparsityMutation implements PopulationOperator {
+public class SparsityMutation implements Mutation {
 
 	private double prob;
 
 	private double[] min, max;
 
-    private int[] valueTypes;
+    private OptimizationValueType[] valueTypes;
     
     private RandomGenerator random;
     
     
-	public SparsityMutation(double prob, double[] min, double[] max, int[] valueTypes, RandomGenerator random) {
+	public SparsityMutation(double prob, double[] min, double[] max, OptimizationValueType[] valueTypes, RandomGenerator random) {
 		this.prob = prob;
 		this.min = min;
         this.max = max;
@@ -56,6 +54,10 @@ public class SparsityMutation implements PopulationOperator {
         this.random = random;
 	}
 
+	public void setValueType(int index, OptimizationValueType type) {
+		this.valueTypes[index] = type;
+	}
+	
 	public void operate(Population population) {
 		List<Individual> newIndividuals = new LinkedList<Individual>();
 		for (int i = 0; i < population.getNumberOfIndividuals(); i++) {
@@ -69,8 +71,15 @@ public class SparsityMutation implements PopulationOperator {
 						values[j] = min[j];
 					else
 						values[j] = random.nextDoubleInRange(min[j], max[j]);
-                    if (valueTypes[j] == ESOptimization.VALUE_TYPE_INT)
+                    if (valueTypes[j].equals(OptimizationValueType.VALUE_TYPE_INT)) {
                         values[j] = (int)Math.round(values[j]);
+                    } else if (valueTypes[j].equals(OptimizationValueType.VALUE_TYPE_BOUNDS)) {
+                    	if (values[j] >= (max[j] - min[j]) / 2.0d) {
+                    		values[j] = min[j];
+                    	} else {
+                    		values[j] = max[j];
+                    	}
+                    }
 				}
 			}
 			if (changed) {

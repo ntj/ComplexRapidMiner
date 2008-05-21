@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.clustering.clusterer;
 
@@ -39,13 +37,12 @@ import com.rapidminer.operator.learner.clustering.FlatCrispClusterModel;
 import com.rapidminer.operator.learner.clustering.IdUtils;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeInt;
-import com.rapidminer.parameter.UndefinedParameterError;
 
 /**
  * A simple generic density based clusterer.
  * 
  * @author Michael Wurst, Ingo Mierswa
- * @version $Id: AbstractDensityBasedClusterer.java,v 1.3 2007/07/11 13:43:35 ingomierswa Exp $
+ * @version $Id: AbstractDensityBasedClusterer.java,v 1.5 2008/05/09 19:22:49 ingomierswa Exp $
  */
 public abstract class AbstractDensityBasedClusterer extends AbstractFlatClusterer {
 
@@ -54,6 +51,8 @@ public abstract class AbstractDensityBasedClusterer extends AbstractFlatClustere
 	private Map<String, Integer> assign;
 
 	private List<String> ids;
+
+	protected int minPts;
 
 	private static final String MIN_PTS_NAME = "min_pts";
 
@@ -64,25 +63,20 @@ public abstract class AbstractDensityBasedClusterer extends AbstractFlatClustere
 
 	protected abstract List<String> getNeighbours(ExampleSet es, String id) throws OperatorException;
 
-	//protected abstract boolean isCoreObject(String id, List<String> preselection);
-
 	protected FlatCrispClusterModel doClustering(ExampleSet es) throws OperatorException {
 		assign = new HashMap<String, Integer>();
 		int clusterId = 0;
-		int minPts = getParameterAsInt(MIN_PTS_NAME);
+		minPts = getParameterAsInt(MIN_PTS_NAME);
 		// Create the mapping
 		FlatCrispClusterModel result = new FlatCrispClusterModel();
 		ids = new ArrayList<String>();
 		Iterator<Example> er = es.iterator();
-		//IDs aus dem ExampleSet lesen und als UNASSIGNED in die HashMap eintragen
 		while (er.hasNext()) {
 			Example ex = er.next();
 			String exId = IdUtils.getIdFromExample(ex);
 			ids.add(exId);
 			assign.put(exId, UNASSIGNED);
 		}
-		
-		//Über alle IDs wird iteriert
 		for (int i = 0; i < ids.size(); i++) {
 			String id = ids.get(i);
 			Integer status = assign.get(id);
@@ -111,7 +105,7 @@ public abstract class AbstractDensityBasedClusterer extends AbstractFlatClustere
 								// it, if its unclassified, add to queue
 								if (status3.intValue() < 1) {
 									if (status3.intValue() == UNASSIGNED) {
-										l.add(id3);//Was vorher als Noise deklariert wurde, kann ja trotzdem auf anderem Wege erreichbar sein!!!
+										l.add(id3);
 									}
 									assign.put(id3, clusterId);
 								}
@@ -143,26 +137,6 @@ public abstract class AbstractDensityBasedClusterer extends AbstractFlatClustere
 	protected int getAssignment(String id) {
 		return assign.get(id);
 	}
-	
-	protected int getMinPts() {
-		int minPts;
-		try {
-			minPts = getParameterAsInt(MIN_PTS_NAME);
-		} catch (UndefinedParameterError e) {
-			minPts = 0;
-			e.printStackTrace();
-		}
-		return minPts;
-	}
-
-	//TODO: isCoreObject implementieren, damit diese Methode in FDBScan erweitert werden kann!
-	protected boolean isCoreObject(String id) {
-		return false;
-	}
-
-//	protected Map<String, Integer> getAssignHashMap() {
-//		return assign;
-//	}
 
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();

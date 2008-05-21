@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.functions.neuralnet;
 
@@ -92,7 +90,7 @@ import com.rapidminer.parameter.UndefinedParameterError;
  * @rapidminer.index Neural Net
  * 
  * @author Ingo Mierswa
- * @version $Id: NeuralNetLearner.java,v 1.4 2007/07/13 22:52:15 ingomierswa Exp $
+ * @version $Id: NeuralNetLearner.java,v 1.7 2008/05/09 19:23:25 ingomierswa Exp $
  */
 public class NeuralNetLearner extends AbstractLearner implements NeuralNetListener {
     
@@ -309,7 +307,7 @@ public class NeuralNetLearner extends AbstractLearner implements NeuralNetListen
 		monitor.setTrainingPatterns(inputArray.length);
 		monitor.setTotCicles(getParameterAsInt(PARAMETER_TRAINING_CYCLES));
 		monitor.setLearning(true);
-		neuralNet.addNeuralNetListener(this);
+		neuralNet.getMonitor().addNeuralNetListener(this);
 		neuralNet.start();
 		neuralNet.getMonitor().Go();
 		neuralNet.join();

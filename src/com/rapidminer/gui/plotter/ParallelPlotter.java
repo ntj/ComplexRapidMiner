@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.plotter;
 
@@ -50,13 +48,14 @@ import javax.swing.event.ChangeListener;
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableRow;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.math.MathFunctions;
 
 
 /** This plotter plots the data in parallel coordinates. One of the attributes can be selected 
  *  to define the color of the lines.
  *   
  *  @author Ingo Mierswa
- *  @version $Id: ParallelPlotter.java,v 1.3 2007/06/10 23:18:53 ingomierswa Exp $
+ *  @version $Id: ParallelPlotter.java,v 1.6 2008/05/09 19:22:51 ingomierswa Exp $
  */
 public class ParallelPlotter extends PlotterAdapter implements MouseListener {
 
@@ -208,11 +207,11 @@ public class ParallelPlotter extends PlotterAdapter implements MouseListener {
 				DataTableRow row = i.next();
 				for (int c = 0; c < dataTable.getNumberOfColumns(); c++) {
 					double value = row.getValue(c); 
-					min[c] = Math.min(min[c], value);
-					max[c] = Math.max(max[c], value);
+					min[c] = MathFunctions.robustMin(min[c], value);
+					max[c] = MathFunctions.robustMax(max[c], value);
 					if (c != colorColumn) {
-						globalMin = Math.min(globalMin, min[c]);
-						globalMax = Math.max(globalMax, max[c]);
+						globalMin = MathFunctions.robustMin(globalMin, min[c]);
+						globalMax = MathFunctions.robustMax(globalMax, max[c]);
 					}
 				}
 			}

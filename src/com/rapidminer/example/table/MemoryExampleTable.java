@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.example.table;
 
@@ -78,14 +76,15 @@ public class MemoryExampleTable extends AbstractExampleTable {
 	 *            initial size of this example table. All values will be
 	 *            Double.NaN.
 	 */
-	public MemoryExampleTable(List<Attribute> attributes, int size) {
+	public MemoryExampleTable(List<Attribute> attributes, DataRowFactory factory, int size) {
 		this(attributes);
 		dataList = new ArrayList<DataRow>(size);
 		for (int i = 0; i < size; i++) {
-			double[] row = new double[columns];
-			for (int j = 0; j < row.length; j++)
-				row[j] = Double.NaN;
-			dataList.add(new DoubleArrayDataRow(row));
+			DataRow dataRow = factory.create(attributes.size());
+			for (Attribute attribute : attributes) {
+				dataRow.set(attribute, Double.NaN);
+			}
+			dataList.add(dataRow);
 		}
 	}
 
@@ -161,6 +160,21 @@ public class MemoryExampleTable extends AbstractExampleTable {
 		dataList.add(dataRow);
 	}
 
+	/** Convenience method for removing data rows. */
+	public boolean removeDataRow(DataRow dataRow) {
+		return dataList.remove(dataRow);
+	}
+	
+	/** Convenience method for removing data rows. */
+	public DataRow removeDataRow(int index) {
+		return dataList.remove(index);
+	}
+	
+	/** Clears the table. */
+	public void clear() {
+		dataList.clear();
+	}
+	
 	/**
 	 * Adds a new attribute to this example table by invoking the super method.
 	 * If the number of attribues reaches a threshold, the number of attributes

@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.associations;
 
@@ -29,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.rapidminer.operator.IOObject;
+import com.rapidminer.operator.InputDescription;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -47,11 +46,13 @@ import com.rapidminer.parameter.ParameterTypeDouble;
  * sets which could be used as input for this operator.</p>
  *  
  * @author Sebastian Land, Ingo Mierswa
- * @version $Id: AssociationRuleGenerator.java,v 1.3 2007/06/22 15:31:44 ingomierswa Exp $
+ * @version $Id: AssociationRuleGenerator.java,v 1.8 2008/05/09 19:23:21 ingomierswa Exp $
  */
 public class AssociationRuleGenerator extends Operator {
 
 	public static final String PARAMETER_MIN_CONFIDENCE = "min_confidence";
+	private static final String PARAMETER_GAIN_THETA = "gain_theta";
+	private static final String PARAMETER_LAPLACE_K = "laplace_k";
 	
 	public AssociationRuleGenerator(OperatorDescription description) {
 		super(description);
@@ -59,10 +60,12 @@ public class AssociationRuleGenerator extends Operator {
 
 	public IOObject[] apply() throws OperatorException {
 		double minConfidence = getParameterAsDouble(PARAMETER_MIN_CONFIDENCE);
-		
+		double theta = getParameterAsDouble(PARAMETER_GAIN_THETA);
+		double laPlaceK = getParameterAsDouble(PARAMETER_LAPLACE_K);
 		FrequentItemSets sets = getInput(FrequentItemSets.class);
 		AssociationRules rules = new AssociationRules();
 		HashMap<Collection<Item>, Integer> setFrequencyMap = new HashMap<Collection<Item>, Integer>();
+		int numberOfTransactions = sets.getNumberOfTransactions();
 		
 		// iterating sorted over every frequent Set, generating every possible rule and building frequency map
 		sets.sortSets();
@@ -75,13 +78,20 @@ public class AssociationRuleGenerator extends Operator {
 					if (premises.size() > 0 && premises.size() < set.getItems().size()) {
 						Collection<Item> conclusion = powerSet.getComplement(premises);
 						int totalFrequency = set.getFrequency();
-						int preconditionFrequency = setFrequencyMap.get(conclusion);
+						int preconditionFrequency = setFrequencyMap.get(premises);
+						int conclusionFrequency = setFrequencyMap.get(conclusion);
 						double confidence = getConfidence(totalFrequency, preconditionFrequency);
 						if (confidence >= minConfidence) {
-							rules.addItemRule(new AssociationRule(premises, 
-								                                  conclusion, 
-								                                  confidence, 
-								                                  getTotalSupport(totalFrequency, sets.getNumberOfTransactions())));
+							AssociationRule rule = new AssociationRule(premises, 
+	                                  conclusion, 
+	                                  confidence, 
+	                                  getSupport(totalFrequency, numberOfTransactions));
+							rule.setLift(getLift(totalFrequency, preconditionFrequency, conclusionFrequency, numberOfTransactions));
+							rule.setConviction(getConviction(totalFrequency, preconditionFrequency, conclusionFrequency, numberOfTransactions));
+							rule.setPs(getPs(totalFrequency, preconditionFrequency, conclusionFrequency, numberOfTransactions));
+							rule.setGain(getGain(theta, totalFrequency, preconditionFrequency, conclusionFrequency, numberOfTransactions));
+							rule.setLaplace(getLaPlace(laPlaceK, totalFrequency, preconditionFrequency, conclusionFrequency, numberOfTransactions));
+							rules.addItemRule(rule);
 						}
 					}
 				}
@@ -89,15 +99,44 @@ public class AssociationRuleGenerator extends Operator {
 		}
 		return new IOObject[] {rules};
 	}
+	private double getGain(double theta, int totalFrequency, int preconditionFrequency, int conclusionFrequency, int numberOfTransactions) {
+		return getSupport(totalFrequency, numberOfTransactions) - theta * getSupport(preconditionFrequency, numberOfTransactions);
+	}
+	
+	private double getLift(int totalFrequency, int preconditionFrequency, int conclusionFrequency, int numberOfTransactions) {
+		return ((double) totalFrequency * ((double) numberOfTransactions)) / ((double)preconditionFrequency * conclusionFrequency);
+	}
+	private double getPs(int totalFrequency, int preconditionFrequency, int conclusionFrequency, int numberOfTransactions) {
+		return getSupport(totalFrequency, numberOfTransactions) - getSupport(preconditionFrequency, numberOfTransactions) * getSupport(conclusionFrequency, numberOfTransactions);
+	}
+	private double getLaPlace(double k, int totalFrequency, int preconditionFrequency, int conclusionFrequency, int numberOfTransactions) {
+		return (getSupport(totalFrequency, numberOfTransactions) + 1d) / (getSupport(preconditionFrequency, numberOfTransactions) + k);
+	}
+	
+		
+	private double getConviction(int totalFrequency, int preconditionFrequency, int conclusionFrequency, int numberOfTransactions) {
+		double numerator = preconditionFrequency * (numberOfTransactions - conclusionFrequency);
+		double denumerator = numberOfTransactions * (preconditionFrequency - totalFrequency);
+		return numerator / denumerator;
+	}
+	
+	/** Indicates that the consumption of frequent item sets can be user defined. */
+	public InputDescription getInputDescription(Class cls) {
+		if (FrequentItemSets.class.isAssignableFrom(cls)) {
+			return new InputDescription(cls, false, true);
+		} else {
+			return super.getInputDescription(cls);
+		}
+	}
 	
 	private double getConfidence(int totalFrequency, int preconditionFrequency) {
 		return (double)totalFrequency / (double)preconditionFrequency;
 	}
 	
-	private double getTotalSupport(int totalFrequency, int completeSize) {
-		return (double)totalFrequency / (double)completeSize;
+	private double getSupport(int frequency, int completeSize) {
+		return (double)frequency / (double)completeSize;
 	}
-	
+
 	public Class[] getInputClasses() {
 		return new Class[] { FrequentItemSets.class	};
 	}
@@ -111,6 +150,13 @@ public class AssociationRuleGenerator extends Operator {
 		ParameterType type = new ParameterTypeDouble(PARAMETER_MIN_CONFIDENCE, "The minimum confidence of the rules", 0.0d, 1.0d, 0.8d);
 		type.setExpert(false);
 		types.add(type);
+		type = new ParameterTypeDouble(PARAMETER_GAIN_THETA, "The Parameter Theta in Gain calculation", Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 2d);
+		type.setExpert(true);
+		types.add(type);
+		type = new ParameterTypeDouble(PARAMETER_LAPLACE_K, "The Parameter k in LaPlace function calculation", 1, Double.POSITIVE_INFINITY, 1d);
+		type.setExpert(true);
+		types.add(type);
+
 		return types;
 	}
 }

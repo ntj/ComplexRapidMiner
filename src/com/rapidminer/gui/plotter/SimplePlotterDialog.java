@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.plotter;
 
@@ -65,15 +63,18 @@ public class SimplePlotterDialog extends JDialog implements MouseMotionListener,
 
 	private List<ObjectVisualizer> visualizers = new LinkedList<ObjectVisualizer>();
 
+	private JButton createOtherPlottersButton = null;
+	
+	
 	public SimplePlotterDialog(DataTable dataTable) {
 		this(dataTable, true);
 	}
 
 	public SimplePlotterDialog(DataTable dataTable, boolean modal) {
-		this(RapidMinerGUI.getMainFrame(), dataTable, -1, -1, modal);
+		this(RapidMinerGUI.getMainFrame(), dataTable, -1, -1, false, modal);
 	}
 
-	public SimplePlotterDialog(Frame owner, DataTable dataTable, int width, int height, boolean modal) {
+	public SimplePlotterDialog(Frame owner, final DataTable dataTable, int width, int height, boolean createPlotterPanelButton, boolean modal) {
 		super(owner, dataTable.getName(), modal);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		this.plotter = new ScatterPlotter(dataTable);
@@ -84,6 +85,18 @@ public class SimplePlotterDialog extends JDialog implements MouseMotionListener,
 		getContentPane().add(plotterComponent, BorderLayout.CENTER);
 
 		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		if (createPlotterPanelButton) {
+			JButton createOtherPlottersButton = new JButton("Create other plotters...");
+			createOtherPlottersButton.addActionListener(new ActionListener() {
+
+				public void actionPerformed(ActionEvent e) {
+					SimplePlotterPanelDialog plotterPanelDialog = new SimplePlotterPanelDialog(dataTable);
+					plotterPanelDialog.setVisible(true);
+				}
+			});
+			buttonPanel.add(createOtherPlottersButton);
+		}
+		
 		if (plotter.isSaveable()) {
 			JButton saveButton = new JButton("Save...");
 			saveButton.addActionListener(new ActionListener() {
@@ -112,6 +125,11 @@ public class SimplePlotterDialog extends JDialog implements MouseMotionListener,
 		setLocationRelativeTo(owner);
 	}
 
+	public void setCreateOtherPlottersEnabled(boolean enabled) {
+		if (this.createOtherPlottersButton != null)
+			this.createOtherPlottersButton.setEnabled(enabled);
+	}
+	
 	public void setDrawRange(double minX, double maxX, double minY, double maxY) {
 		plotter.setDrawRange(minX, maxX, minY, maxY);
 	}
@@ -128,12 +146,8 @@ public class SimplePlotterDialog extends JDialog implements MouseMotionListener,
 		plotter.setPlotColumn(index, plot);
 	}
 
-	public void setDraw2DLines(boolean v) {
-		plotter.setDraw2DLines(v);
-	}
-
-    public void setDrawPoints(boolean v) {
-        plotter.setDrawPoints(v);
+    public void setPointType(int pointType) {
+    	plotter.setPointType(pointType);
     }
     
     public void setDrawLabel(boolean v) {

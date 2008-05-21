@@ -1,28 +1,31 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.parameter;
+
+import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.cipher.CipherException;
+import com.rapidminer.tools.cipher.CipherTools;
 
 /**
  * A parameter for passwords. The parameter is written with asteriks in the GUI
@@ -43,5 +46,37 @@ public class ParameterTypePassword extends ParameterTypeString {
 
 	public String getRange() {
 		return "password";
+	}
+	
+	/** This method will be invoked by the Parameters after a parameter was set
+	 *  and will decrypt the given value. */
+	public Object transformNewValue(Object value) {
+		return decryptPassword(value.toString());
+	}
+	
+	private String decryptPassword(String value) {
+		if (CipherTools.isKeyAvailable()) {
+			try {
+				return CipherTools.decrypt(value);
+			} catch (CipherException e) {
+				LogService.getGlobal().logError("Cannot encrypt password, using non-encrypted password in XML!");
+			}
+		}
+		return value;
+	}
+	
+	public String getXML(String indent, String key, Object value, boolean hideDefault) {
+		if ((value != null) && ((!hideDefault) || (!value.equals(getDefaultValue())))) {
+			String encrypted = value.toString();
+			if (CipherTools.isKeyAvailable()) {
+				try {
+					encrypted = CipherTools.encrypt(encrypted);
+				} catch (CipherException e) {
+					LogService.getGlobal().logError("Cannot encrypt password, using non-encrypted password in XML!");
+				}
+			}
+			return (indent + "<parameter key=\"" + key + "\"\tvalue=\"" + toString(encrypted) + "\"/>" + Tools.getLineSeparator());
+		} else
+			return "";
 	}
 }

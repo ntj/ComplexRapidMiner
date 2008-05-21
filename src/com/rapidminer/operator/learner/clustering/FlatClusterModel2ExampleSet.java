@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.clustering;
 
@@ -41,7 +39,6 @@ import com.rapidminer.operator.InputDescription;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
-import com.rapidminer.operator.UserError;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.tools.Ontology;
@@ -50,7 +47,7 @@ import com.rapidminer.tools.Ontology;
  * Labels an example set with the cluster ids from a given cluster model.
  * 
  * @author Michael Wurst, Ingo Mierswa
- * @version $Id: FlatClusterModel2ExampleSet.java,v 1.3 2007/06/30 23:24:35 ingomierswa Exp $
+ * @version $Id: FlatClusterModel2ExampleSet.java,v 1.9 2008/05/09 19:23:12 ingomierswa Exp $
  */
 public class FlatClusterModel2ExampleSet extends Operator {
 
@@ -68,9 +65,9 @@ public class FlatClusterModel2ExampleSet extends Operator {
 		ExampleSet es = getInput(ExampleSet.class);
 		Tools.checkAndCreateIds(es);
 		
-		ClusterModel clusterModel = getInput(ClusterModel.class);
-		if (!(clusterModel instanceof FlatClusterModel)) {
-			throw new UserError(this, 122, "flat ClusterModel");
+		ClusterModel clusterModel = getInput(ClusterModel.class);		
+		if(clusterModel instanceof HierarchicalClusterModel) {
+			clusterModel = new FlattendClusterModel((HierarchicalClusterModel)clusterModel);		
 		}
 		
 		FlatClusterModel cm = (FlatClusterModel)clusterModel;
@@ -115,7 +112,9 @@ public class FlatClusterModel2ExampleSet extends Operator {
 		while (r.hasNext()) {
 			Example e = r.next();
 			int index = getBestIndex(cm, IdUtils.getIdFromExample(e));
+		
 			log("Index of id " + IdUtils.getIdFromExample(e) + ":" + index);
+			
 			if (index >= 0) {
 				e.setValue(cluster, cluster.getMapping().mapString(uniqueLabels[index]));
 			} else {
@@ -125,8 +124,9 @@ public class FlatClusterModel2ExampleSet extends Operator {
 				if (index >= 0) {
 					e.setLabel(label.getMapping().mapString(uniqueLabels[index]));
 					numExamples++;
-				} else
+				} else {
 					e.setLabel(Double.NaN);
+				}
 			}
 		}
 		if (getParameterAsBoolean(PARAMETER_DELETE_UNLABELED)) {
@@ -136,9 +136,13 @@ public class FlatClusterModel2ExampleSet extends Operator {
 					private static final long serialVersionUID = -305063040412493813L;
 
 					public boolean conditionOk(Example example) {
-						return example.getLabel() >= 0.0;
+						return !Double.isNaN(example.getLabel());
 					}
 
+					 /** 
+					  * @deprecated Conditions should not be able to be changed dynamically and hence there is no need for a copy
+					  */
+					@Deprecated
 					public Condition duplicate() {
 						return this;
 					}

@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools;
 
@@ -34,11 +32,18 @@ import java.awt.dnd.DragSourceDropEvent;
 import java.awt.dnd.DragSourceEvent;
 import java.awt.dnd.DragSourceListener;
 import java.awt.dnd.InvalidDnDOperationException;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.Vector;
 
+import javax.swing.Action;
 import javax.swing.JList;
+import javax.swing.JPopupMenu;
 import javax.swing.ListSelectionModel;
 
+import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.dialog.OperatorInfoScreen;
 import com.rapidminer.gui.operatortree.TransferableOperator;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCreationException;
@@ -50,18 +55,29 @@ import com.rapidminer.operator.OperatorDescription;
  * process tree. The list elements must be of type {@link OperatorDescription}.
  *
  * @author Helge Homburg, Ingo Mierswa
- * @version $Id: OperatorList.java,v 1.2 2007/06/07 17:12:23 ingomierswa Exp $
+ * @version $Id: OperatorList.java,v 1.11 2008/05/09 19:22:58 ingomierswa Exp $
  */
-public class OperatorList extends JList implements DragSourceListener, DragGestureListener  {
-      
-	private static final long serialVersionUID = 1L;
+public class OperatorList extends JList implements DragSourceListener, DragGestureListener, MouseListener  {
+   
+	private static final long serialVersionUID = -2719941529572427942L;
 
+	// ======================================================================
+	// Operator Menu Actions and Items
+	// ======================================================================		
+	
+	public transient final Action INFO_OPERATOR_ACTION_24 = new OperatorListInfoOperatorAction(this, IconSize.SMALL);
+	public transient final Action INFO_OPERATOR_ACTION_32 = new OperatorListInfoOperatorAction(this, IconSize.MIDDLE);
+	
+	/** The main frame. Used for conditional action updates and property table settings. */
+	private MainFrame mainFrame;
+	
 	/** Creates a special CellRenderer for this class */
     private OperatorListCellRenderer operatorDialogCellRenderer;
     
-    /** The drag source of the NewOperatorDialog */
+    /** The drag source of the NewOperatorDialog */    
     private DragSource dragSource;
     
+    private transient Operator selectedOperator;    
     
     /** Creates a new instance of OperatorList */
     public OperatorList() {
@@ -70,7 +86,8 @@ public class OperatorList extends JList implements DragSourceListener, DragGestu
     
     /** Creates a new instance of OperatorList */
     public OperatorList(boolean horizontalWrap, boolean coloredCellBackgrounds) {
-        operatorDialogCellRenderer = new OperatorListCellRenderer(coloredCellBackgrounds);
+        
+    	operatorDialogCellRenderer = new OperatorListCellRenderer(coloredCellBackgrounds);
         if (horizontalWrap) {
             setLayoutOrientation(HORIZONTAL_WRAP);
             setVisibleRowCount(-1);
@@ -79,6 +96,9 @@ public class OperatorList extends JList implements DragSourceListener, DragGestu
         dragSource = DragSource.getDefaultDragSource(); 
         dragSource.createDefaultDragGestureRecognizer(this, DnDConstants.ACTION_COPY, this);
         setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        addMouseListener(this);
+        this.mainFrame = RapidMinerGUI.getMainFrame();
+        
     }
     
     public void setOperatorDescriptions(Vector<OperatorDescription> descriptions) {
@@ -132,5 +152,67 @@ public class OperatorList extends JList implements DragSourceListener, DragGestu
                 }
             }
         }
-    } 
+    }
+    
+    /** Returns the currently selected operator. */
+	private Operator getSelectedOperator() {		
+		
+		Point clickOrigin = getMousePosition();
+		if (clickOrigin == null) {
+			return null;
+		}
+        int selectedIndex = locationToIndex(clickOrigin);
+        if (selectedIndex != -1) {
+            setSelectedIndex(selectedIndex);
+        }
+        OperatorDescription selectedListElement = (OperatorDescription)getSelectedValue();
+        Operator selectedOperator = null;
+        if (selectedListElement != null) {
+            try {
+                selectedOperator = selectedListElement.createOperatorInstance();
+            } catch (OperatorCreationException ocE) {
+                ocE.printStackTrace();
+            }
+         }		
+        return selectedOperator;
+	}
+    	
+	/** Shows the info dialog for the currently selected operator. */
+	public void showOperatorInfo() {		
+		if (selectedOperator != null) {
+			OperatorInfoScreen infoScreen = new OperatorInfoScreen(mainFrame, selectedOperator);
+			infoScreen.setVisible(true);
+		}	
+	}
+	
+	public void mouseEntered(MouseEvent e) {
+	}
+
+	public void mouseExited(MouseEvent e) {
+	}
+
+	public void mouseClicked(MouseEvent e) {		
+	}
+
+	public void mousePressed(MouseEvent e) {		
+	}
+
+	public void mouseReleased(MouseEvent e) {
+		selectedOperator = getSelectedOperator();
+		evaluatePopup(e);
+	}	
+	
+	/** Checks if the given mouse event is a popup trigger and creates a new popup menu if necessary. */
+	private void evaluatePopup(MouseEvent e) {
+		if (e.isPopupTrigger()) {
+			createOperatorPopupMenu().show(this, e.getX(), e.getY());
+		}
+	}	
+	
+	/** Creates a new popup menu for the selected operator. */
+	private JPopupMenu createOperatorPopupMenu() {
+		JPopupMenu menu = new JPopupMenu();        
+		menu.add(this.INFO_OPERATOR_ACTION_24);				
+		return menu;
+	}
 }

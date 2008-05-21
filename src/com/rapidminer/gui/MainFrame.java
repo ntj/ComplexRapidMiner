@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui;
 
@@ -39,6 +37,7 @@ import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -93,6 +92,7 @@ import com.rapidminer.gui.actions.SaveAsAction;
 import com.rapidminer.gui.actions.SaveAsTemplateAction;
 import com.rapidminer.gui.actions.SettingsAction;
 import com.rapidminer.gui.actions.StopAction;
+import com.rapidminer.gui.actions.SwitchWorkspaceAction;
 import com.rapidminer.gui.actions.ToggleExpertModeAction;
 import com.rapidminer.gui.actions.ToggleLoggingViewerItem;
 import com.rapidminer.gui.actions.ToggleSystemMonitorItem;
@@ -102,6 +102,7 @@ import com.rapidminer.gui.actions.ValidateProcessAction;
 import com.rapidminer.gui.actions.WizardAction;
 import com.rapidminer.gui.dialog.Browser;
 import com.rapidminer.gui.dialog.ProcessInfoScreen;
+import com.rapidminer.gui.dialog.RequestSaveDialog;
 import com.rapidminer.gui.dialog.Tutorial;
 import com.rapidminer.gui.operatortree.OperatorTree;
 import com.rapidminer.gui.plotter.PlotterPanel;
@@ -113,7 +114,7 @@ import com.rapidminer.gui.templates.Template;
 import com.rapidminer.gui.tools.AboutBox;
 import com.rapidminer.gui.tools.ComponentPrinter;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.ExtendedToolBar;
+import com.rapidminer.gui.tools.ExtendedJToolBar;
 import com.rapidminer.gui.tools.IconSize;
 import com.rapidminer.gui.tools.LoggingViewer;
 import com.rapidminer.gui.tools.StatusBar;
@@ -143,7 +144,7 @@ import de.java.print.PreviewDialog;
  * children. Most of the code is enclosed within the Actions.
  * 
  * @author Ingo Mierswa
- * @version $Id: MainFrame.java,v 1.12 2007/06/15 16:58:38 ingomierswa Exp $
+ * @version $Id: MainFrame.java,v 1.30 2008/05/09 22:13:12 ingomierswa Exp $
  */
 public class MainFrame extends JFrame implements WindowListener, BreakpointListener {
 
@@ -197,6 +198,10 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 
 	/** The property name for &quot;Shows process info screen after loading?&quot; */
 	public static final String PROPERTY_RAPIDMINER_GUI_PROCESSINFO_SHOW = "rapidminer.gui.processinfo.show";
+
+	/** The property name for &quot;Shows process info screen after loading?&quot; */
+	public static final String PROPERTY_RAPIDMINER_GUI_SAVEDIALOG = "rapidminer.gui.savedialog";
+	
 	private static final long serialVersionUID = -1602076945350148969L;
 
 	private static final String NEWS_TEXT =
@@ -210,16 +215,18 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 		"Are you interested in support, consulting, or other" + Tools.getLineSeparator() +
 		"professional services?   Visit: http://rapid-i.com/";
 	
-	private static final String HISTORY_ICON_NAME = "icons/24/history2.png";
-	private static final String ABOUT_ICON_NAME   = "icons/24/about.png";
-	private static final String HELP_ICON_NAME    = "icons/24/help2.png";
-	private static final String PLUGINS_ICON_NAME = "icons/24/plug.png";
+	private static final String HISTORY_ICON_NAME = "24/history2.png";
+	private static final String ABOUT_ICON_NAME   = "24/about.png";
+	private static final String HELP_ICON_NAME    = "24/help2.png";
+	private static final String SUPPORT_ICON_NAME = "24/lifebelt.png";
+	private static final String PLUGINS_ICON_NAME = "24/plug.png";
 	
 	private static final String RAPID_MINER_LOGO_NAME = "rapidminer_logo.png";
 			
 	private static Icon historyIcon = null;
 	private static Icon aboutIcon   = null;
 	private static Icon helpIcon    = null;
+	private static Icon supportIcon = null;
 	private static Icon pluginsIcon = null;
 	
 	private static Image rapidMinerLogo = null;
@@ -228,6 +235,7 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 		historyIcon = SwingTools.createIcon(HISTORY_ICON_NAME);
 		aboutIcon   = SwingTools.createIcon(ABOUT_ICON_NAME);
 		helpIcon    = SwingTools.createIcon(HELP_ICON_NAME);
+		supportIcon = SwingTools.createIcon(SUPPORT_ICON_NAME);
 		pluginsIcon = SwingTools.createIcon(PLUGINS_ICON_NAME);
 		
 		URL url = Tools.getResource(RAPID_MINER_LOGO_NAME);
@@ -264,6 +272,7 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 		RapidMiner.registerRapidMinerProperty(new ParameterTypeColor(PROPERTY_RAPIDMINER_GUI_MESSAGEVIEWER_HIGHLIGHT_ERRORS, "The color for errors in the message viewer.", new java.awt.Color(255,51,204)));
         RapidMiner.registerRapidMinerProperty(new ParameterTypeColor(PROPERTY_RAPIDMINER_GUI_MESSAGEVIEWER_HIGHLIGHT_LOGSERVICE, "The color for the logging service indicator in the message viewer.", new java.awt.Color(184,184,184)));
 		RapidMiner.registerRapidMinerProperty(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_GUI_PROCESSINFO_SHOW, "Shows process info screen after loading?", true));
+		RapidMiner.registerRapidMinerProperty(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_GUI_SAVEDIALOG, "Shows a dialog asking for saving the current process before the process is started?", true));
 	}
 
 	/** The title of the frame. */
@@ -279,95 +288,98 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 	public static final String RESULTS_MODE_NAME = "results";
 	public static final String WELCOME_MODE_NAME = "welcome";
 	
-	public final Action NEW_ACTION_24 = new NewAction(this, IconSize.SMALL);
-	public final Action NEW_ACTION_32 = new NewAction(this, IconSize.MIDDLE);
+	public final transient Action NEW_ACTION_24 = new NewAction(this, IconSize.SMALL);
+	public final transient Action NEW_ACTION_32 = new NewAction(this, IconSize.MIDDLE);
 
-	public final Action OPEN_ACTION_24 = new OpenAction(this, IconSize.SMALL);
-	public final Action OPEN_ACTION_32 = new OpenAction(this, IconSize.MIDDLE);
+	public final transient Action OPEN_ACTION_24 = new OpenAction(this, IconSize.SMALL);
+	public final transient Action OPEN_ACTION_32 = new OpenAction(this, IconSize.MIDDLE);
 
-	public final Action SAVE_ACTION_24 = new SaveAction(this, IconSize.SMALL);
-	public final Action SAVE_ACTION_32 = new SaveAction(this, IconSize.MIDDLE);
+	public final transient Action SAVE_ACTION_24 = new SaveAction(this, IconSize.SMALL);
+	public final transient Action SAVE_ACTION_32 = new SaveAction(this, IconSize.MIDDLE);
 
-	public final Action SAVE_AS_ACTION_24 = new SaveAsAction(this, IconSize.SMALL);
-	public final Action SAVE_AS_ACTION_32 = new SaveAsAction(this, IconSize.MIDDLE);
+	public final transient Action SAVE_AS_ACTION_24 = new SaveAsAction(this, IconSize.SMALL);
+	public final transient Action SAVE_AS_ACTION_32 = new SaveAsAction(this, IconSize.MIDDLE);
 
-	public final Action SAVE_AS_TEMPLATE_ACTION_24 = new SaveAsTemplateAction(this, IconSize.SMALL);
-	public final Action SAVE_AS_TEMPLATE_ACTION_32 = new SaveAsTemplateAction(this, IconSize.MIDDLE);
+	public final transient Action SAVE_AS_TEMPLATE_ACTION_24 = new SaveAsTemplateAction(this, IconSize.SMALL);
+	public final transient Action SAVE_AS_TEMPLATE_ACTION_32 = new SaveAsTemplateAction(this, IconSize.MIDDLE);
 
-	public final Action MANAGE_TEMPLATES_ACTION_24 = new ManageTemplatesAction(this, IconSize.SMALL);
-	public final Action MANAGE_TEMPLATES_ACTION_32 = new ManageTemplatesAction(this, IconSize.MIDDLE);
+	public final transient Action MANAGE_TEMPLATES_ACTION_24 = new ManageTemplatesAction(this, IconSize.SMALL);
+	public final transient Action MANAGE_TEMPLATES_ACTION_32 = new ManageTemplatesAction(this, IconSize.MIDDLE);
 
-	public final Action MANAGE_BUILDING_BLOCKS_ACTION_24 = new ManageBuildingBlocksAction(this, IconSize.SMALL);
-	public final Action MANAGE_BUILDING_BLOCKS_ACTION_32 = new ManageBuildingBlocksAction(this, IconSize.MIDDLE);
+	public final transient Action MANAGE_BUILDING_BLOCKS_ACTION_24 = new ManageBuildingBlocksAction(this, IconSize.SMALL);
+	public final transient Action MANAGE_BUILDING_BLOCKS_ACTION_32 = new ManageBuildingBlocksAction(this, IconSize.MIDDLE);
 
-	public final Action PRINT_ACTION_24 = new PrintAction(this, IconSize.SMALL);
-	public final Action PRINT_ACTION_32 = new PrintAction(this, IconSize.MIDDLE);
+	public final transient Action PRINT_ACTION_24 = new PrintAction(this, IconSize.SMALL);
+	public final transient Action PRINT_ACTION_32 = new PrintAction(this, IconSize.MIDDLE);
 	
-	public final Action PRINT_PREVIEW_ACTION_24 = new PrintPreviewAction(this, IconSize.SMALL);
-	public final Action PRINT_PREVIEW_ACTION_32 = new PrintPreviewAction(this, IconSize.MIDDLE);
+	public final transient Action PRINT_PREVIEW_ACTION_24 = new PrintPreviewAction(this, IconSize.SMALL);
+	public final transient Action PRINT_PREVIEW_ACTION_32 = new PrintPreviewAction(this, IconSize.MIDDLE);
 	
-	public final Action PAGE_SETUP_ACTION_24 = new PageSetupAction(this, IconSize.SMALL);
-	public final Action PAGE_SETUP_ACTION_32 = new PageSetupAction(this, IconSize.MIDDLE);
+	public final transient Action PAGE_SETUP_ACTION_24 = new PageSetupAction(this, IconSize.SMALL);
+	public final transient Action PAGE_SETUP_ACTION_32 = new PageSetupAction(this, IconSize.MIDDLE);
 
-	public final Action EXPORT_ACTION_24 = new ExportAction(this, IconSize.SMALL);
-	public final Action EXPORT_ACTION_32 = new ExportAction(this, IconSize.MIDDLE);
+	public final transient Action EXPORT_ACTION_24 = new ExportAction(this, IconSize.SMALL);
+	public final transient Action EXPORT_ACTION_32 = new ExportAction(this, IconSize.MIDDLE);
 
-	public final Action EXIT_ACTION_24 = new ExitAction(this, IconSize.SMALL);
-	public final Action EXIT_ACTION_32 = new ExitAction(this, IconSize.MIDDLE);
+	public final transient Action EXIT_ACTION_24 = new ExitAction(this, IconSize.SMALL);
+	public final transient Action EXIT_ACTION_32 = new ExitAction(this, IconSize.MIDDLE);
 
-	public final RunResumeAction RUN_RESUME_ACTION_24 = new RunResumeAction(this, IconSize.SMALL);
-	public final RunResumeAction RUN_RESUME_ACTION_32 = new RunResumeAction(this, IconSize.MIDDLE);
+	public final transient RunResumeAction RUN_RESUME_ACTION_24 = new RunResumeAction(this, IconSize.SMALL);
+	public final transient RunResumeAction RUN_RESUME_ACTION_32 = new RunResumeAction(this, IconSize.MIDDLE);
 
-	public final Action STOP_ACTION_24 = new StopAction(this, IconSize.SMALL);
-	public final Action STOP_ACTION_32 = new StopAction(this, IconSize.MIDDLE);
+	public final transient Action STOP_ACTION_24 = new StopAction(this, IconSize.SMALL);
+	public final transient Action STOP_ACTION_32 = new StopAction(this, IconSize.MIDDLE);
 
-	public final Action VALIDATE_ACTION_24 = new ValidateProcessAction(this, IconSize.SMALL);
-	public final Action VALIDATE_ACTION_32 = new ValidateProcessAction(this, IconSize.MIDDLE);
+	public final transient Action VALIDATE_ACTION_24 = new ValidateProcessAction(this, IconSize.SMALL);
+	public final transient Action VALIDATE_ACTION_32 = new ValidateProcessAction(this, IconSize.MIDDLE);
 
-	public final Action WIZARD_ACTION_24 = new WizardAction(this, IconSize.SMALL);
-	public final Action WIZARD_ACTION_32 = new WizardAction(this, IconSize.MIDDLE);
+	public final transient Action WIZARD_ACTION_24 = new WizardAction(this, IconSize.SMALL);
+	public final transient Action WIZARD_ACTION_32 = new WizardAction(this, IconSize.MIDDLE);
 
-	public final Action SETTINGS_ACTION_24 = new SettingsAction(this, IconSize.SMALL);
-	public final Action SETTINGS_ACTION_32 = new SettingsAction(this, IconSize.MIDDLE);
+	public final transient Action SETTINGS_ACTION_24 = new SettingsAction(this, IconSize.SMALL);
+	public final transient Action SETTINGS_ACTION_32 = new SettingsAction(this, IconSize.MIDDLE);
 
-	public final Action TOGGLE_EXPERT_MODE_ACTION_24 = new ToggleExpertModeAction(this, IconSize.SMALL);
-	public final Action TOGGLE_EXPERT_MODE_ACTION_32 = new ToggleExpertModeAction(this, IconSize.MIDDLE);
+	public final transient Action TOGGLE_EXPERT_MODE_ACTION_24 = new ToggleExpertModeAction(this, IconSize.SMALL);
+	public final transient Action TOGGLE_EXPERT_MODE_ACTION_32 = new ToggleExpertModeAction(this, IconSize.MIDDLE);
 
-	public final Action TUTORIAL_ACTION_24 = new TutorialAction(this, IconSize.SMALL);
-	public final Action TUTORIAL_ACTION_32 = new TutorialAction(this, IconSize.MIDDLE);
+	public final transient Action TUTORIAL_ACTION_24 = new TutorialAction(this, IconSize.SMALL);
+	public final transient Action TUTORIAL_ACTION_32 = new TutorialAction(this, IconSize.MIDDLE);
 
-	public final Action UNDO_ACTION_24 = new UndoAction(this, IconSize.SMALL);
-	public final Action UNDO_ACTION_32 = new UndoAction(this, IconSize.MIDDLE);
+	public final transient Action UNDO_ACTION_24 = new UndoAction(this, IconSize.SMALL);
+	public final transient Action UNDO_ACTION_32 = new UndoAction(this, IconSize.MIDDLE);
 
-	public final Action REDO_ACTION_24 = new RedoAction(this, IconSize.SMALL);
-	public final Action REDO_ACTION_32 = new RedoAction(this, IconSize.MIDDLE);
+	public final transient Action REDO_ACTION_24 = new RedoAction(this, IconSize.SMALL);
+	public final transient Action REDO_ACTION_32 = new RedoAction(this, IconSize.MIDDLE);
 
-	public final Action ATTRIBUTE_EDITOR_ACTION_24 = new AttributeEditorAction(this, IconSize.SMALL);
-	public final Action ATTRIBUTE_EDITOR_ACTION_32 = new AttributeEditorAction(this, IconSize.MIDDLE);
+	public final transient Action ATTRIBUTE_EDITOR_ACTION_24 = new AttributeEditorAction(this, IconSize.SMALL);
+	public final transient Action ATTRIBUTE_EDITOR_ACTION_32 = new AttributeEditorAction(this, IconSize.MIDDLE);
 
-	public final Action ANOVA_CALCULATOR_ACTION_24 = new AnovaCalculatorAction(this, IconSize.SMALL);
-	public final Action ANOVA_CALCULATOR_ACTION_32 = new AnovaCalculatorAction(this, IconSize.MIDDLE);
+	public final transient Action ANOVA_CALCULATOR_ACTION_24 = new AnovaCalculatorAction(this, IconSize.SMALL);
+	public final transient Action ANOVA_CALCULATOR_ACTION_32 = new AnovaCalculatorAction(this, IconSize.MIDDLE);
 
-	public final Action CHECK_FOR_UPDATES_ACTION_24 = new CheckForUpdatesAction(IconSize.SMALL);
-	public final Action CHECK_FOR_UPDATES_ACTION_32 = new CheckForUpdatesAction(IconSize.MIDDLE);
+	public final transient Action CHECK_FOR_UPDATES_ACTION_24 = new CheckForUpdatesAction(IconSize.SMALL);
+	public final transient Action CHECK_FOR_UPDATES_ACTION_32 = new CheckForUpdatesAction(IconSize.MIDDLE);
 
-    public final Action CHECK_FOR_JDBC_DRIVERS_ACTION_24 = new CheckForJDBCDriversAction(this, IconSize.SMALL);
-    public final Action CHECK_FOR_JDBC_DRIVERS_ACTION_32 = new CheckForJDBCDriversAction(this, IconSize.MIDDLE);
+    public final transient Action CHECK_FOR_JDBC_DRIVERS_ACTION_24 = new CheckForJDBCDriversAction(this, IconSize.SMALL);
+    public final transient Action CHECK_FOR_JDBC_DRIVERS_ACTION_32 = new CheckForJDBCDriversAction(this, IconSize.MIDDLE);
 
-    public final Action EDIT_MODE_24 = new EditModeAction(this, IconSize.SMALL);
-    public final Action EDIT_MODE_32 = new EditModeAction(this, IconSize.MIDDLE);
+    public final transient Action EDIT_MODE_24 = new EditModeAction(this, IconSize.SMALL);
+    public final transient Action EDIT_MODE_32 = new EditModeAction(this, IconSize.MIDDLE);
 
-    public final Action RESULTS_MODE_24 = new ResultsModeAction(this, IconSize.SMALL);
-    public final Action RESULTS_MODE_32 = new ResultsModeAction(this, IconSize.MIDDLE);
+    public final transient Action RESULTS_MODE_24 = new ResultsModeAction(this, IconSize.SMALL);
+    public final transient Action RESULTS_MODE_32 = new ResultsModeAction(this, IconSize.MIDDLE);
     
-    public final Action BOX_VIEW_24 = new BoxViewerAction(this, IconSize.SMALL);
-    public final Action BOX_VIEW_32 = new BoxViewerAction(this, IconSize.MIDDLE);
+    public final transient Action BOX_VIEW_24 = new BoxViewerAction(this, IconSize.SMALL);
+    public final transient Action BOX_VIEW_32 = new BoxViewerAction(this, IconSize.MIDDLE);
 
-    public final Action RESULT_HISTORY_24 = new ResultHistoryAction(this, IconSize.SMALL);
-    public final Action RESULT_HISTORY_32 = new ResultHistoryAction(this, IconSize.MIDDLE);
+    public final transient Action RESULT_HISTORY_24 = new ResultHistoryAction(this, IconSize.SMALL);
+    public final transient Action RESULT_HISTORY_32 = new ResultHistoryAction(this, IconSize.MIDDLE);
 
-    public final Action ATTRIBUTE_DESCRIPTION_FILE_WIZARD_24 = new AttributeDescriptionFileWizardAction(IconSize.SMALL);
-    public final Action ATTRIBUTE_DESCRIPTION_FILE_WIZARD_32 = new AttributeDescriptionFileWizardAction(IconSize.MIDDLE);
+    public final transient Action ATTRIBUTE_DESCRIPTION_FILE_WIZARD_24 = new AttributeDescriptionFileWizardAction(IconSize.SMALL);
+    public final transient Action ATTRIBUTE_DESCRIPTION_FILE_WIZARD_32 = new AttributeDescriptionFileWizardAction(IconSize.MIDDLE);
+
+    public final transient Action SWITCH_WORKSPACE_24 = new SwitchWorkspaceAction(IconSize.SMALL);
+    public final transient Action SWITCH_WORKSPACE_32 = new SwitchWorkspaceAction(IconSize.MIDDLE);
     
     public final JCheckBoxMenuItem TOGGLE_LOGGING_VIEWER = new ToggleLoggingViewerItem(this, IconSize.SMALL);
     public final JCheckBoxMenuItem TOGGLE_SYSTEM_MONITOR = new ToggleSystemMonitorItem(this, IconSize.SMALL);
@@ -390,7 +402,7 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 	
 	private MainProcessEditor mainEditor = new MainProcessEditor(this);
 	
-	private JToolBar toolBar = new ExtendedToolBar();
+	private JToolBar toolBar = new ExtendedJToolBar();
 
 	private JSplitPane splitPaneV;
 	
@@ -416,6 +428,8 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 
 	private int undoIndex;
 	
+	private boolean noActualChange = false;
+	
 	/** The hostname of the system. Might be empty (no host name will be shown) and will be initialized
 	 *  in the first call of {@link #setTitle()}. */
 	private String hostname = null;
@@ -436,7 +450,7 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 		SwingTools.setFrameIcon(this);
 
 		// create and set new process setup
-		setProcess(new Process());
+		setProcess(new Process(), true);
 		
 		// create main editor and result display
 		welcomeScreen = new WelcomeScreen(this, NEWS_TEXT);
@@ -487,6 +501,8 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 		fileMenu.add(PRINT_PREVIEW_ACTION_24);
 		fileMenu.add(PAGE_SETUP_ACTION_24);
 		fileMenu.add(EXPORT_ACTION_24);
+		fileMenu.addSeparator();
+		fileMenu.add(SWITCH_WORKSPACE_24);
 		fileMenu.addSeparator();
 		fileMenu.add(EXIT_ACTION_24);
 		menuBar.add(fileMenu);
@@ -549,26 +565,17 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 		JMenu helpMenu = new JMenu("Help");
 		helpMenu.setMnemonic(KeyEvent.VK_H);
 		JMenuItem aboutItem = new JMenuItem("About RapidMiner...", aboutIcon);
-		aboutItem.setMnemonic(KeyEvent.VK_Y);
+		aboutItem.setMnemonic(KeyEvent.VK_A);
 		aboutItem.setToolTipText("Display information about RapidMiner");
 		aboutItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				new AboutBox(MainFrame.this, 
-						"RapidMiner", RapidMiner.getVersion(), 
-						"Copyright (C) 2001-2007 by Rapid-I and contributors" + Tools.getLineSeparator() + 
-						"Rapid-I, In der Oeverscheidt 18, 44221 Dortmund, Germany." + Tools.getLineSeparator() + 
-						"Complete list of developers available at our web site" + Tools.getLineSeparator() +
-						"http://www.rapidminer.com" + Tools.getLineSeparator() + 
-						"RapidMiner comes with ABSOLUTELY NO WARRANTY; This is free" + Tools.getLineSeparator() +
-						"software and you are welcome to redistribute it under certain" + Tools.getLineSeparator() +
-						"conditions; see license information in the file LICENSE.", 
-						rapidMinerLogo).setVisible(true);
+				new AboutBox(MainFrame.this, RapidMiner.getVersion(), rapidMinerLogo).setVisible(true);
 			}
 		});
 		helpMenu.add(aboutItem);
 		helpMenu.add(TUTORIAL_ACTION_24);
 		JMenuItem contents = new JMenuItem("RapidMiner GUI Manual...", helpIcon);
-		contents.setMnemonic(KeyEvent.VK_M);
+		contents.setMnemonic(KeyEvent.VK_G);
 		contents.setToolTipText("Browse the RapidMiner GUI Manual.");
 		contents.addActionListener(new ActionListener() {
 
@@ -582,6 +589,28 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 		});
 		helpMenu.add(contents);
 
+		JMenuItem needSupport = new JMenuItem("Need Support?", supportIcon);
+		needSupport.setMnemonic(KeyEvent.VK_S);
+		needSupport.setToolTipText("Learn more about the possibilities of getting professional support for RapidMiner.");
+		needSupport.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String message = 
+					"Do you need professional support? Do you want" + Tools.getLineSeparator() + 
+					"to optimize the achieved results? Do you need" + Tools.getLineSeparator() + 
+					"professional training which enables you to find" + Tools.getLineSeparator() + 
+					"better data mining solutions in shorter times?" + Tools.getLineSeparators(2) + 
+					"Check out the offers on" + Tools.getLineSeparators(2) + 
+					"                      http://rapid-i.com" + Tools.getLineSeparators(2) + 
+					" including" + Tools.getLineSeparators(2) +
+					"      - improved software versions, e.g. the Enterprise Edition of RapidMiner," + Tools.getLineSeparator() +
+					"      - professional support and other services," + Tools.getLineSeparator() + 
+					"      - courses for data mining with RapidMiner," + Tools.getLineSeparator() +
+					"      - and individual solutions and extensions." + Tools.getLineSeparators(2);
+				JOptionPane.showMessageDialog(MainFrame.this, message, "Need Support?", JOptionPane.INFORMATION_MESSAGE);
+			}
+		});
+		helpMenu.add(needSupport);
+		
 		List allPlugins = Plugin.getAllPlugins();
 		if (allPlugins.size() > 0) {
 			helpMenu.addSeparator();
@@ -603,6 +632,7 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 		menuBar.add(helpMenu);
 
 		// Tool Bar
+		/*
 		toolBar.add(NEW_ACTION_32);
 		toolBar.add(OPEN_ACTION_32);
 		toolBar.add(SAVE_ACTION_32);
@@ -632,6 +662,37 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 		toolBar.add(Box.createHorizontalGlue());
 		toolBar.add(EDIT_MODE_32);
 		toolBar.add(RESULTS_MODE_32);
+		*/
+		
+		toolBar.add(NEW_ACTION_24);
+		toolBar.add(OPEN_ACTION_24);
+		toolBar.add(SAVE_ACTION_24);
+		toolBar.add(SAVE_AS_ACTION_24);
+		toolBar.add(PRINT_ACTION_24);
+		toolBar.addSeparator();
+		toolBar.addSeparator();
+		toolBar.add(UNDO_ACTION_24);
+		toolBar.add(REDO_ACTION_24);
+		toolBar.addSeparator();
+		toolBar.addSeparator();
+		toolBar.add(mainEditor.getOperatorTree().NEW_OPERATOR_ACTION_24);
+		toolBar.add(mainEditor.getOperatorTree().DELETE_OPERATOR_ACTION_24);
+		toolBar.add(mainEditor.getOperatorTree().NEW_BUILDING_BLOCK_ACTION_24);
+		toolBar.addSeparator();
+		toolBar.addSeparator();
+		toolBar.add(RUN_RESUME_ACTION_24);
+		toolBar.add(STOP_ACTION_24);
+		toolBar.addSeparator();
+		toolBar.addSeparator();
+		toolBar.add(VALIDATE_ACTION_24);
+		toolBar.addSeparator();
+		toolBar.addSeparator();
+		toolBar.add(TOGGLE_EXPERT_MODE_ACTION_24);
+		toolBar.addSeparator();
+		toolBar.addSeparator();		
+		toolBar.add(Box.createHorizontalGlue());
+		toolBar.add(EDIT_MODE_24);
+		toolBar.add(RESULTS_MODE_24);
 		
 		getContentPane().add(toolBar, BorderLayout.NORTH);
 		getContentPane().add(statusBar, BorderLayout.SOUTH);
@@ -715,7 +776,7 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 			printerJob.setPrintable(new ComponentPrinter(mainEditor));
 			break;
 		case RESULTS_MODE:
-			printerJob.setPrintable(new ComponentPrinter(resultDisplay));
+			printerJob.setPrintable(new ComponentPrinter(resultDisplay.getCurrentlyDisplayedComponent()));
 			break;
 		}
 		if (printerJob.printDialog()) {
@@ -734,7 +795,7 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 			printer = new ComponentPrinter(mainEditor);
 			break;
 		case RESULTS_MODE:
-			printer = new ComponentPrinter(resultDisplay);
+			printer = new ComponentPrinter(resultDisplay.getCurrentlyDisplayedComponent());
 			break;
 		}
         PreviewDialog dialog = new PreviewDialog("Print Preview", this, printer, pageFormat, 1);
@@ -885,7 +946,7 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 		if (close()) {
 			stopProcess();
 			resultDisplay.clear();
-			setProcess(new Process());
+			setProcess(new Process(), true);
 			addToUndoList();
 			changeMode(EDIT_MODE);
 		}	
@@ -896,9 +957,23 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
         if (getProcessState() == Process.PROCESS_STATE_STOPPED) {
             // Run
             if ((isChanged() || (getProcess().getProcessFile() == null)) && !isTutorialMode()) {
-                if (JOptionPane.showConfirmDialog(this, "Save process file?", "Save?", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
-                    save();
-
+            	
+				String saveDialogProperty = System.getProperty(PROPERTY_RAPIDMINER_GUI_SAVEDIALOG);
+				boolean showSaveDialog = true;
+				if (saveDialogProperty != null)
+					showSaveDialog = Tools.booleanValue(saveDialogProperty, true);
+				
+				if (showSaveDialog) {
+					RequestSaveDialog saveDialog = new RequestSaveDialog("Save Process?", "Save process before start?");
+					saveDialog.setVisible(true);
+					if (saveDialog.shouldNotAskAgain()) {
+						System.setProperty(PROPERTY_RAPIDMINER_GUI_SAVEDIALOG, "false");
+						ParameterService.writePropertyIntoMainUserConfigFile(PROPERTY_RAPIDMINER_GUI_SAVEDIALOG, "false");
+					}
+					if (saveDialog.isOk()) {
+	                    save();						
+					}
+				}
             }
            
         	setProcessState(Process.PROCESS_STATE_RUNNING);
@@ -947,9 +1022,9 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
     				if (processThread.isAlive()) {
     					processThread.setPriority(Thread.MIN_PRIORITY);
     					processThread.stopProcess();
-    					processThread.notify();
+    					processThread.notifyAll();
     				}
-    	    		setProcess((Process)MainFrame.this.process.clone());
+    	    		setProcess((Process)MainFrame.this.process.clone(), false);
     	            setProcessState(Process.PROCESS_STATE_STOPPED);
     	    		enableActions();
     				statusBar.processEnded();
@@ -969,9 +1044,7 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 			RapidMinerGUI.getResultHistory().addResults(resultName, this.process.getRootOperator(), results);
 		}
 		statusBar.processEnded();
-		/* synchronized (processThread) {
-			this.processThread = null;	
-		} */
+
         setProcessState(Process.PROCESS_STATE_STOPPED);
 		enableActions();
 	}
@@ -991,16 +1064,16 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 	/** Sets a new process and registers the MainFrame listener. Please note
 	 *  that this method does not invoke {@link #processChanged()}. Do so
 	 *  if necessary. 
-	 * @deprecated Use {@link #setProcess(Process)} instead*/
+	 * @deprecated Use {@link #setProcess(Process, boolean)} instead*/
 	@Deprecated
 	public synchronized void setExperiment(Process process) {
-		setProcess(process);
+		setProcess(process, true);
 	}
 
 	/** Sets a new process and registers the MainFrame listener. Please note
-     *  that this method does not invoke {@link #processChanged()}. Do so
-     *  if necessary. */
-	public synchronized void setProcess(Process process) {
+     *  that this method only invoke {@link #processChanged()} if the parameter
+     *  newProcess is true. */
+	public synchronized void setProcess(Process process, boolean newProcess) {
 		if (getProcessState() != Process.PROCESS_STATE_STOPPED) {
 			if (processThread != null) {
 				synchronized (processThread) {
@@ -1015,7 +1088,10 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 			this.process.addBreakpointListener(this);
 			this.process.addBreakpointListener(statusBar);
 			this.process.getRootOperator().addProcessListener(statusBar);
-			setOperator(this.process.getRootOperator());
+			if (!newProcess)
+				noActualChange = true;
+			setOperator(this.process.getRootOperator(), newProcess);
+			noActualChange = false;
 			enableActions();
 		}
 		setTitle();
@@ -1027,7 +1103,7 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 	 * {@link #setProcess(Process)} for this purpose which also sets some
 	 * listeners etc.
 	 */
-	private void setOperator(Operator root) {
+	private void setOperator(Operator root, boolean newProcess) {
 		mainEditor.processChanged(root);
 	}
 
@@ -1037,20 +1113,22 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
      * can be saved to disk.
 	 */
 	public void processChanged() {
-		boolean oldValue = this.changed;
-		this.changed = true;
-		addToUndoList();
-		if (!oldValue) {
-			setTitle();
-		}
-		synchronized (process) {
-			if ((this.process.getProcessFile() != null) && !tutorialMode) {
-				this.SAVE_ACTION_24.setEnabled(true);
-				this.SAVE_ACTION_32.setEnabled(true);
+		if (!noActualChange) {
+			boolean oldValue = this.changed;
+			this.changed = true;
+			addToUndoList();
+			if (!oldValue) {
+				setTitle();
 			}
-			
-			// changes the XML text after each process change
-			mainEditor.getXMLEditor().processChanged(this.process.getRootOperator());
+			synchronized (process) {
+				if ((this.process.getProcessFile() != null) && !tutorialMode) {
+					this.SAVE_ACTION_24.setEnabled(true);
+					this.SAVE_ACTION_32.setEnabled(true);
+				}
+
+				// changes the XML text after each process change
+				mainEditor.getXMLEditor().processChanged(this.process.getRootOperator());
+			}
 		}
 	}
 	
@@ -1131,7 +1209,7 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 		try {
 			synchronized (process) {
 				this.process.setupFromXML(stateXML);
-				setProcess(this.process);
+				setProcess(this.process, true);
 				// cannot use method processChanged() because this would add the
 				// old state to the undo stack!
 				this.changed = true;
@@ -1241,21 +1319,33 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 	public void open(File file, boolean showInfo) {
 		stopProcess();
 		try {
-			try {
-				Process process = RapidMiner.readProcessFile(file);
-				setProcess(process);
-				changeMode(EDIT_MODE);
-			} catch (XMLException ex) {
-				SwingTools.showSimpleErrorMessage("While loading '" + file + "'", ex);
-				Process process = new Process();
-				process.setProcessFile(file);
-				setProcess(process);
-				changeMode(EDIT_MODE);
-				mainEditor.changeToXMLEditor();
-				mainEditor.getXMLEditor().setText(Tools.readOutput(new BufferedReader(new FileReader(file))));
-			}
-		} catch (Exception ex) { // io exceptions
+			Process process = RapidMiner.readProcessFile(file);
+			setProcess(process, true);
+			changeMode(EDIT_MODE);
+		} catch (XMLException ex) {
 			SwingTools.showSimpleErrorMessage("While loading '" + file + "'", ex);
+			Process process = new Process();
+			process.setProcessFile(file);
+			setProcess(process, true);
+			changeMode(EDIT_MODE);
+			mainEditor.changeToXMLEditor();
+			try {
+				mainEditor.getXMLEditor().setText(Tools.readOutput(new BufferedReader(new FileReader(file))));
+			} catch (FileNotFoundException e) {
+				SwingTools.showSimpleErrorMessage("While loading '" + file + "'", e);
+				return;
+			} catch (IOException e) {
+				SwingTools.showSimpleErrorMessage("While loading '" + file + "'", e);
+				return;
+			}
+		} catch (InstantiationException e) {
+			SwingTools.showSimpleErrorMessage("While loading '" + file + "'", e);
+			return;
+		} catch (IllegalAccessException e) {
+			SwingTools.showSimpleErrorMessage("While loading '" + file + "'", e);
+			return;
+		} catch (IOException e) {
+			SwingTools.showSimpleErrorMessage("While loading '" + file + "'", e);
 			return;
 		}
 
@@ -1296,7 +1386,7 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 				setTitle();
 				RapidMinerGUI.useProcessFile(this.process);
 				updateRecentFileList();
-				mainEditor.processChanged(this.process.getRootOperator());
+				//mainEditor.processChanged(this.process.getRootOperator());
 			}
 		} catch (IOException ex) {
 			SwingTools.showSimpleErrorMessage("Cannot save process file!", ex);
@@ -1357,7 +1447,8 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 		}
 		stopProcess();
 		dispose();
-		System.exit(0);
+		RapidMinerGUI.quit(0);
+		//System.exit(0);
 	}
 
 	/** Updates the list of recently used files. */

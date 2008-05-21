@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.plotter;
 
@@ -37,6 +35,7 @@ import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableRow;
 import com.rapidminer.gui.plotter.conditions.ColumnsPlotterCondition;
 import com.rapidminer.gui.plotter.conditions.PlotterCondition;
+import com.rapidminer.tools.math.MathFunctions;
 
 
 /**
@@ -45,7 +44,7 @@ import com.rapidminer.gui.plotter.conditions.PlotterCondition;
  * coefficients.
  * 
  * @author Ingo Mierswa
- * @version $Id: AndrewsCurves.java,v 1.1 2007/05/27 21:59:05 ingomierswa Exp $
+ * @version $Id: AndrewsCurves.java,v 1.4 2008/05/09 19:22:51 ingomierswa Exp $
  */
 public class AndrewsCurves extends PlotterAdapter {
 
@@ -147,8 +146,8 @@ public class AndrewsCurves extends PlotterAdapter {
 				while (s.hasNext()) {
 					DataTableRow row = s.next();
 					double color = row.getValue(colorColumn);
-					this.minColor = Math.min(this.minColor, color);
-					this.maxColor = Math.max(this.maxColor, color);
+					this.minColor = MathFunctions.robustMin(this.minColor, color);
+					this.maxColor = MathFunctions.robustMax(this.maxColor, color);
 				}
 			}
 			s = this.dataTable.iterator();

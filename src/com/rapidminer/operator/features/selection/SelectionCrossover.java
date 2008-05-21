@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.selection;
 
@@ -66,11 +64,20 @@ public class SelectionCrossover implements PopulationOperator {
 
     private Random random;
     
+    private int minNumber;
     
-	public SelectionCrossover(int type, double prob, Random random) {
-		this.prob = prob;
-		this.type = type;
-        this.random = random;
+    private int maxNumber;
+    
+    private int exactNumber;
+    
+    
+	public SelectionCrossover(int type, double prob, Random random, int minNumber, int maxNumber, int exactNumber) {
+		this.prob        = prob;
+		this.type        = type;
+        this.random      = random;
+        this.minNumber   = minNumber;
+        this.maxNumber   = maxNumber;
+        this.exactNumber = exactNumber;
 	}
 
 	/** The default implementation returns true for every generation. */
@@ -149,11 +156,31 @@ public class SelectionCrossover implements PopulationOperator {
 
 			if (random.nextDouble() < prob) {
 				crossover(p1, p2);
-				if (p1.getNumberOfUsedAttributes() > 0) {
-					l.add(new Individual(p1));
+				
+				int numberOfFeatures = p1.getNumberOfUsedAttributes(); 
+				if (numberOfFeatures > 0) {
+					if (exactNumber > 0) {
+						if (numberOfFeatures == exactNumber) {
+							l.add(new Individual(p1));
+						}
+					} else {
+						if (((maxNumber < 1) || (numberOfFeatures <= maxNumber)) && (numberOfFeatures >= minNumber)) {
+							l.add(new Individual(p1));
+						}
+					}
 				}
-				if (p2.getNumberOfUsedAttributes() > 0) {
-					l.add(new Individual(p2));
+				
+				numberOfFeatures = p2.getNumberOfUsedAttributes(); 
+				if (numberOfFeatures > 0) {
+					if (exactNumber > 0) {
+						if (numberOfFeatures == exactNumber) {
+							l.add(new Individual(p2));
+						}
+					} else {
+						if (((maxNumber < 1) || (numberOfFeatures <= maxNumber)) && (numberOfFeatures >= minNumber)) {
+							l.add(new Individual(p2));
+						}
+					}
 				}
 			}
 		}

@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.performance;
 
@@ -50,8 +48,7 @@ import com.rapidminer.tools.LogService;
  * given, this is used for keeping the performance values.</p> 
  * 
  * <p>All of the performance criteria can be switched on using boolean parameters. 
- * Their values can be queried by a
- * {@link com.rapidminer.operator.visualization.ProcessLogOperator} using the same names.
+ * Their values can be queried by a ProcessLogOperator using the same names.
  * The main criterion is used for comparisons and need to be specified only for
  * processes where performance vectors are compared, e.g. feature selection
  * or other meta optimization process setups. 
@@ -69,7 +66,7 @@ import com.rapidminer.tools.LogService;
  * used instead of simply replacing the performance comparator.</p>
  * 
  * @author Ingo Mierswa
- * @version $Id: PolynominalClassificationPerformanceEvaluator.java,v 1.3 2007/07/15 19:04:34 ingomierswa Exp $
+ * @version $Id: PolynominalClassificationPerformanceEvaluator.java,v 1.7 2008/05/09 19:22:43 ingomierswa Exp $
  */
 public class PolynominalClassificationPerformanceEvaluator extends AbstractPerformanceEvaluator {
 
@@ -85,7 +82,8 @@ public class PolynominalClassificationPerformanceEvaluator extends AbstractPerfo
 		com.rapidminer.operator.performance.RootRelativeSquaredError.class, 
 		com.rapidminer.operator.performance.SquaredError.class, 
 		com.rapidminer.operator.performance.CorrelationCriterion.class,
-		com.rapidminer.operator.performance.SquaredCorrelationCriterion.class, 
+		com.rapidminer.operator.performance.SquaredCorrelationCriterion.class,
+		com.rapidminer.operator.performance.CrossEntropy.class,
 		com.rapidminer.operator.performance.Margin.class,
         com.rapidminer.operator.performance.SoftMarginLoss.class,
         com.rapidminer.operator.performance.LogisticLoss.class

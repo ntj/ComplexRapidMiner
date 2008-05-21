@@ -1,39 +1,34 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.templates;
 
-import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.StringReader;
-import java.net.URL;
 import java.util.Collection;
 import java.util.Iterator;
 
-import javax.imageio.ImageIO;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JMenu;
@@ -50,8 +45,6 @@ import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.tools.BuildingBlockService;
-import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.XMLException;
 
 
@@ -59,13 +52,13 @@ import com.rapidminer.tools.XMLException;
  * This menu contains all building blocks, the predefined and the user defined.
  * 
  * @author Ingo Mierswa
- * @version $Id: NewBuildingBlockMenu.java,v 1.2 2007/06/01 23:15:50 ingomierswa Exp $
+ * @version $Id: NewBuildingBlockMenu.java,v 1.6 2008/05/09 19:22:52 ingomierswa Exp $
  */
 public class NewBuildingBlockMenu extends JMenu {
 
 	private static final long serialVersionUID = 316102134905132452L;
 
-	private static final String NEW_BUILDING_BLOCK_ICON_NAME = "icons/24/box_new.png";
+	private static final String NEW_BUILDING_BLOCK_ICON_NAME = "24/box_new.png";
 	
 	private static Icon newBuildingBlockIcon = null;
 	
@@ -94,19 +87,8 @@ public class NewBuildingBlockMenu extends JMenu {
 			if (iconPath == null) {
 			    item = new JMenuItem(name);
 			} else {
-			    Image image = null;
-			    try {
-			        URL url = Tools.getResource("icons/" + iconPath);
-			        if (url != null) {
-			            image = ImageIO.read(url);
-			            item = new JMenuItem(name, new ImageIcon(image));
-			        } else {
-			            item = new JMenuItem(name);
-			        }
-			    } catch (IOException e) {
-                    LogService.getGlobal().log("Cannot load icon '" + iconPath + "'.", LogService.ERROR);
-			        item = new JMenuItem(name);
-			    }
+			    ImageIcon icon = SwingTools.createIcon(iconPath);
+			    item = new JMenuItem(name, icon);
 			}
 			item.setToolTipText(buildingBlock.getDescription());
 			item.addActionListener(new ActionListener() {

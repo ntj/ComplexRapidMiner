@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools;
 
@@ -30,7 +28,6 @@ import java.awt.GradientPaint;
 import java.awt.Image;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.LinkedList;
@@ -46,13 +43,16 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileSystemView;
 
+import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.syntax.SyntaxStyle;
 import com.rapidminer.gui.tools.syntax.SyntaxUtilities;
 import com.rapidminer.gui.tools.syntax.TextAreaDefaults;
 import com.rapidminer.gui.tools.syntax.Token;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.Tools;
 
 
@@ -68,7 +68,7 @@ import com.rapidminer.tools.Tools;
  * </ul>
  * 
  * @author Ingo Mierswa
- * @version $Id: SwingTools.java,v 1.13 2007/07/01 01:02:47 ingomierswa Exp $
+ * @version $Id: SwingTools.java,v 1.31 2008/05/09 19:22:58 ingomierswa Exp $
  */
 public class SwingTools {
 	
@@ -83,42 +83,53 @@ public class SwingTools {
      *  to the amount of {@link #TABLE_ROW_EXTRA_HEIGHT} which is already 
      *  added in the constructor. */
     public static final int TABLE_WITH_COMPONENTS_ROW_EXTRA_HEIGHT = 10;
+
+   
+	/** Some color constants for Java Look and Feel. */
+	public static final Color DARKEST_YELLOW = new Color(250, 219, 172);
 	
 	/** Some color constants for Java Look and Feel. */
-	public static final Color DARKEST_YELLOW = new Color(190, 170, 100);
+	public static final Color DARK_YELLOW = new Color(250, 226, 190);
+
+	/** Some color constants for Java Look and Feel. */
+	public static final Color LIGHT_YELLOW = new Color(250, 233, 207);
+    
+    /** Some color constants for Java Look and Feel. */
+    public static final Color LIGHTEST_YELLOW = new Color(250, 240, 225);
+
+    /** Some color constants for Java Look and Feel. */
+    public static final Color TRANSPARENT_YELLOW = new Color(255, 245, 230, 190);
+    
+ 
+    /** Some color constants for Java Look and Feel. */
+	public static final Color VERY_DARK_BLUE = new Color(172, 172, 212);
 	
 	/** Some color constants for Java Look and Feel. */
-	public static final Color DARK_YELLOW = new Color(220, 200, 130);
-
-	/** Some color constants for Java Look and Feel. */
-	public static final Color LIGHT_YELLOW = new Color(230, 215, 155);
-    
-    /** Some color constants for Java Look and Feel. */
-    public static final Color LIGHTEST_YELLOW = new Color(250, 240, 190);
-
-    /** Some color constants for Java Look and Feel. */
-    public static final Color TRANSPARENT_YELLOW = new Color(250, 240, 190, 190);
-    
-	/** Some color constants for Java Look and Feel. */
-	public static final Color DARKEST_BLUE = new Color(110, 130, 170);
+	public static final Color DARKEST_BLUE = new Color(182, 202, 242);
 	
 	/** Some color constants for Java Look and Feel. */
-	public static final Color DARK_BLUE = new Color(140, 160, 200);
+	public static final Color DARK_BLUE = new Color(199, 213, 242);
 
 	/** Some color constants for Java Look and Feel. */
-	public static final Color LIGHT_BLUE = new Color(196, 213, 255);
+	public static final Color LIGHT_BLUE = new Color(216, 224, 242);
 
     /** Some color constants for Java Look and Feel. */
-    public static final Color LIGHTEST_BLUE = new Color(232, 239, 255);
+    public static final Color LIGHTEST_BLUE = new Color(233, 236, 242);
+    
+    /** The Rapid-I orange color. */
+	public static final Color RAPID_I_ORANGE = new Color(242, 146, 0);
+	
+	/** The Rapid-I brown color. */
+	public static final Color RAPID_I_BROWN = new Color(97, 66, 11);
     
     /** Some color constants for Java Look and Feel. */
-    public static final Color LIGHTEST_RED = new Color(255, 195, 195);
+    public static final Color LIGHTEST_RED = new Color(250, 210, 210);
     
     /** A brown font color. */
 	public static final Color BROWN_FONT_COLOR = new Color(63,53,24);
 	
     /** A brown font color. */
-	public static final Color LIGHT_BROWN_FONT_COLOR = new Color(113,103,74);
+	public static final Color LIGHT_BROWN_FONT_COLOR = new Color(113,103,74);	
 	
 	/** Contains the small frame icons in all possible sizes. */
 	private static final List<Image> ALL_FRAME_ICONS = new LinkedList<Image>();
@@ -127,10 +138,24 @@ public class SwingTools {
 		"16", "24", "32", "48", "64", "128"
 	};
 	
+	private static String frameIconBaseName = "rapidminer_frame_icon_";
+	
+	private static String iconType = RapidMinerGUI.LOOK_AND_FEELS[RapidMinerGUI.LOOK_AND_FEEL_MODERN];
+	
 	static {
+		reloadFrameIcons();
+	}
+    
+	public static void setupFrameIcons(String _iconBaseName) {
+		frameIconBaseName = _iconBaseName;
+		reloadFrameIcons();
+	}
+	
+	private static void reloadFrameIcons() {
 		try {
+			ALL_FRAME_ICONS.clear();
 			for (String size : FRAME_ICON_SIZES) {
-				URL url = Tools.getResource("rapidminer_frame_icon_" + size + ".png");
+				URL url = Tools.getResource(frameIconBaseName + size + ".png");
 				if (url != null) {
 					ALL_FRAME_ICONS.add(ImageIO.read(url));
 				}
@@ -138,9 +163,9 @@ public class SwingTools {
 		} catch (IOException e) {
 			// ignore this and do not use frame icons
 			LogService.getGlobal().logWarning("Cannot load frame icons. Skipping...");
-		}
+		}		
 	}
-    
+	
 	/** Returns the list of all possible frame icons. */
 	public static void setFrameIcon(JFrame frame) {
 		Method iconImageMethod = null;
@@ -164,6 +189,29 @@ public class SwingTools {
 		}
 	}
 	
+	/** Returns the list of all possible frame icons. */
+	public static void setDialogIcon(JDialog dialog) {
+		Method iconImageMethod = null;
+		try {
+			iconImageMethod = dialog.getClass().getMethod("setIconImages", new Class[] { List.class });
+		} catch (Throwable e) {
+			// ignore this and use no icons or parent icon
+		}
+		
+		if (iconImageMethod != null) {
+			try {
+				iconImageMethod.invoke(dialog, new Object[] { ALL_FRAME_ICONS });
+			} catch (Throwable e) {
+				// ignore this and use no or parent icon
+			}
+		}
+	}
+	
+	/** Creates a red gradient paint. */
+	public static GradientPaint makeRedPaint(double width, double height) {
+		return new GradientPaint(0f, 0f, new Color(200,50,50), (float) width / 2, (float) height / 2, new Color(255,100,100), true);
+	}
+	
 	/** Creates a blue gradient paint. */
 	public static GradientPaint makeBluePaint(double width, double height) {
 		return new GradientPaint(0f, 0f, LIGHT_BLUE, (float) width / 2, (float) height / 2, LIGHTEST_BLUE, true);
@@ -174,14 +222,25 @@ public class SwingTools {
 		return new GradientPaint(0f, 0f, LIGHT_YELLOW, (float) width / 2, (float) height / 2, LIGHTEST_YELLOW, true);
 	}
 
+	public static void setIconType(String newIconType) {
+		iconType = newIconType;
+	}
+	
 	/** Tries to load the icon for the given resource. Returns null (and writes a warning) if the 
+	 *  resource file cannot be loaded. This method automatically adds the icon path and the
+	 *  correct icon type (modern or classic). The given names must contain '/' instead of backslashes! */
+	public static ImageIcon createIcon(String iconName) {
+		return createImage("icons/" + iconType + "/" + iconName);		
+	}
+
+	/** Tries to load the image for the given resource. Returns null (and writes a warning) if the 
 	 *  resource file cannot be loaded. */
-	public static ImageIcon createIcon(String resourceName) {
-		URL url = Tools.getResource(resourceName);
+	public static ImageIcon createImage(String imageName) {
+		URL url = Tools.getResource(imageName);
 		if (url != null) {
 			return new ImageIcon(url);
 		} else {
-            LogService.getGlobal().log("Cannot load image '" + resourceName + "': icon will not be displayed", LogService.WARNING);
+            LogService.getGlobal().log("Cannot load image '" + imageName + "': icon will not be displayed", LogService.STATUS);
 			return null;
 		}		
 	}
@@ -248,6 +307,8 @@ public class SwingTools {
 	
 	/** Adds linebreaks after {@link #TOOL_TIP_LINE_LENGTH} letters. */
 	public static String addLinebreaks(String message) {
+		if (message == null)
+			return null;
 		String completeText = message.trim();
 		StringBuffer result = new StringBuffer();
         // line.separator does not work here (transform and use \n)
@@ -355,7 +416,7 @@ public class SwingTools {
 					extension = simpleFF.getExtension();
 				}
 				if (extension != null) {
-					if (!selectedFile.getAbsolutePath().endsWith(extension)) {
+					if (!selectedFile.getAbsolutePath().toLowerCase().endsWith(extension.toLowerCase())) {
 						selectedFile = new File(selectedFile.getAbsolutePath() + extension); 
 					}
 				}
@@ -397,11 +458,18 @@ public class SwingTools {
 				directory = file.getAbsoluteFile().getParentFile();
 			}
 		} else {
-			File processFile = (RapidMinerGUI.getMainFrame().getProcess() != null) ? RapidMinerGUI.getMainFrame().getProcess().getProcessFile() : null;
+			File processFile = null;
+			MainFrame mainFrame = RapidMinerGUI.getMainFrame();
+			if (mainFrame != null)
+				processFile = (mainFrame.getProcess() != null) ? mainFrame.getProcess().getProcessFile() : null;
 			if (processFile != null) {
 				directory = processFile.getAbsoluteFile().getParentFile();
 			} else {
-				directory = new File(System.getProperty("user.dir"));
+				directory = ParameterService.getUserWorkspace();
+				if (directory == null) {
+				    FileSystemView fsv = FileSystemView.getFileSystemView();
+				    directory = fsv.getDefaultDirectory();
+				}
 			}
 		}
 
@@ -416,27 +484,6 @@ public class SwingTools {
 		if (file != null)
 			fileChooser.setSelectedFile(file);
         
-        // for special options of Trendy LaF
-        try {        	
-            Class configurationClazz = Class.forName("com.Trendy.swing.plaf.TrendyConfiguration");
-            
-            Field favouritesField = configurationClazz.getField("FILECHOOSER_FAVOURITES");
-            String favouritesString = (String)favouritesField.get(null);
-            fileChooser.putClientProperty(favouritesString, Boolean.TRUE);
-            
-            Field viewField = configurationClazz.getField("FILECHOOSER_VIEW");
-            String viewString = (String)viewField.get(null);
-            Field detailsField = configurationClazz.getField("FILECHOOSER_VIEW_DETAILS");
-            String detailsString = (String)detailsField.get(null);
-            
-            fileChooser.putClientProperty(viewString, detailsString);
-            
-            
-        } catch (Throwable e) {
-            // does nothing: trendy look and feel is simply not available --> use usual file chooser
-        	LogService.getGlobal().log("Cannot use trendy file chooser, use normal one...", LogService.MINIMUM);
-        }
-        
 		return fileChooser;
 	}
 
@@ -444,7 +491,7 @@ public class SwingTools {
      *  is placed into the NORTH section. */
 	public static JPanel createTextPanel(String title, String text) {
 		JPanel panel = new JPanel(new java.awt.BorderLayout());
-		JLabel label = new JLabel("<html><h2>" + title + "</h2><p>" + text + "</p></html>");
+		JLabel label = new JLabel("<html><h2>" + title + "</h2>" + (text != null ? "<p>" + text + "</p>" : "") + "</html>");
 		label.setBorder(BorderFactory.createEmptyBorder(11, 11, 11, 11));
 		label.setFont(label.getFont().deriveFont(java.awt.Font.PLAIN));
 		panel.add(label, java.awt.BorderLayout.NORTH);

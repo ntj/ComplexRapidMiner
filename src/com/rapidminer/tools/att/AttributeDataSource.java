@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools.att;
 
@@ -108,26 +106,26 @@ public class AttributeDataSource {
 	}
 
 	public void writeXML(PrintWriter out, File defaultSource) throws IOException {
-		out.println("  <" + attributeType);
-		out.println("    name       = \"" + attribute.getName() + "\"");
+		out.println("  <" + Tools.escapeXML(attributeType));
+		out.println("    name       = \"" + Tools.escapeXML(attribute.getName()) + "\"");
 		if (!getFile().equals(defaultSource)) {
 			out.println("    sourcefile = \"" + getFile().getAbsolutePath() + "\"");
 		}
 		out.println("    sourcecol  = \"" + (getColumn() + 1) + "\"");
-		out.println("    valuetype  = \"" + Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(attribute.getValueType()) + "\"");
+		out.print("    valuetype  = \"" + Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(attribute.getValueType()) + "\"");
         if (!Ontology.ATTRIBUTE_BLOCK_TYPE.isA(attribute.getBlockType(), Ontology.SINGLE_VALUE))
-            out.println("    blocktype  = \"" + Ontology.ATTRIBUTE_BLOCK_TYPE.mapIndex(attribute.getBlockType()) + "\"");
+            out.print(Tools.getLineSeparator() + "    blocktype  = \"" + Ontology.ATTRIBUTE_BLOCK_TYPE.mapIndex(attribute.getBlockType()) + "\"");
 
 		if ((Ontology.ATTRIBUTE_VALUE_TYPE.isA(attribute.getValueType(), Ontology.NOMINAL)) && 
             (!attributeType.equals(Attributes.KNOWN_ATTRIBUTE_TYPES[Attributes.TYPE_ID]))) {
-			out.println("  >");
+			out.println(">");
 			Iterator<String> i = attribute.getMapping().getValues().iterator();
 			while (i.hasNext()) {
-				out.println("    <value>"+Tools.escapeXML(i.next())+"</value>");
+				out.println("    <value>" + Tools.escapeXML(i.next()) + "</value>");
 			}
-            out.println("  </"+attributeType+">");
+            out.println("  </" + Tools.escapeXML(attributeType) + ">" + Tools.getLineSeparator());
 		} else { // no values, simply end this attribute
-            out.println("  />");
+            out.println("/>" + Tools.getLineSeparator());
         }
 	}
 

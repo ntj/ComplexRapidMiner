@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.example.set;
 
@@ -30,6 +28,7 @@ import java.util.Random;
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableExampleSetAdapter;
 import com.rapidminer.example.Attribute;
+import com.rapidminer.example.AttributeTransformation;
 import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -50,17 +49,11 @@ import com.rapidminer.tools.Tools;
 public class AttributeWeightedExampleSet extends AbstractExampleSet {
 
 	private static final long serialVersionUID = -5662936146589379273L;
-
-	/** Currently used attribute weights. Used also for example creation. */
-	private AttributeWeights attributeWeights = new AttributeWeights();
-	
-	/** Indicates if attributes with a zero weight should be ignored by the 
-	 *  iterators delivered by {@link #getAttributes()}. */
-	private boolean ignoreZeroWeightedAttributes = false;
 	
 	/** The parent example set. */
 	private ExampleSet parent;
-	
+    
+	private AttributeWeights attributeWeights = new AttributeWeights();
 	
 	/**
 	 * Constructs a new AttributeWeightedExampleSet. Initially all attributes
@@ -85,59 +78,67 @@ public class AttributeWeightedExampleSet extends AbstractExampleSet {
 	 * weighted with the given default weight.
 	 */
 	public AttributeWeightedExampleSet(ExampleSet exampleSet, AttributeWeights weights, double defaultWeight) {
-		this.parent = exampleSet;
+		this.parent = (ExampleSet)exampleSet.clone();
+		this.attributeWeights = weights;
 		if (weights == null) {
 			this.attributeWeights = new AttributeWeights();
-			for (Attribute attribute : getAttributes())
-				this.attributeWeights.setWeight(attribute.getName(), defaultWeight);
-		} else {
-			this.attributeWeights = weights;
-			for (Attribute attribute : getAttributes()) {
-				double weight = weights.getWeight(attribute.getName());
-				this.attributeWeights.setWeight(attribute.getName(), Double.isNaN(weight) ? defaultWeight : weight);
+			for (Attribute attribute : this.parent.getAttributes()) {
+				setWeight(attribute, defaultWeight);
 			}
 		}
+		
+		for (Attribute attribute : this.parent.getAttributes()) {
+            attribute.addTransformation(new AttributeTransformationWeighting(this.attributeWeights));
+        }
 	}
 
 	/** Clone constructor. */
 	public AttributeWeightedExampleSet(AttributeWeightedExampleSet exampleSet) {
     	this.parent = (ExampleSet)exampleSet.parent.clone();
-		this.attributeWeights = (AttributeWeights) exampleSet.attributeWeights.clone();
-		this.ignoreZeroWeightedAttributes = exampleSet.ignoreZeroWeightedAttributes;
+    	this.attributeWeights = (AttributeWeights)exampleSet.attributeWeights.clone();
+		for (Attribute attribute : this.parent.getAttributes()) {
+			AttributeTransformation transformation = attribute.getLastTransformation();
+			if (transformation != null)
+				if (transformation instanceof AttributeTransformationWeighting)
+					((AttributeTransformationWeighting)transformation).setAttributeWeights(this.attributeWeights);
+        }
 	}
 
 	public AttributeWeights getAttributeWeights() {
-		return this.attributeWeights;
+	    return this.attributeWeights;
 	}
-	
+
 	/** Returns a clone where the zero weighted attributes are not delivered. */
 	public AttributeWeightedExampleSet createCleanClone() {
 		AttributeWeightedExampleSet clone = (AttributeWeightedExampleSet)clone();
-		clone.setIgnoreZeroWeightedAttributes(true);
+		Iterator<Attribute> a = clone.getAttributes().iterator();
+		while (a.hasNext()) {
+			Attribute attribute = a.next();
+			double weight = this.attributeWeights.getWeight(attribute.getName());
+			if (Tools.isZero(weight)) {
+				a.remove();
+			}
+		}
 		return clone;
 	}
 	
-	/** Indicates if zero weighted attributes should be ignored by the {@link Attributes}
-	 *  object delivered by {@link #getAttributes()}. */
-	public void setIgnoreZeroWeightedAttributes(boolean ignoreZeroWeightedAttributes) {
-		this.ignoreZeroWeightedAttributes = ignoreZeroWeightedAttributes;
-	}
-	
 	public Attributes getAttributes() {
-		return new AttributeWeightedAttributeRoles(parent.getAttributes(), this, this.ignoreZeroWeightedAttributes);
+		return this.parent.getAttributes();
 	}
 	
 	/** Returns the weight of the attribute. */
 	public double getWeight(Attribute attribute) {
-		return attributeWeights.getWeight(attribute.getName());
+        if (this.attributeWeights == null)
+            return 1.0d;
+        else
+            return this.attributeWeights.getWeight(attribute.getName());
 	}
 
 	/**
-	 * Sets the weight of the attribute. If the weight is 0, the attribute is
-	 * completely removed.
+	 * Sets the weight of the attribute.
 	 */
 	public void setWeight(Attribute attribute, double weightValue) {
-		attributeWeights.setWeight(attribute.getName(), weightValue);
+        this.attributeWeights.setWeight(attribute.getName(), weightValue);
 	}
 
 	/** Returns the number of selected attributes. */
@@ -251,8 +252,8 @@ public class AttributeWeightedExampleSet extends AbstractExampleSet {
 		return buffer.toString();
 	}
 
-    protected DataTable createDataTable(IOContainer container) {
-        return new DataTableExampleSetAdapter(this, attributeWeights);
+    public DataTable createDataTable(IOContainer container) {
+        return new DataTableExampleSetAdapter(this, getAttributeWeights());
     }
 
     /**
@@ -262,29 +263,15 @@ public class AttributeWeightedExampleSet extends AbstractExampleSet {
         return new AttributesExampleReader(parent.iterator(), this);
     }
 
-    /**
-     * Returns the example with the given index.
-     */
     public Example getExample(int index) {
-        return new Example(parent.getExample(index).getDataRow(), this);
+    	return this.parent.getExample(index);
     }
     
-    /**
-     * Returns the example with the given index.
-     */
-    public Example getExampleFromId(double id) {
-        return new Example(parent.getExampleFromId(id).getDataRow(), this);
-    }
-
 	public ExampleTable getExampleTable() {
 		return parent.getExampleTable();
 	}
 
 	public int size() {
 		return parent.size();
-	}
-
-	public void remapIds() {
-		parent.remapIds();
 	}
 }

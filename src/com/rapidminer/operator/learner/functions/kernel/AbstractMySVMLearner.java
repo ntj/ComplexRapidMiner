@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.functions.kernel;
 
@@ -68,7 +66,6 @@ import com.rapidminer.parameter.ParameterTypeInt;
  */
 public abstract class AbstractMySVMLearner extends AbstractLearner {
 
-
 	/** The parameter name for &quot;The SVM kernel parameter gamma (radial, anova).&quot; */
 	public static final String PARAMETER_KERNEL_GAMMA = "kernel_gamma";
 
@@ -107,6 +104,7 @@ public abstract class AbstractMySVMLearner extends AbstractLearner {
 
 	/** The parameter name for &quot;Indicates if final optimization fitness should be returned as performance.&quot; */
 	public static final String PARAMETER_RETURN_OPTIMIZATION_PERFORMANCE = "return_optimization_performance";
+	
     public static final String PARAMETER_C = "C";
     
     public static final String PARAMETER_KERNEL_TYPE = "kernel_type";
@@ -343,7 +341,7 @@ public abstract class AbstractMySVMLearner extends AbstractLearner {
 		type.setExpert(false);
 		types.add(type);
 		types.add(new ParameterTypeInt(PARAMETER_KERNEL_CACHE, "Size of the cache for kernel evaluations im MB ", 0, Integer.MAX_VALUE, 200));
-		type = new ParameterTypeDouble(PARAMETER_C, "The SVM complexity constant. Use -1 for different C values for positive and negative.", Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 0.0d);
+		type = new ParameterTypeDouble(PARAMETER_C, "The SVM complexity constant. Use -1 for different C values for positive and negative.", -1, Double.POSITIVE_INFINITY, 0.0d);
 		type.setExpert(false);
 		types.add(type);
 		type = new ParameterTypeDouble(PARAMETER_CONVERGENCE_EPSILON, "Precision on the KKT conditions", 0.0d, Double.POSITIVE_INFINITY, 1e-3);

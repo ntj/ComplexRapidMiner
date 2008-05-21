@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.plotter.som;
 
@@ -51,14 +49,15 @@ import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableRow;
 import com.rapidminer.gui.plotter.ExamplePlotterPoint;
 import com.rapidminer.gui.plotter.PlotterAdapter;
-import com.rapidminer.gui.plotter.conditions.MissingValuesPlotterCondition;
+import com.rapidminer.gui.plotter.conditions.BasicPlotterCondition;
 import com.rapidminer.gui.plotter.conditions.PlotterCondition;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.tools.RandomGenerator;
+import com.rapidminer.tools.math.MathFunctions;
 import com.rapidminer.tools.math.som.KohonenNet;
 import com.rapidminer.tools.math.som.ProgressListener;
 import com.rapidminer.tools.math.som.RandomDataContainer;
-import com.rapidminer.tools.math.som.RitterAdaption;
+import com.rapidminer.tools.math.som.RitterAdaptation;
 
 
 /**
@@ -67,12 +66,18 @@ import com.rapidminer.tools.math.som.RitterAdaption;
  * are different styled visualizations of the properties.
  * 
  * @author Sebastian Land, Ingo Mierswa
- * @version $Id: SOMPlotter.java,v 1.2 2007/06/08 15:07:48 ingomierswa Exp $
+ * @version $Id: SOMPlotter.java,v 1.8 2008/05/09 19:23:24 ingomierswa Exp $
  */
 public class SOMPlotter extends PlotterAdapter implements ProgressListener {
 
     private static final long serialVersionUID = -1936359032703929998L;
 	
+    private static final String[] MATRIX_TYPES = new String[] { "U-Matrix", "P-Matrix", "U*-Matrix" };
+    
+    public static final int MATRIX_U = 0;
+    public static final int MATRIX_P = 1;
+    public static final int MATRIX_U_STAR = 2;
+    
     protected static final int IMAGE_WIDTH = 400;
     
     protected static final int IMAGE_HEIGHT = 300;
@@ -117,7 +122,7 @@ public class SOMPlotter extends PlotterAdapter implements ProgressListener {
     
 	private JButton approveButton = new JButton("Calculate");
 
-	private JComboBox matrixSelection = new JComboBox(new String[] { "U-Matrix", "P-Matrix", "U*-Matrix" });
+	private JComboBox matrixSelection = new JComboBox(MATRIX_TYPES);
 
 	private JComboBox colorSelection = new JComboBox(new String[] { "Landscape", "GrayScale", "Fire and Ice" });
 	
@@ -131,6 +136,8 @@ public class SOMPlotter extends PlotterAdapter implements ProgressListener {
 
 	private JProgressBar progressBar = new JProgressBar();
 
+	private boolean coloredPoints = true;
+	
 	private transient SOMMatrixColorizer[] colorizer = new SOMMatrixColorizer[] { 
 		new SOMLandscapeColorizer(), 
 		new SOMGreyColorizer(), 
@@ -148,34 +155,7 @@ public class SOMPlotter extends PlotterAdapter implements ProgressListener {
         approveButton.setToolTipText("Start the calculation of the SOM (may take a while).");
 		approveButton.addActionListener(new ActionListener() {
            public void actionPerformed(ActionEvent e) {
-            show = false;
-            try {
-                dimensions[0] = Integer.parseInt(dimensionX.getText());
-            } catch (NumberFormatException ex) {
-                SwingTools.showVerySimpleErrorMessage("Only numbers are allowed for SOM width.");
-                return;
-            }
-            try {
-                dimensions[1] = Integer.parseInt(dimensionY.getText());
-            } catch (NumberFormatException ex) {
-                SwingTools.showVerySimpleErrorMessage("Only numbers are allowed for SOM height.");
-                return;
-            }
-            int adaptionRadius = 15;
-            try {
-                adaptionRadius = Integer.parseInt(radiusSelection.getText());
-            } catch (NumberFormatException ex) {
-                SwingTools.showVerySimpleErrorMessage("Only numbers are allowed for radius.");
-                return;
-            }
-            int trainRounds = 25;
-            try {
-                trainRounds = Integer.parseInt(roundSelection.getText());
-            } catch (NumberFormatException ex) {
-                SwingTools.showVerySimpleErrorMessage("Only numbers are allowed for number of training rounds.");
-                return;
-            }
-            prepareSOM(dataTable, adaptionRadius, trainRounds); 
+        	   startCalculation();
            }
         });
         
@@ -219,8 +199,47 @@ public class SOMPlotter extends PlotterAdapter implements ProgressListener {
 		return this;
 	}
 	
+	public void setColoredPoints(boolean coloredPoints) {
+		this.coloredPoints = coloredPoints;
+	}
+	
+	public void setMatrixType(int matrixType) {
+		this.showMatrix = matrixType;
+	}
+	
+	public void startCalculation() {
+		show = false;
+		try {
+			dimensions[0] = Integer.parseInt(dimensionX.getText());
+		} catch (NumberFormatException ex) {
+			SwingTools.showVerySimpleErrorMessage("Only numbers are allowed for SOM width.");
+			return;
+		}
+		try {
+			dimensions[1] = Integer.parseInt(dimensionY.getText());
+		} catch (NumberFormatException ex) {
+			SwingTools.showVerySimpleErrorMessage("Only numbers are allowed for SOM height.");
+			return;
+		}
+		int adaptationRadius = 15;
+		try {
+			adaptationRadius = Integer.parseInt(radiusSelection.getText());
+		} catch (NumberFormatException ex) {
+			SwingTools.showVerySimpleErrorMessage("Only numbers are allowed for radius.");
+			return;
+		}
+		int trainRounds = 25;
+		try {
+			trainRounds = Integer.parseInt(roundSelection.getText());
+		} catch (NumberFormatException ex) {
+			SwingTools.showVerySimpleErrorMessage("Only numbers are allowed for number of training rounds.");
+			return;
+		}
+		prepareSOM(dataTable, adaptationRadius, trainRounds);	
+	}
+	
     public PlotterCondition getPlotterCondition() {
-        return new MissingValuesPlotterCondition();
+        return new BasicPlotterCondition();
     }
     
 	public void paintComponent(Graphics graphics) {
@@ -259,8 +278,8 @@ public class SOMPlotter extends PlotterAdapter implements ProgressListener {
             
             while (iterator.hasNext()) {
                 double value = ((DataTableRow) iterator.next()).getValue(colorColumn);
-                minColorValue = Math.min(minColorValue, value);
-                maxColorValue = Math.max(maxColorValue, value);
+                minColorValue = MathFunctions.robustMin(minColorValue, value);
+                maxColorValue = MathFunctions.robustMax(maxColorValue, value);
             }
             
             // remember point positions
@@ -289,8 +308,12 @@ public class SOMPlotter extends PlotterAdapter implements ProgressListener {
             RandomGenerator random = RandomGenerator.getRandomGenerator(2001);
             while (exampleIterator.hasNext()) {
                 ExamplePlotterPoint point = exampleIterator.next();
-                double color = getPointColorValue(this.dataTable, dataTable.getRow(point.getDataTableIndex()), colorColumn, minColorValue, maxColorValue);
-                Color borderColor = getPointBorderColor(this.dataTable, dataTable.getRow(point.getDataTableIndex()), colorColumn);
+                double color = 1.0d;
+                Color borderColor = Color.BLACK;
+                if (coloredPoints) {
+                	color = getPointColorValue(this.dataTable, dataTable.getRow(point.getDataTableIndex()), colorColumn, minColorValue, maxColorValue);
+                	borderColor = getPointBorderColor(this.dataTable, dataTable.getRow(point.getDataTableIndex()), colorColumn);
+                }
                 double pertX = 0.0d;
                 double pertY = 0.0d;
                 if (jitterAmount > 0) {
@@ -320,7 +343,7 @@ public class SOMPlotter extends PlotterAdapter implements ProgressListener {
 		repaint();
 	}
 	
-	public void prepareSOM(DataTable dataTable, double adaptionRadius, int trainRounds) {
+	public void prepareSOM(DataTable dataTable, double adaptationRadius, int trainRounds) {
 		// reseting Data already applied flag
 		examplesApplied = false;
 		// generating data for SOM
@@ -336,10 +359,10 @@ public class SOMPlotter extends PlotterAdapter implements ProgressListener {
 		}
 		// generating SOM
 		net = new KohonenNet(data);
-		RitterAdaption adaptionFunction = new RitterAdaption();
-		adaptionFunction.setAdaptionRadiusStart(adaptionRadius);
-		adaptionFunction.setLearnRateStart(0.8);
-		net.setAdaptionFunction(adaptionFunction);
+		RitterAdaptation adaptationFunction = new RitterAdaptation();
+		adaptationFunction.setAdaptationRadiusStart(adaptationRadius);
+		adaptationFunction.setLearnRateStart(0.8);
+		net.setAdaptationFunction(adaptationFunction);
 		net.init(dataDimension, dimensions, false);
 		// registering this as ProgressListener
 		net.addProgressListener(this);
@@ -533,8 +556,8 @@ public class SOMPlotter extends PlotterAdapter implements ProgressListener {
 				JPanel dimensionLabelPanel = new JPanel();
                 dimensionLabelPanel.setToolTipText("Set the dimensions of the Kohonen net.");
 				dimensionLabelPanel.setLayout(new GridLayout());
-				dimensionLabelPanel.add(new JLabel("net width"));
-				dimensionLabelPanel.add(new JLabel("net height"));
+				dimensionLabelPanel.add(new JLabel("Net Width"));
+				dimensionLabelPanel.add(new JLabel("Net Height"));
 				return dimensionLabelPanel;
 			case 5:
 				JPanel dimensionPanel = new JPanel();
@@ -554,10 +577,10 @@ public class SOMPlotter extends PlotterAdapter implements ProgressListener {
 				return roundPanel;
 			case 7:
 				JPanel radiusPanel = new JPanel();
-                radiusPanel.setToolTipText("Set the adaption radius of the Kohonen net.");
-                radiusSelection.setToolTipText("Set the adaption radius of the Kohonen net.");
+                radiusPanel.setToolTipText("Set the adaptation radius of the Kohonen net.");
+                radiusSelection.setToolTipText("Set the adaptation radius of the Kohonen net.");
 				radiusPanel.setLayout(new GridLayout());
-				radiusPanel.add(new JLabel("Adaption Radius"));
+				radiusPanel.add(new JLabel("Adaptation Radius"));
 				radiusPanel.add(radiusSelection);
 				return radiusPanel;
 			case 8:
@@ -566,7 +589,6 @@ public class SOMPlotter extends PlotterAdapter implements ProgressListener {
 				return approveButton;
 		}
 		return null;
-
 	}
 
 	public void setPlotColumn(int column, boolean plot) {

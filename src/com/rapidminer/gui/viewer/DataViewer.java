@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.viewer;
 
@@ -42,18 +40,18 @@ import javax.swing.JScrollPane;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.Condition;
 import com.rapidminer.example.set.ConditionCreationException;
-import com.rapidminer.example.set.ConditionExampleReader;
 import com.rapidminer.example.set.ConditionedExampleSet;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.tools.Tableable;
 
 
 /**
  * Can be used to display (parts of) the data by means of a JTable.
  * 
  * @author Ingo Mierswa
- * @version $Id: DataViewer.java,v 1.1 2007/05/27 22:00:40 ingomierswa Exp $
+ * @version $Id: DataViewer.java,v 1.6 2008/05/09 19:23:01 ingomierswa Exp $
  */
-public class DataViewer extends JPanel {
+public class DataViewer extends JPanel implements Tableable {
 
     private static final long serialVersionUID = -8114228636932871865L;
 
@@ -66,7 +64,7 @@ public class DataViewer extends JPanel {
     
     private transient ExampleSet originalExampleSet;
     
-    public DataViewer(ExampleSet exampleSet) {
+    public DataViewer(ExampleSet exampleSet, boolean providedFilter) {
         super(new BorderLayout());
         this.originalExampleSet = exampleSet;
         
@@ -95,33 +93,35 @@ public class DataViewer extends JPanel {
         infoPanel.add(generalInfo);
         
         // filter
-        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        filterPanel.add(new JLabel("View Filter "));
-        updateFilterCounter(originalExampleSet);
-        filterPanel.add(filterCounter);
-        List<String> applicableFilterNames = new LinkedList<String>();
-        for (int i = 0; i < ConditionExampleReader.KNOWN_CONDITION_NAMES.length; i++) {
-            String conditionName = ConditionExampleReader.KNOWN_CONDITION_NAMES[i];
-            try {
-                ConditionExampleReader.createCondition(conditionName, exampleSet, null);
-                applicableFilterNames.add(conditionName);
-            } catch (ConditionCreationException ex) {} // Do nothing
+        if (providedFilter) {
+        	JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        	filterPanel.add(new JLabel("View Filter "));
+        	updateFilterCounter(originalExampleSet);
+        	filterPanel.add(filterCounter);
+        	List<String> applicableFilterNames = new LinkedList<String>();
+        	for (int i = 0; i < ConditionedExampleSet.KNOWN_CONDITION_NAMES.length; i++) {
+        		String conditionName = ConditionedExampleSet.KNOWN_CONDITION_NAMES[i];
+        		try {
+        			ConditionedExampleSet.createCondition(conditionName, exampleSet, null);
+        			applicableFilterNames.add(conditionName);
+        		} catch (ConditionCreationException ex) {} // Do nothing
+        	}
+        	String[] applicableConditions = new String[applicableFilterNames.size()];
+        	applicableFilterNames.toArray(applicableConditions);
+        	final JComboBox filterSelector = new JComboBox(applicableConditions);
+        	filterSelector.setToolTipText("These filters can be used to skip examples in the view fulfilling the filter condition.");
+        	filterSelector.addItemListener(new ItemListener() {
+        		public void itemStateChanged(ItemEvent e) {
+        			updateFilter((String)filterSelector.getSelectedItem());
+        		}
+        	});
+        	filterPanel.add(filterSelector);
+
+        	c.weightx = 0.0;
+        	c.gridwidth = GridBagConstraints.REMAINDER;
+        	layout.setConstraints(filterPanel, c);
+        	infoPanel.add(filterPanel);
         }
-        String[] applicableConditions = new String[applicableFilterNames.size()];
-        applicableFilterNames.toArray(applicableConditions);
-        final JComboBox filterSelector = new JComboBox(applicableConditions);
-        filterSelector.setToolTipText("These filters can be used to skip examples in the view fulfilling the filter condition.");
-        filterSelector.addItemListener(new ItemListener() {
-            public void itemStateChanged(ItemEvent e) {
-                updateFilter((String)filterSelector.getSelectedItem());
-            }
-        });
-        filterPanel.add(filterSelector);
-        
-        c.weightx = 0.0;
-        c.gridwidth = GridBagConstraints.REMAINDER;
-        layout.setConstraints(filterPanel, c);
-        infoPanel.add(filterPanel);
         
         add(infoPanel, BorderLayout.NORTH);
         
@@ -138,7 +138,7 @@ public class DataViewer extends JPanel {
     private void updateFilter(String conditionName) {
         ExampleSet filteredExampleSet = originalExampleSet;
         try {
-            Condition condition = ConditionExampleReader.createCondition(conditionName, originalExampleSet, null);
+            Condition condition = ConditionedExampleSet.createCondition(conditionName, originalExampleSet, null);
             filteredExampleSet = new ConditionedExampleSet(originalExampleSet, condition);
         } catch (ConditionCreationException ex) {
             originalExampleSet.getLog().logError("Cannot create condition '" + conditionName + "' for filtered data view: " + ex.getMessage() + ". Using original data set view...");
@@ -151,4 +151,16 @@ public class DataViewer extends JPanel {
     private void updateFilterCounter(ExampleSet filteredExampleSet) {
         filterCounter.setText("(" + filteredExampleSet.size() + " / " + originalExampleSet.size() + "): ");        
     }
+
+	public String getCell(int row, int column) {
+		return dataTable.getCell(row, column);
+	}
+
+	public int getColumnNumber() {
+		return dataTable.getColumnNumber();
+	}
+
+	public int getRowNumber() {
+		return dataTable.getRowNumber();
+	}
 }

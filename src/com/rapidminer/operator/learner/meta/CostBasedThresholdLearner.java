@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.meta;
 
@@ -64,7 +62,7 @@ import com.rapidminer.tools.math.optimization.ec.es.Individual;
  * </p>
  *  
  * @author Ingo Mierswa
- * @version $Id: CostBasedThresholdLearner.java,v 1.4 2007/07/13 22:52:11 ingomierswa Exp $
+ * @version $Id: CostBasedThresholdLearner.java,v 1.7 2008/05/09 19:22:46 ingomierswa Exp $
  */
 public class CostBasedThresholdLearner extends AbstractMetaLearner {
 
@@ -127,12 +125,12 @@ public class CostBasedThresholdLearner extends AbstractMetaLearner {
     }
     
     private Model calculateThresholdModel(ExampleSet exampleSet, final double[] classWeights, final double unknownWeight) throws OperatorException {
-        final SplittedExampleSet trainingSet = new SplittedExampleSet(exampleSet, getParameterAsDouble(PARAMETER_TRAINING_RATIO), SplittedExampleSet.STRATIFIED_SAMPLING, getParameterAsInt(PARAMETER_LOCAL_RANDOM_SEED));
+        SplittedExampleSet trainingSet = new SplittedExampleSet(exampleSet, getParameterAsDouble(PARAMETER_TRAINING_RATIO), SplittedExampleSet.STRATIFIED_SAMPLING, getParameterAsInt(PARAMETER_LOCAL_RANDOM_SEED));
         trainingSet.selectSingleSubset(0);
         Model innerModel = applyInnerLearner(trainingSet);
         trainingSet.selectSingleSubset(1);
-        innerModel.apply(trainingSet);
-        final Attribute label = trainingSet.getAttributes().getLabel();
+        final ExampleSet appliedTrainingSet = innerModel.apply(trainingSet);
+        final Attribute label = appliedTrainingSet.getAttributes().getLabel();
         
         int numberOfGenerations = getParameterAsInt(PARAMETER_NUMBER_OF_ITERATIONS);
         ESOptimization optimization = new ESOptimization(0.0d, 1.0d, 5, classWeights.length, 
@@ -146,7 +144,7 @@ public class CostBasedThresholdLearner extends AbstractMetaLearner {
             public PerformanceVector evaluateIndividual(Individual individual) throws OperatorException {
                 double costs = 0.0d;
                 double[] thresholds = individual.getValues();
-                for (Example example : trainingSet) {
+                for (Example example : appliedTrainingSet) {
                     int predictionIndex = (int)example.getPredictedLabel();
                     String className = label.getMapping().mapIndex(predictionIndex);
                     double confidence = example.getConfidence(className);
@@ -181,11 +179,11 @@ public class CostBasedThresholdLearner extends AbstractMetaLearner {
         };
 
         optimization.optimize();
-        PredictionModel.removePredictedLabel(trainingSet);
+        PredictionModel.removePredictedLabel(appliedTrainingSet);
         
         double[] bestValues = optimization.getBestValuesEver();
 
-        return new ThresholdModel(trainingSet, innerModel, bestValues);
+        return new ThresholdModel(appliedTrainingSet, innerModel, bestValues);
     }
     
     public List<ParameterType> getParameterTypes() {

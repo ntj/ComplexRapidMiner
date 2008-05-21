@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.clustering.clusterer;
 
@@ -42,7 +40,7 @@ import com.rapidminer.tools.LogService;
  * SVClustering.
  * 
  * @author Stefan Rueping, Ingo Mierswa
- * @version $Id: SVClustering.java,v 1.4 2007/06/15 18:44:37 ingomierswa Exp $
+ * @version $Id: SVClustering.java,v 1.7 2008/05/09 19:22:49 ingomierswa Exp $
  */
 public class SVClustering implements SVMInterface {
 
@@ -239,15 +237,6 @@ public class SVClustering implements SVMInterface {
 		logln(2, "Done training: " + iteration + " iterations.");
 		print_statistics();
 		exit_optimizer();
-		// double[] att;
-		// for(i=0;i<examples_total;i++){
-		// att = examples.atts[i];
-		// for(int j=0;j<att.length;j++){
-		// System.out.print(att[j]+"\t");
-		// };
-		// System.out.println(predict(i));
-		// };
-		// System.exit(1);
 	};
 
 	/**
@@ -1113,11 +1102,7 @@ public class SVClustering implements SVMInterface {
 		}
 		if (Math.abs(s + sum_alpha - 1) > is_zero) {
 			logln(1, "ERROR: sum_alpha is off by " + (s + sum_alpha - 1));
-			// throw(new Exception("ERROR: sum_alpha is off by
-			// "+(s+sum_alpha)));
-			// System.exit(1);
 		};
-		// System.out.println("...check ok.");
 	};
 
 	/**

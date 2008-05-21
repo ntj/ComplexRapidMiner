@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.weighting;
 
@@ -37,7 +35,7 @@ import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
-import com.rapidminer.operator.preprocessing.discretization.SimpleBinDiscretization;
+import com.rapidminer.operator.preprocessing.discretization.BinDiscretization;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.tools.OperatorService;
@@ -50,17 +48,15 @@ import com.rapidminer.tools.math.ContingencyTableTools;
  * chi-squared statistic with respect to the class attribute.
  * 
  * @author Ingo Mierswa
- * @version $Id: ChiSquaredWeighting.java,v 1.1 2007/06/16 03:28:12 ingomierswa Exp $
+ * @version $Id: ChiSquaredWeighting.java,v 1.6 2008/05/09 19:23:22 ingomierswa Exp $
  */
-public class ChiSquaredWeighting extends Operator {
+public class ChiSquaredWeighting extends AbstractWeighting {
 
 	public ChiSquaredWeighting(OperatorDescription description) {
 		super(description);
 	}
 
-	public IOObject[] apply() throws OperatorException {
-		ExampleSet exampleSet = getInput(ExampleSet.class);
-		
+	public AttributeWeights calculateWeights(ExampleSet exampleSet) throws OperatorException {				
 		Attribute label = exampleSet.getAttributes().getLabel();
 		if (!label.isNominal()) {
 			throw new UserError(this, 101, "chi squared test", label.getName());
@@ -68,13 +64,13 @@ public class ChiSquaredWeighting extends Operator {
 		
 		Operator discretization = null;
 		try {
-			discretization = OperatorService.createOperator(SimpleBinDiscretization.class);
+			discretization = OperatorService.createOperator(BinDiscretization.class);
 		} catch (OperatorCreationException e) {
 			throw new UserError(this, 904, "Discretization", e.getMessage());
 		}
 		
-		int numberOfBins = getParameterAsInt(SimpleBinDiscretization.NUMBER_OF_BINS);
-		discretization.setParameter(SimpleBinDiscretization.NUMBER_OF_BINS, numberOfBins + "");
+		int numberOfBins = getParameterAsInt(BinDiscretization.PARAMETER_NUMBER_OF_BINS);
+		discretization.setParameter(BinDiscretization.PARAMETER_NUMBER_OF_BINS, numberOfBins + "");
 		IOContainer ioContainer = new IOContainer(new IOObject[] { exampleSet });
 		ioContainer = discretization.apply(ioContainer);
 		exampleSet = ioContainer.get(ExampleSet.class);
@@ -127,23 +123,12 @@ public class ChiSquaredWeighting extends Operator {
 	    	attributeCounter++;
 	    }
 	    
-	    // normalization
-	    weights.normalize();
-	    
-		return new IOObject[] { exampleSet, weights };
-	}
-
-	public Class[] getInputClasses() {
-		return new Class[] { ExampleSet.class };
-	}
-
-	public Class[] getOutputClasses() {
-		return new Class[] { ExampleSet.class, AttributeWeights.class };
+	    return weights;
 	}
 	
 	public List<ParameterType> getParameterTypes() { 
 		List<ParameterType> types = super.getParameterTypes();
-		types.add(new ParameterTypeInt(SimpleBinDiscretization.NUMBER_OF_BINS, "The number of bins used for discretization of numerical attributes before the chi squared test can be performed.", 2, Integer.MAX_VALUE, 10));
+		types.add(new ParameterTypeInt(BinDiscretization.PARAMETER_NUMBER_OF_BINS, "The number of bins used for discretization of numerical attributes before the chi squared test can be performed.", 2, Integer.MAX_VALUE, 10));
 		return types;
 	}
 }

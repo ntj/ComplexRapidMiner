@@ -1,33 +1,33 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.construction;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.rapidminer.example.Attribute;
@@ -96,33 +96,51 @@ public class FeatureGenerationOperator extends Operator {
 
 	public IOObject[] apply() throws OperatorException {
 		ExampleSet exampleSet = getInput(ExampleSet.class);
+		
 		boolean keepAll = getParameterAsBoolean(PARAMETER_KEEP_ALL);
-
+		List<Attribute> oldAttributes = new LinkedList<Attribute>();
+		for (Attribute attribute : exampleSet.getAttributes()) {
+			oldAttributes.add(attribute);
+		}
+		
+		AttributeParser parser = new AttributeParser(exampleSet.getExampleTable());
+		
 		File file = getParameterAsFile(PARAMETER_FILENAME);
-		try {
-			AttributeParser parser = new AttributeParser(exampleSet.getExampleTable());
-
-			if (file != null) {
-                InputStream in = new FileInputStream(file);
-				parser.parseAll(in);
-                in.close();
+		if (file != null) {
+			InputStream in = null;
+			try {
+				in = new FileInputStream(file);
+				parser.generateAll(this, exampleSet, in);
+			} catch (IOException e) {
+				throw new UserError(this, e, 302, new Object[] { file, e.getMessage() });
+			} finally {
+				if (in != null) {
+					try {
+						in.close();
+					} catch (IOException e) {
+						logError("Cannot close stream to file " + file);
+					}
+				}
 			}
+		}
 
-			Iterator j = getParameterList(PARAMETER_FUNCTIONS).iterator();
-			while (j.hasNext()) {
-				Object[] nameFunctionPair = (Object[]) j.next();
-				Attribute attribute = parser.parseAttribute((String) nameFunctionPair[1]);
+		Iterator j = getParameterList(PARAMETER_FUNCTIONS).iterator();
+		while (j.hasNext()) {
+			Object[] nameFunctionPair = (Object[]) j.next();
+			Attribute attribute = parser.generateAttribute(this, (String) nameFunctionPair[1]);
+			if (attribute != null) {
 				attribute.setName((String) nameFunctionPair[0]);
-				checkForStop();
+				exampleSet.getAttributes().addRegular(attribute);
+			} else {
+				logWarning("Cannot generate attribute: " + nameFunctionPair[0] + " --> " + nameFunctionPair[1]);
 			}
+			checkForStop();
+		}
 
-			if (!keepAll) {
-				exampleSet.getAttributes().clearRegular();
+		if (!keepAll) {
+			for (Attribute oldAttribute : oldAttributes) {
+				exampleSet.getAttributes().remove(oldAttribute);
 			}
-			parser.generateAll(exampleSet);
-
-		} catch (java.io.IOException e) {
-			throw new UserError(this, e, 302, new Object[] { file, e.getMessage() });
 		}
 
 		return new IOObject[] { exampleSet };

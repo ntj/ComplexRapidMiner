@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools;
 
@@ -46,10 +44,13 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
+import javax.swing.JTextPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.UIManager;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
 
 import com.rapidminer.NoBugError;
 import com.rapidminer.gui.RapidMinerGUI;
@@ -66,7 +67,7 @@ import com.rapidminer.tools.XMLException;
  * for sending a bugreport is also provided.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: ErrorDialog.java,v 1.1 2007/06/01 23:15:50 ingomierswa Exp $
+ * @version $Id: ErrorDialog.java,v 1.4 2008/05/09 19:22:58 ingomierswa Exp $
  */
 public class ErrorDialog extends JDialog {
 
@@ -94,7 +95,7 @@ public class ErrorDialog extends JDialog {
 		public StackTraceList(Throwable t) {
 			super(new DefaultListModel());
 			setFont(getFont().deriveFont(Font.PLAIN));
-			setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+			setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 			appendAllStackTraces(t);
 			addListSelectionListener(new ListSelectionListener() {
 
@@ -184,11 +185,26 @@ public class ErrorDialog extends JDialog {
 		// message
 		c.gridwidth = GridBagConstraints.REMAINDER;
 		c.weightx = 1.0;
-		JLabel text = new JLabel(mainText);
-		text.setFont(text.getFont().deriveFont(java.awt.Font.PLAIN));
+		
+		SimpleAttributeSet attributeSet = new SimpleAttributeSet();
+		StyleConstants.setFontFamily(attributeSet, "SansSerif");
+		StyleConstants.setFontSize(attributeSet, 11);
+
+		JTextPane text = new JTextPane();
+		text.setBorder(null);
+		text.setEditable(false);
+		text.setBackground(this.getBackground());
+		text.setContentType("text/html");
+		text.setFont(new Font("SansSerif", Font.PLAIN, 11));
+		text.setText(mainText);
+		text.getStyledDocument().setCharacterAttributes(0, text.getStyledDocument().getLength(), attributeSet, false);
+        
+		JScrollPane textScrollPane = new ExtendedJScrollPane(text);
+		textScrollPane.setBorder(null);
 		text.setPreferredSize(new Dimension((int) (RapidMinerGUI.getMainFrame().getWidth() * 0.5d), Math.max(150, (int) (RapidMinerGUI.getMainFrame().getHeight() * 0.15d))));
-		gbl.setConstraints(text, c);
-		box.add(text);
+		
+		gbl.setConstraints(textScrollPane, c);
+		box.add(textScrollPane);
 
 		// details
 		final Box detailBox = new Box(BoxLayout.Y_AXIS);
@@ -273,9 +289,19 @@ public class ErrorDialog extends JDialog {
 	/* pp */ static ErrorDialog create(String message, Throwable t) {
 		if (t instanceof NoBugError) {
 			NoBugError ue = (NoBugError) t;
-			return new ErrorDialog("Error " + ue.getCode() + ": " + ue.getErrorName(), ue.getHTMLMessage(), UIManager.getIcon("OptionPane.warningIcon"), t, false);
+			return new ErrorDialog(
+					"Error " + ue.getCode() + ": " + ue.getErrorName(), 
+					ue.getHTMLMessage(), 
+					UIManager.getIcon("OptionPane.warningIcon"), 
+					t, 
+					false);
 		} else {
-			return new ErrorDialog("Error occured", "<html><b>" + Tools.classNameWOPackage(t.getClass()) + "</b><br>" + Tools.escapeXML(message) + "<br>" + "Message: " + Tools.escapeXML(t.getMessage()) + "</html>", UIManager.getIcon("OptionPane.errorIcon"), t, !(t instanceof XMLException));
+			return new ErrorDialog(
+					"Error occured", 
+					"<html><b>" + Tools.classNameWOPackage(t.getClass()) + "</b><br>" + Tools.escapeXML(message) + "<br>" + "Message: " + Tools.escapeXML(t.getMessage()) + "</html>", 
+					UIManager.getIcon("OptionPane.errorIcon"), 
+					t, 
+					!(t instanceof XMLException));
 		}
 	}
 }

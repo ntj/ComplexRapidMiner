@@ -16,6 +16,10 @@ public class MonteCarloSampling extends AbstractSampleStrategy {
 
 
 	public Double[][] getSamples() {
+		return getSamples(false);
+	}
+	
+	public Double[][] getSamples(boolean withOriginal) {
 		Double[][] ret = new Double[this.sampleRate][];
 		
 		Random r = new Random();
@@ -37,6 +41,7 @@ public class MonteCarloSampling extends AbstractSampleStrategy {
 				i++;
 			}
 		}
+		
 		return ret;
 	}
 

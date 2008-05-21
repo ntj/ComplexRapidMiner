@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.graphs;
 
@@ -59,9 +57,10 @@ import com.rapidminer.gui.graphs.actions.TransformingModeAction;
 import com.rapidminer.gui.graphs.actions.ZoomInAction;
 import com.rapidminer.gui.graphs.actions.ZoomOutAction;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.ExtendedToolBar;
+import com.rapidminer.gui.tools.ExtendedJToolBar;
 import com.rapidminer.gui.tools.IconSize;
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.tools.Renderable;
 
 import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;
@@ -88,9 +87,9 @@ import edu.uci.ics.jung.visualization.util.Animator;
  * The basic graph viewer component for graphs.
  *
  * @author Ingo Mierswa
- * @version $Id: GraphViewer.java,v 1.14 2007/07/06 21:15:16 ingomierswa Exp $
+ * @version $Id: GraphViewer.java,v 1.22 2008/05/09 19:23:24 ingomierswa Exp $
  */
-public class GraphViewer<V,E> extends JPanel {
+public class GraphViewer<V,E> extends JPanel implements Renderable{
 	
     private static final long serialVersionUID = -7501422172633548861L;
     
@@ -126,8 +125,8 @@ public class GraphViewer<V,E> extends JPanel {
         "</ul>"+
         "</html>";
 	
-    private final Action transformAction = new TransformingModeAction<V,E>(this, IconSize.SMALL);
-    private final Action pickingAction   = new PickingModeAction<V,E>(this, IconSize.SMALL);
+    private final transient Action transformAction = new TransformingModeAction<V,E>(this, IconSize.SMALL);
+    private final transient Action pickingAction   = new PickingModeAction<V,E>(this, IconSize.SMALL);
     
     private VisualizationViewer<V,E> vv;
     
@@ -148,7 +147,6 @@ public class GraphViewer<V,E> extends JPanel {
     private transient JSplitPane objectViewerSplitPane;
     
     private transient ModalGraphMouse.Mode currentMode = ModalGraphMouse.Mode.TRANSFORMING;
-    
     
     public GraphViewer(final GraphCreator<V,E> graphCreator) {
         this.graphCreator = graphCreator;
@@ -263,14 +261,19 @@ public class GraphViewer<V,E> extends JPanel {
 			}
         });
         // VERTEX FILL PAINT
-        vv.getRenderContext().setVertexFillPaintTransformer(new Transformer<V, Paint>() {
-			public Paint transform(V vertex) {
-				if (vv.getPickedVertexState().isPicked(vertex))
-					return SwingTools.makeYellowPaint(50, 50);
-				else
-					return SwingTools.makeBluePaint(50, 50);
-			}
-        });
+        Transformer<V, Paint> paintTransformer = graphCreator.getVertexPaintTransformer(vv);
+        if (paintTransformer == null) {
+        	paintTransformer = new Transformer<V, Paint>() {
+    			public Paint transform(V vertex) {
+    				if (vv.getPickedVertexState().isPicked(vertex))
+    					return SwingTools.makeYellowPaint(50, 50);
+    				else
+    					return SwingTools.makeBluePaint(50, 50);
+    			}
+            };
+        }
+        vv.getRenderContext().setVertexFillPaintTransformer(paintTransformer);
+        
         // VERTEX DRAW PAINT
         vv.getRenderContext().setVertexDrawPaintTransformer(new Transformer<V, Paint>() {
 			public Paint transform(V vertex) {
@@ -339,8 +342,8 @@ public class GraphViewer<V,E> extends JPanel {
         
         // === control panel ===
         
-        JComponent controls = createControlPanel();
-        add(new ExtendedJScrollPane(controls), BorderLayout.WEST);
+        Component controlPanel = createControlPanel();
+        add(new ExtendedJScrollPane(controlPanel), BorderLayout.WEST);
         
         this.showEdgeLabels = !graphCreator.showEdgeLabelsDefault();
         togglePaintEdgeLabels();
@@ -382,7 +385,7 @@ public class GraphViewer<V,E> extends JPanel {
         c.weighty = 0;
         
         // zooming
-        JToolBar zoomBar = new ExtendedToolBar();
+        JToolBar zoomBar = new ExtendedJToolBar();
         zoomBar.setLayout(new FlowLayout(FlowLayout.CENTER));
         zoomBar.add(new ZoomInAction(this, IconSize.SMALL));
         zoomBar.add(new ZoomOutAction(this, IconSize.SMALL));
@@ -393,7 +396,7 @@ public class GraphViewer<V,E> extends JPanel {
         
         
         // mode
-        JToolBar modeBar = new ExtendedToolBar();
+        JToolBar modeBar = new ExtendedJToolBar();
         modeBar.setLayout(new FlowLayout(FlowLayout.CENTER));
         modeBar.add(transformAction);
         modeBar.add(pickingAction);
@@ -479,21 +482,22 @@ public class GraphViewer<V,E> extends JPanel {
     }
     
     public void changeLayout(Layout<V, E> newLayout) {
-        MultiLayerTransformer transformer = vv.getRenderContext().getMultiLayerTransformer();
+    	MultiLayerTransformer transformer = vv.getRenderContext().getMultiLayerTransformer();
     	double scale = transformer.getTransformer(Layer.VIEW).getScale();
     	int layoutWidth  = (int)(vv.getWidth() / scale);
     	int layoutHeight = (int)(vv.getHeight() / scale);
         newLayout.setSize(new Dimension(layoutWidth, layoutHeight));
-               
         if (layout == null) {
             // initial layout --> no transition possible!
             vv.setGraphLayout(newLayout);
         } else {
-            LayoutTransition<V,E> lt = new LayoutTransition<V,E>(vv, layout, newLayout);
-            Animator animator = new Animator(lt);
-            animator.start();
-        }
-        
+            // No transition possible if no edges in graph!
+        	if (newLayout.getGraph().getEdgeCount() > 0 || newLayout.getGraph().getVertexCount() > 0) {	    
+            	LayoutTransition<V,E> lt = new LayoutTransition<V,E>(vv, layout, newLayout);
+	            Animator animator = new Animator(lt);
+	            animator.start();
+	        }
+        }    
         this.layout = newLayout;
              
         vv.scaleToLayout(this.scaler);
@@ -502,7 +506,7 @@ public class GraphViewer<V,E> extends JPanel {
     	double viewY = transformer.getTransformer(Layer.VIEW).getTranslateX();
     	double scaleViewX = viewX * scale;
     	double scaleViewY = viewY * scale;
-    	transformer.getTransformer(Layer.VIEW).translate(-scaleViewX, -scaleViewY); 
+    	transformer.getTransformer(Layer.VIEW).translate(-scaleViewX, -scaleViewY);
     }
     
     /** VertexLabel is not parameterized in Jung. In order to avoid to make all things
@@ -573,4 +577,16 @@ public class GraphViewer<V,E> extends JPanel {
     	}
     	vv.repaint();
     }
+
+	public int getRenderHeight(int preferredHeight) {
+		return vv.getHeight();
+	}
+
+	public int getRenderWidth(int preferredWidth) {
+		return vv.getWidth();
+	}
+
+	public void render(Graphics graphics, int width, int height) {
+		vv.paint(graphics);
+	}
 }

@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.example;
 
@@ -28,6 +26,7 @@ import java.util.Arrays;
 
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.SparseDataRow;
+import com.rapidminer.operator.UserError;
 
 /**
  * This class can be used for the efficient generation of sparse example
@@ -69,8 +68,9 @@ public class FastExample2SparseTransform {
 	 * or has been deleted (is null). This is used in order to optimize the access 
 	 * to sparse DataRows (e.g. SVM implementations or for Weka), which is important 
 	 * when the number of Attributes is large.
+	 * @throws UserError 
 	 */
-	public FastExample2SparseTransform(ExampleSet es) {
+	public FastExample2SparseTransform(ExampleSet es) throws UserError {
 		// init
 		this.mapping = new int[es.getExampleTable().getNumberOfAttributes()];
 		for (int i = 0; i < mapping.length; i++)
@@ -81,10 +81,15 @@ public class FastExample2SparseTransform {
 		this.attributes = new Attribute[es.getAttributes().size()];
 		this.allIndices = new int[es.getAttributes().size()];
 		for (Attribute attribute : es.getAttributes()) {
-			this.mapping[attribute.getTableIndex()] = pos;
-			this.attributes[pos] = attribute;
-			this.allIndices[pos] = pos;
-			pos++;
+			int tableIndex = attribute.getTableIndex();
+			if (tableIndex != Attribute.VIEW_ATTRIBUTE_INDEX) {
+				this.mapping[attribute.getTableIndex()] = pos;
+				this.attributes[pos] = attribute;
+				this.allIndices[pos] = pos;
+				pos++;
+			} else {
+				throw new UserError(null, 140);
+			}
 		}
 		
         // trim is necessary in order to allow fast mapping!

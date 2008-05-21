@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.io;
 
@@ -90,7 +88,6 @@ import com.rapidminer.tools.att.AttributeSet;
  */
 public class SparseFormatExampleSource extends Operator {
 
-
 	/** The parameter name for &quot;Format of the sparse data file.&quot; */
 	public static final String PARAMETER_FORMAT = "format";
 
@@ -117,6 +114,7 @@ public class SparseFormatExampleSource extends Operator {
 
 	/** The parameter name for &quot;Maps prefixes to names of special attributes.&quot; */
 	public static final String PARAMETER_PREFIX_MAP = "prefix_map";
+	
 	private static final Class[] INPUT_CLASSES = {};
 
 	private static final Class[] OUTPUT_CLASSES = { ExampleSet.class };
@@ -199,7 +197,7 @@ public class SparseFormatExampleSource extends Operator {
 				throw new UserError(this, e, 302, new Object[] { labelFile, e.getMessage() });
 			}
 		}
-
+		
 		MemoryExampleTable table = new MemoryExampleTable(attributeSet.getAllAttributes());
 		SparseFormatDataRowReader reader = new SparseFormatDataRowReader(new DataRowFactory(getParameterAsInt(PARAMETER_DATAMANAGEMENT), getParameterAsString(PARAMETER_DECIMAL_POINT_CHARACTER).charAt(0)), format, prefixMap, attributeSet, inData, inLabels, getParameterAsInt(PARAMETER_SAMPLE_SIZE));
 		table.readExamples(reader);
@@ -227,7 +225,7 @@ public class SparseFormatExampleSource extends Operator {
 		types.add(new ParameterTypeFile(PARAMETER_LABEL_FILE, "Name of the data file containing the labels. Only necessary if format is 'format_separate_file'.", null, true));
 		types.add(new ParameterTypeInt(PARAMETER_DIMENSION, "Dimension of the example space. Only necessary if parameter 'attribute_description_file' is not set.", -1, Integer.MAX_VALUE, -1));
 		types.add(new ParameterTypeInt(PARAMETER_SAMPLE_SIZE, "The maximum number of examples to read from the data files (-1 = all)", -1, Integer.MAX_VALUE, -1));
-		types.add(new ParameterTypeCategory(PARAMETER_DATAMANAGEMENT, "Determines, how the data is represented internally.", DataRowFactory.TYPE_NAMES, DataRowFactory.TYPE_DOUBLE_SPARSE_ARRAY));
+		types.add(new ParameterTypeCategory(PARAMETER_DATAMANAGEMENT, "Determines, how the data is represented internally.", DataRowFactory.TYPE_NAMES, DataRowFactory.TYPE_DOUBLE_ARRAY));
 		types.add(new ParameterTypeString(PARAMETER_DECIMAL_POINT_CHARACTER, "Character that is used as decimal point.", "."));
 		types.add(new ParameterTypeList(PARAMETER_PREFIX_MAP, "Maps prefixes to names of special attributes.", new ParameterTypeString("special_attribute", "Maps prefixes to names of special attributes.")));
 		return types;

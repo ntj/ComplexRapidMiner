@@ -1,66 +1,54 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.transformation;
 
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import com.rapidminer.example.Attribute;
-import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
-import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DataRow;
-import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.MemoryExampleTable;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
+import com.rapidminer.operator.preprocessing.PreprocessingOperator;
 import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
-import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.math.som.KohonenNet;
 import com.rapidminer.tools.math.som.RandomDataContainer;
-import com.rapidminer.tools.math.som.RitterAdaption;
-
+import com.rapidminer.tools.math.som.RitterAdaptation;
 
 /**
  * This operator performs a dimensionality reduction based on a SOM (Self Organizing Map, aka Kohonen net).
  * 
- * 
  * @author Sebastian Land, Ingo Mierswa
- * @version $Id: SOMDimensionalityReduction.java,v 1.3 2007/07/13 22:52:14 ingomierswa Exp $
+ * @version $Id: SOMDimensionalityReduction.java,v 1.7 2008/05/09 19:22:51 ingomierswa Exp $
  */
 public class SOMDimensionalityReduction extends Operator {
-
 
 	/** The parameter name for &quot;Defines the number of dimensions, the data shall be reduced.&quot; */
 	public static final String PARAMETER_NUMBER_OF_DIMENSIONS = "number_of_dimensions";
@@ -82,7 +70,7 @@ public class SOMDimensionalityReduction extends Operator {
 
 	/** The parameter name for &quot;Defines the radius of the sphere around an stimulus, within an adaption occoures. This radius decreases every round, starting by adaption_radius_start in first round, to adaption_radius_end in last round.&quot; */
 	public static final String PARAMETER_ADAPTION_RADIUS_END = "adaption_radius_end";
-	private KohonenNet net;
+	
 
 	public SOMDimensionalityReduction(OperatorDescription description) {
 		super(description);
@@ -116,50 +104,19 @@ public class SOMDimensionalityReduction extends Operator {
 		}
 		
 		// train SOM
-		prepareSOM(exampleSet, dimensions, netSize, trainingRounds, learningRateStart, learningRateEnd, adaptionRadiusStart, adaptionRadiusEnd);
+		KohonenNet net = prepareSOM(exampleSet, dimensions, netSize, trainingRounds, learningRateStart, learningRateEnd, adaptionRadiusStart, adaptionRadiusEnd);
 
-		// creating new ExampleTable
-		List<Attribute> attributes = new LinkedList<Attribute>();
-		for (int i = 0; i < dimensions; i++) {
-			attributes.add(AttributeFactory.createAttribute("SOM_" + i, Ontology.NUMERICAL));
+		SOMDimensionalityReductionModel model = new SOMDimensionalityReductionModel(exampleSet, net, dimensions);
+
+		ExampleSet newExampleSet = model.apply(exampleSet);
+		if (getParameterAsBoolean(PreprocessingOperator.PARAMETER_RETURN_PREPROCESSING_MODEL)) {
+			return new IOObject[] { newExampleSet, model };
+		} else {
+			return new IOObject[] { newExampleSet };
 		}
-		
-		// copy special attributes
-		Iterator<AttributeRole> s = exampleSet.getAttributes().specialAttributes();
-		Map<Attribute, String> newSpecialAttributes = new HashMap<Attribute, String>();
-		while (s.hasNext()) {
-			AttributeRole role = s.next();
-			Attribute specialAttribute = role.getAttribute();
-			Attribute newAttribute = (Attribute) specialAttribute.clone();
-			attributes.add(newAttribute);
-			newSpecialAttributes.put(newAttribute, role.getSpecialName());
-		}
-		
-		MemoryExampleTable newDataTable = new MemoryExampleTable(attributes);
-		Iterator<Example> iterator = exampleSet.iterator();
-		
-		// applying Example on net
-		while (iterator.hasNext()) {
-			Example currentExample = iterator.next();
-			int[] coords = net.apply(getDoubleArrayFromExample(currentExample));
-			double[] exampleData = new double[attributes.size()];
-			for (int i = 0; i < dimensions; i++) {
-				exampleData[i] = coords[i];
-			}
-			s = exampleSet.getAttributes().specialAttributes();
-			int i = dimensions;
-			while (s.hasNext()) {
-				exampleData[i++] = currentExample.getValue(s.next().getAttribute());
-			}
-			DataRow newRow = new DoubleArrayDataRow(exampleData);
-			newDataTable.addDataRow(newRow);
-			checkForStop();
-		}
-		ExampleSet newExampleSet = newDataTable.createExampleSet(newSpecialAttributes);
-		return new IOObject[] { newExampleSet };
 	}
 
-	private void prepareSOM(ExampleSet exampleSet, int netDimensions, int netSize, int trainingRounds, double learningRateStart, double learningRateEnd, double adaptionRadiusStart, double adaptionRadiusEnd) {
+	private KohonenNet prepareSOM(ExampleSet exampleSet, int netDimensions, int netSize, int trainingRounds, double learningRateStart, double learningRateEnd, double adaptionRadiusStart, double adaptionRadiusEnd) {
 		// generating data for SOM
 		int dataDimension;
 		RandomDataContainer data = new RandomDataContainer();
@@ -170,14 +127,15 @@ public class SOMDimensionalityReduction extends Operator {
 				data.addData(getDoubleArrayFromExample(iterator.next()));
 			}
 		}
+
 		// generating SOM
-		net = new KohonenNet(data);
-		RitterAdaption adaptionFunction = new RitterAdaption();
-		adaptionFunction.setAdaptionRadiusStart(adaptionRadiusStart);
-		adaptionFunction.setAdaptionRadiusEnd(adaptionRadiusEnd);
+		KohonenNet net = new KohonenNet(data);
+		RitterAdaptation adaptionFunction = new RitterAdaptation();
+		adaptionFunction.setAdaptationRadiusStart(adaptionRadiusStart);
+		adaptionFunction.setAdaptationRadiusEnd(adaptionRadiusEnd);
 		adaptionFunction.setLearnRateStart(learningRateStart);
 		adaptionFunction.setLearnRateEnd(learningRateEnd);
-		net.setAdaptionFunction(adaptionFunction);
+		net.setAdaptationFunction(adaptionFunction);
 		int[] dimensions = new int[netDimensions];
 		for (int i = 0; i < netDimensions; i++)
 			dimensions[i] = netSize;
@@ -185,9 +143,10 @@ public class SOMDimensionalityReduction extends Operator {
 		// train SOM
 		net.setTrainingRounds(trainingRounds);
 		net.train();
+		return net;
 	}
 
-	private double[] getDoubleArrayFromExample(Example example) {
+	public static double[] getDoubleArrayFromExample(Example example) {
 		double[] doubleRow = new double[example.getAttributes().size()];
 		int i = 0;
 		for (Attribute attribute : example.getAttributes()) {
@@ -198,6 +157,7 @@ public class SOMDimensionalityReduction extends Operator {
 
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
+		types.add(new ParameterTypeBoolean(PreprocessingOperator.PARAMETER_RETURN_PREPROCESSING_MODEL, "Indicates if the preprocessing model should also be returned", false));
 		ParameterType type = new ParameterTypeInt(PARAMETER_NUMBER_OF_DIMENSIONS, "Defines the number of dimensions, the data shall be reduced.", 1, Integer.MAX_VALUE, 2);
 		type.setExpert(false);
 		types.add(type);
@@ -217,6 +177,7 @@ public class SOMDimensionalityReduction extends Operator {
 		types.add(new ParameterTypeDouble(PARAMETER_ADAPTION_RADIUS_END,
 				"Defines the radius of the sphere around an stimulus, within an adaption occoures. This radius decreases every round, starting by adaption_radius_start in first round, to adaption_radius_end in last round.", 0.0d,
 				Double.POSITIVE_INFINITY, 1.0d));
+		
 		return types;
 	}
 

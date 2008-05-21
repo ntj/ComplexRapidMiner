@@ -1,29 +1,28 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.preprocessing.sampling;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -41,6 +40,7 @@ import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.UserError;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.tools.RandomGenerator;
@@ -55,16 +55,16 @@ import com.rapidminer.tools.RandomGenerator;
  * not, for example, for database or file management.
  * 
  * @author Ingo Mierswa
- * @version $Id: AbsoluteSampling.java,v 1.2 2007/06/15 16:58:40 ingomierswa Exp $
+ * @version $Id: AbsoluteSampling.java,v 1.5 2008/05/09 19:23:16 ingomierswa Exp $
  */
 public class AbsoluteSampling extends Operator {
-
 
 	/** The parameter name for &quot;The number of examples which should be sampled&quot; */
 	public static final String PARAMETER_SAMPLE_SIZE = "sample_size";
 
 	/** The parameter name for &quot;Use the given random seed instead of global random numbers (-1: use global).&quot; */
 	public static final String PARAMETER_LOCAL_RANDOM_SEED = "local_random_seed";
+	
 	public AbsoluteSampling(OperatorDescription description) {
 		super(description);
 	}
@@ -73,10 +73,17 @@ public class AbsoluteSampling extends Operator {
 		ExampleSet exampleSet = getInput(ExampleSet.class);
 		int size = getParameterAsInt(PARAMETER_SAMPLE_SIZE);
 
+		if (size > exampleSet.size()) 
+			throw new UserError(this, 110, size);
+		
 		// fill new table
+		List<Integer> indices = new ArrayList<Integer>(exampleSet.size());
+		for (int i = 0; i < exampleSet.size(); i++)
+			indices.add(i);
+		RandomGenerator random = RandomGenerator.getRandomGenerator(getParameterAsInt(PARAMETER_LOCAL_RANDOM_SEED));
 		List<DataRow> dataList = new LinkedList<DataRow>();
 		for (int i = 0; i < size; i++) {
-			int index = RandomGenerator.getRandomGenerator(getParameterAsInt(PARAMETER_LOCAL_RANDOM_SEED)).nextInt(exampleSet.size());
+			int index = indices.remove(random.nextInt(indices.size()));
 			dataList.add(exampleSet.getExample(index).getDataRow());
 		}
 		List<Attribute> attributes = Arrays.asList(exampleSet.getExampleTable().getAttributes());

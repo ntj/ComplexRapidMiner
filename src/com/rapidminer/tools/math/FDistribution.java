@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools.math;
 
@@ -30,24 +28,30 @@ package com.rapidminer.tools.math;
  * probability that a null hypothesis can be hold).
  * 
  * @author Ingo Mierswa
- * @version $Id: FDistribution.java,v 1.1 2007/05/27 21:59:32 ingomierswa Exp $
+ * @version $Id: FDistribution.java,v 1.4 2008/05/09 19:23:02 ingomierswa Exp $
  */
 public class FDistribution {
 
-	private static final double[] GAMMA_COEFFICIENTS = new double[] { 76.18009172947146, -86.50532032941677, 25.01409824083091, -1.231739572450155, 0.1208650973866179E-2, -0.5395239384953E-5 };
+	private static final double[] GAMMA_COEFFICIENTS = new double[] { 
+		76.18009172947146, 
+		-86.50532032941677, 
+		25.01409824083091, 
+		-1.231739572450155, 
+		0.1208650973866179E-2, 
+		-0.5395239384953E-5 };
 
-	private int df1 = 0;
+	private int degreeOfFreedom1 = 0;
 
-	private int df2 = 0;
+	private int degreeOfFreedom2 = 0;
 
-	public FDistribution(int df1, int df2) {
-		this.df1 = df1;
-		this.df2 = df2;
+	public FDistribution(int degreeOfFreedom1, int degreeOfFreedom2) {
+		this.degreeOfFreedom1 = degreeOfFreedom1;
+		this.degreeOfFreedom2 = degreeOfFreedom2;
 	}
 
-	public double getProbabilityForValue(double f) {
-		// computes P(F > x)
-		return betaInv(df1 * f / (df1 * f + df2), 0.5d * df1, 0.5d * df2);
+	/** This method returns the probability that a value is greater than the given one. */ 
+	public double getProbabilityForValue(double value) {
+		return betaInverse(degreeOfFreedom1 * value / (degreeOfFreedom1 * value + degreeOfFreedom2), 0.5d * degreeOfFreedom1, 0.5d * degreeOfFreedom2);
 	}
 
 	private double lnGamma(double c) {
@@ -66,9 +70,8 @@ public class FDistribution {
 		return (lnGamma(a) + lnGamma(b) - lnGamma(a + b));
 	}
 
-	private double betaInv(double x1, double p, double q) {
-		// ALGORITHM AS 63 APPL. STATIST. VOL.32, NO.1
-		// computes P(Beta>x)
+	/** Returns the result for the inverse beta function. */
+	private double betaInverse(double x1, double p, double q) {
 		double beta = lnBeta(p, q);
 		double acu = 1e-14;
 		if (p <= 0 || q <= 0)

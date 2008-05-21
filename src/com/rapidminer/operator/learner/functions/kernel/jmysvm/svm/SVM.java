@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.functions.kernel.jmysvm.svm;
 
@@ -45,7 +43,7 @@ import com.rapidminer.tools.RandomGenerator;
  * Abstract base class for all SVMs
  * 
  * @author Stefan Rueping, Ingo Mierswa
- * @version $Id: SVM.java,v 1.2 2007/07/15 13:40:58 ingomierswa Exp $
+ * @version $Id: SVM.java,v 1.6 2008/05/09 19:23:26 ingomierswa Exp $
  */
 public abstract class SVM implements SVMInterface {
 
@@ -150,6 +148,7 @@ public abstract class SVM implements SVMInterface {
 			while (reader.hasNext()) {
 				com.rapidminer.example.Example example = reader.next();
 				cPos[index] = cNeg[index] = example.getValue(weightAttribute);
+				index++;
 			}
 			if (paramOperator.getParameterAsBoolean(JMySVMLearner.PARAMETER_BALANCE_COST))
 				logWarning("Since the example set contains a weight attribute, the parameter balance_cost will be ignored.");
@@ -286,28 +285,6 @@ public abstract class SVM implements SVMInterface {
 			shrink();
 			calculate_working_set();
 			update_working_set();
-
-			// int shrinked=0;
-			// int upper_bound=0;
-			// int lower_bound=0;
-
-			// for(int i=0;i<examples_total;i++){
-			// if(at_bound[i] > 0){
-			// shrinked++;
-			// };
-			// if(Math.abs(alphas[i]) < is_zero){
-			// lower_bound++;
-			// }
-			// else if((alphas[i]-Cneg>-is_zero) || (alphas[i]+Cpos<is_zero)){
-			// upper_bound++;
-			// };
-			// };
-			// System.out.println(examples_total+" variables total, "
-			// +lower_bound+" variables at lower bound, "
-			// +upper_bound+" variables at upper bound, "
-			// +shrinked+" variables shrinked, "
-			// +to_shrink+" to shrink");
-
 		};
 
 		int i;
@@ -1192,7 +1169,6 @@ public abstract class SVM implements SVMInterface {
 		SVMExample sVMExample;
 		// int size = the_examples.count_examples(); // IM 04/02/12
 		int size = to_predict.count_examples();
-		// System.out.println("Size: " + size);
 		for (i = 0; i < size; i++) {
 			sVMExample = to_predict.get_example(i);
 			prediction = predict(sVMExample);
@@ -1304,9 +1280,6 @@ public abstract class SVM implements SVMInterface {
 			};
 		};
 
-		// System.out.println("estim_pos: " + estim_pos + ", estim_neg: " +
-		// estim_neg + ", total_pos: " + total_pos + ", total_neg: " +
-		// total_neg);
 		double[] result = new double[3];
 
 		result[0] = 1.0d - (double) (estim_pos + estim_neg) / (double) (total_pos + total_neg);

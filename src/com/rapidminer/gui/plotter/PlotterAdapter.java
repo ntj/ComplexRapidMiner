@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.plotter;
 
@@ -31,6 +29,8 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Polygon;
+import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
@@ -48,6 +48,7 @@ import com.rapidminer.gui.plotter.conditions.BasicPlotterCondition;
 import com.rapidminer.gui.plotter.conditions.PlotterCondition;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.math.MathFunctions;
 
 
 /** This adapter class can be used for simple plotter implementation which only need to overwrite the methods
@@ -61,13 +62,13 @@ import com.rapidminer.tools.Tools;
  *  methods might include the methods for plot column and axis column handling.
  *  
  *  @author Ingo Mierswa
- *  @version $Id: PlotterAdapter.java,v 1.4 2007/07/15 13:41:00 ingomierswa Exp $
+ *  @version $Id: PlotterAdapter.java,v 1.14 2008/05/09 19:22:51 ingomierswa Exp $
  */
 public class PlotterAdapter extends JPanel implements Plotter {
 	
 	private static final long serialVersionUID = -8994113034200480325L;
 
-    public static final double POINTSIZE = 6.0d;
+    public static final double POINTSIZE = 7.0d;
     
 	private static final int[] TICS = { 1, 2, 5 };
 	
@@ -81,14 +82,57 @@ public class PlotterAdapter extends JPanel implements Plotter {
 	
 	protected static final Color TOOLTIP_COLOR = new Color(170, 150, 240, 210);
 
-	protected static Icon[] LINE_STYLE_ICONS;
+	protected static final PointStyle ELLIPSOID_POINT_STYLE = new EllipsoidPointStyle();
+	protected static final PointStyle RECTANGLE_POINT_STYLE = new RectanglePointStyle();
+	protected static final PointStyle TRIANGUALAR_POINT_STYLE = new TriangularPointStyle();
+	protected static final PointStyle TURNED_TRIANGUALAR_POINT_STYLE = new TurnedTriangularPointStyle();
+	protected static final PointStyle STAR_POINT_STYLE = new StarPointStyle();
 
-	protected static final Color[] LINE_COLORS = { Color.black, Color.red, Color.blue, Color.orange, new Color(0, 200, 0), Color.pink, Color.yellow, Color.gray };
+	//protected static final Color[] LINE_COLORS = { Color.black, Color.red, Color.blue, Color.orange, new Color(0, 200, 0), Color.pink, Color.yellow, Color.gray };
+	protected static final Color[] LINE_COLORS = { 
+		new Color(255, 0, 0),
+		new Color(0, 255, 0),
+		new Color(0, 0, 255),
+		new Color(255, 0, 255),
+		Color.ORANGE,
+		new Color(255, 255, 0),
+		new Color(0, 255, 255),
+		new Color(200, 100, 0),
+		new Color(100, 200, 0),
+		new Color(0, 100, 200),
+    };
 
-	protected static final Stroke[] LINE_STROKES = { new BasicStroke() };
+	protected static final PointStyle[] KNOWN_POINT_STYLES = {
+		ELLIPSOID_POINT_STYLE,
+		RECTANGLE_POINT_STYLE,
+		TRIANGUALAR_POINT_STYLE,
+		TURNED_TRIANGUALAR_POINT_STYLE,
+		STAR_POINT_STYLE,
+		ELLIPSOID_POINT_STYLE,
+		RECTANGLE_POINT_STYLE,
+		TRIANGUALAR_POINT_STYLE,
+		TURNED_TRIANGUALAR_POINT_STYLE,
+		STAR_POINT_STYLE
+	};
+	
+	// stroked lines are very slow!!!
+	protected static final Stroke[] LINE_STROKES = {
+		new BasicStroke(2.0f)
+		/*
+		new BasicStroke(1.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND),
+		new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1.0f, new float[] { 8, 8 }, 0),
+		new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1.0f, new float[] { 12, 12 }, 0),
+		new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1.0f, new float[] { 16, 16 }, 0),
+		new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1.0f, new float[] { 12, 8, 4, 8 }, 0)
+		*/
+	};
 
-	protected static final LineStyle[] LINE_STYLES = new LineStyle[LINE_COLORS.length * LINE_STROKES.length]; 
-    
+	protected static final LineStyle[] LINE_STYLES = new LineStyle[LINE_COLORS.length * LINE_STROKES.length];
+	
+	protected static final PointStyle[] POINT_STYLES = new PointStyle[LINE_COLORS.length * LINE_STROKES.length];
+	
+	protected final static Icon[] LINE_STYLE_ICONS = new LineStyleIcon[LINE_STYLES.length];
+	
     private static Color MIN_LEGEND_COLOR = Color.BLUE;
     
     private static Color MAX_LEGEND_COLOR = Color.RED;
@@ -100,9 +144,14 @@ public class PlotterAdapter extends JPanel implements Plotter {
 			}
 		}
 
-		LINE_STYLE_ICONS = new LineStyleIcon[LINE_STYLES.length];
 		for (int i = 0; i < LINE_STYLE_ICONS.length; i++) {
 			LINE_STYLE_ICONS[i] = new LineStyleIcon(i);
+		}
+		
+		for (int i = 0; i < LINE_STROKES.length; i++) {
+			for (int j = 0; j < LINE_COLORS.length; j++) {
+				POINT_STYLES[i * LINE_COLORS.length + j] = KNOWN_POINT_STYLES[j];
+			}
 		}
 	}
 
@@ -119,16 +168,16 @@ public class PlotterAdapter extends JPanel implements Plotter {
 		}
 
 		public int getIconWidth() {
-			return 26;
+			return 20;
 		}
 
 		public int getIconHeight() {
-			return 1;
+			return 2;
 		}
 
 		public void paintIcon(Component c, Graphics g, int x, int y) {
 			LINE_STYLES[index].set((Graphics2D) g);
-			g.drawLine(x + 2, y, x + 26, y);
+			g.drawLine(x, y, x + 20, y);
 		}
 	}
 
@@ -155,6 +204,102 @@ public class PlotterAdapter extends JPanel implements Plotter {
 		
 		public Color getColor() {
 			return color;
+		}
+		
+		public Stroke getStroke() {
+			return this.stroke;
+		}
+	}
+
+	/**
+	 * The point style that should be used for plotting points.
+	 */
+	protected static interface PointStyle {
+
+		public Shape createShape(double x, double y);
+		
+	}
+
+	/**
+	 * The point style that should be used for plotting points.
+	 */
+	protected static class EllipsoidPointStyle implements PointStyle {
+
+		public Shape createShape(double x, double y) {
+			return new Ellipse2D.Double(x - POINTSIZE / 2.0d, y - POINTSIZE / 2.0d, POINTSIZE, POINTSIZE);
+		}
+	}
+
+	/**
+	 * The point style that should be used for plotting points.
+	 */
+	protected static class RectanglePointStyle implements PointStyle {
+
+		public Shape createShape(double x, double y) {
+			return new Rectangle2D.Double(x - POINTSIZE / 2.0d, y - POINTSIZE / 2.0d, POINTSIZE - 1, POINTSIZE - 1);
+		}
+	}
+
+	/**
+	 * The point style that should be used for plotting points.
+	 */
+	protected static class TriangularPointStyle implements PointStyle {
+
+		public Shape createShape(double x, double y) {
+			int[] xPoints = new int[] { (int)Math.ceil(x - POINTSIZE / 2.0d), (int)Math.ceil(x), (int)Math.ceil(x + POINTSIZE / 2.0d) };
+			int[] yPoints = new int[] { (int)Math.ceil(y + POINTSIZE / 2.0d), (int)Math.ceil(y - POINTSIZE / 2.0d), (int)Math.ceil(y + POINTSIZE / 2.0d) };
+			return new Polygon(xPoints, yPoints, xPoints.length);
+		}
+	}
+
+	/**
+	 * The point style that should be used for plotting points.
+	 */
+	protected static class TurnedTriangularPointStyle implements PointStyle {
+
+		public Shape createShape(double x, double y) {
+			int[] xPoints = new int[] { (int)Math.ceil(x - POINTSIZE / 2.0d), (int)Math.ceil(x), (int)Math.ceil(x + POINTSIZE / 2.0d) };
+			int[] yPoints = new int[] { (int)Math.ceil(y - POINTSIZE / 2.0d), (int)Math.ceil(y + POINTSIZE / 2.0d), (int)Math.ceil(y - POINTSIZE / 2.0d) };
+			return new Polygon(xPoints, yPoints, xPoints.length);
+		}
+	}
+
+	/**
+	 * The point style that should be used for plotting points.
+	 */
+	protected static class StarPointStyle implements PointStyle {
+
+		public Shape createShape(double x, double y) {
+			double pointSize = POINTSIZE - 1.0d;
+			int[] xPoints = new int[] { 
+					(int)Math.ceil(x - pointSize / 6.0d), 
+					(int)Math.ceil(x + pointSize / 6.0d), 
+					(int)Math.ceil(x + pointSize / 6.0d),
+					(int)Math.ceil(x + pointSize / 2.0d),
+					(int)Math.ceil(x + pointSize / 2.0d),
+					(int)Math.ceil(x + pointSize / 6.0d),
+					(int)Math.ceil(x + pointSize / 6.0d),
+					(int)Math.ceil(x - pointSize / 6.0d),
+					(int)Math.ceil(x - pointSize / 6.0d),
+					(int)Math.ceil(x - pointSize / 2.0d),
+					(int)Math.ceil(x - pointSize / 2.0d),
+					(int)Math.ceil(x - pointSize / 6.0d)
+			};
+			int[] yPoints = new int[] { 
+					(int)Math.ceil(y - pointSize / 2.0d), 
+					(int)Math.ceil(y - pointSize / 2.0d), 
+					(int)Math.ceil(y - pointSize / 6.0d),
+					(int)Math.ceil(y - pointSize / 6.0d),
+					(int)Math.ceil(y + pointSize / 6.0d),
+					(int)Math.ceil(y + pointSize / 6.0d),
+					(int)Math.ceil(y + pointSize / 2.0d),
+					(int)Math.ceil(y + pointSize / 2.0d),
+					(int)Math.ceil(y + pointSize / 6.0d),
+					(int)Math.ceil(y + pointSize / 6.0d),
+					(int)Math.ceil(y - pointSize / 6.0d),
+					(int)Math.ceil(y - pointSize / 6.0d)
+			};
+			return new Polygon(xPoints, yPoints, xPoints.length);
 		}
 	}
 	
@@ -348,26 +493,31 @@ public class PlotterAdapter extends JPanel implements Plotter {
 	 *  real value. */
 	protected double getPointColorValue(DataTable table, DataTableRow row, int column, double min, double max) {
 		double colorValue = row.getValue(column);
-		double normalized = (colorValue - min) / (max - min);	
-		if ((table.isNominal(column)) && (table.getNumberOfValues(column) == 2)) {
-			String columnName = table.getColumnName(column);
-			int startParIndex = columnName.indexOf("(") + 1;
-			if (startParIndex >= 0) {
-				int endParIndex = columnName.indexOf(")", startParIndex);
-				if (endParIndex >= 0) {
-					String otherColumnName = columnName.substring(startParIndex, endParIndex);
-					int otherColumnIndex = table.getColumnIndex(otherColumnName);
-					if (otherColumnIndex >= 0) {
-						if (table.isNominal(otherColumnIndex)) {
-							int compareValue = (int)row.getValue(otherColumnIndex);
-							String compareString = table.mapIndex(otherColumnIndex, compareValue);
-							compareValue = table.mapString(column, compareString);
-							if (colorValue != compareValue) {
-								// both values are different --> change color
-								if (normalized > 0.8)
-									normalized = 0.8;
-								else if (normalized < 0.2)
-									normalized = 0.2;
+		double normalized = (colorValue - min) / (max - min);
+		if (!Double.isNaN(colorValue)) {
+			if ((table.isNominal(column)) && (table.getNumberOfValues(column) == 2)) {
+				String columnName = table.getColumnName(column);
+				int startParIndex = columnName.indexOf("(") + 1;
+				if (startParIndex >= 0) {
+					int endParIndex = columnName.indexOf(")", startParIndex);
+					if (endParIndex >= 0) {
+						String otherColumnName = columnName.substring(startParIndex, endParIndex);
+						int otherColumnIndex = table.getColumnIndex(otherColumnName);
+						if (otherColumnIndex >= 0) {
+							if (table.isNominal(otherColumnIndex)) {
+								double compareValue = row.getValue(otherColumnIndex);
+								if (!Double.isNaN(compareValue)) {
+									int compareIndex = (int)compareValue;
+									String compareString = table.mapIndex(otherColumnIndex, compareIndex);
+									compareIndex = table.mapString(column, compareString);
+									if (colorValue != compareIndex) {
+										// both values are different --> change color
+										if (normalized > 0.8)
+											normalized = 0.8;
+										else if (normalized < 0.2)
+											normalized = 0.2;
+									}
+								}
 							}
 						}
 					}
@@ -380,27 +530,33 @@ public class PlotterAdapter extends JPanel implements Plotter {
     protected Color getPointBorderColor(DataTable table, DataTableRow row, int column) {
         Color result = Color.BLACK;
         if (table.isNominal(column)) { // nominal --> try to find compare column
-            int colorValue = (int)row.getValue(column);
-            String columnName = table.getColumnName(column);
-            int startParIndex = columnName.indexOf("(") + 1;
-            if (startParIndex >= 0) {
-                int endParIndex = columnName.indexOf(")", startParIndex);
-                if (endParIndex >= 0) {
-                    String otherColumnName = columnName.substring(startParIndex, endParIndex);
-                    int otherColumnIndex = table.getColumnIndex(otherColumnName);
-                    if (otherColumnIndex >= 0) {
-                    	if (table.isNominal(otherColumnIndex)) {
-                    		int compareValue = (int)row.getValue(otherColumnIndex);
-                    		String compareString = table.mapIndex(otherColumnIndex, compareValue);
-                    		compareValue = table.mapString(column, compareString);
-                    		if (colorValue != compareValue) {
-                    			// both values are different --> change color
-                    			result = Color.RED;
-                    		} 
-                    	}
-                    }
-                }
-            }
+        	double colorValue = row.getValue(column);
+        	if (!Double.isNaN(colorValue)) {
+        		int colorIndex = (int)colorValue;
+        		String columnName = table.getColumnName(column);
+        		int startParIndex = columnName.indexOf("(") + 1;
+        		if (startParIndex >= 0) {
+        			int endParIndex = columnName.indexOf(")", startParIndex);
+        			if (endParIndex >= 0) {
+        				String otherColumnName = columnName.substring(startParIndex, endParIndex);
+        				int otherColumnIndex = table.getColumnIndex(otherColumnName);
+        				if (otherColumnIndex >= 0) {
+        					if (table.isNominal(otherColumnIndex)) {
+        						double compareValue = row.getValue(otherColumnIndex);
+        						if (!Double.isNaN(compareValue)) {
+        							int compareIndex = (int)compareValue;
+        							String compareString = table.mapIndex(otherColumnIndex, compareIndex);
+        							compareIndex = table.mapString(column, compareString);
+        							if (colorIndex != compareIndex) {
+        								// both values are different --> change color
+        								result = Color.RED;
+        							} 
+        						}
+        					}
+        				}
+        			}
+        		}
+        	}
         }
         return result;
     }
@@ -419,7 +575,7 @@ public class PlotterAdapter extends JPanel implements Plotter {
 	 */
 	public static Color getPointColor(double value, int alpha) {
         if (Double.isNaN(value))
-            return Color.RED;
+            return Color.LIGHT_GRAY;
         float[] minCol = Color.RGBtoHSB(MIN_LEGEND_COLOR.getRed(), MIN_LEGEND_COLOR.getGreen(), MIN_LEGEND_COLOR.getBlue(), null);
         float[] maxCol = Color.RGBtoHSB(MAX_LEGEND_COLOR.getRed(), MAX_LEGEND_COLOR.getGreen(), MAX_LEGEND_COLOR.getBlue(), null);
         //double hColorDiff = 1.0f - 0.68f;
@@ -433,9 +589,18 @@ public class PlotterAdapter extends JPanel implements Plotter {
 		return color;
 	}
 
+	protected PointStyle getPointStyle(int styleIndex) {
+		return POINT_STYLES[styleIndex % POINT_STYLES.length];
+	}
+	
 	/** This helper method can be used to draw a point in the given graphics object. */
 	protected void drawPoint(Graphics2D g, double x, double y, Color color, Color borderColor) {
-		Ellipse2D pointShape = new Ellipse2D.Double(x - POINTSIZE / 2.0d, y - POINTSIZE / 2.0d, POINTSIZE, POINTSIZE);
+		drawPoint(g, ELLIPSOID_POINT_STYLE, x, y, color, borderColor);
+	}
+	
+	/** This helper method can be used to draw a point in the given graphics object. */
+	protected void drawPoint(Graphics2D g, PointStyle pointStyle, double x, double y, Color color, Color borderColor) {
+		Shape pointShape = pointStyle.createShape(x, y);
 		g.setColor(color);
 		g.fill(pointShape);
 		g.setColor(borderColor);
@@ -482,13 +647,13 @@ public class PlotterAdapter extends JPanel implements Plotter {
 			String nominalValue = table.mapIndex(legendColumn, i);
 			if (nominalValue.length() > 16)
 				nominalValue = nominalValue.substring(0, 16) + "...";
-			Rectangle2D colorRect = new Rectangle2D.Double(currentX, 5, 10.0d, 10.0d);
+			Shape colorBullet = new Ellipse2D.Double(currentX, 7, 7.0d, 7.0d);
 			Color color = getPointColor((double)i / (double)(numberOfValues - 1), alpha);
 			g.setColor(color);
-			g.fill(colorRect);
+			g.fill(colorBullet);
 			g.setColor(Color.black);
-			g.draw(colorRect);
-			currentX += 15;
+			g.draw(colorBullet);
+			currentX += 12;
 			g.drawString(nominalValue, currentX, 15);
 			Rectangle2D stringBounds = LABEL_FONT.getStringBounds(nominalValue, g.getFontRenderContext());
 			currentX += stringBounds.getWidth() + 15;
@@ -503,8 +668,8 @@ public class PlotterAdapter extends JPanel implements Plotter {
 			while (i.hasNext()) {
 				DataTableRow row = i.next();
 				double colorValue = row.getValue(legendColumn);
-				min = Math.min(min, colorValue);
-				max = Math.max(max, colorValue);
+				min = MathFunctions.robustMin(min, colorValue);
+				max = MathFunctions.robustMax(max, colorValue);
 			}
 		}
 		drawNumericalLegend(graphics, min, max, alpha);		
@@ -538,7 +703,7 @@ public class PlotterAdapter extends JPanel implements Plotter {
 		g.drawString(maxColorString, keyX, keyY);
 	}
     
-    protected void drawGenericNominalLegend(Graphics graphics, String[] names, Color[] colors, int xOffset, int alpha) {
+    protected void drawGenericNominalLegend(Graphics graphics, String[] names, PointStyle[] pointStyles, Color[] colors, int xOffset, int alpha) {
         Graphics2D g = (Graphics2D)graphics.create();
         g.translate(xOffset, 0);
         int numberOfValues = names.length;
@@ -549,13 +714,13 @@ public class PlotterAdapter extends JPanel implements Plotter {
             String nominalValue = names[i];
             if (nominalValue.length() > 16)
                 nominalValue = nominalValue.substring(0, 16) + "...";
-            Rectangle2D colorRect = new Rectangle2D.Double(currentX, 5, 10.0d, 10.0d);
+            Shape shape = pointStyles[i].createShape(currentX, 11);
             Color color = colors[i];
             g.setColor(color);
-            g.fill(colorRect);
+            g.fill(shape);
             g.setColor(Color.black);
-            g.draw(colorRect);
-            currentX += 15;
+            g.draw(shape);
+            currentX += 8;
             g.drawString(nominalValue, currentX, 15);
             Rectangle2D stringBounds = LABEL_FONT.getStringBounds(nominalValue, g.getFontRenderContext());
             currentX += stringBounds.getWidth() + 15;
@@ -644,4 +809,16 @@ public class PlotterAdapter extends JPanel implements Plotter {
     		newSpace.fill(weightRect);
     	}
     }
+
+	public int getRenderHeight(int preferredHeight) {
+		return getHeight();
+	}
+
+	public int getRenderWidth(int preferredWidth) {
+		return getWidth();
+	}
+
+	public void render(Graphics graphics, int width, int height) {
+		paint(graphics);
+	}
 }

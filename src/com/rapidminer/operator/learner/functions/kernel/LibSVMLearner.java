@@ -1,32 +1,31 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.functions.kernel;
 
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
 
 import libsvm.Svm;
 import libsvm.svm_model;
@@ -64,10 +63,9 @@ import com.rapidminer.parameter.ParameterTypeList;
  * @rapidminer.index SVM
  * @rapidminer.reference Chang/Lin/2001a
  * @author Ingo Mierswa
- * @version $Id: LibSVMLearner.java,v 1.6 2007/07/14 12:31:38 ingomierswa Exp $
+ * @version $Id: LibSVMLearner.java,v 1.13 2008/05/09 19:23:01 ingomierswa Exp $
  */
 public class LibSVMLearner extends AbstractLearner {
-
 
 	/** The parameter name for &quot;SVM for classification (C-SVC, nu-SVC), regression (epsilon-SVR, nu-SVR) and distribution estimation (one-class)&quot; */
 	public static final String PARAMETER_SVM_TYPE = "svm_type";
@@ -107,6 +105,10 @@ public class LibSVMLearner extends AbstractLearner {
 
 	/** The parameter name for &quot;Indicates if proper confidence values should be calculated.&quot; */
 	public static final String PARAMETER_CALCULATE_CONFIDENCES = "calculate_confidences";
+	
+	/** The parameter name for &quot;Indicates if proper confidence values should be calculated.&quot; */
+	public static final String PARAMETER_CONFIDENCE_FOR_MULTICLASS = "confidence_for_multiclass";
+	
 	/*
 	 * What to do for a new LibSVM version (current version 2.84):
 	 * ----------------------------------------------------------
@@ -164,8 +166,9 @@ public class LibSVMLearner extends AbstractLearner {
 		return nodeArray;
 	}
 
-	/** Creates a support vector problem for the LibSVM. */
-	private svm_problem getProblem(ExampleSet exampleSet) {
+	/** Creates a support vector problem for the LibSVM. 
+	 * @throws UserError */
+	private svm_problem getProblem(ExampleSet exampleSet) throws UserError {
 		log("Creating LibSVM problem.");
 		FastExample2SparseTransform ripper = new FastExample2SparseTransform(exampleSet);
 		int nodeCount = 0;
@@ -174,11 +177,12 @@ public class LibSVMLearner extends AbstractLearner {
 		problem.y = new double[exampleSet.size()];
 		problem.x = new svm_node[exampleSet.size()][];
 		Iterator<Example> i = exampleSet.iterator();
+		Attribute label = exampleSet.getAttributes().getLabel();
 		int j = 0;
 		while (i.hasNext()) {
 			Example e = i.next();
 			problem.x[j] = makeNodes(e, ripper);
-			problem.y[j] = e.getLabel();
+			problem.y[j] = e.getValue(label);
 			nodeCount += problem.x[j].length;
 			j++;
 		}
@@ -248,9 +252,13 @@ public class LibSVMLearner extends AbstractLearner {
 	/** Learns a new SVM model with the LibSVM package. */
 	public Model learn(ExampleSet exampleSet) throws OperatorException {
 		svm_parameter params = getParameters(exampleSet);
-		
+        
+        if (exampleSet.size() < 2) {
+            throw new UserError(this, 110, 2);
+        }
+        
 		// check if svm type fits problem type
-		Attribute label = exampleSet.getAttributes().getLabel();
+		Attribute label = exampleSet.getAttributes().getLabel();	
 		if (label.isNominal()) {
 			if ((params.svm_type != SVM_TYPE_C_SVC) && 
 				(params.svm_type != SVM_TYPE_NU_SVC) &&
@@ -272,7 +280,7 @@ public class LibSVMLearner extends AbstractLearner {
        
         svm_model model = Svm.svm_train(problem, params);
         
-        return new LibSVMModel(exampleSet, model, exampleSet.getAttributes().size());
+        return new LibSVMModel(exampleSet, model, exampleSet.getAttributes().size(), getParameterAsBoolean(PARAMETER_CONFIDENCE_FOR_MULTICLASS));
 	}
 
 	public List<ParameterType> getParameterTypes() {
@@ -290,7 +298,7 @@ public class LibSVMLearner extends AbstractLearner {
 		type = new ParameterTypeDouble(PARAMETER_C, "The cost parameter C for c_svc, epsilon_svr, and nu_svr.", 0, Double.POSITIVE_INFINITY, 0);
 		type.setExpert(false);
 		types.add(type);
-		types.add(new ParameterTypeDouble(PARAMETER_NU, "The parameter nu for nu_svc, one_class, and nu_svr.", Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 0.5));
+		types.add(new ParameterTypeDouble(PARAMETER_NU, "The parameter nu for nu_svc, one_class, and nu_svr.", 0.0d, 0.5d, 0.5d));
 		types.add(new ParameterTypeInt(PARAMETER_CACHE_SIZE, "Cache size in Megabyte.", 0, Integer.MAX_VALUE, 80));
 
 		types.add(new ParameterTypeDouble(PARAMETER_EPSILON, "Tolerance of termination criterion.", Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 0.001));
@@ -300,6 +308,7 @@ public class LibSVMLearner extends AbstractLearner {
 		type = new ParameterTypeBoolean(PARAMETER_CALCULATE_CONFIDENCES, "Indicates if proper confidence values should be calculated.", false);
 		type.setExpert(false);
 		types.add(type);
+		types.add(new ParameterTypeBoolean(PARAMETER_CONFIDENCE_FOR_MULTICLASS, "Indicates if the class with the highest confidence should be selected in the multiclass setting. Uses binary majority vote over all 1-vs-1 classifiers otherwise (selected class must not be the one with highest confidence in that case).", true));
 		return types;
 	}
 }

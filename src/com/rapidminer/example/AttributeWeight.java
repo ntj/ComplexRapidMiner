@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.example;
 
@@ -31,7 +29,7 @@ import com.rapidminer.tools.math.Averagable;
  * weight.
  * 
  * @author Ingo Mierswa
- * @version $Id: AttributeWeight.java,v 1.1 2007/05/27 21:58:37 ingomierswa Exp $
+ * @version $Id: AttributeWeight.java,v 1.4 2008/05/09 19:22:42 ingomierswa Exp $
  */
 public class AttributeWeight extends Averagable implements Comparable<AttributeWeight> {
 
@@ -43,6 +41,9 @@ public class AttributeWeight extends Averagable implements Comparable<AttributeW
 	/** The weight of the attribute. */
 	private double weight;
 
+    /** A counter for building averages. */
+    private int counter = 1;
+    
 	/** The parent attribute weights. */
 	private AttributeWeights weights;
 
@@ -69,7 +70,7 @@ public class AttributeWeight extends Averagable implements Comparable<AttributeW
 
 	/** Returns the weight of the attribute. */
 	public double getWeight() {
-		return weight;
+		return weight / counter;
 	}
 
 	/** Sets the weight of the attribute. */
@@ -87,7 +88,7 @@ public class AttributeWeight extends Averagable implements Comparable<AttributeW
 
 	/** Returns the current weight. */
 	public double getMikroAverage() {
-		return getWeight();
+		return getWeight() / counter;
 	}
 
 	/**
@@ -120,9 +121,10 @@ public class AttributeWeight extends Averagable implements Comparable<AttributeW
 		return this.name.hashCode() ^ ((int)(bits ^ bits >>> 32));
 	}
 
-	/** Builds the sum of weights. */
+	/** Builds the sum of weights and counters. */
 	public void buildSingleAverage(Averagable avg) {
 		AttributeWeight other = (AttributeWeight) avg;
 		this.weight += other.weight;
+        this.counter += other.counter;
 	}
 }

@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.example.table;
 
@@ -49,7 +47,7 @@ public class ResultSetDataRowReader extends AbstractDataRowReader {
 	private Attribute[] attributes;
 
 	private ResultSet resultSet;
-
+	
 	private static final int DONT_KNOW_YET = 0;
 
 	private static final int YES = 1;
@@ -103,11 +101,11 @@ public class ResultSetDataRowReader extends AbstractDataRowReader {
 		if (hasNext()) {
 			hasNext = DONT_KNOW_YET;
 			try {
-				double[] data = new double[resultSet.getMetaData().getColumnCount()];
 				DataRow row = getFactory().create(attributes.length);
-				for (int i = 0; i < data.length; i++) {
+				for (int i = 0; i < attributes.length; i++) {
 					row.set(attributes[i], DatabaseDataRow.readColumn(resultSet, attributes[i]));
 				}
+				row.trim();
 				return row;
 			} catch (SQLException sqle) {
 				throw new RuntimeException("Error accessing the result of a query:" + sqle.toString());

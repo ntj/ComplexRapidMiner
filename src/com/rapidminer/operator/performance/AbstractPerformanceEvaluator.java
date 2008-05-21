@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.performance;
 
@@ -31,6 +29,7 @@ import java.util.List;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Statistics;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.InputDescription;
 import com.rapidminer.operator.MissingIOObjectException;
@@ -44,6 +43,7 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.ParameterTypeStringCategory;
 import com.rapidminer.parameter.UndefinedParameterError;
+import com.rapidminer.tools.Ontology;
 
 /**
  * <p>This performance evaluator operator should be used for regression tasks, 
@@ -74,7 +74,7 @@ import com.rapidminer.parameter.UndefinedParameterError;
  * used instead of simply replacing the performance comparator.</p>
  * 
  * @author Ingo Mierswa
- * @version $Id: AbstractPerformanceEvaluator.java,v 1.3 2007/07/15 19:04:34 ingomierswa Exp $
+ * @version $Id: AbstractPerformanceEvaluator.java,v 1.10 2008/05/09 19:22:43 ingomierswa Exp $
  */
 public abstract class AbstractPerformanceEvaluator extends Operator {
 
@@ -86,20 +86,33 @@ public abstract class AbstractPerformanceEvaluator extends Operator {
 
 	/** The parameter name for &quot;Fully qualified classname of the PerformanceComparator implementation.&quot; */
 	public static final String PARAMETER_COMPARATOR_CLASS = "comparator_class";
+
+	/** Indicates if example weights should be used for performance calculations. */
+	private static final String PARAMETER_USE_EXAMPLE_WEIGHTS = "use_example_weights";
+	
 	
 	/**
 	 * The currently used performance vector. This is be used for logging /
 	 * plotting purposes.
 	 */
 	private PerformanceVector currentPerformanceVector = null;
-    
+	
 	public AbstractPerformanceEvaluator(OperatorDescription description) {
 		super(description);
 		// add values for logging
 		List<PerformanceCriterion> criteria = getCriteria();
 		for (PerformanceCriterion criterion : criteria) {
-			addPerformanceValue(criterion.getName(), criterion.getDescription());
+		    addPerformanceValue(criterion.getName(), criterion.getDescription());
 		}
+		
+		addValue(new Value("performance", "The last performance (main criterion).") {
+			public double getValue() {
+				if (currentPerformanceVector != null)
+					return currentPerformanceVector.getMainCriterion().getAverage();
+				else
+					return Double.NaN;
+			}
+		});
 	}
 
 	/** Delivers the list of criteria which is able for this operator. Please note that
@@ -202,6 +215,9 @@ public abstract class AbstractPerformanceEvaluator extends Operator {
 				performanceCriteria.addCriterion(criterion);
 		}
 
+        if (performanceCriteria.size() == 0)
+            throw new UserError(this, 910);
+        
 		// set suitable main criterion
 		if (performanceCriteria.size() == 0) {
 			List<PerformanceCriterion> availableCriteria = getCriteria();
@@ -278,7 +294,8 @@ public abstract class AbstractPerformanceEvaluator extends Operator {
 		boolean skipUndefined = true;
 		if (showComparatorParameter())
 			skipUndefined = getParameterAsBoolean(PARAMETER_SKIP_UNDEFINED_LABELS);
-		evaluate(this, testSet, currentPerformanceVector, givenCriteria, skipUndefined);
+		boolean useExampleWeights = getParameterAsBoolean(PARAMETER_USE_EXAMPLE_WEIGHTS);
+		evaluate(this, testSet, currentPerformanceVector, givenCriteria, skipUndefined, useExampleWeights);
 		return currentPerformanceVector;
 	}
 
@@ -290,13 +307,28 @@ public abstract class AbstractPerformanceEvaluator extends Operator {
 	 *            Ususally this. May be null for testing. Only needed for
 	 *            exception.
 	 */
-	public static void evaluate(AbstractPerformanceEvaluator evaluator, ExampleSet testSet, PerformanceVector performanceCriteria, List<PerformanceCriterion> givenCriteria, boolean skipUndefinedLabels) throws OperatorException {
+	public static void evaluate(AbstractPerformanceEvaluator evaluator, ExampleSet testSet, PerformanceVector performanceCriteria, List<PerformanceCriterion> givenCriteria, boolean skipUndefinedLabels, boolean useExampleWeights) throws OperatorException {
 		if (testSet.getAttributes().getLabel() == null)
 			throw new UserError(evaluator, 105, new Object[0]);
 		if (testSet.getAttributes().getPredictedLabel() == null)
 			throw new UserError(evaluator, 107, new Object[0]);
         
-		// initialise all criteria
+		// sanity check for weight attribute
+		if (useExampleWeights) {
+			Attribute weightAttribute = testSet.getAttributes().getWeight();
+			if (weightAttribute != null) {
+				if (weightAttribute.isNominal())
+					throw new UserError(evaluator, 120, new Object[] { weightAttribute.getName(), Ontology.VALUE_TYPE_NAMES[weightAttribute.getValueType()], Ontology.VALUE_TYPE_NAMES[Ontology.NUMERICAL] });
+				
+				testSet.recalculateAttributeStatistics(weightAttribute);
+				double minimum = testSet.getStatistics(weightAttribute, Statistics.MINIMUM);
+				if ((Double.isNaN(minimum)) || (minimum < 0.0d)) {
+					throw new UserError(evaluator, 138, new Object[] { weightAttribute.getName(), "positive values", "negative for some examples"});
+				}
+			}
+		}
+		
+		// initialize all criteria
 		for (int pc = 0; pc < performanceCriteria.size(); pc++) {
 			PerformanceCriterion c = performanceCriteria.getCriterion(pc);
             if (!givenCriteria.contains(c)) {
@@ -304,7 +336,7 @@ public abstract class AbstractPerformanceEvaluator extends Operator {
                     throw new UserError(evaluator, 903, new Object[0]);
                 }
                 // init all criteria
-                ((MeasuredPerformance)c).startCounting(testSet);
+                ((MeasuredPerformance)c).startCounting(testSet, useExampleWeights);
                 
                 // init weight handlers
                 if (c instanceof ClassWeightedPerformance) {
@@ -394,6 +426,8 @@ public abstract class AbstractPerformanceEvaluator extends Operator {
 			types.add(new ParameterTypeBoolean(PARAMETER_SKIP_UNDEFINED_LABELS, "If set to true, examples with undefined labels are skipped.", true));
 		if (showComparatorParameter())
 			types.add(new ParameterTypeString(PARAMETER_COMPARATOR_CLASS, "Fully qualified classname of the PerformanceComparator implementation.", true));
+		
+		types.add(new ParameterTypeBoolean(PARAMETER_USE_EXAMPLE_WEIGHTS, "Indicated if example weights should be used for performance calculations if possible.", true));
 		return types;
 	}
 }

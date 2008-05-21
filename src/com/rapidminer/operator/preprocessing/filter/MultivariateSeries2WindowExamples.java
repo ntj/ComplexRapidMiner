@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.preprocessing.filter;
 
@@ -106,20 +104,21 @@ public class MultivariateSeries2WindowExamples extends Series2WindowExamples {
     public void fillSeriesExampleTable(MemoryExampleTable table, ExampleSet exampleSet, Attribute label, int representation, int windowWidth, int stepSize, int horizon) throws OperatorException {
         int labelDimension = getParameterAsInt(PARAMETER_LABEL_DIMENSION);
         if (representation == SERIES_AS_EXAMPLES) {
-            for (int w = 0; w < exampleSet.size() - windowWidth - horizon; w+=stepSize) {
-                double[] data = new double[windowWidth * exampleSet.getAttributes().size() + 1];
-                int a = 0;
-                for (Attribute currentAttribute : exampleSet.getAttributes()) {
-                    for (int d = 0; d < windowWidth; d++) {
-                        data[a * windowWidth + d] = exampleSet.getExample(w + d).getValue(currentAttribute);
-                    }
-                    if (a == labelDimension)
-                        data[data.length - 1] = exampleSet.getExample(w + windowWidth + horizon).getValue(currentAttribute);
-                }
-                table.addDataRow(new DoubleArrayDataRow(data));
-                checkForStop();
-                a++;
-            }
+        	for (int w = 0; w < exampleSet.size() - windowWidth - horizon; w+=stepSize) { 
+        		double[] data = new double[windowWidth * exampleSet.getAttributes().size() + 1]; 
+        		int a = 0; 
+        		for (Attribute currentAttribute : exampleSet.getAttributes()) { 
+        			for (int d = 0; d < windowWidth; d++) { 
+        				data[a * windowWidth + d] = exampleSet.getExample(w + d).getValue(currentAttribute); 
+        			} 
+        			if (a == labelDimension) 
+        				data[data.length - 1] = exampleSet.getExample(w + windowWidth + 
+        						horizon).getValue(currentAttribute); 
+        			a++; 
+        		} 
+        		table.addDataRow(new DoubleArrayDataRow(data)); 
+        		checkForStop(); 
+        	} 
         } else {
             int lastAttribute = exampleSet.getAttributes().size() - windowWidth - horizon;
             Attribute[] attributeArray = new Attribute[exampleSet.getAttributes().size()];

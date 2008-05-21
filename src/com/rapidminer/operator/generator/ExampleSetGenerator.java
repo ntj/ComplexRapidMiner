@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.generator;
 
@@ -67,7 +65,6 @@ import com.rapidminer.tools.Tools;
  */
 public class ExampleSetGenerator extends Operator {
 
-
 	/** The parameter name for &quot;Specifies the target function of this example set&quot; */
 	public static final String PARAMETER_TARGET_FUNCTION = "target_function";
 
@@ -88,6 +85,7 @@ public class ExampleSetGenerator extends Operator {
 
 	/** The parameter name for &quot;Determines, how the data is represented internally.&quot; */
 	public static final String PARAMETER_DATAMANAGEMENT = "datamanagement";
+	
 	private static final String[] KNOWN_FUNCTION_NAMES = new String[] { 
 		"random", // regression
 	    "sum", 
@@ -99,7 +97,8 @@ public class ExampleSetGenerator extends Operator {
 	    "simple sinus", 
 	    "sinus", 
 	    "simple superposition", 
-	    "sinus frequency", 
+	    "sinus frequency",
+	    "sinus with trend",
 	    "sinc", 
 	    "triangular function", 
 	    "square pulse function", 
@@ -115,13 +114,16 @@ public class ExampleSetGenerator extends Operator {
 		"random dots classification", 
         "global and local models classification",
 		"sinus classification",
-		"multi classification", 
+		"multi classification",
+		"two gaussians classification",
 		"transactions dataset", // transactions
 		"grid function", // clusters
 		"three ring clusters", 
 		"spiral cluster", 
 		"single gaussian cluster", 
-		"gaussian mixture clusters" 
+		"gaussian mixture clusters",
+		"driller oscillation timeseries" // timeseries
+		
 	};
 
 	private static final Class[] KNOWN_FUNCTION_IMPLEMENTATIONS = new Class[] {
@@ -136,6 +138,7 @@ public class ExampleSetGenerator extends Operator {
 		SinusFunction.class, 
 		SimpleSuperpositionFunction.class,
 		SinusFrequencyFunction.class,
+		SinusWithTrendFunction.class,
 		SincFunction.class,
 		TriangularFunction.class,
 		SquarePulseFunction.class,
@@ -152,12 +155,14 @@ public class ExampleSetGenerator extends Operator {
         GlobalAndLocalPatternsFunction.class,
 		SinusClassificationFunction.class,
 		MultiClassificationFunction.class,
+		TwoGaussiansClassificationFunction.class,
 		TransactionDatasetFunction.class, // transactions
 		GridFunction.class, // clusters
 		RingClusteringFunction.class, 
 		SpiralClusteringFunction.class,
 		GaussianFunction.class,
-		GaussianMixtureFunction.class
+		GaussianMixtureFunction.class,
+		DrillerOscillationFunction.class // timeseries
 	};
 
 	private static final Class[] INPUT_CLASSES = new Class[0];
@@ -216,6 +221,7 @@ public class ExampleSetGenerator extends Operator {
                 DataRow row = factory.create(example.length);
                 for (int i = 0; i < example.length; i++)
                     row.set(attributes.get(i), example[i]);
+                row.trim();
 				data.add(row);
 			}
 		} catch (TargetFunction.FunctionException e) {

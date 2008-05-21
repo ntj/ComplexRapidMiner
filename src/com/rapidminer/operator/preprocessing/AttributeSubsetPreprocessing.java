@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.preprocessing;
 
@@ -64,8 +62,17 @@ import com.rapidminer.parameter.UndefinedParameterError;
  * to the resulting example set if the parameter &quot;keep_subset_only&quot; is set to 
  * false (default).</p>
  * 
+ * <p>Please note that this operator is very powerful and can be used to create
+ * new preprocessing schemes by combinating it with other preprocessing operators.
+ * Hoewever, there are two major restrictions (among some others): first, since the inner result
+ * will be combined with the rest of the input example set, the number of 
+ * examples (data points) is not allowed to be changed inside of the subset preprocessing. 
+ * Second, attribute role changes will not be delivered to the outside since internally all special
+ * attributes will be changed to regular for the inner operators and role changes can afterwards
+ * not be delivered.</p> 
+ * 
  * @author Ingo Mierswa, Shevek
- * @version $Id: AttributeSubsetPreprocessing.java,v 1.6 2007/06/24 00:54:51 ingomierswa Exp $
+ * @version $Id: AttributeSubsetPreprocessing.java,v 1.11 2008/05/09 22:13:12 ingomierswa Exp $
  */
 public class AttributeSubsetPreprocessing extends OperatorChain {
 
@@ -208,7 +215,8 @@ public class AttributeSubsetPreprocessing extends OperatorChain {
         Class[] innerResult = null;
         try {
             if (getParameterAsBoolean(PARAMETER_DELIVER_INNER_RESULTS)) {
-                innerResult = getOperator(0).getOutputClasses();
+            	if (getNumberOfOperators() > 0)
+            		innerResult = getOperator(0).getOutputClasses();
             }
         } catch (NullPointerException e) {
             // hack to allow parameter retrieval in getInputClasses before

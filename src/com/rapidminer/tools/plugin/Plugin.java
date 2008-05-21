@@ -1,36 +1,36 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools.plugin;
 
 import java.awt.Frame;
 import java.awt.Image;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.jar.JarFile;
 
 import com.rapidminer.RapidMiner;
+import com.rapidminer.gui.templates.BuildingBlock;
 import com.rapidminer.gui.tools.AboutBox;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.OperatorService;
@@ -62,7 +63,7 @@ import com.rapidminer.tools.Tools;
  * </p>
  * 
  * @author Simon Fischer, Ingo Mierswa
- * @version $Id: Plugin.java,v 1.1 2007/05/27 22:03:33 ingomierswa Exp $
+ * @version $Id: Plugin.java,v 1.6 2008/05/09 19:22:57 ingomierswa Exp $
  */
 public class Plugin {
 
@@ -72,6 +73,9 @@ public class Plugin {
 	 */
 	private JarFile archive;
 
+	/** The file for this plugin. */
+	private File file;
+	
 	/** The class loader based on the plugin file. */
 	private PluginClassLoader classLoader;
 
@@ -98,8 +102,9 @@ public class Plugin {
 
 	/** Creates a new pluging based on the plugin .jar file. */
 	public Plugin(File file) throws IOException {
-		archive = new JarFile(file);
-		URL url = new URL("file", null, file.getAbsolutePath());
+		this.file = file;
+		this.archive = new JarFile(this.file);
+		URL url = new URL("file", null, this.file.getAbsolutePath());
 		this.classLoader = new PluginClassLoader(new URL[] { url });
 		Tools.addResourceSource(new ResourceSource(this.classLoader));
 		getMetaData();
@@ -181,7 +186,7 @@ public class Plugin {
 			if (singleDependencies[i].trim().length() > 0) {
 				String dependencyName = singleDependencies[i].trim();
 				String dependencyVersion = "0";
-				if (singleDependencies[i].trim().indexOf("[") > 0) {
+				if (singleDependencies[i].trim().indexOf("[") >= 0) {
 					dependencyName = singleDependencies[i].trim().substring(0, singleDependencies[i].trim().indexOf("[")).trim();
 					dependencyVersion = singleDependencies[i].trim().substring(singleDependencies[i].trim().indexOf("[") + 1, singleDependencies[i].trim().indexOf("]")).trim();
 				}
@@ -220,7 +225,57 @@ public class Plugin {
 			OperatorService.registerOperators(archive.getName(), in, this.classLoader, true);
 		}
 	}
+	
+	/** Returns a list of building blocks. If this plugin does not define any
+	 *  building blocks, an empty list will be returned. */
+	public List<BuildingBlock> getBuildingBlocks() {
+		List<BuildingBlock> result = new LinkedList<BuildingBlock>();
 
+		URL url = null;
+		try {
+			url = new URL("file", null, this.file.getAbsolutePath());
+		} catch (MalformedURLException e1) {
+			LogService.getGlobal().log("Cannot load plugin building blocks. Skipping...", LogService.ERROR);
+		}
+		if (url != null) {
+			ClassLoader independentLoader = new PluginClassLoader(new URL[] { url });
+			URL bbDefinition = independentLoader.getResource(Tools.RESOURCE_PREFIX + "buildingblocks.txt");
+			if (bbDefinition != null) {
+				BufferedReader in = null;
+				try {
+					in = new BufferedReader(new InputStreamReader(bbDefinition.openStream()));
+
+					String line = null;
+					while ((line = in.readLine()) != null) {
+						URL bbURL = this.classLoader.getResource(Tools.RESOURCE_PREFIX + line);
+						BufferedReader bbIn = null;
+						try {
+							bbIn = new BufferedReader(new InputStreamReader(bbURL.openStream()));
+							result.add(new BuildingBlock(bbIn));
+						} catch (IOException e) {
+							LogService.getGlobal().log("Cannot load plugin building blocks. Skipping...", LogService.ERROR);		
+						} finally {
+							if (bbIn != null) {
+								bbIn.close();
+							}
+						}
+					}
+				} catch (IOException e) {
+					LogService.getGlobal().log("Cannot load plugin building blocks.", LogService.WARNING);					
+				} finally {
+					if (in != null) {
+						try {
+							in.close();
+						} catch (IOException e) {
+							LogService.getGlobal().log("Cannot close stream to plugin building blocks.", LogService.ERROR);
+						}
+					}
+				}
+			}
+		}
+		return result;
+	}
+	
 	/** Creates the about box for this plugin. */
 	public AboutBox createAboutBox(Frame owner, Image productLogo) {
 		String about = "";
@@ -229,7 +284,7 @@ public class Plugin {
 			if (url != null)
 				about = Tools.readTextFile(new InputStreamReader(url.openStream()));
 		} catch (Throwable e) {}
-		return new AboutBox(owner, name, version, "Vendor: " + ((vendor != null) ? vendor : "unknown") + Tools.getLineSeparator() + "URL: " + ((url != null) ? url : "unknown") + Tools.getLineSeparator() + Tools.getLineSeparator() + about, productLogo);
+		return new AboutBox(owner, name, version, "Vendor: " + ((vendor != null) ? vendor : "unknown"), "URL: " + ((url != null) ? url : "unknown"), about, productLogo);
 	}
 
 	/** Returns a list of Plugins found in the plugins directory. */
@@ -317,15 +372,15 @@ public class Plugin {
 	}
 	
 	/** Returns the collection of all plugins. */
-	public static List getAllPlugins() {
+	public static List<Plugin> getAllPlugins() {
 		return allPlugins;
 	}
 
 	/** Returns the desired plugin. */
 	public static Plugin getPlugin(String name) {
-		Iterator i = allPlugins.iterator();
+		Iterator<Plugin> i = allPlugins.iterator();
 		while (i.hasNext()) {
-			Plugin plugin = (Plugin) i.next();
+			Plugin plugin = i.next();
 			if (plugin.getName().equals(name))
 				return plugin;
 		}

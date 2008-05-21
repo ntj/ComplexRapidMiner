@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.visualization;
 
@@ -30,10 +28,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -42,7 +38,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import com.rapidminer.example.Attribute;
-import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.DataRow;
@@ -62,86 +57,90 @@ import com.rapidminer.tools.LogService;
  * so that missclassifications may be recognized immediately.
  *  
  * @author Sebastian Land
- * @version $Id: SOMModelPlotter.java,v 1.1 2007/05/27 22:03:32 ingomierswa Exp $
+ * @version $Id: SOMModelPlotter.java,v 1.6 2008/05/09 19:23:14 ingomierswa Exp $
  */
 public class SOMModelPlotter extends SOMPlotter {
 
 	private static final long serialVersionUID = 1L;
+
 	private Model model;
+
 	private ExampleSet exampleSet;
+
 	private double[][] classificationMatrix;
+
 	private float alphaLevel = 0.5f;
+
 	private transient BufferedImage classImage;
+
 	private transient SOMMatrixColorizer colorizer;
+
 	private int lastPlotterComponentIndex;
+
 	public SOMModelPlotter() {
 		super();
 	}
+
 	public SOMModelPlotter(ExampleSet exampleSet, Model model) {
 		super();
 		this.model = model;
 		this.exampleSet = exampleSet;
 		this.colorizer = new SOMClassColorizer(exampleSet.getAttributes().getLabel().getMapping().size());
 	}
+
 	public void setExampleSet(ExampleSet exampleSet) {
 		this.exampleSet = exampleSet;
 		this.colorizer = new SOMClassColorizer(exampleSet.getAttributes().getLabel().getMapping().size());
 	}
+
 	public void setModel(Model model) {
 		this.model = model;
 	}
+
 	public void paintComponent(Graphics graphics) {
 		super.paintComponent(graphics);
 		//		 painting only if approved
 		if (show) {
 			// init graphics
 			Graphics2D g = (Graphics2D) graphics;
-            
-            int pixWidth  = getWidth() - 2 * MARGIN;
-            int pixHeight = getHeight() - 2 * MARGIN;
-            
-			// painting background
-            g.drawImage(this.image, MARGIN, MARGIN, pixWidth, pixHeight, Color.WHITE, null);
 
-            // painting transparent class overlay
-            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alphaLevel));
-            g.drawImage(this.classImage, MARGIN, MARGIN, pixWidth, pixHeight, Color.WHITE, null);
-            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
+			int pixWidth = getWidth() - 2 * MARGIN;
+			int pixHeight = getHeight() - 2 * MARGIN;
+
+			// painting background
+			g.drawImage(this.image, MARGIN, MARGIN, pixWidth, pixHeight, Color.WHITE, null);
+
+			// painting transparent class overlay
+			g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alphaLevel));
+			g.drawImage(this.classImage, MARGIN, MARGIN, pixWidth, pixHeight, Color.WHITE, null);
+			g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
 			// painting points
-            drawPoints(g);
+			drawPoints(g);
 
 			// painting Legend
 			drawLegend(graphics, this.dataTable, colorColumn);
-			
+
 			// paint Tooltip
 			drawToolTip((Graphics2D) graphics);
 		}
 	}
+
 	protected void createMatrices() {
 		List<Attribute> attributes = new ArrayList<Attribute>(exampleSet.getAttributes().size());
 		for (Attribute attribute : exampleSet.getAttributes()) {
-			attributes.add((Attribute)attribute.clone());
-		}
-		// union specAttributes and normal attributes
-		Iterator<AttributeRole> s = exampleSet.getAttributes().specialAttributes();
-		Map<Attribute, String> clonedSpecAttributes = new HashMap<Attribute, String>();
-		while (s.hasNext()) {
-			AttributeRole role = s.next();
-			Attribute clonedAttribute = (Attribute)role.getAttribute().clone(); 
-			attributes.add(clonedAttribute);
-			clonedSpecAttributes.put(clonedAttribute, role.getSpecialName());
+			attributes.add((Attribute) attribute.clone());
 		}
 		MemoryExampleTable table = new MemoryExampleTable(attributes);
 		for (int x = 0; x < dimensions[0]; x++) {
 			for (int y = 0; y < dimensions[1]; y++) {
-				DataRow row = new DoubleArrayDataRow(net.getNodeWeights(new int[]{x , y}));
+				DataRow row = new DoubleArrayDataRow(net.getNodeWeights(new int[] { x, y}));
 				table.addDataRow(row);
 			}
 		}
-		ExampleSet set = table.createExampleSet(clonedSpecAttributes);
+		ExampleSet set = table.createExampleSet();
 		this.classificationMatrix = new double[dimensions[0]][dimensions[1]];
-		try{
-			model.apply(set);
+		try {
+			set = model.apply(set);
 			Iterator<Example> exampleIterator = set.iterator();
 			for (int x = 0; x < dimensions[0]; x++) {
 				for (int y = 0; y < dimensions[1]; y++) {
@@ -154,18 +153,20 @@ public class SOMModelPlotter extends SOMPlotter {
 		}
 		super.createMatrices();
 	}
+
 	protected void recalculateBackgroundImage() {
 		super.recalculateBackgroundImage();
-        this.classImage = new BufferedImage(IMAGE_WIDTH, IMAGE_HEIGHT, BufferedImage.TYPE_INT_ARGB);
-        int width = IMAGE_WIDTH / dimensions[0];
-        int height = IMAGE_HEIGHT / dimensions[1];
-        for (int i = 0; i < dimensions[0]; i++) {
-            for (int j = 0; j < dimensions[1]; j++) {
-                // using 1 as scale factor, because SOMClasscolorzier needs original classvalues!
-            	interpolateRect(classImage, width * i, height * j, width, height, classificationMatrix, i, j, 1, colorizer);
-            }
-        }
+		this.classImage = new BufferedImage(IMAGE_WIDTH, IMAGE_HEIGHT, BufferedImage.TYPE_INT_ARGB);
+		int width = IMAGE_WIDTH / dimensions[0];
+		int height = IMAGE_HEIGHT / dimensions[1];
+		for (int i = 0; i < dimensions[0]; i++) {
+			for (int j = 0; j < dimensions[1]; j++) {
+				// using 1 as scale factor, because SOMClasscolorzier needs original classvalues!
+				interpolateRect(classImage, width * i, height * j, width, height, classificationMatrix, i, j, 1, colorizer);
+			}
+		}
 	}
+
 	public JComponent getOptionsComponent(int index) {
 		JComponent comp = super.getOptionsComponent(index);
 		if (comp != null) {
@@ -174,15 +175,15 @@ public class SOMModelPlotter extends SOMPlotter {
 		} else {
 			if (index == lastPlotterComponentIndex + 1) {
 				JLabel label = new JLabel("Transparency");
-                label.setToolTipText("Select level of transparency");
-                return label;
+				label.setToolTipText("Select level of transparency");
+				return label;
 			} else if (index == lastPlotterComponentIndex + 2) {
 				String toolTip = "Select level of transparency";
 				final JSlider alphaSlider = new JSlider(0, 100, 50);
 				alphaSlider.setToolTipText(toolTip);
 				alphaSlider.addChangeListener(new ChangeListener() {
 					public void stateChanged(ChangeEvent e) {
-						setAlphaLevel(((double)alphaSlider.getValue()) / 100);
+						setAlphaLevel(((double) alphaSlider.getValue()) / 100);
 					}
 				});
 				return alphaSlider;
@@ -190,8 +191,9 @@ public class SOMModelPlotter extends SOMPlotter {
 		}
 		return null;
 	}
+
 	public void setAlphaLevel(double alphaLevel) {
-		this.alphaLevel = (float)alphaLevel;
+		this.alphaLevel = (float) alphaLevel;
 		if (show) {
 			this.repaint();
 		}

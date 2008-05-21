@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.preprocessing.filter;
 
@@ -30,6 +28,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import com.rapidminer.example.Attribute;
+import com.rapidminer.example.AttributeRole;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -49,12 +48,12 @@ import com.rapidminer.parameter.ParameterTypeString;
  */
 public class FeatureNameFilter extends FeatureFilter {
 
-
 	/** The parameter name for &quot;Remove attributes with a matching name (accepts regular expressions)&quot; */
 	public static final String PARAMETER_SKIP_FEATURES_WITH_NAME = "skip_features_with_name";
 
 	/** The parameter name for &quot;Does not remove attributes if their name fulfills this matching criterion (accepts regular expressions)&quot; */
 	public static final String PARAMETER_EXCEPT_FEATURES_WITH_NAME = "except_features_with_name";
+	
 	private Pattern skipPattern;
     
     private Pattern exceptionPattern;
@@ -90,15 +89,24 @@ public class FeatureNameFilter extends FeatureFilter {
 	 * If no parameter was provided, FALSE is always returned, so no feature is
 	 * switched off.
 	 * 
-	 * @param feature
+	 * @param attributeRole
 	 *            Feature to check.
 	 * @return TRUE if this feature should <b>not</b> be active in the output
 	 *         example set of this operator. FALSE otherwise.
 	 */
-	public boolean switchOffFeature(Attribute feature) throws OperatorException {
-		Matcher skipMatcher = skipPattern.matcher(feature.getName());
-        Matcher exceptionMatcher = exceptionPattern != null ? exceptionPattern.matcher(feature.getName()) : null;
-		return skipMatcher.matches() && ((exceptionMatcher == null) || (!exceptionMatcher.matches()));
+	public boolean switchOffFeature(AttributeRole attributeRole) throws OperatorException {
+		Attribute attribute = attributeRole.getAttribute();
+		Matcher nameSkipMatcher = skipPattern.matcher(attribute.getName());
+		Matcher specialNameSkipMatcher = null;
+		if (attributeRole.isSpecial())
+			specialNameSkipMatcher = skipPattern.matcher(attributeRole.getSpecialName());
+        Matcher exceptionMatcher = exceptionPattern != null ? exceptionPattern.matcher(attribute.getName()) : null;
+        Matcher specialExceptionMatcher = null;
+        if (attributeRole.isSpecial())
+        	specialExceptionMatcher = exceptionPattern != null ? exceptionPattern.matcher(attributeRole.getSpecialName()) : null;
+		return (nameSkipMatcher.matches() || ((specialNameSkipMatcher != null) && (specialNameSkipMatcher.matches())))
+		&& ((exceptionMatcher == null) || (!exceptionMatcher.matches()))
+		&& ((specialExceptionMatcher == null) || (!specialExceptionMatcher.matches()));
 	}
 
 	public List<ParameterType> getParameterTypes() {

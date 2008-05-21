@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.performance;
 
@@ -35,7 +33,7 @@ import com.rapidminer.tools.math.Averagable;
  * Measures the length of an example set (i.e. the number of attributes).
  * 
  * @author Ingo Mierswa
- * @version $Id: MDLCriterion.java,v 1.1 2007/05/27 21:59:12 ingomierswa Exp $
+ * @version $Id: MDLCriterion.java,v 1.4 2008/05/09 19:22:43 ingomierswa Exp $
  */
 public class MDLCriterion extends MeasuredPerformance {
 
@@ -60,7 +58,7 @@ public class MDLCriterion extends MeasuredPerformance {
 	private int length;
 
 	/** A counter for average building. */
-	private int counter = 1;
+	private double counter = 1;
 
 	/**
 	 * Indicates if the fitness should be higher or smaller depending on the
@@ -90,8 +88,8 @@ public class MDLCriterion extends MeasuredPerformance {
 		return "Measures the length of an example set (i.e. the number of attributes).";
 	}
 
-	public void startCounting(ExampleSet eSet) throws OperatorException {
-		super.startCounting(eSet);
+	public void startCounting(ExampleSet eSet, boolean useExampleWeights) throws OperatorException {
+		super.startCounting(eSet, useExampleWeights);
 		if (eSet instanceof AttributeWeightedExampleSet) {
 			this.length = ((AttributeWeightedExampleSet) eSet).getNumberOfUsedAttributes();
 		} else {
@@ -99,8 +97,8 @@ public class MDLCriterion extends MeasuredPerformance {
 		}
 	}
 
-	public int getExampleCount() {
-		return 1;
+	public double getExampleCount() {
+		return counter;
 	}
 
 	public void countExample(Example example) {}

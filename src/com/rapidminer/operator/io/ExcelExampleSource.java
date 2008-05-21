@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.io;
 
@@ -49,6 +47,7 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeFile;
 import com.rapidminer.parameter.ParameterTypeInt;
+import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.att.AttributeDataSourceCreator;
 
@@ -69,10 +68,9 @@ import jxl.Workbook;
  * are indicated by empty cells or by cells containing only &quot;?&quot;.</p>
  *
  * @author Ingo Mierswa
- * @version $Id: ExcelExampleSource.java,v 1.2 2007/06/15 16:58:37 ingomierswa Exp $
+ * @version $Id: ExcelExampleSource.java,v 1.7 2008/05/09 19:22:37 ingomierswa Exp $
  */
 public class ExcelExampleSource extends Operator {
-
 
 	/** The parameter name for &quot;The Excel spreadsheet file which should be loaded.&quot; */
 	public static final String PARAMETER_EXCEL_FILE = "excel_file";
@@ -91,6 +89,10 @@ public class ExcelExampleSource extends Operator {
 
 	/** The parameter name for &quot;Determines, how the data is represented internally.&quot; */
 	public static final String PARAMETER_DATAMANAGEMENT = "datamanagement";
+
+	/** The parameter name for &quot;Character that is used as decimal point.&quot; */
+	public static final String PARAMETER_DECIMAL_POINT_CHARACTER = "decimal_point_character";
+	
 	public ExcelExampleSource(OperatorDescription description) {
 		super(description);
 	}
@@ -184,6 +186,7 @@ public class ExcelExampleSource extends Operator {
 		}
 		
 		// attribute value types
+		char decimalPointCharacter = getParameterAsString(PARAMETER_DECIMAL_POINT_CHARACTER).charAt(0);
 		int[] valueTypes = new int[numberOfColumns - columnOffset - emptyColumns.size()];
 		for (int i = 0; i < valueTypes.length; i++)
 			valueTypes[i] = Ontology.INTEGER;
@@ -206,7 +209,7 @@ public class ExcelExampleSource extends Operator {
 					row[columnCounter] = "?";
 				columnCounter++;
 			}
-			AttributeDataSourceCreator.guessValueTypes(row, valueTypes);
+			AttributeDataSourceCreator.guessValueTypes(row, valueTypes, decimalPointCharacter);
 		}
 		
 		// create attributes
@@ -217,7 +220,7 @@ public class ExcelExampleSource extends Operator {
 		
 		// create and fill table
 		MemoryExampleTable table = new MemoryExampleTable(attributes);
-		DataRowFactory dataRowFactory = new DataRowFactory(getParameterAsInt(PARAMETER_DATAMANAGEMENT));
+		DataRowFactory dataRowFactory = new DataRowFactory(getParameterAsInt(PARAMETER_DATAMANAGEMENT), decimalPointCharacter);
 		Attribute[] attributeArray = new Attribute[attributes.size()];
 		attributes.toArray(attributeArray);
 		for (int r = rowOffset; r < numberOfRows; r++) {
@@ -287,6 +290,7 @@ public class ExcelExampleSource extends Operator {
 		type.setExpert(false);
 		types.add(type);
 		types.add(new ParameterTypeInt(PARAMETER_ID_COLUMN, "Indicates which column should be used for the Id attribute (0: no id)", 0, Integer.MAX_VALUE, 0));
+		types.add(new ParameterTypeString(PARAMETER_DECIMAL_POINT_CHARACTER, "Character that is used as decimal point.", "."));
 		types.add(new ParameterTypeCategory(PARAMETER_DATAMANAGEMENT, "Determines, how the data is represented internally.", DataRowFactory.TYPE_NAMES, DataRowFactory.TYPE_DOUBLE_ARRAY));
 		return types;
 	}

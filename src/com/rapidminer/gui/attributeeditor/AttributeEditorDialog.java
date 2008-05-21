@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.attributeeditor;
 
@@ -45,7 +43,7 @@ import com.rapidminer.gui.attributeeditor.actions.OpenAttributeFileAction;
 import com.rapidminer.gui.attributeeditor.actions.SaveAttributeFileAction;
 import com.rapidminer.gui.attributeeditor.actions.SaveDataAction;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.gui.tools.ExtendedToolBar;
+import com.rapidminer.gui.tools.ExtendedJToolBar;
 import com.rapidminer.gui.tools.IconSize;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.tools.Tools;
@@ -67,33 +65,33 @@ public class AttributeEditorDialog extends JDialog implements WindowListener {
 
 	private AttributeEditor attributeEditor;
 
-	public Action OPEN_ATTRIBUTE_FILE_ACTION_24;
+	public transient Action OPEN_ATTRIBUTE_FILE_ACTION_24;
 
-	public Action OPEN_ATTRIBUTE_FILE_ACTION_32;
+	public transient Action OPEN_ATTRIBUTE_FILE_ACTION_32;
 
-	public Action SAVE_ATTRIBUTE_FILE_ACTION_24;
+	public transient Action SAVE_ATTRIBUTE_FILE_ACTION_24;
 
-	public Action SAVE_ATTRIBUTE_FILE_ACTION_32;
+	public transient Action SAVE_ATTRIBUTE_FILE_ACTION_32;
 
-	public Action LOAD_DATA_ACTION_24;
+	public transient Action LOAD_DATA_ACTION_24;
 
-	public Action LOAD_DATA_ACTION_32;
+	public transient Action LOAD_DATA_ACTION_32;
 
-	public Action LOAD_SERIES_DATA_ACTION_24;
+	public transient Action LOAD_SERIES_DATA_ACTION_24;
 
-	public Action LOAD_SERIES_DATA_ACTION_32;
+	public transient Action LOAD_SERIES_DATA_ACTION_32;
 
-	public Action SAVE_DATA_ACTION_24;
+	public transient Action SAVE_DATA_ACTION_24;
 
-	public Action SAVE_DATA_ACTION_32;
+	public transient Action SAVE_DATA_ACTION_32;
 
-	public Action CLEAR_ACTION_24;
+	public transient Action CLEAR_ACTION_24;
 
-	public Action CLEAR_ACTION_32;
+	public transient Action CLEAR_ACTION_32;
 
-	public Action CLOSE_ACTION_24;
+	public transient Action CLOSE_ACTION_24;
 
-	public Action CLOSE_ACTION_32;
+	public transient Action CLOSE_ACTION_32;
     
     
 	public AttributeEditorDialog(JFrame owner, Operator exampleSource, File file) {
@@ -143,13 +141,13 @@ public class AttributeEditorDialog extends JDialog implements WindowListener {
 		setJMenuBar(menuBar);
 
 		// tool bar
-		JToolBar toolBar = new ExtendedToolBar();
-		toolBar.add(OPEN_ATTRIBUTE_FILE_ACTION_32);
-		toolBar.add(SAVE_ATTRIBUTE_FILE_ACTION_32);
-		toolBar.add(LOAD_DATA_ACTION_32);
-		toolBar.add(SAVE_DATA_ACTION_32);
+		JToolBar toolBar = new ExtendedJToolBar();
+		toolBar.add(OPEN_ATTRIBUTE_FILE_ACTION_24);
+		toolBar.add(SAVE_ATTRIBUTE_FILE_ACTION_24);
+		toolBar.add(LOAD_DATA_ACTION_24);
+		toolBar.add(SAVE_DATA_ACTION_24);
 		toolBar.addSeparator();
-		toolBar.add(CLEAR_ACTION_32);
+		toolBar.add(CLEAR_ACTION_24);
 		getContentPane().add(toolBar, BorderLayout.NORTH);
 
 		setSize((int) Math.max(600, owner.getWidth() * 2.0d / 3.0d), (int) Math.max(400, owner.getHeight() * 2.0d / 3.0d));

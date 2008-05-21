@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.io;
 
@@ -30,6 +28,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -191,7 +190,7 @@ public class ExampleSetWriter extends Operator {
 		if (fractionDigits < 0)
 			fractionDigits = NumericalAttribute.UNLIMITED_NUMBER_OF_DIGITS;
 		
-		String encoding = getEncoding();
+		Charset encoding = getEncoding();
 		
 		try {
 			// write example set
@@ -218,7 +217,7 @@ public class ExampleSetWriter extends Operator {
 		return new IOObject[] { eSet };
 	}
 
-	private void writeSpecialFormat(ExampleSet exampleSet, File dataFile, int fractionDigits, boolean quoteWhitespace, boolean zipped, boolean append, String encoding) throws OperatorException {
+	private void writeSpecialFormat(ExampleSet exampleSet, File dataFile, int fractionDigits, boolean quoteWhitespace, boolean zipped, boolean append, Charset encoding) throws OperatorException {
 		String format = getParameterAsString(PARAMETER_SPECIAL_FORMAT);
 		if (format == null)
 			throw new UserError(this, 201, new Object[] { "special_format", "format", "special_format" });
@@ -229,22 +228,32 @@ public class ExampleSetWriter extends Operator {
 			throw new UserError(this, 901, format, e.getMessage());
 		}
 		
+		OutputStream out = null;
+		PrintWriter writer = null;
 		try {
-			OutputStream out = null;
 			if (zipped) {
 				out = new GZIPOutputStream(new FileOutputStream(dataFile, append));
 			} else {
 				out = new FileOutputStream(dataFile, append);
 			}
 
-			PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, encoding));
+			writer = new PrintWriter(new OutputStreamWriter(out, encoding));
 			Iterator<Example> reader = exampleSet.iterator();
 			while (reader.hasNext())
 				writer.println(formatter.format(reader.next()));
-			writer.close();
-			out.close();
 		} catch (IOException e) {
 			throw new UserError(this, 303, dataFile, e.getMessage());
+		} finally {
+			if (writer != null) {
+				writer.close();		
+			}
+			if (out != null) {
+				try {
+					out.close();
+				} catch (IOException e) {
+					logError("Cannot close stream to file " + dataFile);
+				}
+			}
 		}
 	}
 

@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.test;
 
@@ -38,7 +36,7 @@ import com.rapidminer.operator.learner.functions.kernel.evosvm.EvoSVMModel;
  * Tests for the Data of an ExampleSet
  *
  * @author Marcin Skirzynski
- * @version 
+ * @version $Id: SVMModelSampleDataTest.java,v 1.6 2008/05/09 19:22:48 ingomierswa Exp $
  */
 public class SVMModelSampleDataTest extends OperatorDataSampleTest {
 	
@@ -52,23 +50,22 @@ public class SVMModelSampleDataTest extends OperatorDataSampleTest {
 	
 	public void checkOutput(IOContainer output) throws MissingIOObjectException {
 		ContainerModel containerModel = output.get(ContainerModel.class);
-		//System.out.println(containerModel.getModel(0).getClass().getName());
 		
-		if (containerModel.getModel(0).getClass().getName()=="com.rapidminer.operator.learner.functions.kernel.evosvm.EvoSVMModel"){
+		if (containerModel.getModel(0).getClass().getName().equals("com.rapidminer.operator.learner.functions.kernel.evosvm.EvoSVMModel")) {
 			EvoSVMModel model = containerModel.getModel(EvoSVMModel.class);
 			for(int i=0;i<expectedValues.length;i++){
 				assertEquals(model.getFunctionValue(i),expectedValues[i]);
 			}
 		}
 
-		if (containerModel.getModel(0).getClass().getName()=="com.rapidminer.operator.learner.functions.kernel.GPModel"){
+		if (containerModel.getModel(0).getClass().getName().equals("com.rapidminer.operator.learner.functions.kernel.GPModel")) {
 			GPModel model = containerModel.getModel(GPModel.class);
 			for(int i=0;i<expectedValues.length;i++){
 				assertEquals(model.getFunctionValue(i),expectedValues[i]);
 			}
 		}
 		
-		if (containerModel.getModel(0).getClass().getName()=="com.rapidminer.operator.learner.functions.kernel.JMySVMModel"){
+		if (containerModel.getModel(0).getClass().getName().equals("com.rapidminer.operator.learner.functions.kernel.JMySVMModel")) {
 			JMySVMModel model= containerModel.getModel(JMySVMModel.class);
 			for(int i=0;i<expectedValues.length;i++){
 				assertEquals(model.getFunctionValue(i),expectedValues[i]);
@@ -76,7 +73,7 @@ public class SVMModelSampleDataTest extends OperatorDataSampleTest {
 		}
 		
 
-		if (containerModel.getModel(0).getClass().getName()=="com.rapidminer.operator.learner.functions.kernel.LibSVMModel"){
+		if (containerModel.getModel(0).getClass().getName().equals("com.rapidminer.operator.learner.functions.kernel.LibSVMModel")) {
 			LibSVMModel model= containerModel.getModel(LibSVMModel.class);
 			for(int i=0;i<expectedValues.length;i++){
 				assertEquals(model.getAlpha(i),expectedValues[i]);

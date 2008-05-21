@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.performance.test;
 
@@ -85,13 +83,13 @@ public class MeasuredCriterionTest extends CriterionTestCase {
 	private void criterionTest(PerformanceCriterion c1, PerformanceCriterion c2, double expected1, double expected2, double expectedOverall) throws Exception {
 		PerformanceVector pv1 = new PerformanceVector();
 		pv1.addCriterion(c1);
-		AbstractPerformanceEvaluator.evaluate(null, exampleSet1, pv1, new LinkedList<PerformanceCriterion>(), false);
+		AbstractPerformanceEvaluator.evaluate(null, exampleSet1, pv1, new LinkedList<PerformanceCriterion>(), false, true);
 		assertEquals(c1.getName() + " 1", expected1, c1.getAverage(), 0.00000001);
 		assertEquals(c1.getName() + " 1 clone", expected1, ((PerformanceCriterion) c1.clone()).getAverage(), 0.00000001);
 
 		PerformanceVector pv2 = new PerformanceVector();
 		pv2.addCriterion(c2);
-		AbstractPerformanceEvaluator.evaluate(null, exampleSet2, pv2, new LinkedList<PerformanceCriterion>(), false);
+		AbstractPerformanceEvaluator.evaluate(null, exampleSet2, pv2, new LinkedList<PerformanceCriterion>(), false, true);
 		assertEquals(c2.getName() + " 2", expected2, c2.getAverage(), 0.00000001);
 		assertEquals(c2.getName() + " 2 clone", expected2, ((PerformanceCriterion) c2.clone()).getAverage(), 0.00000001);
 

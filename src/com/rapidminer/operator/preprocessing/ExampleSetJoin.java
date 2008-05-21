@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.preprocessing;
 
@@ -49,7 +47,7 @@ import com.rapidminer.operator.UserError;
  * </p>
  * 
  * @author Ingo Mierswa
- * @version $Id: ExampleSetJoin.java,v 1.1 2007/05/27 22:02:48 ingomierswa Exp $
+ * @version $Id: ExampleSetJoin.java,v 1.4 2008/05/09 19:22:54 ingomierswa Exp $
  */
 public class ExampleSetJoin extends AbstractExampleSetJoin {
 
@@ -58,8 +56,11 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
     }
 
     protected MemoryExampleTable joinData(ExampleSet es1, ExampleSet es2, List<AttributeSource> originalAttributeSources, List<Attribute> unionAttributeList) throws OperatorException {
+        es1.remapIds();
+        es2.remapIds();
         Attribute id1 = es1.getAttributes().getId();
         Attribute id2 = es2.getAttributes().getId();
+        
         MemoryExampleTable unionTable = new MemoryExampleTable(unionAttributeList);
         Iterator<Example> reader = es1.iterator();
         while (reader.hasNext()) {
@@ -67,11 +68,11 @@ public class ExampleSetJoin extends AbstractExampleSetJoin {
             double id1Value = example1.getValue(id1);
             Example example2 = null;
             if (id1.isNominal())
-                example2 = es2.getExampleFromId(id2.getMapping().mapString(id1.getMapping().mapIndex((int) id1Value)));
+                example2 = es2.getExampleFromId(id2.getMapping().getIndex(id1.getMapping().mapIndex((int) id1Value)));
             else
                 example2 = es2.getExampleFromId(id1Value);
             if (example2 == null)
-                throw new UserError(this, 130, example1.getValueAsString(id1));
+                throw new UserError(this, 130, "'" + example1.getValueAsString(id1) + "'");
 
             double[] unionDataRow = new double[unionAttributeList.size()];
             Iterator<AttributeSource> a = originalAttributeSources.iterator();

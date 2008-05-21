@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools.syntax;
 /*
@@ -63,7 +61,7 @@ import com.rapidminer.tools.Tools;
  * This class provides all the necessary support code for an input handler, but doesn't actually do any key binding logic. It is up to the implementations of this class to do so.
  * 
  * @author Slava Pestov, Ingo Mierswa
- * @version $Id: InputHandler.java,v 1.1 2007/05/27 22:00:43 ingomierswa Exp $
+ * @version $Id: InputHandler.java,v 1.4 2008/05/09 19:22:56 ingomierswa Exp $
  */
 public abstract class InputHandler extends KeyAdapter {
 	/**
@@ -1049,7 +1047,7 @@ public abstract class InputHandler extends KeyAdapter {
 		static {
 			int counter = 0;
 			for (IconSize size : IconSize.values()) {
-				ICONS[counter++] = SwingTools.createIcon("icons/" + size.getSize() + "/" + ICON_NAME);
+				ICONS[counter++] = SwingTools.createIcon(size.getSize() + "/" + ICON_NAME);
 			}
 		}
 

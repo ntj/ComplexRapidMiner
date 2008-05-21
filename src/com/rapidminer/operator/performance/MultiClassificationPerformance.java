@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.performance;
 
@@ -37,6 +35,7 @@ import com.rapidminer.gui.viewer.ConfusionMatrixViewer;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
+import com.rapidminer.tools.Tableable;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.math.Averagable;
 
@@ -53,7 +52,7 @@ import com.rapidminer.tools.math.Averagable;
  * @version $Id: MultiClassificationPerformance.java,v 2.16 2006/03/21 15:35:50
  *          ingomierswa Exp $
  */
-public class MultiClassificationPerformance extends MeasuredPerformance {
+public class MultiClassificationPerformance extends MeasuredPerformance implements Tableable {
 
 	private static final long serialVersionUID = 3068421566038331525L;
 
@@ -86,7 +85,7 @@ public class MultiClassificationPerformance extends MeasuredPerformance {
 	/**
 	 * The counter for true labels and the prediction.
 	 */
-	private int[][] counter;
+	private double[][] counter;
 
 	/** The class names of the label. Used for logging and result display. */
 	private String[] classNames;
@@ -100,9 +99,15 @@ public class MultiClassificationPerformance extends MeasuredPerformance {
     /** The currently used predicted label attribute. */
     private Attribute predictedLabelAttribute;
     
+    /** The weight attribute. Might be null. */
+    private Attribute weightAttribute;
+    
 	/** The type of this performance: accuracy or classification error. */
 	private int type = ACCURACY;
 
+	/** The viewer used to show the confusion matrix */
+	private ConfusionMatrixViewer viewer;
+	
 	/** Creates a MultiClassificationPerformance with undefined type. */
 	public MultiClassificationPerformance() {
 		this(UNDEFINED);
@@ -122,12 +127,14 @@ public class MultiClassificationPerformance extends MeasuredPerformance {
 			this.classNames[i] = m.classNames[i];
             this.classNameMap.put(this.classNames[i], i);
         }
-		this.counter = new int[m.counter.length][m.counter.length];
+		this.counter = new double[m.counter.length][m.counter.length];
 		for (int i = 0; i < this.counter.length; i++)
 			for (int j = 0; j < this.counter[i].length; j++)
 				this.counter[i][j] = m.counter[i][j];
         this.labelAttribute = (Attribute)m.labelAttribute.clone();
         this.predictedLabelAttribute = (Attribute)m.predictedLabelAttribute.clone();
+        if (m.weightAttribute != null)
+        	this.weightAttribute = (Attribute)m.weightAttribute.clone();
 	}
 
 	/** Creates a MultiClassificationPerformance with the given type. */
@@ -139,8 +146,8 @@ public class MultiClassificationPerformance extends MeasuredPerformance {
 		return null;
 	}
 
-	public int getExampleCount() {
-		int total = 0;
+	public double getExampleCount() {
+		double total = 0;
 		for (int i = 0; i < counter.length; i++) {
 			for (int j = 0; j < counter[i].length; j++)
 				total += counter[i][j];
@@ -149,16 +156,25 @@ public class MultiClassificationPerformance extends MeasuredPerformance {
 	}
 
 	/** Initializes the criterion and sets the label. */
-	public void startCounting(ExampleSet eSet) throws OperatorException {
+	public void startCounting(ExampleSet eSet, boolean useExampleWeights) throws OperatorException {
+		super.startCounting(eSet, useExampleWeights);
 		this.labelAttribute = eSet.getAttributes().getLabel();
 		if (!this.labelAttribute.isNominal())
 			throw new UserError(null, 101, "calculation of classification performance criteria", this.labelAttribute.getName());
         this.predictedLabelAttribute = eSet.getAttributes().getPredictedLabel();
+        
         if ((this.predictedLabelAttribute == null) || (!this.predictedLabelAttribute.isNominal()))
-            throw new UserError(null, 101, "calculation of classification performance criteria", this.predictedLabelAttribute.getName());
+            throw new UserError(null, 101, "calculation of classification performance criteria", "predicted label attribute");
+        
+        if (this.predictedLabelAttribute.getMapping().size() != this.labelAttribute.getMapping().size()) {
+        	throw new UserError(null, 118, new Object[] { this.predictedLabelAttribute.getName(), this.predictedLabelAttribute.getMapping().size(), " the same as the different values of the label (" + this.labelAttribute.getMapping().size() + ")" });
+        }
+     
+        if (useExampleWeights)
+        	this.weightAttribute = eSet.getAttributes().getWeight();
         
 		Collection values = this.labelAttribute.getMapping().getValues();
-		this.counter = new int[values.size()][values.size()];
+		this.counter = new double[values.size()][values.size()];
 		this.classNames = new String[values.size()];
 		Iterator i = values.iterator();
 		int n = 0;
@@ -173,12 +189,15 @@ public class MultiClassificationPerformance extends MeasuredPerformance {
 	public void countExample(Example example) {
 		int label = classNameMap.get(example.getNominalValue(labelAttribute));
 		int plabel = classNameMap.get(example.getNominalValue(predictedLabelAttribute));
-		counter[label][plabel]++;
+		double weight = 1.0d;
+		if (weightAttribute != null)
+			weight = example.getValue(weightAttribute);
+		counter[label][plabel] += weight;
 	}
 
 	/** Returns either the accuracy or the classification error. */
 	public double getMikroAverage() {
-		int diagonal = 0, total = 0;
+		double diagonal = 0, total = 0;
 		for (int i = 0; i < counter.length; i++) {
 			diagonal += counter[i][i];
 			for (int j = 0; j < counter[i].length; j++)
@@ -188,7 +207,7 @@ public class MultiClassificationPerformance extends MeasuredPerformance {
 			return Double.NaN;
 
 		// returns either the accuracy, the error, or the kappa statistics
-		double accuracy = (double) diagonal / (double) total;
+		double accuracy = diagonal / total;
 		switch (type) {
 			case ACCURACY:
 				return accuracy;
@@ -261,7 +280,8 @@ public class MultiClassificationPerformance extends MeasuredPerformance {
 
 	/** This implementation returns a confusion matrix viewer based on a JTable. */
 	public Component getVisualizationComponent(IOContainer ioContainer) {
-		return new ConfusionMatrixViewer(super.toString(), classNames, counter);
+		viewer = new ConfusionMatrixViewer(super.toString(), classNames, counter);
+		return viewer;
 	}
 	
 	public String toString() {
@@ -273,9 +293,21 @@ public class MultiClassificationPerformance extends MeasuredPerformance {
 		for (int i = 0; i < this.counter.length; i++) {
 			result.append(Tools.getLineSeparator() + classNames[i] + ":");
 			for (int j = 0; j < this.counter[i].length; j++) {
-				result.append("\t" + this.counter[j][i]);
+				result.append("\t" + Tools.formatIntegerIfPossible(this.counter[j][i]));
 			}
 		}
 		return result.toString();
+	}
+
+	public String getCell(int row, int column) {
+		return viewer.getCell(row, column);
+	}
+
+	public int getColumnNumber() {
+		return viewer.getColumnNumber();
+	}
+
+	public int getRowNumber() {
+		return viewer.getRowNumber();
 	}
 }

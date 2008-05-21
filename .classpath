@@ -35,5 +35,6 @@
 	<classpathentry kind="lib" path="lib/jung-api-2.0-alpha2.jar"/>
 	<classpathentry kind="lib" path="lib/jung-graph-impl-2.0-alpha2.jar"/>
 	<classpathentry kind="lib" path="lib/jung-visualization-2.0-alpha2.jar"/>
+	<classpathentry kind="lib" path="lib/jh.jar"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>

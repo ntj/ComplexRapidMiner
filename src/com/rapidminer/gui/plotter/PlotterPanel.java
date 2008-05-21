@@ -1,45 +1,38 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.plotter;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.awt.geom.Point2D;
-import java.text.DecimalFormat;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -65,15 +58,16 @@ import javax.swing.event.ListSelectionListener;
 
 import org.freehep.util.export.ExportDialog;
 
-import com.rapidminer.ObjectVisualizer;
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.plotter.charts.BarChart2DPlotter;
 import com.rapidminer.gui.plotter.charts.BarChart3DPlotter;
 import com.rapidminer.gui.plotter.charts.BubbleChartPlotter;
+import com.rapidminer.gui.plotter.charts.DeviationChartPlotter;
 import com.rapidminer.gui.plotter.charts.PieChart2DPlotter;
 import com.rapidminer.gui.plotter.charts.PieChart3DPlotter;
 import com.rapidminer.gui.plotter.charts.RingChartPlotter;
+import com.rapidminer.gui.plotter.charts.SeriesChartPlotter;
 import com.rapidminer.gui.plotter.conditions.PlotterCondition;
 import com.rapidminer.gui.plotter.mathplot.BoxPlot2D;
 import com.rapidminer.gui.plotter.mathplot.BoxPlot3D;
@@ -87,7 +81,7 @@ import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.visualization.SOMModelPlotter;
 import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.ObjectVisualizerService;
+import com.rapidminer.tools.Renderable;
 
 
 /**
@@ -97,22 +91,21 @@ import com.rapidminer.tools.ObjectVisualizerService;
  * options depending on the plotter like a plot amount slider or option buttons.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: PlotterPanel.java,v 1.3 2007/06/15 16:58:37 ingomierswa Exp $
+ * @version $Id: PlotterPanel.java,v 1.15 2008/05/09 19:22:51 ingomierswa Exp $
  */
-public class PlotterPanel extends JPanel implements MouseMotionListener, MouseListener, ItemListener, Runnable {
+public class PlotterPanel extends JPanel implements ItemListener, Runnable, Renderable, CoordinatesHandler {
     
 	private static final long serialVersionUID = -8724351470349745191L;
 
     public static final int DEFAULT_MAX_NUMBER_OF_DATA_POINTS = 1000;
     	
-    public static LinkedHashMap<String,Class<? extends Plotter>> WEIGHT_PLOTTER_SELECTION;
+    public final static LinkedHashMap<String,Class<? extends Plotter>> WEIGHT_PLOTTER_SELECTION = new LinkedHashMap<String,Class<? extends Plotter>>();
     
-    public static LinkedHashMap<String,Class<? extends Plotter>> DATA_SET_PLOTTER_SELECTION;
+    public final static LinkedHashMap<String,Class<? extends Plotter>> DATA_SET_PLOTTER_SELECTION = new LinkedHashMap<String, Class<? extends Plotter>>();
     
-    public static LinkedHashMap<String,Class<? extends Plotter>> MODEL_PLOTTER_SELECTION;
+    public final static LinkedHashMap<String,Class<? extends Plotter>> MODEL_PLOTTER_SELECTION = new LinkedHashMap<String, Class<? extends Plotter>>();
     
-    static {
-        WEIGHT_PLOTTER_SELECTION = new LinkedHashMap<String,Class<? extends Plotter>>();
+    static { 
         WEIGHT_PLOTTER_SELECTION.put("Lines", ScatterPlotter.class);
         WEIGHT_PLOTTER_SELECTION.put("Histogram", HistogramPlotter.class);
         WEIGHT_PLOTTER_SELECTION.put("Hinton", HintonDiagram.class);
@@ -123,13 +116,15 @@ public class PlotterPanel extends JPanel implements MouseMotionListener, MouseLi
         WEIGHT_PLOTTER_SELECTION.put("Bars", BarChart2DPlotter.class);
         WEIGHT_PLOTTER_SELECTION.put("Bars 3D", BarChart3DPlotter.class);
         
-        DATA_SET_PLOTTER_SELECTION = new LinkedHashMap<String,Class<? extends Plotter>>();
+
         DATA_SET_PLOTTER_SELECTION.put("Scatter", ScatterPlotter.class);
         DATA_SET_PLOTTER_SELECTION.put("Scatter Matrix", ScatterMatrixPlotter.class);
         DATA_SET_PLOTTER_SELECTION.put("Scatter 3D", ScatterPlot3D.class);
         DATA_SET_PLOTTER_SELECTION.put("Scatter 3D Color", ScatterPlot3DColor.class);
         DATA_SET_PLOTTER_SELECTION.put("Bubble", BubbleChartPlotter.class);
         DATA_SET_PLOTTER_SELECTION.put("Parallel", ParallelPlotter.class);
+        DATA_SET_PLOTTER_SELECTION.put("Deviation", DeviationChartPlotter.class);
+        DATA_SET_PLOTTER_SELECTION.put("Series", SeriesChartPlotter.class);
         DATA_SET_PLOTTER_SELECTION.put("Survey", SurveyPlotter.class);
         DATA_SET_PLOTTER_SELECTION.put("SOM", SOMPlotter.class);
         DATA_SET_PLOTTER_SELECTION.put("Density", DensityPlotter.class);
@@ -139,6 +134,7 @@ public class PlotterPanel extends JPanel implements MouseMotionListener, MouseLi
         DATA_SET_PLOTTER_SELECTION.put("Bars", BarChart2DPlotter.class);
         DATA_SET_PLOTTER_SELECTION.put("Bars 3D", BarChart3DPlotter.class);
         DATA_SET_PLOTTER_SELECTION.put("Andrews Curves", AndrewsCurves.class);
+        DATA_SET_PLOTTER_SELECTION.put("Distribution", DistributionPlotter.class);
         DATA_SET_PLOTTER_SELECTION.put("Histogram", HistogramPlotter.class);
         DATA_SET_PLOTTER_SELECTION.put("Histogram Color", ColorHistogramPlotter.class);
         DATA_SET_PLOTTER_SELECTION.put("Histogram Matrix", HistogramMatrixPlotter.class);
@@ -154,7 +150,7 @@ public class PlotterPanel extends JPanel implements MouseMotionListener, MouseLi
         DATA_SET_PLOTTER_SELECTION.put("GridViz", GridVizPlotter.class);
         DATA_SET_PLOTTER_SELECTION.put("Surface 3D", SurfacePlot3D.class);
         
-        MODEL_PLOTTER_SELECTION = new LinkedHashMap<String,Class<? extends Plotter>>();
+
         MODEL_PLOTTER_SELECTION.put("SOM", SOMModelPlotter.class);
     }
 
@@ -200,9 +196,6 @@ public class PlotterPanel extends JPanel implements MouseMotionListener, MouseLi
 	 * plotters.
 	 */
 	private JLabel coordinatesLabel = new JLabel("                      ");
-
-	/** The point at which a mouse pressing started. */
-	private Point pressStart = null;
 
 	/** The selected plotter type. */
 	private String selectedPlotter = null;
@@ -297,16 +290,20 @@ public class PlotterPanel extends JPanel implements MouseMotionListener, MouseLi
 			selectedIndices[k++] = ((Integer) v.next()).intValue();
 
 		try {
-            this.plotter = availablePlotters.get(this.selectedPlotter).newInstance();
-			this.plotter.setDataTable(dataTable);
+			Class plotterClass = availablePlotters.get(this.selectedPlotter);
+			if (plotterClass != null) {
+				this.plotter = availablePlotters.get(this.selectedPlotter).newInstance();
+				this.plotter.setDataTable(dataTable);
+			}
 		} catch (Exception e) {
 			SwingTools.showSimpleErrorMessage("Cannot instantiate plotter '" + this.selectedPlotter + "':", e);
 			return;
 		}
 		mainPanel.removeAll();
         
-		plotter.addMouseMotionListener(this);
-		plotter.addMouseListener(this);
+		PlotterMouseHandler mouseHandler = new PlotterMouseHandler(plotter, this);  
+		plotter.addMouseMotionListener(mouseHandler);
+		plotter.addMouseListener(mouseHandler);
 
 		JComponent plotterComponent = plotter.getPlotter();
 		plotterComponent.setBorder(BorderFactory.createEtchedBorder());
@@ -554,72 +551,6 @@ public class PlotterPanel extends JPanel implements MouseMotionListener, MouseLi
 		return this;
 	}
 
-	// ================================================================================
-	// Mouse Events
-	// ================================================================================
-
-	public void mouseMoved(MouseEvent e) {
-		Point2D p = plotter.getPositionInDataSpace(e.getPoint());
-		if (p != null) {
-			DecimalFormat format = new DecimalFormat(" 0.000E0;-0.000E0");
-			coordinatesLabel.setText(format.format(p.getX()) + " , " + format.format(p.getY()));
-		}
-		plotter.setMousePosInDataSpace(e.getX(), e.getY());
-	}
-
-	public void mouseDragged(MouseEvent e) {
-		if ((pressStart != null) && (Math.abs(e.getX() - pressStart.getX()) > 5) && (Math.abs(e.getY() - pressStart.getY()) > 5)) {
-			plotter.setDragBounds((int) Math.min(pressStart.getX(), e.getX()), (int) Math.min(pressStart.getY(), e.getY()), (int) Math.abs(pressStart.getX() - e.getX()), (int) Math.abs(pressStart.getY() - e.getY()));
-		} else {
-			plotter.setDragBounds(-1, -1, -1, -1);
-		}
-	}
-
-	public void mouseClicked(MouseEvent e) {
-		if (e.getButton() == MouseEvent.BUTTON1) {
-			if (e.getClickCount() > 1) {
-				String id = plotter.getIdForPos(e.getX(), e.getY());
-				if (id != null) {
-					ObjectVisualizer visualizer = ObjectVisualizerService.getVisualizerForObject(id);
-					visualizer.startVisualization(id);
-				}
-			}
-		} else if (e.getButton() == MouseEvent.BUTTON3) {
-			plotter.setDrawRange(-1, -1, -1, -1);
-			pressStart = null;
-			plotter.setDragBounds(-1, -1, -1, -1);
-		}
-	}
-
-	public void mouseReleased(MouseEvent e) {
-		if (e.getButton() == MouseEvent.BUTTON1) {
-			if (pressStart != null) {
-				if ((Math.abs(e.getX() - pressStart.getX()) > 5) && (Math.abs(e.getY() - pressStart.getY()) > 5)) {
-					Point2D pressPoint = plotter.getPositionInDataSpace(pressStart);
-					Point2D releasePoint = plotter.getPositionInDataSpace(e.getPoint());
-					if (pressPoint != null) {
-						plotter.setDrawRange(Math.min(pressPoint.getX(), releasePoint.getX()), 
-								             Math.max(pressPoint.getX(), releasePoint.getX()), 
-								             Math.min(pressPoint.getY(), releasePoint.getY()), 
-								             Math.max(pressPoint.getY(), releasePoint.getY()));
-					}
-				}
-			}
-		}
-		plotter.setDragBounds(-1, -1, -1, -1);
-		pressStart = null;
-	}
-
-	public void mousePressed(MouseEvent e) {
-		if (e.getButton() == MouseEvent.BUTTON1) {
-			pressStart = e.getPoint();
-		}
-	}
-
-	public void mouseExited(MouseEvent e) {}
-
-	public void mouseEntered(MouseEvent e) {}
-
     public void itemStateChanged(ItemEvent e) {
         setSelectedPlotter((String)plotterCombo.getSelectedItem());
     }
@@ -632,12 +563,15 @@ public class PlotterPanel extends JPanel implements MouseMotionListener, MouseLi
 			while (n.hasNext()) {
 				String plotterName = n.next();
 				try {
-					Plotter plotter = availablePlotters.get(plotterName).newInstance();
-					PlotterCondition condition = plotter.getPlotterCondition();
-					if (condition.acceptDataTable(this.dataTable)) {
-						plotterCombo.addItem(plotterName);
-					} else {
-                        LogService.getGlobal().log("Cannot use plotter '" + plotterName + "': " + condition.getRejectionReason(this.dataTable), LogService.NOTE);
+					Class<? extends Plotter> plotterClass = availablePlotters.get(plotterName);
+					if (plotterClass != null) {
+						Plotter plotter = plotterClass.newInstance();
+						PlotterCondition condition = plotter.getPlotterCondition();
+						if (condition.acceptDataTable(this.dataTable)) {
+							plotterCombo.addItem(plotterName);
+						} else {
+							LogService.getGlobal().log("Cannot use plotter '" + plotterName + "': " + condition.getRejectionReason(this.dataTable), LogService.NOTE);
+						}
 					}
 				} catch (InstantiationException e) {
                     LogService.getGlobal().log("Plotter panel: cannot instantiate plotter '" + plotterName + "'. Skipping...", LogService.WARNING);
@@ -648,5 +582,21 @@ public class PlotterPanel extends JPanel implements MouseMotionListener, MouseLi
 	        plotterCombo.setToolTipText("The plotter which should be used for displaying data.");
 			plotterCombo.addItemListener(this);
 		}
+	}
+
+	public int getRenderHeight(int preferredHeight) {
+		return plotter.getRenderHeight(preferredHeight);
+	}
+
+	public int getRenderWidth(int preferredWidth) {
+		return plotter.getRenderWidth(preferredWidth);
+	}
+
+	public void render(Graphics graphics, int width, int height) {
+		plotter.render(graphics, width, height);
+	}
+
+	public void updateCoordinates(String coordinateInfo) {
+		this.coordinatesLabel.setText(coordinateInfo);
 	}
 }

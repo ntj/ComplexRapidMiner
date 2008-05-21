@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools;
 
@@ -36,7 +34,9 @@ import java.awt.Paint;
 import java.awt.event.ActionEvent;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
+import java.util.Properties;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
@@ -53,12 +53,14 @@ import com.rapidminer.tools.Tools;
  * The product logo should have a size of approximately 270 times 70 pixels.
  * 
  * @author Ingo Mierswa
- * @version $Id: AboutBox.java,v 1.2 2007/05/28 00:29:22 ingomierswa Exp $
+ * @version $Id: AboutBox.java,v 1.5 2008/05/09 19:22:58 ingomierswa Exp $
  */
 public class AboutBox extends JDialog {
 
 	private static final long serialVersionUID = -3889559376722324215L;
 
+	private static final String PROPERTY_FILE = "about_infos.properties";
+	
 	private static class ContentPanel extends JPanel {
 		
 		private static final long serialVersionUID = -1763842074674706654L;
@@ -79,20 +81,13 @@ public class AboutBox extends JDialog {
 			}
 		}
 
-		private String productName;
-		
-		private String productVersion;
-		
-		private String[] aboutTextLines;
+		private Properties properties;
 
 		private transient Image productLogo;
 
-		public ContentPanel(String productName, String productVersion, String aboutText, Image productLogo) {
-			this.productName = productName;
-			this.productVersion = productVersion;
+		public ContentPanel(Properties properties, Image productLogo) {
+			this.properties = properties;
 			this.productLogo = productLogo;
-			String transformedText = Tools.transformAllLineSeparators(aboutText);
-			this.aboutTextLines = transformedText.split("\n");
 			
 			int width = 450;
 			int height = 350;
@@ -125,17 +120,20 @@ public class AboutBox extends JDialog {
 
 			g.setColor(SwingTools.BROWN_FONT_COLOR);
 			g.setFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 11));
-			int yPos = getHeight() - MARGIN - aboutTextLines.length * 15 - 5;
-			drawString(g, productName + " " + productVersion, yPos);
-			yPos += 5;
+			drawString(g, properties.getProperty("name") + " " + properties.getProperty("version"), 240);
+			
 			g.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 10));
-			for (String line : aboutTextLines) {
-				yPos += 15;
-				drawString(g, line, yPos);
-			}
+			drawString(g, properties.getProperty("name") + " " + properties.getProperty("version"), 260);
+			drawString(g, properties.getProperty("copyright"), 275);
+			drawString(g, properties.getProperty("licensor"), 290);
+			drawString(g, properties.getProperty("license"), 305);
+			drawString(g, properties.getProperty("warranty"), 320);
+			drawString(g, properties.getProperty("more"), 335);
 		}
 
 		private void drawString(Graphics2D g, String text, int height) {
+			if (text == null)
+				return;
 			Rectangle2D stringBounds = g.getFontMetrics().getStringBounds(text, g);
 			float xPos = (float)(getWidth() - MARGIN - stringBounds.getWidth());
 			float yPos = height;
@@ -143,12 +141,25 @@ public class AboutBox extends JDialog {
 		}	
 	}
 
-	public AboutBox(Frame owner, String productName, String productVersion, String aboutText, Image productLogo) {
-		super(owner, "About " + productName, true);
+	public AboutBox(Frame owner, String productName, String productVersion, String licensor, String url, String text, Image productLogo) {
+		this(owner, createProperties(productName, productVersion, licensor, url, text), productLogo);
+	}
+	
+	public AboutBox(Frame owner, String productVersion, Image productLogo) {
+		this(owner, createProperties(productVersion), productLogo);
+	}
+	
+	public AboutBox(Frame owner, Properties properties, Image productLogo) {
+		super(owner, "About", true);
 		setResizable(false);
 		
 		setLayout(new BorderLayout());
-		ContentPanel contentPanel = new ContentPanel(productName, productVersion, aboutText, productLogo);
+		
+		String name = properties.getProperty("name");
+		if (name != null) {
+			setTitle("About " + name);
+		}
+		ContentPanel contentPanel = new ContentPanel(properties, productLogo);
 		add(contentPanel, BorderLayout.CENTER);
 		
 		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -163,5 +174,28 @@ public class AboutBox extends JDialog {
 		
 		pack();
 		setLocationRelativeTo(owner);
-	}	
+	}
+	
+	private static Properties createProperties(String productVersion) {
+		Properties properties = new Properties();
+		try {
+			InputStream in = Tools.getResource(PROPERTY_FILE).openStream();
+			properties.load(in);
+			in.close();
+		} catch (Exception e) {
+			LogService.getGlobal().logError("Cannot read splash screen infos: " + e.getMessage());
+		}
+		properties.setProperty("version", productVersion);
+		return properties;
+	}
+	
+	private static Properties createProperties(String productName, String productVersion, String licensor, String url, String text) {
+		Properties properties = new Properties();
+		properties.setProperty("name", productName);
+		properties.setProperty("version", productVersion);
+		properties.setProperty("licensor", licensor);
+		properties.setProperty("license", url);
+		properties.setProperty("more", text);
+		return properties;
+	}
 }

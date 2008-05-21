@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.weighting;
 
@@ -31,8 +29,6 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
-import com.rapidminer.operator.IOObject;
-import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.parameter.ParameterType;
@@ -54,18 +50,18 @@ import com.rapidminer.parameter.ParameterTypeString;
  * @version $Id: CorpusBasedFeatureWeighting.java,v 1.8 2006/04/05 08:57:24
  *          ingomierswa Exp $
  */
-public class CorpusBasedFeatureWeighting extends Operator {
+public class CorpusBasedFeatureWeighting extends AbstractWeighting {
 
-	public CorpusBasedFeatureWeighting(OperatorDescription description) {
-		super(description);
-	}
-
-	private static String PARAMETER_CLASS_TO_CHARACTERIZE = "class_to_characterize";
+	/** The parameter name for &quot;The target class for which to find characteristic feature weights.&quot; */
+	private static final String PARAMETER_CLASS_TO_CHARACTERIZE = "class_to_characterize";
 
 	private double epsilon = 0.001;
+	
+	public CorpusBasedFeatureWeighting(OperatorDescription description) {
+		super(description);
+	}	
 
-	public IOObject[] apply() throws OperatorException {
-		ExampleSet es = getInput(ExampleSet.class);
+	public AttributeWeights calculateWeights(ExampleSet es) throws OperatorException {
 
 		String targetValue = getParameterAsString(PARAMETER_CLASS_TO_CHARACTERIZE);
 
@@ -87,18 +83,7 @@ public class CorpusBasedFeatureWeighting extends Operator {
 			i++;
 		}
 
-		// normalize
-		attWeights.normalize();
-		
-		return new IOObject[] { es, attWeights };
-	}
-
-	public Class[] getInputClasses() {
-		return new Class[] { ExampleSet.class };
-	}
-
-	public Class[] getOutputClasses() {
-		return new Class[] { ExampleSet.class, AttributeWeights.class };
+		return attWeights;
 	}
 
 	private double[] generateWeightsForClass(ExampleSet es, String value) {

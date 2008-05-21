@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.templates;
 
@@ -33,6 +31,8 @@ import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.rapidminer.tools.LogService;
 
 /**
  * A template process consisting of name, short description, a name for an
@@ -47,7 +47,7 @@ import java.util.List;
  * </pre>
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: Template.java,v 1.2 2007/06/07 17:12:20 ingomierswa Exp $
+ * @version $Id: Template.java,v 1.6 2008/05/09 19:22:52 ingomierswa Exp $
  */
 public class Template {
 
@@ -63,17 +63,30 @@ public class Template {
 
 	public Template() {}
 
-	public Template(File file) throws IOException {
+	public Template(File file) throws InstantiationException {
 		this.templateFile = file;
-		BufferedReader in = new BufferedReader(new FileReader(templateFile));
-		name = in.readLine();
-		description = in.readLine();
-		configFile = in.readLine();
-		String line = null;
-		while ((line = in.readLine()) != null) {
-			parameters.add(line.split("\\."));
+		BufferedReader in = null;
+		try {
+			in = new BufferedReader(new FileReader(templateFile));
+			name = in.readLine();
+			description = in.readLine();
+			configFile = in.readLine();
+			String line = null;
+			while ((line = in.readLine()) != null) {
+				parameters.add(line.split("\\."));
+			}
+		} catch (IOException e) {
+			LogService.getGlobal().logError("Cannot read template file: " + file);
+			throw new InstantiationException("Cannot read template file: " + file);
+		} finally {
+			if (in != null) {
+				try {
+					in.close();
+				} catch (IOException e) {
+					LogService.getGlobal().logError("Cannot close stream to template file: " + e.getMessage());
+				}
+			}
 		}
-		in.close();
 	}
 
 	public Template(String name, String description, String configFile, List<String[]> parameters) {
@@ -108,15 +121,23 @@ public class Template {
 	}
 
 	public void save(File file) throws IOException {
-		PrintWriter out = new PrintWriter(new FileWriter(file));
-		out.println(name);
-		out.println(description);
-		out.println(configFile);
-		Iterator<String[]> i = parameters.iterator();
-		while (i.hasNext()) {
-			String[] pair = i.next();
-			out.println(pair[0] + "." + pair[1]);
+		PrintWriter out = null;
+		try {
+			out = new PrintWriter(new FileWriter(file));
+			out.println(name);
+			out.println(description);
+			out.println(configFile);
+			Iterator<String[]> i = parameters.iterator();
+			while (i.hasNext()) {
+				String[] pair = i.next();
+				out.println(pair[0] + "." + pair[1]);
+			}
+		} catch (IOException e) {
+			throw e;
+		} finally {
+			if (out != null) {
+				out.close();		
+			}
 		}
-		out.close();
 	}
 }

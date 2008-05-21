@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.preprocessing.filter;
 
@@ -44,16 +42,24 @@ import com.rapidminer.parameter.ParameterTypeString;
 
 
 /**
- * This operator takes an <code>ExampleSet</code> as input and maps the values
+ * <p>This operator takes an <code>ExampleSet</code> as input and maps the values
  * of certain attributes to other values. For example, it can replace all
  * occurrences of the String "unknown" in a nominal Attribute by a default
- * String, for all examples in the ExampleSet.
+ * String, for all examples in the ExampleSet.</p>
+ * 
+ * <p>This operator can replace nominal values (e.g. replace the value &quot;green&quot; by 
+ * the value &quot;green_color&quot;) as well as numerical values (e.g. replace the all values
+ * &quot;3&quot; by &quot;-1&quot;).</p>
+ * 
+ * <p> This operator supports regular expressions for the attribute names, i.e. the value
+ * mapping is applied on all attributes for which the name fulfills the pattern defined
+ * by the name expression.</p>
+ * 
  * 
  * @author Timm Euler, Ingo Mierswa, Tobias Malbrecht
- * @version $Id: AttributeValueMapper.java,v 1.2 2007/06/15 16:58:39 ingomierswa Exp $
+ * @version $Id: AttributeValueMapper.java,v 1.6 2008/05/09 19:22:58 ingomierswa Exp $
  */
 public class AttributeValueMapper extends Operator {
-
 
 	/** The parameter name for &quot;Mapping of values will be applied to the attributes that match the given regular expression.&quot; */
 	public static final String PARAMETER_ATTRIBUTES = "attributes";
@@ -66,6 +72,7 @@ public class AttributeValueMapper extends Operator {
 
 	/** The parameter name for &quot;The new attribute value to use.&quot; */
 	public static final String PARAMETER_REPLACE_BY = "replace_by";
+	
 	public AttributeValueMapper(OperatorDescription description) {
 		super(description);
 	}

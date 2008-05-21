@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.olap.aggregation;
 
@@ -47,7 +45,6 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.ParameterTypeStringCategory;
-import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
 
 
@@ -64,7 +61,7 @@ import com.rapidminer.tools.Ontology;
  * by an additional {@link ExampleFilter} operator following this one.</p>
  * 
  * @author Ingo Mierswa
- * @version $Id: AggregationOperator.java,v 1.2 2007/06/15 16:58:40 ingomierswa Exp $
+ * @version $Id: AggregationOperator.java,v 1.5 2008/05/09 19:23:02 ingomierswa Exp $
  */
 public class AggregationOperator extends Operator {
     
@@ -76,23 +73,22 @@ public class AggregationOperator extends Operator {
     
     private static final String PARAMETER_ONLY_DISTINCT = "only_distinct";
     
-    
-    private static final Class[] KNOWN_AGGREGATION_FUNCTIONS = {
+    public static final Class[] KNOWN_AGGREGATION_FUNCTIONS = {
+        AverageFunction.class,
+        VarianceFunction.class,
         CountFunction.class,
         MinFunction.class,
         MaxFunction.class,
-        SumFunction.class,
-        AverageFunction.class,
-        VarianceFunction.class
+        SumFunction.class
     };
     
-    private static final String[] KNOWN_AGGREGATION_FUNCTION_NAMES = {
+    public static final String[] KNOWN_AGGREGATION_FUNCTION_NAMES = {
+        "average",
+        "variance",
         "count",
         "min",
         "max",
-        "sum",
-        "average",
-        "variance"
+        "sum"
     };
     
     public AggregationOperator(OperatorDescription desc) {
@@ -104,7 +100,7 @@ public class AggregationOperator extends Operator {
         
         AggregationFunction function;
         try {
-            function = createAggregationFunction();
+            function = createAggregationFunction(getParameterAsString(PARAMETER_AGGREGATION_FUNCTION));
         } catch (InstantiationException e) {
             throw new UserError(this, 904, getParameterAsString(PARAMETER_AGGREGATION_FUNCTION), e.getMessage());
         } catch (IllegalAccessException e) {
@@ -163,8 +159,7 @@ public class AggregationOperator extends Operator {
         return new IOObject[] { resultSet };
     }
 
-    private AggregationFunction createAggregationFunction() throws UndefinedParameterError, InstantiationException, IllegalAccessException, ClassNotFoundException {
-        String functionName = getParameterAsString(PARAMETER_AGGREGATION_FUNCTION);
+    public static AggregationFunction createAggregationFunction(String functionName) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
         int typeIndex = -1;
         for (int i = 0; i < KNOWN_AGGREGATION_FUNCTION_NAMES.length; i++) {
             if (KNOWN_AGGREGATION_FUNCTION_NAMES[i].equals(functionName)) {

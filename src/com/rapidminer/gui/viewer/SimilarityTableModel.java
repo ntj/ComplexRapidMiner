@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.viewer;
 
@@ -35,18 +33,12 @@ import com.rapidminer.operator.similarity.SimilarityMeasure;
  * The table model for the similarity visualization.
  *
  * @author Ingo Mierswa
- * @version $Id: SimilarityTableModel.java,v 1.2 2007/06/22 15:31:44 ingomierswa Exp $
+ * @version $Id: SimilarityTableModel.java,v 1.5 2008/05/09 19:23:01 ingomierswa Exp $
  */
 public class SimilarityTableModel extends AbstractTableModel {
 
 	private static final long serialVersionUID = 7451178433975831387L;
 
-	private static final String[] COLUMN_NAMES = {
-		"First",
-		"Second",
-		"Similarity"
-	};
-	
 	private static final int COLUMN_FIRST      = 0;
 	private static final int COLUMN_SECOND     = 1;
 	private static final int COLUMN_SIMILARITY = 2;
@@ -68,7 +60,19 @@ public class SimilarityTableModel extends AbstractTableModel {
 	}
 	
 	public String getColumnName(int column) {
-		return COLUMN_NAMES[column];
+		switch(column) {
+		case 0: 
+			return "First";
+		case 1: 
+			return "Second";
+		case 2: 
+			if (similarity.isDistance()) {
+				return "Distance";
+			}else {
+				return "Similarity";
+			}
+		}
+		return "";
 	}
 
 	public Class<?> getColumnClass(int column) {
@@ -80,7 +84,7 @@ public class SimilarityTableModel extends AbstractTableModel {
 	}
 	
 	public int getColumnCount() {
-		return COLUMN_NAMES.length;
+		return 3;
 	}
 
 	public int getRowCount() {

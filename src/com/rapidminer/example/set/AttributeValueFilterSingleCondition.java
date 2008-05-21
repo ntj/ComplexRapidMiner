@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.example.set;
 
@@ -34,25 +32,27 @@ import com.rapidminer.tools.Tools;
  * less than, ... a given value.
  * 
  * @author Ingo Mierswa
- * @version $Id: AttributeValueFilterSingleCondition.java,v 1.2 2007/07/13 22:52:12 ingomierswa Exp $
+ * @version $Id: AttributeValueFilterSingleCondition.java,v 1.8 2008/05/09 19:22:49 ingomierswa Exp $
  */
 public class AttributeValueFilterSingleCondition implements Condition {
     
     private static final long serialVersionUID = 1537763901048986863L;
 
-	private static final String[] COMPARISON_TYPES = { "<=", ">=", "!=", "=", "<", ">" };
+	private static final String[] COMPARISON_TYPES = { "<=", ">=", "!=", "<>", "=", "<", ">" };
 
     public static final int LEQ = 0;
 
     public static final int GEQ = 1;
 
-    public static final int NEQ = 2;
+    public static final int NEQ1 = 2;
+    
+    public static final int NEQ2 = 3;
 
-    public static final int EQUALS = 3;
+    public static final int EQUALS = 4;
 
-    public static final int LESS = 4;
+    public static final int LESS = 5;
 
-    public static final int GREATER = 5;
+    public static final int GREATER = 6;
 
     private int comparisonType = EQUALS;
 
@@ -98,24 +98,7 @@ public class AttributeValueFilterSingleCondition implements Condition {
             throw new IllegalArgumentException("Parameter string must have the form 'attribute {=|<|>|<=|>=|!=} value'");
 
         this.attribute = exampleSet.getAttributes().get(attName);
-        if (this.attribute == null) {
-            this.attribute = exampleSet.getAttributes().getLabel();
-            if ((this.attribute != null) && (!this.attribute.getName().equals(attName))) {
-                this.attribute = null;
-            }
-        }
-        if (this.attribute == null) {
-            this.attribute = exampleSet.getAttributes().getPredictedLabel();
-            if ((this.attribute != null) && (!this.attribute.getName().equals(attName))) {
-                this.attribute = null;
-            }
-        }
-        if (this.attribute == null) {
-            this.attribute = exampleSet.getAttributes().getCluster();
-            if ((this.attribute != null) && (!this.attribute.getName().equals(attName))) {
-                this.attribute = null;
-            }
-        }
+
         if (this.attribute == null) {
             throw new IllegalArgumentException("Unknown attribute: '" + attName + "'");
         }
@@ -124,8 +107,8 @@ public class AttributeValueFilterSingleCondition implements Condition {
 
     private void setValue(String value) {
         if (attribute.isNominal()) {
-            if ((comparisonType != EQUALS) && (comparisonType != NEQ))
-                throw new IllegalArgumentException("For nominal attributes only '=' and '!=' is allowed!");
+            if ((comparisonType != EQUALS) && (comparisonType != NEQ1 && comparisonType != NEQ2))
+                throw new IllegalArgumentException("For nominal attributes only '=' and '!=' or '<>' is allowed!");
             this.nominalValue = value;
         } else {
             try {
@@ -139,7 +122,10 @@ public class AttributeValueFilterSingleCondition implements Condition {
     /**
      * Since the condition cannot be altered after creation we can just return
      * the condition object itself.
+     * 
+     * @deprecated Conditions should not be able to be changed dynamically and hence there is no need for a copy
      */
+    @Deprecated
     public Condition duplicate() {
         return this;
     }
@@ -155,8 +141,9 @@ public class AttributeValueFilterSingleCondition implements Condition {
     public boolean conditionOk(Example e) {
         if (attribute.isNominal()) {
             switch (comparisonType) {
-                case NEQ:
-                    return e.getNominalValue(attribute).equals(nominalValue);
+                case NEQ1:
+                case NEQ2:
+                    return !e.getNominalValue(attribute).equals(nominalValue);
                 case EQUALS:
                     return e.getNominalValue(attribute).equals(nominalValue);
                 default:
@@ -168,7 +155,8 @@ public class AttributeValueFilterSingleCondition implements Condition {
                     return Tools.isLessEqual(e.getNumericalValue(attribute), numericalValue);
                 case GEQ:
                     return Tools.isGreaterEqual(e.getNumericalValue(attribute), numericalValue);
-                case NEQ:
+                case NEQ1:
+                case NEQ2:
                     return Tools.isNotEqual(e.getNumericalValue(attribute), numericalValue);
                 case EQUALS:
                     return Tools.isEqual(e.getNumericalValue(attribute), numericalValue);

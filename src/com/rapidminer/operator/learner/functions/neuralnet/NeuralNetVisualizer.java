@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.functions.neuralnet;
 
@@ -53,7 +51,7 @@ import com.rapidminer.tools.Tools;
  * show the input weights for the selected node.
  * 
  * @author Ingo Mierswa
- * @version $Id: NeuralNetVisualizer.java,v 1.1 2007/05/27 22:03:44 ingomierswa Exp $
+ * @version $Id: NeuralNetVisualizer.java,v 1.4 2008/05/09 19:23:25 ingomierswa Exp $
  */
 public class NeuralNetVisualizer extends JPanel implements MouseListener {
 	
@@ -83,9 +81,11 @@ public class NeuralNetVisualizer extends JPanel implements MouseListener {
     
     private int keyY = -1;
     
+    private String[] attributeNames;
     
-	public NeuralNetVisualizer(NeuralNet neuralNet) {
+	public NeuralNetVisualizer(NeuralNet neuralNet, String[] attributeNames) {
 		this.neuralNet = neuralNet;
+		this.attributeNames = attributeNames;
 		addMouseListener(this);
         
         // calculate maximal absolute weight
@@ -273,7 +273,11 @@ public class NeuralNetVisualizer extends JPanel implements MouseListener {
 				setKey(null, -1, -1);
 			}
 		} else {
-			setKey(null, -1, -1);
+			if ((rowIndex >= 0) && (rowIndex < this.attributeNames.length)) {
+				setKey(this.attributeNames[rowIndex], xPos, yPos);
+			} else {
+				setKey(null, -1, -1);
+			}
 		}
 		repaint();
 	}

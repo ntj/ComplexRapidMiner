@@ -1,32 +1,31 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,6 +34,10 @@ import java.io.PrintStream;
 import java.io.Reader;
 import java.io.StreamTokenizer;
 import java.net.URL;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
+import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -50,17 +53,18 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import com.rapidminer.RapidMiner;
+import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.tools.plugin.Plugin;
 
-
 /**
  * Tools for RapidMiner.
  * 
  * @author Simon Fischer, Ingo Mierswa
- * @version $Id: Tools.java,v 1.5 2007/06/23 00:09:30 ingomierswa Exp $
+ * @version $Id: Tools.java,v 1.24 2008/05/09 19:22:55 ingomierswa Exp $
  */
 public class Tools {
     
@@ -70,16 +74,25 @@ public class Tools {
 	/** Number smaller than this value are consideres as zero. */
 	private static final double IS_ZERO = 1E-6;
 	
+	/** Number of post-comma digits needed to distinguish between display of numbers as integers or doubles. */
+	private static final double IS_DISPLAY_ZERO = 1E-8;
+	
 	/** Used for formatting values in the {@link #formatNumber(double)} method. */
 	private static final NumberFormat NUMBER_FORMAT = NumberFormat.getInstance(Locale.US);
 
 	/** Used for formatting values in the {@link #formatPercent(double)} method. */
 	private static final NumberFormat PERCENT_FORMAT = NumberFormat.getPercentInstance(Locale.US);
 
-	private static final List<ResourceSource> ALL_RESOURCES = new LinkedList<ResourceSource>();
+	/** Used for determining the symbols used in decimal formats. */
+	private static final DecimalFormatSymbols FORMAT_SYMBOLS = new DecimalFormatSymbols(Locale.US);
+	
+	private static final LinkedList<ResourceSource> ALL_RESOURCES = new LinkedList<ResourceSource>();
 	
 	public static final String RESOURCE_PREFIX = "com/rapidminer/resources/";
 	
+	static {
+		ALL_RESOURCES.add(new ResourceSource(Tools.class.getClassLoader()));
+	}
 	
 	/**
 	 * Returns a formatted string of the given number (percent format with two
@@ -156,9 +169,16 @@ public class Tools {
     public static String formatIntegerIfPossible(double value, int numberOfDigits) {
         if (Double.isNaN(value))
             return "?";
-        int intValue = (int)value;
-        if (intValue == value) {
-            return intValue + "";
+        if (Double.isInfinite(value)) {
+        	if (value < 0)
+        		return "-" + FORMAT_SYMBOLS.getInfinity();
+        	else
+        		return FORMAT_SYMBOLS.getInfinity();
+        }
+
+        long longValue = Math.round(value);
+        if (Math.abs(longValue - value) < IS_DISPLAY_ZERO) {
+            return longValue + "";
         } else {
             return formatNumber(value, numberOfDigits);
         }
@@ -183,7 +203,7 @@ public class Tools {
         return Math.abs(d1 - d2) < IS_ZERO;
     }
     
-	/** Returns {@link #isEqual(d, 0)}. */
+	/** Returns {@link #isEqual(double, double)} for d and 0. */
 	public static boolean isZero(double d) {
 		return isEqual(d, 0.0d);
 	}
@@ -243,6 +263,18 @@ public class Tools {
         return text;
     }
     
+    /** Removes all possible line feed character combinations. This
+     *  might be important for GUI purposes like tool tip texts which do not support
+     *  carriage return combinations. */
+    public static String removeAllLineSeparators(String text) {
+        Pattern crlf = Pattern.compile("(\r\n|\r|\n|\n\r)");
+        Matcher m = crlf.matcher(text);
+        if (m.find()) {
+            text = m.replaceAll(" ");
+        }
+        return text;
+    }
+    
 	/**
 	 * Returns the class name of the given class without the package
 	 * information.
@@ -285,7 +317,7 @@ public class Tools {
      *  Otherwise, this method checks if the file has the extension .gz. If this applies, a gzipped
      *  stream reader is returned. Otherwise, this method just returns a BufferedReader
      *  for the given file (file was not zipped at all). */
-    public static BufferedReader getReader(File file, String encoding) throws IOException {
+    public static BufferedReader getReader(File file, Charset encoding) throws IOException {
         // handle zip files if necessary
         if (file.getAbsolutePath().endsWith(".zip")) {
         	ZipFile zipFile = new ZipFile(file);	                 
@@ -299,10 +331,51 @@ public class Tools {
             InputStream zipIn = zipFile.getInputStream(entries.nextElement());	 
             return new BufferedReader(new InputStreamReader(zipIn, encoding));        	
         } else if (file.getAbsolutePath().endsWith(".gz")) {
-        	return new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(file))));
+        	return new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(file)), encoding));
         } else {
-            return new BufferedReader(new FileReader(file));
+            //return new BufferedReader(new FileReader(file));
+        	return new BufferedReader(new InputStreamReader(new FileInputStream(file), encoding));
         }
+    }
+    
+    /** This method tries to identify the encoding if a GUI is running and a process
+     *  is defined. In this case, the encoding is taken from the process. 
+     *  Otherwise, the method tries to identify the encoding via the property
+     *  {@link RapidMiner#PROPERTY_RAPIDMINER_GENERAL_DEFAULT_ENCODING}. If this is not 
+     *  possible, this method just returns the default system encoding. */
+    public static Charset getDefaultEncoding() {
+    	Charset result = null;
+
+    	// try GUI setting
+    	MainFrame mainFrame = RapidMinerGUI.getMainFrame();
+    	if (mainFrame != null) {
+    		com.rapidminer.Process process = mainFrame.getProcess();
+    		if (process != null) {
+    			Operator rootOperator = process.getRootOperator();
+    			if (rootOperator != null) {
+    				result = rootOperator.getEncoding();
+    			}
+    		}
+    	}
+    	
+    	// try property setting
+    	if (result == null) {
+            String encoding = System.getProperty(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEFAULT_ENCODING);
+            if ((encoding != null) && (encoding.trim().length() > 0)) {
+                if (RapidMiner.SYSTEM_ENCODING_NAME.equals(encoding)) {
+                	result = Charset.defaultCharset();
+                } else {
+                	result = Charset.forName(encoding);
+                }
+            }
+    	}
+    	
+    	// still not found? try default charset
+    	if (result == null) {
+    		result = Charset.defaultCharset();
+    	}
+    	
+    	return result;
     }
     
 	/**
@@ -384,13 +457,20 @@ public class Tools {
 				// command = command.replaceAll("\\$S", subject);
 				LogService.getGlobal().log("Executing '" + command + "'", LogService.MINIMUM);
 				Process sendmail = Runtime.getRuntime().exec(new String[] { command, address });
-				PrintStream out = new PrintStream(sendmail.getOutputStream());
-				out.println("Subject: " + subject);
-				out.println("From: RapidMiner");
-				out.println("To: " + address);
-				out.println();
-				out.println(content);
-				out.close();
+				PrintStream out = null;
+				try {
+					out = new PrintStream(sendmail.getOutputStream());
+					out.println("Subject: " + subject);
+					out.println("From: RapidMiner");
+					out.println("To: " + address);
+					out.println();
+					out.println(content);
+				} catch (Exception e) {
+					throw e;
+				} finally {
+					if (out != null)
+						out.close();
+				}
 				waitForProcess(null, sendmail, command);
 			}
 		} catch (Throwable e) {
@@ -402,9 +482,18 @@ public class Tools {
 	public static void addResourceSource(ResourceSource source) {
 		ALL_RESOURCES.add(source);
 	}
-	
+
+	/** Adds a new resource source before the others. Might be used by plugins etc. */
+	public static void prependResourceSource(ResourceSource source) {
+		ALL_RESOURCES.addFirst(source);
+	}
+
     public static URL getResource(ClassLoader loader, String name) {	 
-        return loader.getResource(RESOURCE_PREFIX + name);	 
+        return getResource(loader, RESOURCE_PREFIX, name);	 
+    }
+
+    public static URL getResource(ClassLoader loader, String prefix, String name) {	 
+        return loader.getResource(prefix + name);	 
     }
     
     /** Returns the desired resource. Tries first to find a resource in the core RapidMiner resources
@@ -412,18 +501,19 @@ public class Tools {
      *  the ResourceSource which might have been added by plugins. Please note that resource names
      *  are only allowed to use '/' as separator instead of File.separator! */
 	public static URL getResource(String name) {
+		Iterator<ResourceSource> i = ALL_RESOURCES.iterator();
+		while (i.hasNext()) {
+			ResourceSource source = i.next();
+			URL url = source.getResource(name);
+			if (url != null) {
+				return url;
+			}
+		}
+		
 		URL resourceURL = getResource(Tools.class.getClassLoader(), name);
 		if (resourceURL != null) {
 			return resourceURL;
 		} else {
-			Iterator<ResourceSource> i = ALL_RESOURCES.iterator();
-			while (i.hasNext()) {
-				ResourceSource source = i.next();
-				URL url = source.getResource(name);
-				if (url != null) {
-					return url;
-				}
-			}
 			return null;
 		}
 	}
@@ -494,6 +584,9 @@ public class Tools {
         string = string.replaceAll("'",  "&#39;");
 		string = string.replaceAll("<",  "&lt;");
 		string = string.replaceAll(">",  "&gt;");
+		string = transformAllLineSeparators(string);
+		string = string.replaceAll("\n",  "&#10;");
+		string = string.replaceAll("\t",  "&#09;");
 		return string;
 	}
 	
@@ -535,7 +628,7 @@ public class Tools {
 			try {
 				return p.getClassLoader().loadClass(className);
 			} catch (ClassNotFoundException e) {
-				// System.out.println("not found");
+				// TODO: do nothing?
 			}
 		}
 		throw new ClassNotFoundException(className);
@@ -552,10 +645,18 @@ public class Tools {
      * @throws IOException if an open quote was not ended
      */
     public static String[] mergeQuotedSplits(String line, String[] splittedTokens, String quoteString) throws IOException {
+    	int[] tokenStarts = new int[splittedTokens.length];
+    	int currentCounter = 0;
+    	int currentIndex = 0;
+    	for (String currentToken : splittedTokens) {
+    		tokenStarts[currentIndex] = line.indexOf(currentToken, currentCounter);
+    		currentCounter = tokenStarts[currentIndex] + currentToken.length() + 1;
+    		currentIndex++;
+    	}
+    	
         List<String> tokens = new LinkedList<String>();
         int start = -1;
         int end = -1;
-        int totalCounter = 0;
         for (int i = 0; i < splittedTokens.length; i++) {
             if (splittedTokens[i].trim().startsWith(quoteString)) {
                 start = i;
@@ -577,34 +678,30 @@ public class Tools {
                     if (nextToken.length() == 0)
                         continue;
                     if (a == start) {
-                        nextToken = nextToken.substring(1);
+                        nextToken = nextToken.substring(quoteString.length());
                     }
                     if (a == end) {
-                        nextToken = nextToken.substring(0, nextToken.length() - 1);
+                        nextToken = nextToken.substring(0, nextToken.length() - quoteString.length());
                     }
                     // add correct separator
                     if (lastToken != null) {
-                        int lastIndex = line.indexOf(lastToken, totalCounter - lastToken.length()) + lastToken.length();
-                        int thisIndex = line.indexOf(splittedTokens[a], totalCounter);
+                        //int lastIndex = line.indexOf(lastToken, totalCounter - lastToken.length()) + lastToken.length();
+                    	int lastIndex = tokenStarts[a-1] + lastToken.length();
+                        int thisIndex = tokenStarts[a];
                         if (lastIndex >= 0 && thisIndex >= lastIndex) {
                             String separator = line.substring(lastIndex, thisIndex);
                             current.append(separator);
-                            totalCounter += separator.length();
                         }
                     }
                     current.append(nextToken);
                     lastToken = splittedTokens[a];
-                    //totalCounter = line.indexOf(lastToken, totalCounter) + lastToken.length();
-                    totalCounter += lastToken.length();
                 }
                 tokens.add(current.toString());
                 start = -1;
                 end = -1;
             } else {
                 tokens.add(splittedTokens[i]);
-                totalCounter += splittedTokens[i].length();
             }
-            //totalCounter += splittedTokens[i].length();
         }
         String[] quoted = new String[tokens.size()];
         tokens.toArray(quoted);
@@ -652,4 +749,52 @@ public class Tools {
         while (tokenizer.nextToken() != StreamTokenizer.TT_EOL) {};
         tokenizer.pushBack();
     }
+      
+    public static void delete(File file) {
+    	if (file.isDirectory()) {
+			File[] files = file.listFiles();
+			for (File child : files) {
+				delete(child);
+			}
+			boolean result = file.delete();
+			if (!result)
+				LogService.getGlobal().logWarning("Unable to delete file " + file);
+    	} else {
+			boolean result = file.delete();
+			if (!result)
+				LogService.getGlobal().logWarning("Unable to delete file " + file);
+    	}
+    }
+    
+    public static void copy(File srcPath, File dstPath) throws IOException {
+		if (srcPath.isDirectory()) {
+			if (!dstPath.exists()) {
+				boolean result = dstPath.mkdir();
+				if (!result)
+					throw new IOException("Unable to create directoy: " + dstPath);
+			}
+
+			String[] files = srcPath.list();
+			for (int i = 0; i < files.length; i++) {
+				copy(new File(srcPath, files[i]), new File(dstPath, files[i]));
+			}
+		} else {
+			if (srcPath.exists()) {
+				FileChannel in = null;
+				FileChannel out = null;
+				try {
+					in = new FileInputStream(srcPath).getChannel();
+					out = new FileOutputStream(dstPath).getChannel();
+					long size = in.size();
+					MappedByteBuffer buf = in.map(FileChannel.MapMode.READ_ONLY, 0, size);
+					out.write(buf);
+				} finally {
+					if (in != null)
+						in.close();
+					if (out != null)
+						out.close();
+				}
+			}
+		}
+	}
 }

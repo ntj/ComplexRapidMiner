@@ -1,30 +1,31 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.example.set;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
@@ -63,10 +64,10 @@ public class SplittedExampleSet extends AbstractExampleSet {
 	/** The parent example set. */
 	private ExampleSet parent;
 	
-
+	
 	/** Constructs a SplittedExampleSet with the given partition. */
 	public SplittedExampleSet(ExampleSet exampleSet, Partition partition) {
-		this.parent = exampleSet;
+		this.parent = (ExampleSet)exampleSet.clone();
 		this.partition = partition;
 	}
     
@@ -201,25 +202,15 @@ public class SplittedExampleSet extends AbstractExampleSet {
 	public int getActualParentIndex(int index) {
 		return partition.mapIndex(index);
 	}
-   
-   /**
-    * Returns the example with the given index.
-    */
-   public Example getExampleFromId(double id) {
-       return new Example(parent.getExampleFromId(id).getDataRow(), this);
-   }
 
 	public ExampleTable getExampleTable() {
 		return parent.getExampleTable();
-	}
-
-	public void remapIds() {
-		parent.remapIds();
 	}
 	
 	public Attributes getAttributes() {
 		return this.parent.getAttributes();
 	}
+
 	
 	// -------------------- Factory methods --------------------
 
@@ -230,16 +221,22 @@ public class SplittedExampleSet extends AbstractExampleSet {
 	 */
 	public static SplittedExampleSet splitByAttribute(ExampleSet exampleSet, Attribute attribute) {
 		int[] elements = new int[exampleSet.size()];
-		Iterator<Example> reader = exampleSet.iterator();
 		int i = 0;
-		int maxNumber = 0;
-		while (reader.hasNext()) {
-			Example example = reader.next();
+		Map<Integer, Integer> indexMap = new HashMap<Integer, Integer>();
+		AtomicInteger currentIndex = new AtomicInteger(0);
+		for (Example example : exampleSet) {
 			int value = (int) example.getValue(attribute);
-			maxNumber = Math.max(maxNumber, value);
-			elements[i++] = value;
+			Integer indexObject = indexMap.get(value);
+			if (indexObject == null) {
+				indexMap.put(value, currentIndex.getAndIncrement());
+			}
+			int intValue = indexMap.get(value).intValue();
+			elements[i++] = intValue;
 		}
-		Partition partition = new Partition(elements, maxNumber + 1);
+		
+		int maxNumber = indexMap.size();
+		indexMap.clear();
+		Partition partition = new Partition(elements, maxNumber);
 		return new SplittedExampleSet(exampleSet, partition);
 	}
     

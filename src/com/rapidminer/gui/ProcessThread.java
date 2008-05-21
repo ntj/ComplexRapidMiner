@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui;
 
@@ -65,14 +63,15 @@ public class ProcessThread extends Thread implements ProcessListener {
 			process.getRootOperator().sendEmail(results, null);
             RapidMinerGUI.getMainFrame().processEnded(results);
 		} catch (ProcessStoppedException ex) {
-			beep("error");
-            process.getLog().log(ex.getMessage(), LogService.MAXIMUM);
+			//beep("error");
+            process.getLog().log(ex.getMessage(), LogService.STATUS);
             // here the process ended method is not called ! let the thread finish the
             // current operator and send no events to the main frame...
+            // also no beep...
 		} catch (Throwable e) {
 			beep("error");
 			String debugProperty = System.getProperty(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEBUGMODE);
-			boolean debugMode = Tools.booleanValue(debugProperty, true);
+			boolean debugMode = Tools.booleanValue(debugProperty, false);
 			String message = e.getMessage();
 			if (!debugMode) {
 				if (e instanceof RuntimeException) {
@@ -102,7 +101,11 @@ public class ProcessThread extends Thread implements ProcessListener {
 						// not be shown...
 						if ((e instanceof NullPointerException) || 
 							(e instanceof ArrayIndexOutOfBoundsException)) {
-							SwingTools.showVerySimpleErrorMessage("Process failed!\nThe setup seem not to contain any obvious errors, but you should check the log messages.");
+							SwingTools.showVerySimpleErrorMessage("Process failed!\n" + 
+									                              "The setup does not seem to contain any obvious errors,\n" +
+									                              "but you should check the log messages or activate the\n"+
+									                              "debug mode in the settings dialog in order to get more\n"+
+									                              "information about this problem.");
 						} else {
 							SwingTools.showSimpleErrorMessage("Process failed", e);
 						}

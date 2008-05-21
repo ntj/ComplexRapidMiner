@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.preprocessing.filter;
 
@@ -30,7 +28,6 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.Condition;
 import com.rapidminer.example.set.ConditionCreationException;
-import com.rapidminer.example.set.ConditionExampleReader;
 import com.rapidminer.example.set.ConditionedExampleSet;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
@@ -65,10 +62,9 @@ import com.rapidminer.parameter.ParameterTypeStringCategory;
  * label value.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: ExampleFilter.java,v 1.2 2007/06/15 16:58:39 ingomierswa Exp $
+ * @version $Id: ExampleFilter.java,v 1.6 2008/05/09 19:22:58 ingomierswa Exp $
  */
 public class ExampleFilter extends Operator {
-
 
 	/** The parameter name for &quot;Implementation of the condition.&quot; */
 	public static final String PARAMETER_CONDITION_CLASS = "condition_class";
@@ -78,6 +74,7 @@ public class ExampleFilter extends Operator {
 
 	/** The parameter name for &quot;Indicates if only examples should be accepted which would normally filtered.&quot; */
 	public static final String PARAMETER_INVERT_FILTER = "invert_filter";
+	
 	private static final Class[] INPUT_CLASSES = { ExampleSet.class };
 
 	private static final Class[] OUTPUT_CLASSES = { ExampleSet.class };
@@ -96,7 +93,7 @@ public class ExampleFilter extends Operator {
 		log("Creating condition '" + className + "' with parameter '" + parameter + "'");
 		Condition condition = null;
 		try {
-			condition = ConditionExampleReader.createCondition(className, inputSet, parameter);
+			condition = ConditionedExampleSet.createCondition(className, inputSet, parameter);
 		} catch (ConditionCreationException e) {
 			throw new UserError(this, 904, className, e.getMessage());
 		}
@@ -114,7 +111,7 @@ public class ExampleFilter extends Operator {
 
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		ParameterType type = new ParameterTypeStringCategory(PARAMETER_CONDITION_CLASS, "Implementation of the condition.", ConditionExampleReader.KNOWN_CONDITION_NAMES, ConditionExampleReader.KNOWN_CONDITION_NAMES[0]);
+		ParameterType type = new ParameterTypeStringCategory(PARAMETER_CONDITION_CLASS, "Implementation of the condition.", ConditionedExampleSet.KNOWN_CONDITION_NAMES, ConditionedExampleSet.KNOWN_CONDITION_NAMES[0]);
 		type.setExpert(false);
 		types.add(type);
 		type = new ParameterTypeString(PARAMETER_PARAMETER_STRING, "Parameter string for the condition, e.g. 'attribute=value' for the AttributeValueFilter.", true);

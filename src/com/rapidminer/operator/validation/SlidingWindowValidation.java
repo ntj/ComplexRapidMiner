@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.validation;
 
@@ -47,13 +45,13 @@ import com.rapidminer.tools.math.AverageVector;
  * the time points are encoded as examples. It uses a certain window of examples for
  * training and uses another window (after horizon examples, i.e. time points) for testing.
  * The window is moved across the example set and all performance measurements are 
- * averaged afterwards.
+ * averaged afterwards. The parameter &quot;cumulative_training&quot; indicates if all
+ * former examples should be used for training (instead of only the current window).
  * 
  * @author Ingo Mierswa
- * @version $Id: SlidingWindowValidation.java,v 1.4 2007/06/15 16:58:38 ingomierswa Exp $
+ * @version $Id: SlidingWindowValidation.java,v 1.8 2008/05/09 19:22:54 ingomierswa Exp $
  */
 public class SlidingWindowValidation extends ValidationChain {
-
 
 	/** The parameter name for &quot;Number of examples in the window which is used for training&quot; */
 	public static final String PARAMETER_TRAINING_WINDOW_WIDTH = "training_window_width";
@@ -72,6 +70,7 @@ public class SlidingWindowValidation extends ValidationChain {
 
 	/** The parameter name for &quot;Indicates if only performance vectors should be averaged or all types of averagable result vectors&quot; */
 	public static final String PARAMETER_AVERAGE_PERFORMANCES_ONLY = "average_performances_only";
+
     public SlidingWindowValidation(OperatorDescription description) {
         super(description);
     }
@@ -120,6 +119,7 @@ public class SlidingWindowValidation extends ValidationChain {
             SplittedExampleSet splittedES = new SplittedExampleSet(inputSet, new Partition(partition, 3));
             splittedES.selectSingleSubset(0);
             learn(splittedES);
+
             
             // evaluate
             splittedES.selectSingleSubset(1);

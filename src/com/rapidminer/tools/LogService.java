@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools;
 
@@ -60,8 +58,8 @@ import com.rapidminer.tools.log.StreamMultiplier;
  * basic initialization phase of RapidMiner). After the basic intialization phase, 
  * the global messages will be presented in the message viewer (if the RapidMiner GUI
  * is used) or still printed to system out or in any other stream defined via the
- * method {@link #initGlobalLogging(File, int)}. Alternatively, one could also define an 
- * environment variable named {@link RapidMiner#PROPERTY_RAPIDMINER_GLOBAL_LOGGING}.</p>
+ * method {@link #initGlobalLogging(OutputStream, int)}. Alternatively, one could also define an 
+ * environment variable named {@link RapidMiner#PROPERTY_RAPIDMINER_GLOBAL_LOG_FILE}.</p>
  * 
  * <p>Usually, operators should only use the log verbosities MINIMUM for messages
  * with a low priority and STATUS for normal information messages. In rare cases, the 
@@ -88,7 +86,7 @@ import com.rapidminer.tools.log.StreamMultiplier;
  * </ul>
  * 
  * @author Ingo Mierswa
- * @version $Id: LogService.java,v 1.7 2007/07/18 12:17:30 ingomierswa Exp $
+ * @version $Id: LogService.java,v 1.12 2008/05/09 19:22:55 ingomierswa Exp $
  */
 public class LogService implements LoggingHandler {
 
@@ -210,28 +208,28 @@ public class LogService implements LoggingHandler {
         
     /** Returns the global logging. If no logging was otherwise create, this
      *  method creates the default standard out log service if no log file
-     *  was defined in the property {@link RapidMiner#PROPERTY_RAPIDMINER_GLOBAL_LOGGING}.
+     *  was defined in the property {@link RapidMiner#PROPERTY_RAPIDMINER_GLOBAL_LOG_FILE}.
      *  Alternatively, developers can invoke the method {@link #initGlobalLogging(OutputStream, int)}. */
-    public static LogService getGlobal() {
-        if (globalLogging == null) {
-            globalLogging = new LogService();
-            String globalLogFile = System.getProperty(RapidMiner.PROPERTY_RAPIDMINER_GLOBAL_LOG_FILE);
-            String globalLogVerbosity = System.getProperty(RapidMiner.PROPERTY_RAPIDMINER_GLOBAL_LOG_VERBOSITY);
-            int logVerbosity = getVerbosityLevel(globalLogVerbosity);
-            if ((logVerbosity < UNKNOWN_LEVEL) || (logVerbosity >= LOG_VERBOSITY_NAMES.length)) {
-                globalLogging.logError("Only numbers between " + MINIMUM + " and " + MAXIMUM + " or one of the log verbosity level names are allowed as value for " + RapidMiner.PROPERTY_RAPIDMINER_GLOBAL_LOG_VERBOSITY + ". Was: '" + globalLogVerbosity + "'. Using INIT instead...");
-                logVerbosity = INIT;
-            }
-            globalLogging.init(globalLogFile, logVerbosity, GLOBAL_PREFIX);
-        }
-        return globalLogging;
+    public static synchronized LogService getGlobal() {
+    	if (globalLogging == null) {
+    		globalLogging = new LogService();
+    		String globalLogFile = System.getProperty(RapidMiner.PROPERTY_RAPIDMINER_GLOBAL_LOG_FILE);
+    		String globalLogVerbosity = System.getProperty(RapidMiner.PROPERTY_RAPIDMINER_GLOBAL_LOG_VERBOSITY);
+    		int logVerbosity = getVerbosityLevel(globalLogVerbosity);
+    		if ((logVerbosity < UNKNOWN_LEVEL) || (logVerbosity >= LOG_VERBOSITY_NAMES.length)) {
+    			globalLogging.logError("Only numbers between " + MINIMUM + " and " + MAXIMUM + " or one of the log verbosity level names are allowed as value for " + RapidMiner.PROPERTY_RAPIDMINER_GLOBAL_LOG_VERBOSITY + ". Was: '" + globalLogVerbosity + "'. Using INIT instead...");
+    			logVerbosity = INIT;
+    		}
+    		globalLogging.init(globalLogFile, logVerbosity, GLOBAL_PREFIX);
+    	}
+    	return globalLogging;
     }
 
     /** Initializes the global logging, i.e. the global log service not bound
      *  to a concrete process. Usually, system out or the message viewer (GUI) are
      *  used for global log messages. */
     public static void initGlobalLogging(OutputStream out, int logVerbosity) {
-        globalLogging.init(out, logVerbosity, false, GLOBAL_PREFIX);
+        getGlobal().init(out, logVerbosity, false, GLOBAL_PREFIX);
     }
     
 	/** Initialises the LogService using the given parameters. */
@@ -405,7 +403,6 @@ public class LogService implements LoggingHandler {
 	 *  from operators but only at the end of processes. This will be ensured by RapidMiner itself. 
 	 *  If RapidMiner is not used in debug mode, the stack trace will not be shown. */
 	public void logFinalException(String message, Process process, Throwable exception, boolean debugMode) {
-		exception.printStackTrace();
 		if (FATAL < this.minVerbosityLevel)
 			return;
 		

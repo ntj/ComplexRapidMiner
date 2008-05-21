@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner;
 
@@ -44,12 +42,12 @@ import com.rapidminer.tools.Tools;
 
 /**
  * A <tt>Learner</tt> is an operator that encapsulates the learning step of a
- * machine learning method. New learning schemes shoud extend this class to
+ * machine learning method. New learning schemes should extend this class to
  * support the same parameters as other RapidMiner learners. The main purpose of this
  * class is to perform some compatibility checks.
  * 
  * @author Ingo Mierswa
- * @version $Id: AbstractLearner.java,v 1.5 2007/06/16 14:13:27 ingomierswa Exp $
+ * @version $Id: AbstractLearner.java,v 1.10 2008/05/09 19:23:25 ingomierswa Exp $
  */
 public abstract class AbstractLearner extends Operator implements Learner {
 
@@ -66,7 +64,7 @@ public abstract class AbstractLearner extends Operator implements Learner {
 	}
 
 	/**
-	 * Trains a model useing an ExampleSet from the input. 
+	 * Trains a model using an ExampleSet from the input. 
      * Uses the method learn(ExampleSet).
 	 */
 	public IOObject[] apply() throws OperatorException {
@@ -86,8 +84,8 @@ public abstract class AbstractLearner extends Operator implements Learner {
             throw new UserError(this, 117);
         }
         
-		// check capabilities and produce errors if they are not fullfilled
-        CapabilityCheck check = new CapabilityCheck(this, Tools.booleanValue(System.getProperty(PROPERTY_RAPIDMINER_GENERAL_CAPABILITIES_WARN), true));
+		// check capabilities and produce errors if they are not fulfilled
+        CapabilityCheck check = new CapabilityCheck(this, Tools.booleanValue(System.getProperty(PROPERTY_RAPIDMINER_GENERAL_CAPABILITIES_WARN), true) || onlyWarnForNonSufficientCapabilities());
         check.checkLearnerCapabilities(this, exampleSet);
 
 		List<IOObject> results = new LinkedList<IOObject>();
@@ -189,6 +187,11 @@ public abstract class AbstractLearner extends Operator implements Learner {
 		}
 	}
 
+	/** Returns true. */
+	public boolean onlyWarnForNonSufficientCapabilities() {
+		return false;
+	}
+	
 	public Class[] getInputClasses() {
 		return new Class[] { ExampleSet.class };
 	}

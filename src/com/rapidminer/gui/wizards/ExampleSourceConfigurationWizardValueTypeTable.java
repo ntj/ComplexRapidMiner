@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.wizards;
 
@@ -44,6 +42,7 @@ import com.rapidminer.gui.EditorCellRenderer;
 import com.rapidminer.gui.tools.ExtendedJTable;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.att.AttributeDataSource;
 
 
@@ -51,7 +50,7 @@ import com.rapidminer.tools.att.AttributeDataSource;
  * This table shows only the attribute names and the attribute value types.
  * 
  * @author Ingo Mierswa
- * @version $Id: ExampleSourceConfigurationWizardValueTypeTable.java,v 1.1 2007/05/27 22:02:06 ingomierswa Exp $
+ * @version $Id: ExampleSourceConfigurationWizardValueTypeTable.java,v 1.8 2008/05/09 19:22:56 ingomierswa Exp $
  */
 public class ExampleSourceConfigurationWizardValueTypeTable extends ExtendedJTable {
     
@@ -67,45 +66,75 @@ public class ExampleSourceConfigurationWizardValueTypeTable extends ExtendedJTab
         	this.sources = sources;
         }
  
-        public void guessValueTypes(File originalDataFile, String commentString, String columnSeparators, boolean firstLineAsNames) {
-            try {
-                BufferedReader in = new BufferedReader(new FileReader(originalDataFile));
-                String line = null;
-                boolean first = true;
-                while ((line = in.readLine()) != null) {
-                    if ((commentString != null) && (commentString.trim().length() > 0) && (line.startsWith(commentString)))
-                        continue;
-                    String[] row = line.trim().split(columnSeparators);
-                    if (first) {
-                        if (!firstLineAsNames) {
-                            updateValueTypes(row);
-                        }
-                        first = false;
-                    } else {
-                        updateValueTypes(row);
-                    }
-                }
-                in.close();
-            } catch (IOException e) {
-                SwingTools.showSimpleErrorMessage("Cannot re-write data: " + e.getMessage(), e);
-            }            
+        public void guessValueTypes(File originalDataFile, String commentString, String columnSeparators, char decimalPointCharacter, boolean useQuotes, boolean firstLineAsNames) {
+        	BufferedReader in = null;
+        	try {
+        		in = new BufferedReader(new FileReader(originalDataFile));
+        		String line = null;
+        		boolean first = true;
+        		boolean[] hasToCheck = null;
+        		int rowCounter = 1;
+        		while ((line = in.readLine()) != null) {
+        			if ((commentString != null) && (commentString.trim().length() > 0) && (line.startsWith(commentString)))
+        				continue;
+        			if (line.trim().length() == 0)
+        				continue;
+
+        			String[] row = line.trim().split(columnSeparators);
+        			if (useQuotes)
+        				row = Tools.mergeQuotedSplits(line, row, "\"");
+        			if (first) {
+        				hasToCheck = new boolean[row.length];
+        				for (int i = 0; i < hasToCheck.length; i++)
+        					hasToCheck[i] = true;
+
+        				if (!firstLineAsNames) {
+        					updateValueTypes(row, hasToCheck, decimalPointCharacter);
+        				}
+
+        				first = false;
+        			} else {
+        				if (row.length != hasToCheck.length)
+        					throw new IOException("Line " + rowCounter + " has a number of columns (" + row.length + ") different from preceding lines (" + hasToCheck.length + ").");
+        				updateValueTypes(row, hasToCheck, decimalPointCharacter);
+        			}
+
+        			rowCounter++;
+        		}
+        	} catch (IOException e) {
+        		SwingTools.showSimpleErrorMessage("Cannot guess value types: " + e.getMessage(), e);                	
+        	} finally {
+        		if (in != null) {
+        			try {
+						in.close();
+					} catch (IOException e) {
+						SwingTools.showSimpleErrorMessage("Cannot close stream to data file: " + e.getMessage(), e);  
+					}
+        		}
+        	}         
         }
         
-        private void updateValueTypes(String[] row) {
+        private void updateValueTypes(String[] row, boolean[] hasToCheck, char decimalPointCharacter) {
             for (int c = 0; c < row.length; c++) {
-                int valueType = Ontology.INTEGER;
-                String value = row[c];
-                if ((value != null) && (!value.equals("?"))) {
-                    try {
-                        double d = Double.parseDouble(value);
-                        if ((valueType == Ontology.INTEGER) && ((int) d != d)) {
-                            valueType = Ontology.REAL;
-                        }
-                    } catch (NumberFormatException e) {
-                        valueType = Ontology.NOMINAL;
-                    }
-                }
-                setValueAt(Ontology.VALUE_TYPE_NAMES[valueType], 0, c);
+            	if (hasToCheck[c]) {
+            		int valueType = Ontology.INTEGER;
+            		String value = row[c];
+
+            		if ((value != null) && (value.length() >= 0) && (!value.equals("?"))) {
+            			try {
+            				String decimalValue = value.replace(decimalPointCharacter, '.');
+            				double d = Double.parseDouble(decimalValue);
+            				if ((valueType == Ontology.INTEGER) && (!Tools.isEqual(Math.round(d), d))) {
+            					valueType = Ontology.REAL;
+            					hasToCheck[c] = false;
+            				}
+            			} catch (NumberFormatException e) {
+            				valueType = Ontology.NOMINAL;
+            				hasToCheck[c] = false;
+            			}
+            		}
+            		setValueAt(Ontology.VALUE_TYPE_NAMES[valueType], 0, c);
+            	}
             }
         }
         
@@ -147,8 +176,8 @@ public class ExampleSourceConfigurationWizardValueTypeTable extends ExtendedJTab
         update();
     }
     
-    public void guessValueTypes(File data, String commentString, String columnSeparators, boolean firstLineAsNames) {
-    	((ExampleSourceConfigurationWizardValueTypeTableModel)getModel()).guessValueTypes(data, commentString, columnSeparators, firstLineAsNames);	
+    public void guessValueTypes(File data, String commentString, String columnSeparators, char decimalPointCharacter, boolean useQuotes, boolean firstLineAsNames) {
+    	((ExampleSourceConfigurationWizardValueTypeTableModel)getModel()).guessValueTypes(data, commentString, columnSeparators, decimalPointCharacter, useQuotes, firstLineAsNames);	
     }
     
     public void update() {

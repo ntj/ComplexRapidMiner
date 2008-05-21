@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.dialog;
 
@@ -34,6 +32,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -55,6 +54,7 @@ import com.rapidminer.gui.templates.Template;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.tools.ParameterService;
+import com.rapidminer.tools.XMLException;
 
 
 /**
@@ -64,7 +64,7 @@ import com.rapidminer.tools.ParameterService;
  * parameters can be set.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: WizardDialog.java,v 1.3 2007/06/07 17:12:23 ingomierswa Exp $
+ * @version $Id: WizardDialog.java,v 1.8 2008/05/09 19:23:21 ingomierswa Exp $
  */
 public class WizardDialog extends JDialog {
 
@@ -76,7 +76,7 @@ public class WizardDialog extends JDialog {
 
 	static {
 		// init icon
-		wizardIcon = SwingTools.createIcon(WIZARD_ICON_NAME);
+		wizardIcon = SwingTools.createImage(WIZARD_ICON_NAME);
 	}
 
 	private MainFrame mainFrame;
@@ -202,8 +202,16 @@ public class WizardDialog extends JDialog {
 				templates[i] = new Template(templateFiles[i]);
 				processes[i] = new Process(new File(templateFiles[i].getParent(), templates[i].getFilename()));
 				processes[i].setProcessFile(null);
-			} catch (Throwable e) {
+			} catch (InstantiationException e) {
 				SwingTools.showSimpleErrorMessage("Cannot load template file '" + templateFiles[i] + "'", e);
+				processes[i] = new Process();
+				templates[i] = new Template();
+			} catch (IOException e) {
+				SwingTools.showSimpleErrorMessage("Cannot load template process file '" + templateFiles[i] + "'", e);
+				processes[i] = new Process();
+				templates[i] = new Template();
+			} catch (XMLException e) {
+				SwingTools.showSimpleErrorMessage("Cannot load template process file '" + templateFiles[i] + "'", e);
 				processes[i] = new Process();
 				templates[i] = new Template();
 			}
@@ -303,7 +311,7 @@ public class WizardDialog extends JDialog {
 	}
 
 	private void finish() {
-		mainFrame.setProcess(processes[selectedTemplateIndex]);
+		mainFrame.setProcess(processes[selectedTemplateIndex], true);
         mainFrame.processChanged();
 		dispose();
 	}

@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.dialog;
 
@@ -53,13 +51,13 @@ import javax.swing.event.ListSelectionListener;
 
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.ExtendedJTabbedPane;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.XMLEditor;
-import com.rapidminer.operator.performance.PerformanceCriterion;
-import com.rapidminer.operator.performance.PerformanceVector;
 import com.rapidminer.tools.math.AnovaCalculator;
 import com.rapidminer.tools.math.SignificanceCalculationException;
 import com.rapidminer.tools.math.SignificanceTestResult;
+import com.rapidminer.tools.math.TestGroup;
 
 
 /**
@@ -67,7 +65,7 @@ import com.rapidminer.tools.math.SignificanceTestResult;
  * in an XML view and the corresponding results will be displayed in the result area.
  * 
  * @author Ingo Mierswa
- * @version $Id: ResultHistoryDialog.java,v 1.3 2007/07/15 22:06:25 ingomierswa Exp $
+ * @version $Id: ResultHistoryDialog.java,v 1.9 2008/05/09 19:23:20 ingomierswa Exp $
  */
 public class ResultHistoryDialog extends JDialog {
 
@@ -85,11 +83,10 @@ public class ResultHistoryDialog extends JDialog {
 			AnovaCalculator calculator = new AnovaCalculator();
 			calculator.setAlpha(0.05);
 
-			Iterator<PerformanceVector> i = selectedPerformanceVectors.iterator();
+			Iterator<TestGroup> i = selectedTestGroups.iterator();
 			while (i.hasNext()) {
-				PerformanceVector vector = i.next();
-				PerformanceCriterion pc = vector.getMainCriterion();
-				calculator.addGroup(pc.getExampleCount(), pc.getAverage(), pc.getVariance());
+				TestGroup group = i.next();
+				calculator.addGroup(group);
 			}
 
 			try {
@@ -101,9 +98,9 @@ public class ResultHistoryDialog extends JDialog {
 		}
 	}
 	
-	private final Action ANOVA_ACTION = new AnovaAction();
+	private final transient Action ANOVA_ACTION = new AnovaAction();
 	
-	private List<PerformanceVector> selectedPerformanceVectors = new LinkedList<PerformanceVector>();
+	private List<TestGroup> selectedTestGroups = new LinkedList<TestGroup>();
 	
 	public ResultHistoryDialog(Frame owner) {
 		super(owner, "Result Comparator");
@@ -141,7 +138,7 @@ public class ResultHistoryDialog extends JDialog {
 		layout.setConstraints(testPanel, c);
 		processSelectionPanel.add(testPanel);
         
-        JTabbedPane processTabbedPane = new JTabbedPane();
+        JTabbedPane processTabbedPane = new ExtendedJTabbedPane();
 		processTabbedPane.add("Process", processSelectionPanel);
 		resultSelectionSplitPane.add(processTabbedPane);
 		
@@ -161,7 +158,7 @@ public class ResultHistoryDialog extends JDialog {
         layout.setConstraints(xmlArea, c);
         xmlPanel.add(xmlArea);
         
-        JTabbedPane xmlTabbedPane = new JTabbedPane();
+        JTabbedPane xmlTabbedPane = new ExtendedJTabbedPane();
         xmlTabbedPane.add("XML Setup", xmlPanel);
         resultSelectionSplitPane.add(xmlTabbedPane);
 		
@@ -191,7 +188,7 @@ public class ResultHistoryDialog extends JDialog {
 		layout.setConstraints(resultsPane, c);
 		resultsPanel.add(resultsPane);
         
-        JTabbedPane resultsTabbedPane = new JTabbedPane();
+        JTabbedPane resultsTabbedPane = new ExtendedJTabbedPane();
         resultsTabbedPane.add("Results", resultsPanel);
         mainSplitPane.add(resultsTabbedPane);
 		
@@ -203,20 +200,20 @@ public class ResultHistoryDialog extends JDialog {
 					if (indices.length > 0) {
 						if (indices.length == 1) {
 							ResultContainer selectedContainer = (ResultContainer)resultSelectionList.getSelectedValue();
-							xmlArea.setText(selectedContainer.getRootOperator().getXML(""));
+							xmlArea.setText(selectedContainer.getProcess());
 							resultsArea.setText(selectedContainer.getResults());
 							ANOVA_ACTION.setEnabled(false);
 						} else {
 							xmlArea.setText("");
 							resultsArea.setText("");
-							selectedPerformanceVectors.clear();
+							selectedTestGroups.clear();
 							for (int i = 0; i < indices.length; i++) {
 								ResultContainer selectedContainer = (ResultContainer)RapidMinerGUI.getResultHistory().getElementAt(indices[i]);
-								PerformanceVector performance = selectedContainer.getPerformance();
-								if (performance != null)
-									selectedPerformanceVectors.add(performance);
+								TestGroup group = selectedContainer.getTestGroup();
+								if (group != null)
+									selectedTestGroups.add(group);
 							}
-							if (indices.length == selectedPerformanceVectors.size())
+							if (indices.length == selectedTestGroups.size())
 								ANOVA_ACTION.setEnabled(true);
 							else
 								ANOVA_ACTION.setEnabled(false);

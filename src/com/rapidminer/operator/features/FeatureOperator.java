@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features;
 
@@ -28,10 +26,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
 import com.rapidminer.datatable.SimpleDataTable;
+import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.AttributeWeightedExampleSet;
@@ -66,7 +66,7 @@ import com.rapidminer.tools.Tools;
  * terminate if <tt>solutionGoodEnough()</tt> returns true.
  * 
  * @author Simon Fischer, Ingo Mierswa
- * @version $Id: FeatureOperator.java,v 1.2 2007/06/09 14:09:16 ingomierswa Exp $
+ * @version $Id: FeatureOperator.java,v 1.14 2008/05/09 19:22:45 ingomierswa Exp $
  *          <br>
  */
 public abstract class FeatureOperator extends OperatorChain {
@@ -158,11 +158,16 @@ public abstract class FeatureOperator extends OperatorChain {
 			public double getValue() {
 				if (population == null)
 					return Double.NaN;
-				AttributeWeightedExampleSet eSet = population.getBestIndividualEver().getExampleSet();
-				if (eSet != null)
-					return eSet.getNumberOfUsedAttributes();
-				else
+				Individual individual = population.getBestIndividualEver();
+				if (individual != null) {
+					AttributeWeightedExampleSet eSet = individual.getExampleSet();
+					if (eSet != null)
+						return eSet.getNumberOfUsedAttributes();
+					else
+						return Double.NaN;
+				} else {
 					return Double.NaN;
+				}
 			}
 		});
 	}
@@ -205,11 +210,15 @@ public abstract class FeatureOperator extends OperatorChain {
 	}
 
 	public InnerOperatorCondition getInnerOperatorCondition() {
-		return new LastInnerOperatorCondition(new Class[] { PerformanceVector.class });
+		return new LastInnerOperatorCondition(new Class[] { ExampleSet.class}, new Class[] { PerformanceVector.class });
 	}
 
     protected RandomGenerator getRandom() {
         return random;
+    }
+    
+    protected Population getPopulation() {
+    	return population;
     }
     
 	/**
@@ -237,6 +246,10 @@ public abstract class FeatureOperator extends OperatorChain {
 
 		ExampleSet es = getInput(ExampleSet.class);
 
+		if (es.getAttributes().size() == 0) {
+			throw new UserError(this, 125, 0, 1);
+		}
+		
 		List preOps = getPreEvaluationPopulationOperators(es);
 		List postOps = getPostEvaluationPopulationOperators(es);
 
@@ -249,7 +262,7 @@ public abstract class FeatureOperator extends OperatorChain {
 		}
 
 		// create initial population
-		population = createInitialPopulation((ExampleSet) es.clone());
+		population = createInitialPopulation(es);
 		log("Initial population has " + population.getNumberOfIndividuals() + " individuals.");
 		evaluate(population);
 
@@ -292,15 +305,19 @@ public abstract class FeatureOperator extends OperatorChain {
 
 		// write criteria data of the final population into a file
 		if (isParameterSet(PARAMETER_POPULATION_CRITERIA_DATA_FILE)) {
+			SimpleDataTable finalStatistics = PopulationPlotter.createDataTable(population);
+			PopulationPlotter.fillDataTable(finalStatistics, new HashMap<String, ExampleSet>(), population, getParameterAsBoolean(PARAMETER_DRAW_DOMINATED_POINTS));
 			File outFile = getParameterAsFile(PARAMETER_POPULATION_CRITERIA_DATA_FILE);
+			PrintWriter out = null;
 			try {
-				PrintWriter out = new PrintWriter(new FileWriter(outFile));
-				SimpleDataTable finalStatistics = PopulationPlotter.createDataTable(population);
-				PopulationPlotter.fillDataTable(finalStatistics, population, getParameterAsBoolean(PARAMETER_DRAW_DOMINATED_POINTS));
+				out = new PrintWriter(new FileWriter(outFile));
 				finalStatistics.write(out);
-				out.close();
 			} catch (IOException e) {
 				throw new UserError(this, e, 303, new Object[] { outFile, e.getMessage() });
+			} finally {
+				if (out != null) {
+					out.close();
+				}
 			}
 		}
 
@@ -316,7 +333,13 @@ public abstract class FeatureOperator extends OperatorChain {
 		if (bestEver == null) {
 			bestEver = population.getBestIndividualEver();
 		}
+		
+		// create resulting weights
 		AttributeWeightedExampleSet weightedResultSet = bestEver.getExampleSet();
+		for (Attribute attribute : weightedResultSet.getAttributes()) {
+			if (Double.isNaN(weightedResultSet.getWeight(attribute)))
+				weightedResultSet.setWeight(attribute, 1.0d);
+		}
 		AttributeWeights weights = weightedResultSet.getAttributeWeights();
 		Iterator<String> n = weights.getAttributeNames().iterator();
 		while (n.hasNext()) {
@@ -329,7 +352,7 @@ public abstract class FeatureOperator extends OperatorChain {
 		// normalize weights
 		weights.normalize();
 		
-		return new IOObject[] { weightedResultSet.createCleanClone(), weights, population.getBestPerformanceEver() };
+		return new IOObject[] { weightedResultSet.createCleanClone(), weights, bestEver.getPerformance() };
 	}
 
 	/** Applies all PopulationOperators in opList to the population. */
@@ -372,7 +395,6 @@ public abstract class FeatureOperator extends OperatorChain {
 			return individual.getPerformance();
 		} else {
 			evaluationCounter++;
-			// method createCleanES still necessary?
 			AttributeWeightedExampleSet clone = individual.getExampleSet().createCleanClone();
 			IOObject[] operatorChainInput = new IOObject[] { clone };
 			IOContainer innerResult = getInput().prepend(operatorChainInput);

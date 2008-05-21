@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer;
 
@@ -33,6 +31,7 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -78,7 +77,7 @@ import com.rapidminer.tools.XMLException;
  * GUI beforehand) and start it by invoking the {@link #run()} method.</p>
  * 
  * @author Ingo Mierswa
- * @version $Id: Process.java,v 1.5 2007/07/10 20:44:52 ingomierswa Exp $
+ * @version $Id: Process.java,v 1.14 2008/05/09 19:23:19 ingomierswa Exp $
  */
 public class Process implements Cloneable {
 
@@ -150,9 +149,16 @@ public class Process implements Cloneable {
     /** Creates a new process from the given process file. This might have been created 
      *  with the GUI beforehand. */
 	public Process(File file) throws IOException, XMLException {
-		InputStream in = new FileInputStream(file);
-		readProcess(in);
-		in.close();
+		InputStream in = null;
+		try {
+			in = new FileInputStream(file);
+			readProcess(in);
+		} catch (IOException e) {
+			throw e;
+		} finally {
+			if (in != null)
+				in.close();
+		}
 		this.processFile = file;
         initLogging();
 	}
@@ -182,7 +188,6 @@ public class Process implements Cloneable {
 			this.processFile = new File(other.processFile.getAbsolutePath());
 		else
 			this.processFile = null;
-		this.breakpointListeners = other.breakpointListeners;
         initLogging();
 	}
 
@@ -498,11 +503,12 @@ public class Process implements Cloneable {
 	
     /** This method initializes the process, the operators, and the services and must be invoked
      *  at the beginning of run. */
-	private final void prepareRun(IOContainer inputContainer, int logVerbosity) throws OperatorException {
+	private final void prepareRun(IOContainer inputContainer, int logVerbosity, boolean cleanUp) throws OperatorException {
         
         // TODO: perform this cleaning here after object visualiers, log service and 
         // temp file service are bound to a single process
-        RapidMiner.cleanUp();
+		if (cleanUp)
+			RapidMiner.cleanUp();
         
         initLogging(logVerbosity);
         //getLog().init(this, logVerbosity);
@@ -527,17 +533,36 @@ public class Process implements Cloneable {
 
 	/** Starts the process with the given log verbosity. */
 	public final IOContainer run(int logVerbosity) throws OperatorException {
-        return run(new IOContainer(), logVerbosity);
+        return run(new IOContainer(), logVerbosity, true);
     }
 	
 	/** Starts the process with the given input. */
 	public final IOContainer run(IOContainer input) throws OperatorException {
-        return run(input, LogService.UNKNOWN_LEVEL);
+        return run(input, LogService.UNKNOWN_LEVEL, true);
     }
-        
-	/** Starts the process with the given input. */
+
+	/** Starts the process with the given input. The process uses the given log verbosity. */
 	public final IOContainer run(IOContainer input, int logVerbosity) throws OperatorException {
-		prepareRun(input, logVerbosity);
+		return run(input, logVerbosity, true);
+	}
+	
+	/** Starts the process with the given input. The process uses a default log verbosity.
+	 * 	The boolean flag indicates if some static initializations should be cleaned
+	 *  before the process is started. This should usually be true but it might be useful
+	 *  to set this to false if, for example, several process runs uses the same
+	 *  object visualizer which would have been cleaned otherwise.
+	 */
+	public final IOContainer run(IOContainer input, boolean cleanUp) throws OperatorException {
+		return run(input, LogService.UNKNOWN_LEVEL, cleanUp);
+	}
+	
+	/** Starts the process with the given input. The process uses the given log verbosity. 
+	 *  The boolean flag indicates if some static initializations should be cleaned
+	 *  before the process is started. This should usually be true but it might be useful
+	 *  to set this to false if, for example, several process runs uses the same
+	 *  object visualizer which would have been cleaned otherwise. */
+	public final IOContainer run(IOContainer input, int logVerbosity, boolean cleanUp) throws OperatorException {
+		prepareRun(input, logVerbosity, cleanUp);
 		long start = System.currentTimeMillis();
 		logService.log("Process starts", LogService.NOTE);
 		logService.log("Process:" + Tools.getLineSeparator() + getRootOperator().createProcessTree(3), LogService.INIT);
@@ -572,7 +597,8 @@ public class Process implements Cloneable {
     /** This method is invoked after an process has finished. */
 	private void tearDown() {
 		try {
-			rootOperator.processFinished();
+			if (!shouldStop())
+				rootOperator.processFinished();
 		} catch (OperatorException e) {
 			logService.log("Problem during finishing the process: " + e.getMessage(), LogService.ERROR);
 		}
@@ -592,18 +618,24 @@ public class Process implements Cloneable {
 
 	/** Saves the process to the given process file. */
 	public void save(File file) throws IOException {
-		String encoding = rootOperator.getEncoding();
-		PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), encoding));
+		Charset encoding = rootOperator.getEncoding();
+		PrintWriter writer = null;
+		try {
+			writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), encoding));
 
-        // write encoding
-		writer.println("<?xml version=\"1.0\" encoding=\""+encoding+"\"?>");
-        
-        // write process
-		writer.println("<process version=\"" + RapidMiner.getVersion() + "\">" + Tools.getLineSeparator());
-		rootOperator.writeXML(writer, "  ");
-		writer.println("</process>");
-        
-		writer.close();
+			// write encoding
+			writer.println("<?xml version=\"1.0\" encoding=\""+encoding+"\"?>");
+
+			// write process
+			writer.println("<process version=\"" + RapidMiner.getVersion() + "\">" + Tools.getLineSeparator());
+			rootOperator.writeXML(writer, "  ");
+			writer.println("</process>");
+		} catch (IOException e) {
+			throw e;
+		} finally {
+			if (writer != null)
+				writer.close();
+		}
 		logService.log("Finished writing of process definition file '" + file + "'.", LogService.STATUS);
 	}
 
@@ -719,5 +751,12 @@ public class Process implements Cloneable {
     /** This method is used for unregistering a name from the operator name map. */
     public void unregisterName(String name) {
         operatorNameMap.remove(name);
+    }
+    
+    public String toString() {
+        if (rootOperator == null)
+            return "empty process";
+        else
+            return "Process:" + Tools.getLineSeparator() + rootOperator.getXML("");        
     }
 }

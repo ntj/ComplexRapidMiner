@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.learner.meta;
 
@@ -36,6 +34,7 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.SplittedExampleSet;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.IOObject;
+import com.rapidminer.operator.Model;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -43,7 +42,6 @@ import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.Value;
 import com.rapidminer.operator.condition.InnerOperatorCondition;
 import com.rapidminer.operator.condition.LastInnerOperatorCondition;
-import com.rapidminer.operator.learner.PredictionModel;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeDouble;
@@ -121,7 +119,7 @@ public class SDRulesetInduction extends OperatorChain {
 	}
 
 	public InnerOperatorCondition getInnerOperatorCondition() {
-		return new LastInnerOperatorCondition(new Class[] { PredictionModel.class });
+		return new LastInnerOperatorCondition(new Class[] { ExampleSet.class }, new Class[] { Model.class });
 	}
 
 	/**
@@ -149,7 +147,7 @@ public class SDRulesetInduction extends OperatorChain {
 	 * @see com.rapidminer.operator.Operator#getOutputClasses()
 	 */
 	public Class[] getOutputClasses() {
-		return new Class[] { PredictionModel.class };
+		return new Class[] { Model.class };
 	}
 
 	public static int getPosIndex(Attribute label) {
@@ -207,10 +205,9 @@ public class SDRulesetInduction extends OperatorChain {
 	 *            an <code>ExampleSet</code> to train a model for
 	 * @return a <code>Model</code>
 	 */
-	private PredictionModel trainModel(ExampleSet exampleSet) throws OperatorException {
+	private Model trainModel(ExampleSet exampleSet) throws OperatorException {
 		IOContainer result = getOperator(0).apply(new IOContainer(new IOObject[] { exampleSet }));
-		PredictionModel model = result.remove(PredictionModel.class);
-		model.apply(exampleSet);
+		Model model = result.remove(Model.class);
 		return model;
 	}
 
@@ -232,7 +229,7 @@ public class SDRulesetInduction extends OperatorChain {
 
 		double[] classPriors = this.prepareWeights(exampleSet);
 
-		PredictionModel model = this.trainRuleset(exampleSet, classPriors);
+		Model model = this.trainRuleset(exampleSet, classPriors);
 
 		return new IOObject[] { model };
 	}
@@ -272,19 +269,21 @@ public class SDRulesetInduction extends OperatorChain {
 			}
 
 			// train one model per iteration
-			PredictionModel model = this.trainModel(splittedSet);
-
+			Model model = this.trainModel(splittedSet);
+			ExampleSet resultSet = null;
 			if (bootstrap == true) {
 				((SplittedExampleSet) splittedSet).selectSingleSubset(1); // switch
 																			// to
 																			// out-of-bag
 																			// set
-				model.apply(trainingSet); // apply model to all examples
+				resultSet = model.apply(splittedSet); // apply model to all examples
+			} else {
+				resultSet = model.apply(trainingSet); // apply model to all examples
 			}
 
 			// get the weighted performance value of the example set with
 			// respect to the model
-			SDReweightMeasures wp = new SDReweightMeasures(splittedSet);
+			SDReweightMeasures wp = new SDReweightMeasures(resultSet);
 			final boolean additive = this.getParameterAsBoolean(PARAMETER_ADDITIVE_REWEIGHT);
 
 			wp.setAdditive(additive);

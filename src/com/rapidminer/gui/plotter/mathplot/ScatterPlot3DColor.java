@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.plotter.mathplot;
 
@@ -31,12 +29,13 @@ import org.math.plot.Plot3DPanel;
 
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableRow;
+import com.rapidminer.tools.math.MathFunctions;
 
 
 /** This plotter can be used to create 3D scatter plots where a 4th dimension can be shown by using a color scale. 
  * 
  *  @author Sebastian Land, Ingo Mierswa
- *  @version $Id: ScatterPlot3DColor.java,v 1.2 2007/07/15 22:06:25 ingomierswa Exp $
+ *  @version $Id: ScatterPlot3DColor.java,v 1.6 2008/05/09 19:23:21 ingomierswa Exp $
  */
 public class ScatterPlot3DColor extends JMathPlotter3D {
 
@@ -66,8 +65,8 @@ public class ScatterPlot3DColor extends JMathPlotter3D {
 						while (iterator.hasNext()) {
 							DataTableRow row = iterator.next();
 							double value = row.getValue(currentVariable);
-							min = Math.min(min, value);
-							max = Math.max(max, value);
+							min = MathFunctions.robustMin(min, value);
+							max = MathFunctions.robustMax(max, value);
 						}
 						iterator = getDataTable().iterator();
 						while (iterator.hasNext()) {
@@ -87,7 +86,7 @@ public class ScatterPlot3DColor extends JMathPlotter3D {
 		if (colorColumn != -1)
 			getLegendComponent().setLegendColumn(getDataTable(), colorColumn);
 	}
-
+	
 	public boolean hasLegend(){
 		return false;
 	}	

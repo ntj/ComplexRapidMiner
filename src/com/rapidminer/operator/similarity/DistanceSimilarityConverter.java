@@ -1,41 +1,38 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.similarity;
 
 import java.util.Iterator;
 
-import com.rapidminer.operator.AbstractIOObject;
-import com.rapidminer.operator.IOObject;
+import com.rapidminer.operator.ResultObjectAdapter;
 
 /**
  * Converts a distance measure into a similarity measure and the other way around.
  * 
  * @author Michael Wurst
- * @version $Id: DistanceSimilarityConverter.java,v 1.2 2007/06/20 12:30:02 ingomierswa Exp $
+ * @version $Id: DistanceSimilarityConverter.java,v 1.5 2008/05/09 19:22:52 ingomierswa Exp $
  */
-public class DistanceSimilarityConverter extends AbstractIOObject implements SimilarityMeasure {
+public class DistanceSimilarityConverter extends ResultObjectAdapter implements SimilarityMeasure {
 
 	private static final long serialVersionUID = -3699572317989121330L;
 
@@ -50,10 +47,6 @@ public class DistanceSimilarityConverter extends AbstractIOObject implements Sim
 	public DistanceSimilarityConverter(final SimilarityMeasure sim) {
 		super();
 		this.sim = sim;
-	}
-
-	public IOObject copy() {
-		return this;
 	}
 
 	public double similarity(String x, String y) {
@@ -79,5 +72,13 @@ public class DistanceSimilarityConverter extends AbstractIOObject implements Sim
 
 	public boolean isDistance() {
 		return !sim.isDistance();
+	}
+	
+	public String getExtension() {
+		return "sim";
+	}
+	
+	public String getFileDescription() {
+		return "similarity measure";
 	}
 }

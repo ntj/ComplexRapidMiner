@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.io;
 
@@ -44,6 +42,7 @@ import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeFile;
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -58,16 +57,16 @@ import com.rapidminer.parameter.ParameterTypeFile;
  * 
  * @rapidminer.index xrff
  * @author Ingo Mierswa
- * @version $Id: XrffExampleSetWriter.java,v 1.3 2007/06/23 00:09:30 ingomierswa Exp $
+ * @version $Id: XrffExampleSetWriter.java,v 1.6 2008/05/09 19:22:37 ingomierswa Exp $
  */
 public class XrffExampleSetWriter extends Operator {
-
 
 	/** The parameter name for &quot;File to save the example set to.&quot; */
 	public static final String PARAMETER_EXAMPLE_SET_FILE = "example_set_file";
 
 	/** The parameter name for &quot;Indicates if the data file should be compressed.&quot; */
 	public static final String PARAMETER_COMPRESS = "compress";
+	
 	private static final Class[] INPUT_CLASSES = { ExampleSet.class };
 
 	private static final Class[] OUTPUT_CLASSES = { ExampleSet.class };
@@ -117,7 +116,7 @@ public class XrffExampleSetWriter extends Operator {
                 	if ((role.getSpecialName() != null) && (role.getSpecialName().equals(Attributes.WEIGHT_NAME)))
                         continue;
                     Attribute attribute = role.getAttribute();
-                    out.println("        <value>" + example.getValueAsString(attribute) + "</value>");
+                    out.println("        <value>" + Tools.escapeXML(example.getValueAsString(attribute)) + "</value>");
                 }  
                 out.println("      </instance>");
             }
@@ -135,15 +134,15 @@ public class XrffExampleSetWriter extends Operator {
     private void printAttribute(Attribute attribute, PrintWriter out, boolean isClass) {
         String classString = isClass ? "class=\"yes\" " : "";
         if (attribute.isNominal()) {
-            out.println("      <attribute name=\""+attribute.getName()+"\" "+classString+"type=\"nominal\">");
+            out.println("      <attribute name=\"" + Tools.escapeXML(attribute.getName()) + "\" " + classString + "type=\"nominal\">");
             out.println("        <labels>");
             for (String s : attribute.getMapping().getValues()) {
-                out.println("          <label>" + s + "</label>");
+                out.println("          <label>" + Tools.escapeXML(s) + "</label>");
             }
             out.println("        </labels>");
             out.println("      </attribute>");
         } else {
-            out.println("      <attribute name=\""+attribute.getName()+"\" "+classString+"type=\"numeric\"/>");
+            out.println("      <attribute name=\"" + Tools.escapeXML(attribute.getName()) + "\" " + classString + "type=\"numeric\"/>");
         }
     }
     

@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.construction;
 
@@ -33,6 +31,7 @@ import com.rapidminer.generator.FeatureGenerator;
 import com.rapidminer.generator.FloorCeilGenerator;
 import com.rapidminer.generator.MinMaxGenerator;
 import com.rapidminer.generator.PowerGenerator;
+import com.rapidminer.generator.SignumGenerator;
 import com.rapidminer.generator.SquareRootGenerator;
 import com.rapidminer.generator.TrigonometricFunctionGenerator;
 import com.rapidminer.operator.IOObject;
@@ -78,10 +77,9 @@ import com.rapidminer.parameter.ParameterTypeString;
  * <p>Mierswa, Ingo (2007): <em>RobustGP: Intron-Free Multi-Objective Feature Construction</em> (to appear)</p>
  * 
  * @author Ingo Mierswa
- * @version $Id: YAGGA2.java,v 1.2 2007/06/15 16:58:38 ingomierswa Exp $
+ * @version $Id: YAGGA2.java,v 1.5 2008/05/09 19:22:54 ingomierswa Exp $
  */
 public class YAGGA2 extends YAGGA {
-
 
 	/** The parameter name for &quot;Generate square root values.&quot; */
 	public static final String PARAMETER_USE_SQUARE_ROOTS = "use_square_roots";
@@ -116,6 +114,9 @@ public class YAGGA2 extends YAGGA {
 	/** The parameter name for &quot;Generate maximum values.&quot; */
 	public static final String PARAMETER_USE_MAX = "use_max";
 
+	/** The parameter name for &quot;Generate signum values.&quot; */
+	public static final String PARAMETER_USE_SGN = "use_sgn";
+	
 	/** The parameter name for &quot;Generate floor, ceil, and rounded values.&quot; */
 	public static final String PARAMETER_USE_FLOOR_CEIL_FUNCTIONS = "use_floor_ceil_functions";
 
@@ -148,6 +149,8 @@ public class YAGGA2 extends YAGGA {
 
 	/** The parameter name for &quot;Post processing after crossover (only possible for runs with only one generator).&quot; */
 	public static final String PARAMETER_ASSOCIATIVE_ATTRIBUTE_MERGING = "associative_attribute_merging";
+	
+	
 	public YAGGA2(OperatorDescription description) {
 		super(description);
 	}
@@ -199,6 +202,9 @@ public class YAGGA2 extends YAGGA {
 		if (getParameterAsBoolean(PARAMETER_USE_MAX))
 			generators.add(new MinMaxGenerator(MinMaxGenerator.MAX));
 
+		if (getParameterAsBoolean(PARAMETER_USE_SGN))
+			generators.add(new SignumGenerator());
+ 
 		if (getParameterAsBoolean(PARAMETER_USE_FLOOR_CEIL_FUNCTIONS)) {
 			generators.add(new FloorCeilGenerator(FloorCeilGenerator.FLOOR));
 			generators.add(new FloorCeilGenerator(FloorCeilGenerator.CEIL));
@@ -232,6 +238,7 @@ public class YAGGA2 extends YAGGA {
 		types.add(new ParameterTypeBoolean(PARAMETER_USE_ABSOLUTE_VALUES, "Generate absolute values.", true));
 		types.add(new ParameterTypeBoolean(PARAMETER_USE_MIN, "Generate minimum values.", false));
 		types.add(new ParameterTypeBoolean(PARAMETER_USE_MAX, "Generate maximum values.", false));
+		types.add(new ParameterTypeBoolean(PARAMETER_USE_SGN, "Generate signum values.", false));
 		types.add(new ParameterTypeBoolean(PARAMETER_USE_FLOOR_CEIL_FUNCTIONS, "Generate floor, ceil, and rounded values.", false));
 		types.add(new ParameterTypeBoolean(PARAMETER_RESTRICTIVE_SELECTION, "Use restrictive generator selection (faster).", true));
 		types.add(new ParameterTypeBoolean(PARAMETER_REMOVE_USELESS, "Remove useless attributes.", true));

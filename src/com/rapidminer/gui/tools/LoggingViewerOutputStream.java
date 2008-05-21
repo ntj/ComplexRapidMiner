@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.tools;
 
@@ -43,7 +41,7 @@ import com.rapidminer.tools.Tools;
  * A special output stream that appends all its incoming characters and perform necessary formatting.
  * 
  * @author Ingo Mierswa
- * @version $Id: LoggingViewerOutputStream.java,v 1.2 2007/06/15 16:58:38 ingomierswa Exp $
+ * @version $Id: LoggingViewerOutputStream.java,v 1.5 2008/05/09 19:22:59 ingomierswa Exp $
  */
 public class LoggingViewerOutputStream extends OutputStream {
     
@@ -68,12 +66,12 @@ public class LoggingViewerOutputStream extends OutputStream {
         lastStyledText.append(text);
     }
     
-    private void addTextToViewer() {
+    private synchronized void addTextToViewer() {
         Document doc = textArea.getStyledDocument();
         try {
             doc.insertString(doc.getLength(), lastStyledText.toString(), attributeSet);
         } catch (BadLocationException e) {
-            SwingTools.showSimpleErrorMessage("Error during logging: ", e);
+            // do nothing
         }
         String maxRowsString = System.getProperty(MainFrame.PROPERTY_RAPIDMINER_GUI_MESSAGEVIEWER_ROWLIMIT);
         int maxRows = 1000;

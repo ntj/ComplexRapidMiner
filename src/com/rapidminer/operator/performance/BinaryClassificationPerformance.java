@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.performance;
 
@@ -33,6 +31,7 @@ import com.rapidminer.gui.viewer.ConfusionMatrixViewer;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
+import com.rapidminer.tools.Tableable;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.math.Averagable;
 
@@ -49,7 +48,7 @@ import com.rapidminer.tools.math.Averagable;
  * @version $Id: BinaryClassificationPerformance.java,v 2.14 2006/03/21 15:35:50
  *          ingomierswa Exp $
  */
-public class BinaryClassificationPerformance extends MeasuredPerformance {
+public class BinaryClassificationPerformance extends MeasuredPerformance implements Tableable{
 
 	private static final long serialVersionUID = 7475134460409215015L;
 
@@ -102,7 +101,7 @@ public class BinaryClassificationPerformance extends MeasuredPerformance {
 	private int type = 0;
 
 	/** true label, predicted label. PP = TP, PN = FN, NP = FP, NN = TN. */
-	private int[][] counter = new int[2][2];
+	private double[][] counter = new double[2][2];
 
 	/** Name of the positive class. */
 	private String positiveClassName = "";
@@ -116,6 +115,10 @@ public class BinaryClassificationPerformance extends MeasuredPerformance {
     /** The  label attribute. */
     private Attribute labelAttribute;
     
+    /** The weight attribute. Might be null. */
+    private Attribute weightAttribute;
+    
+    private ConfusionMatrixViewer viewer;
     
 	public BinaryClassificationPerformance() {
 		type = -1;
@@ -124,7 +127,7 @@ public class BinaryClassificationPerformance extends MeasuredPerformance {
 	public BinaryClassificationPerformance(BinaryClassificationPerformance o) {
 		super(o);
 		this.type = o.type;
-		this.counter = new int[2][2];
+		this.counter = new double[2][2];
 		this.counter[NEGATIVE][NEGATIVE] = o.counter[NEGATIVE][NEGATIVE];
 		this.counter[POSITIVE][NEGATIVE] = o.counter[POSITIVE][NEGATIVE];
 		this.counter[NEGATIVE][POSITIVE] = o.counter[NEGATIVE][POSITIVE];
@@ -133,6 +136,8 @@ public class BinaryClassificationPerformance extends MeasuredPerformance {
             this.predictedLabelAttribute = (Attribute)o.predictedLabelAttribute.clone();
         if (o.labelAttribute != null)
         this.labelAttribute = (Attribute)o.labelAttribute.clone();
+        if (o.weightAttribute != null)
+        	this.weightAttribute = (Attribute)o.weightAttribute.clone();
         this.positiveClassName = o.positiveClassName;
         this.negativeClassName = o.negativeClassName;
 	}
@@ -142,7 +147,7 @@ public class BinaryClassificationPerformance extends MeasuredPerformance {
 	}
 
 	/** For test cases only. */
-	public BinaryClassificationPerformance(int type, int[][] counter) {
+	public BinaryClassificationPerformance(int type, double[][] counter) {
 		this.type = type;
 		this.counter[NEGATIVE][NEGATIVE] = counter[NEGATIVE][NEGATIVE];
 		this.counter[NEGATIVE][POSITIVE] = counter[NEGATIVE][POSITIVE];
@@ -158,28 +163,35 @@ public class BinaryClassificationPerformance extends MeasuredPerformance {
 		return null;
 	}
 
-	public int getExampleCount() {
+	public double getExampleCount() {
 		return counter[POSITIVE][POSITIVE] + counter[NEGATIVE][POSITIVE] + counter[POSITIVE][NEGATIVE] + counter[NEGATIVE][NEGATIVE];
 	}
 
 	// ================================================================================
 
-	public void startCounting(ExampleSet eSet) throws OperatorException {
+	public void startCounting(ExampleSet eSet, boolean useExampleWeights) throws OperatorException {
+		super.startCounting(eSet, useExampleWeights);
 		this.predictedLabelAttribute = eSet.getAttributes().getPredictedLabel();
         this.labelAttribute = eSet.getAttributes().getLabel();
 		if (!labelAttribute.isNominal() || (labelAttribute.getMapping().size() != 2))
 			throw new UserError(null, 118, new Object[] { "'" + labelAttribute.getName() + "'", Integer.valueOf(labelAttribute.getMapping().getValues().size()), "2 for calculation of '" + getName() + "'" });
 		this.negativeClassName = predictedLabelAttribute.getMapping().getNegativeString();
 		this.positiveClassName = predictedLabelAttribute.getMapping().getPositiveString();
-		this.counter = new int[2][2];
+		if (useExampleWeights)
+			this.weightAttribute = eSet.getAttributes().getWeight();
+		this.counter = new double[2][2];
 	}
 
 	public void countExample(Example example) {
 	    String labelString = example.getNominalValue(labelAttribute);
         int label = predictedLabelAttribute.getMapping().getIndex(labelString);
         String predString = example.getNominalValue(predictedLabelAttribute);
-        int plabel = predictedLabelAttribute.getMapping().getIndex(predString);        
-		counter[label][plabel]++;
+        int plabel = predictedLabelAttribute.getMapping().getIndex(predString);
+        
+        double weight = 1.0d;
+        if (weightAttribute != null)
+        	weight = example.getValue(weightAttribute);
+		counter[label][plabel] += weight;
 	}
 
 	public double getMikroAverage() {
@@ -316,18 +328,31 @@ public class BinaryClassificationPerformance extends MeasuredPerformance {
 		result.append("\t" + negativeClassName);
 		result.append("\t" + positiveClassName);
 		result.append(Tools.getLineSeparator() + negativeClassName + ":");
-		result.append("\t" + counter[NEGATIVE][NEGATIVE]);
-		result.append("\t" + counter[POSITIVE][NEGATIVE]);
+		result.append("\t" + Tools.formatIntegerIfPossible(counter[NEGATIVE][NEGATIVE]));
+		result.append("\t" + Tools.formatIntegerIfPossible(counter[POSITIVE][NEGATIVE]));
 		result.append(Tools.getLineSeparator() + positiveClassName + ":");
-		result.append("\t" + counter[NEGATIVE][POSITIVE]);
-		result.append("\t" + counter[POSITIVE][POSITIVE]);
+		result.append("\t" + Tools.formatIntegerIfPossible(counter[NEGATIVE][POSITIVE]));
+		result.append("\t" + Tools.formatIntegerIfPossible(counter[POSITIVE][POSITIVE]));
 		return result.toString();
 	}
 
 	/** This implementation returns a confusion matrix viewer based on a JTable. */
 	public Component getVisualizationComponent(IOContainer ioContainer) {
-		return new ConfusionMatrixViewer(super.toString() + " (positive class: " + positiveClassName + ")", 
+		viewer = new ConfusionMatrixViewer(super.toString() + " (positive class: " + positiveClassName + ")", 
 				new String[] { negativeClassName, positiveClassName },
-				this.counter);
+				this.counter); 
+		return viewer;
+	}
+
+	public String getCell(int row, int column) {
+		return viewer.getCell(row, column);
+	}
+
+	public int getColumnNumber() {
+		return viewer.getColumnNumber();
+	}
+
+	public int getRowNumber() {
+		return viewer.getRowNumber();
 	}
 }

@@ -1,30 +1,27 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.example.set;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,8 +33,8 @@ import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.SimpleAttributes;
 import com.rapidminer.example.table.DataRow;
-import com.rapidminer.example.table.DataRowReader;
 import com.rapidminer.example.table.ExampleTable;
+import com.rapidminer.example.table.MemoryExampleTable;
 
 
 /**
@@ -60,14 +57,16 @@ public class SimpleExampleSet extends AbstractExampleSet {
 
 	/** Holds all information about the attributes. */
 	private Attributes attributes = new SimpleAttributes();
-
-	/** Maps the id values on the line index in the example table. */
-	private Map<Double, Integer> idMap = new HashMap<Double, Integer>();
+	
 	
 	/**
 	 * Constructs a new SimpleExampleSet backed by the given example table. The
 	 * example set initially does not have any special attributes but all attributes
 	 * from the given table will be used as regular attributes.
+	 * 
+	 * If you are constructing the example set from a {@link MemoryExampleTable}, you
+	 * should use the method {@link MemoryExampleTable#createExampleSet()} instead unless
+	 * you are absolutely sure what you are doing.
 	 */
 	public SimpleExampleSet(ExampleTable exampleTable) {
 		this(exampleTable, null, null);
@@ -77,6 +76,10 @@ public class SimpleExampleSet extends AbstractExampleSet {
 	 * Constructs a new SimpleExampleSet backed by the given example table. The
 	 * example set initially does not have any special attributes but all attributes
 	 * from the given table will be used as regular attributes.
+	 * 
+	 * If you are constructing the example set from a {@link MemoryExampleTable}, you
+	 * should use the method {@link MemoryExampleTable#createExampleSet()} instead unless
+	 * you are absolutely sure what you are doing.
 	 */
 	public SimpleExampleSet(ExampleTable exampleTable, List<Attribute> regularAttributes) {
 		this(exampleTable, regularAttributes, null);
@@ -86,6 +89,10 @@ public class SimpleExampleSet extends AbstractExampleSet {
 	 * Constructs a new SimpleExampleSet backed by the given example table. All
 	 * attributes in the table apart from the special attributes become normal (regular)
 	 * attributes. The special attributes are specified by the given map.
+	 * 
+	 * If you are constructing the example set from a {@link MemoryExampleTable}, you
+	 * should use the method {@link MemoryExampleTable#createExampleSet(Map)} instead unless
+	 * you are absolutely sure what you are doing.
 	 */
 	public SimpleExampleSet(ExampleTable exampleTable, Map<Attribute, String> specialAttributes) {
 		this(exampleTable, null, specialAttributes);
@@ -96,14 +103,21 @@ public class SimpleExampleSet extends AbstractExampleSet {
 	 * attributes in the table defined in the regular attribute list apart from those 
 	 * (also) defined the special attributes become normal (regular) attributes. 
 	 * The special attributes are specified by the given map.
+	 * 
+	 * If you are constructing the example set from a {@link MemoryExampleTable}, you
+	 * should use the method {@link MemoryExampleTable#createExampleSet(Map)} instead unless
+	 * you are absolutely sure what you are doing.
 	 */
 	public SimpleExampleSet(ExampleTable exampleTable, List<Attribute> regularAttributes, Map<Attribute, String> specialAttributes) {
 		this.exampleTable = exampleTable;
 		List<Attribute> regularList = regularAttributes;
 		if (regularList == null) {
 			regularList = new LinkedList<Attribute>();
-			for (int a = 0; a < exampleTable.getNumberOfAttributes(); a++)
-				regularList.add(exampleTable.getAttribute(a));	
+			for (int a = 0; a < exampleTable.getNumberOfAttributes(); a++) {
+				Attribute attribute = exampleTable.getAttribute(a);
+				if (attribute != null)
+					regularList.add(attribute);	
+			}
 		}
 		
 		for (Attribute attribute : regularList) {
@@ -118,15 +132,15 @@ public class SimpleExampleSet extends AbstractExampleSet {
 				getAttributes().setSpecialAttribute(entry.getKey(), entry.getValue());
 			}
 		}
-		remapIds();
 	}
 	
 	/** Clone constructor. The example table is copied by reference, the attributes are 
-	 *  copied by a deep clone. */
+	 *  copied by a deep clone. 
+	 *  
+	 *  Don't use this method directly but use the clone method instead. */
 	public SimpleExampleSet(SimpleExampleSet exampleSet) {
 		this.exampleTable = exampleSet.exampleTable;
 		this.attributes = (Attributes)exampleSet.getAttributes().clone();
-		this.idMap.putAll(exampleSet.idMap);
 	}
 
 	// --- attributes ---
@@ -145,57 +159,15 @@ public class SimpleExampleSet extends AbstractExampleSet {
 		return exampleTable.size();
 	}
 
-	public Iterator<Example> iterator() {
-		return new SimpleExampleReader(getExampleTable().getDataRowReader(), this);
-	}
-	
-	public Example getExampleFromId(double id) {
-		return createExample(getDataRowFromId(id));
-	}
-	
 	public Example getExample(int index) {
-		return createExample(getExampleTable().getDataRow(index));
-	}
-
-	/**
-	 * Creates an example for the given data row. Returns null if the given data
-	 * is null.
-	 */
-	private Example createExample(DataRow dataRow) {
+		DataRow dataRow = getExampleTable().getDataRow(index);
 		if (dataRow == null)
 			return null;
-		return new Example(dataRow, this);
+		else
+			return new Example(dataRow, this);
 	}
 	
-	/**
-	 * This method can be used by subclasses to determine the data row with a
-	 * given id value. This data row is used to construct the desired example.
-	 * This method returns null if no data row with the given id exists.
-	 */
-	private DataRow getDataRowFromId(double id) {
-		Integer indexObject = idMap.get(id);
-		if (indexObject != null) {
-			return getExampleTable().getDataRow(indexObject.intValue());
-		} else {
-			return null;
-		}
-	}
-
-	/**
-	 * Remaps all ids. This method should be invoked after Id tagging or example
-	 * set loading.
-	 */
-	public void remapIds() {
-		idMap.clear();
-		Attribute idAttribute = getAttributes().getSpecial(Attributes.ID_NAME);
-		if (idAttribute != null) {
-			DataRowReader reader = getExampleTable().getDataRowReader();
-			int index = 0;
-			while (reader.hasNext()) {
-				DataRow dataRow = reader.next();
-				idMap.put(dataRow.get(idAttribute), index);
-				index++;
-			}
-		}
+	public Iterator<Example> iterator() {
+		return new SimpleExampleReader(getExampleTable().getDataRowReader(), this);
 	}
 }

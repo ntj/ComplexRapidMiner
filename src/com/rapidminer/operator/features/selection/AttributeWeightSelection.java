@@ -1,31 +1,30 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.selection;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Vector;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
@@ -49,11 +48,9 @@ import com.rapidminer.parameter.ParameterTypeInt;
  * to select the k attributes with the highest weight.
  * 
  * @author Ingo Mierswa, Stefan Rueping
- * @version $Id: AttributeWeightSelection.java,v 1.1 2006/04/14 13:07:13
- *          ingomierswa Exp $
+ * @version $Id: AttributeWeightSelection.java,v 1.6 2008/05/09 19:23:18 ingomierswa Exp $
  */
 public class AttributeWeightSelection extends Operator {
-
 
 	/** The parameter name for &quot;Use this weight for the selection relation.&quot; */
 	public static final String PARAMETER_WEIGHT = "weight";
@@ -72,6 +69,7 @@ public class AttributeWeightSelection extends Operator {
 
 	/** The parameter name for &quot;Indicates if the absolute values of the weights should be used for comparison.&quot; */
 	public static final String PARAMETER_USE_ABSOLUTE_WEIGHTS = "use_absolute_weights";
+	
 	private static final String[] WEIGHT_RELATIONS = { "greater", "greater equals", "equals", "less equals", "less", "top k", "bottom k", "all but top k", "all but bottom k", "top p%", "bottom p%" };
 
 	private static final int GREATER = 0;
@@ -96,6 +94,7 @@ public class AttributeWeightSelection extends Operator {
 
 	private static final int BOTTOMPPERCENT = 10;
 
+	
 	public AttributeWeightSelection(OperatorDescription description) {
 		super(description);
 	}
@@ -108,8 +107,22 @@ public class AttributeWeightSelection extends Operator {
 		int relation = getParameterAsInt(PARAMETER_WEIGHT_RELATION);
 		boolean useAbsoluteWeights = getParameterAsBoolean(PARAMETER_USE_ABSOLUTE_WEIGHTS);
 
+        // determine which attributes have a known weight value
+		boolean[] weightKnown = new boolean[eSet.getAttributes().size()];
+        Vector<Attribute> knownAttributes = new Vector<Attribute>();
+        int index = 0;
+        for (Attribute attribute : eSet.getAttributes()) {
+        	double weight = weights.getWeight(attribute.getName());
+        	if (!Double.isNaN(weight)) {
+        		knownAttributes.add(attribute);
+        		weightKnown[index++] = true;
+        	} else {
+        		weightKnown[index++] = false;
+        	}
+        }
+		
 		// determine number of attributes that should be selected
-		int nrAtts = eSet.getAttributes().size();
+		int nrAtts = knownAttributes.size();
 		int k = getParameterAsInt(PARAMETER_K);
         
 		if (relation == ALLBUTTOPK) {
@@ -143,9 +156,10 @@ public class AttributeWeightSelection extends Operator {
             int comparatorType = AttributeWeights.ORIGINAL_WEIGHTS;
             if (useAbsoluteWeights)
                 comparatorType = AttributeWeights.ABSOLUTE_WEIGHTS;
-            String[] attributeNames = new String[eSet.getAttributes().size()];
-            int index = 0;
-            for (Attribute attribute : eSet.getAttributes()) {
+
+            String[] attributeNames = new String[knownAttributes.size()];
+            index = 0;
+            for (Attribute attribute : knownAttributes) {
                 attributeNames[index++] = attribute.getName();
             }
             weights.sortByWeight(attributeNames, direction, comparatorType);
@@ -154,9 +168,10 @@ public class AttributeWeightSelection extends Operator {
             index = 0;
             while (iterator.hasNext()) {
                 Attribute attribute = iterator.next();
-                double weight = weights.getWeight(attribute.getName());
-                if (Double.isNaN(weight) && (deselectUnknown)) {
-                    iterator.remove();
+                if (!weightKnown[index]) {
+                	if (deselectUnknown) {
+                		iterator.remove();
+                	}
                 } else {
                     boolean remove = true;
                     for (int i = 0; i < k; i++) {
@@ -168,6 +183,7 @@ public class AttributeWeightSelection extends Operator {
                     if (remove)
                         iterator.remove();
                 }
+                index++;
             }
 		} else { // simple relations
 			Iterator<Attribute> iterator = eSet.getAttributes().iterator();

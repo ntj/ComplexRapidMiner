@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.performance;
 
@@ -44,7 +42,7 @@ import com.rapidminer.tools.math.Averagable;
  * confidence value for the desired true label is used as prediction.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: SimpleCriterion.java,v 1.3 2007/07/13 22:52:13 ingomierswa Exp $
+ * @version $Id: SimpleCriterion.java,v 1.6 2008/05/09 19:22:43 ingomierswa Exp $
  */
 public abstract class SimpleCriterion extends MeasuredPerformance {
 
@@ -52,12 +50,14 @@ public abstract class SimpleCriterion extends MeasuredPerformance {
 
 	private double squaresSum = 0.0;
 
-	private int exampleCount = 0;
+	private double exampleCount = 0;
 
 	private Attribute predictedAttribute;
 
 	private Attribute labelAttribute;
 
+	private Attribute weightAttribute;
+	
 	public SimpleCriterion() {
 	}
 
@@ -66,9 +66,13 @@ public abstract class SimpleCriterion extends MeasuredPerformance {
 		this.sum = sc.sum;
 		this.squaresSum = sc.squaresSum;
 		this.exampleCount = sc.exampleCount;
+        this.labelAttribute = (Attribute)sc.labelAttribute.clone();
+        this.predictedAttribute = (Attribute)sc.predictedAttribute.clone();
+        if (sc.weightAttribute != null)
+        	this.weightAttribute = (Attribute)sc.weightAttribute.clone();
 	}
 
-	public int getExampleCount() {
+	public double getExampleCount() {
 		return exampleCount;
 	}
 
@@ -81,7 +85,10 @@ public abstract class SimpleCriterion extends MeasuredPerformance {
 	public void countExample(Example example) {
 		double plabel;
 		double label = example.getValue(labelAttribute);
-
+		double weight = 1.0d;
+		if (weightAttribute != null) {
+			weight = example.getValue(weightAttribute);
+		}
 		if (!predictedAttribute.isNominal()) {
 			plabel = example.getValue(predictedAttribute);
 		} else {
@@ -92,7 +99,7 @@ public abstract class SimpleCriterion extends MeasuredPerformance {
 
 		double deviation = countExample(label, plabel);
 		if (!Double.isNaN(deviation)) {
-			countExample(deviation);
+			countExampleWithWeight(deviation, weight);
 		} else {
 			LogService.getGlobal().log("SimpleCriterion: NaN was generated!", LogService.WARNING);
 		}
@@ -109,11 +116,11 @@ public abstract class SimpleCriterion extends MeasuredPerformance {
 		return value;
 	}
 
-	protected void countExample(double deviation) {
+	protected void countExampleWithWeight(double deviation, double weight) {
 		if (!Double.isNaN(deviation)) {
-			sum += deviation;
-			squaresSum += deviation * deviation;
-			exampleCount++;
+			sum += deviation * weight;
+			squaresSum += deviation * deviation * weight * weight;
+			exampleCount += weight;
 		}
 	}
 
@@ -127,12 +134,14 @@ public abstract class SimpleCriterion extends MeasuredPerformance {
 		return meanSquares - mean * mean;
 	}
 
-	public void startCounting(ExampleSet eset) throws OperatorException {
-		super.startCounting(eset);
-		exampleCount = 0;
-		sum = squaresSum = 0;
+	public void startCounting(ExampleSet eset, boolean useExampleWeights) throws OperatorException {
+		super.startCounting(eset, useExampleWeights);
+		exampleCount = 0.0d;
+		sum = squaresSum = 0.0d;
 		this.predictedAttribute = eset.getAttributes().getPredictedLabel();
 		this.labelAttribute = eset.getAttributes().getLabel();
+		if (useExampleWeights)
+			this.weightAttribute = eset.getAttributes().getWeight();
 	}
 
 	public double getFitness() {

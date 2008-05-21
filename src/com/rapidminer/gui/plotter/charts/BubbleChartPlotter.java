@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.plotter.charts;
 
@@ -46,13 +44,14 @@ import org.jfree.ui.RectangleEdge;
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableRow;
 import com.rapidminer.gui.plotter.PlotterAdapter;
+import com.rapidminer.tools.math.MathFunctions;
 
 
 /**
  * This is the bubble chart plotter.
  * 
  * @author Ingo Mierswa
- * @version $Id: BubbleChartPlotter.java,v 1.1 2007/05/27 22:02:53 ingomierswa Exp $
+ * @version $Id: BubbleChartPlotter.java,v 1.5 2008/05/09 19:22:58 ingomierswa Exp $
  *
  */
 public class BubbleChartPlotter extends PlotterAdapter {
@@ -223,12 +222,12 @@ public class BubbleChartPlotter extends PlotterAdapter {
 				dataCollection.put(name, dataList);
 			}
 		}
-		this.bubbleSizeMin = Math.min(this.bubbleSizeMin, z);
-		this.bubbleSizeMax = Math.max(this.bubbleSizeMax, z);
-		this.xAxisMin = Math.min(this.xAxisMin, x);
-		this.yAxisMin = Math.min(this.yAxisMin, y);
-		this.xAxisMax = Math.max(this.xAxisMax, x);
-		this.yAxisMax = Math.max(this.yAxisMax, y);
+		this.bubbleSizeMin = MathFunctions.robustMin(this.bubbleSizeMin, z);
+		this.bubbleSizeMax = MathFunctions.robustMax(this.bubbleSizeMax, z);
+		this.xAxisMin = MathFunctions.robustMin(this.xAxisMin, x);
+		this.yAxisMin = MathFunctions.robustMin(this.yAxisMin, y);
+		this.xAxisMax = MathFunctions.robustMax(this.xAxisMax, x);
+		this.yAxisMax = MathFunctions.robustMax(this.yAxisMax, y);
 		dataList.add(new double[] { x, y, z });
 	}
 	
@@ -253,6 +252,7 @@ public class BubbleChartPlotter extends PlotterAdapter {
 		
         // set the background color for the chart...
         chart.setBackgroundPaint(Color.white);
+        chart.getPlot().setForegroundAlpha(0.7f);
         
         // legend settings
         LegendTitle legend = chart.getLegend();

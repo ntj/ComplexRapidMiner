@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.viewer;
 
@@ -41,7 +39,7 @@ import com.rapidminer.tools.Ontology;
 /** The model for the {@link com.rapidminer.gui.viewer.MetaDataViewerTable}. 
  * 
  *  @author Ingo Mierswa
- *  @version $Id: MetaDataViewerTableModel.java,v 1.4 2007/07/10 18:02:03 ingomierswa Exp $
+ *  @version $Id: MetaDataViewerTableModel.java,v 1.8 2008/05/09 19:22:59 ingomierswa Exp $
  */
 public class MetaDataViewerTableModel extends AbstractTableModel {
 
@@ -75,6 +73,10 @@ public class MetaDataViewerTableModel extends AbstractTableModel {
         "The sum of all values in the data set for this attribute.",
         "The number of unknown values in the data set for this attribute"
     };
+
+    public static final Class[] COLUMN_CLASSES = new Class[] {
+    	String.class, Double.class, String.class, String.class, String.class, String.class, String.class, String.class, Double.class, Double.class
+    };
     
     private int[] currentMapping = {
         TYPE, NAME, VALUE_TYPE, STATISTICS_AVERAGE, STATISTICS_RANGE, STATISTICS_UNKNOWN
@@ -82,24 +84,26 @@ public class MetaDataViewerTableModel extends AbstractTableModel {
     
     private ExampleSet exampleSet;
 
-    private Attribute[] regularAttributes;
+    private Attribute[] regularAttributes = new Attribute[0];
     
-    private Attribute[] specialAttributes;
+    private Attribute[] specialAttributes = new Attribute[0];
     
-    private String[] specialAttributeNames;
+    private String[] specialAttributeNames = new String[0];
     
     public MetaDataViewerTableModel(ExampleSet exampleSet) {
         this.exampleSet = exampleSet;
-        this.regularAttributes = Tools.createRegularAttributeArray(exampleSet);
-        this.specialAttributes = new Attribute[exampleSet.getAttributes().specialSize()];
-        this.specialAttributeNames = new String[exampleSet.getAttributes().specialSize()];
-        Iterator<AttributeRole> i = exampleSet.getAttributes().specialAttributes();
-        int counter = 0;
-        while (i.hasNext()) {
-        	AttributeRole role = i.next();
-            this.specialAttributeNames[counter] = role.getSpecialName();
-            this.specialAttributes[counter] = role.getAttribute(); 
-            counter++;
+        if (this.exampleSet != null) {
+        	this.regularAttributes = Tools.createRegularAttributeArray(exampleSet);
+        	this.specialAttributes = new Attribute[exampleSet.getAttributes().specialSize()];
+        	this.specialAttributeNames = new String[exampleSet.getAttributes().specialSize()];
+        	Iterator<AttributeRole> i = exampleSet.getAttributes().specialAttributes();
+        	int counter = 0;
+        	while (i.hasNext()) {
+        		AttributeRole role = i.next();
+        		this.specialAttributeNames[counter] = role.getSpecialName();
+        		this.specialAttributes[counter] = role.getAttribute(); 
+        		counter++;
+        	}
         }
     }
 
@@ -130,7 +134,11 @@ public class MetaDataViewerTableModel extends AbstractTableModel {
     }
     
     public int getRowCount() {
-        return exampleSet.getAttributes().specialSize() + exampleSet.getAttributes().size();
+    	if (this.exampleSet != null) {
+    		return exampleSet.getAttributes().specialSize() + exampleSet.getAttributes().size();
+    	} else {
+    		return 0;
+    	}
     }
 
     /** Returns up to 9 for the following eight columns (depending on the current column selection): <br>
@@ -146,7 +154,11 @@ public class MetaDataViewerTableModel extends AbstractTableModel {
      * 9: unknown statistics<br>
      */
     public int getColumnCount() {
-        return currentMapping.length;
+    	if (this.exampleSet != null) {
+    		return currentMapping.length;
+    	} else {
+    		return 0;
+    	}
     }
 
     public Object getValueAt(int row, int col) {
@@ -205,13 +217,9 @@ public class MetaDataViewerTableModel extends AbstractTableModel {
                         " ; " + com.rapidminer.tools.Tools.formatNumber(exampleSet.getStatistics(attribute, Statistics.MAXIMUM)) + "]";
                 }                
             case STATISTICS_SUM:
-                if (attribute.isNominal()) {
-                    return "n/a"; 
-                } else {
-                    return com.rapidminer.tools.Tools.formatIntegerIfPossible(exampleSet.getStatistics(attribute, Statistics.SUM));
-                }                
+            	return exampleSet.getStatistics(attribute, Statistics.SUM);
             case STATISTICS_UNKNOWN:
-                return com.rapidminer.tools.Tools.formatIntegerIfPossible(exampleSet.getStatistics(attribute, Statistics.UNKNOWN));
+              return exampleSet.getStatistics(attribute, Statistics.UNKNOWN);
             default: return "unknown";
         }
     }
@@ -231,6 +239,12 @@ public class MetaDataViewerTableModel extends AbstractTableModel {
     public String getColumnName(int col) {
         return COLUMN_NAMES[currentMapping[col]];
     }
+
+    /** Returns the classes of the columns. */
+    public Class<?> getColumnClass(int col) {
+    	return COLUMN_CLASSES[currentMapping[col]];
+    }
+    
     
     /** Returns the tool tip text for the specified column. */
     public String getColumnToolTip(int column) {

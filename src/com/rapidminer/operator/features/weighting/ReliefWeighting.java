@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.weighting;
 
@@ -37,8 +35,6 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Statistics;
 import com.rapidminer.example.set.SplittedExampleSet;
-import com.rapidminer.operator.IOObject;
-import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
@@ -56,10 +52,9 @@ import com.rapidminer.tools.Tools;
  * weights are normalized into the interval between 0 and 1.</p>
  *
  * @author Ingo Mierswa
- * @version $Id: ReliefWeighting.java,v 1.2 2007/07/10 18:02:02 ingomierswa Exp $
+ * @version $Id: ReliefWeighting.java,v 1.7 2008/05/09 19:23:22 ingomierswa Exp $
  */
-public class ReliefWeighting extends Operator {
-
+public class ReliefWeighting extends AbstractWeighting {
 
 	/** The parameter name for &quot;Number of nearest neigbors for relevance calculation.&quot; */
 	public static final String PARAMETER_NUMBER_OF_NEIGHBORS = "number_of_neighbors";
@@ -69,6 +64,7 @@ public class ReliefWeighting extends Operator {
 
 	/** The parameter name for &quot;Use the given random seed instead of global random numbers (-1: use global)&quot; */
 	public static final String PARAMETER_LOCAL_RANDOM_SEED = "local_random_seed";
+	
 	/** Helper class holding the index of an example and the distance to current example. */
 	private static class IndexDistance implements Comparable<IndexDistance> {
 		
@@ -106,21 +102,22 @@ public class ReliefWeighting extends Operator {
 		public String toString() { 
 			return exampleIndex + " (d: " + Tools.formatNumber(distance) + ")";
 		}
-	}
+	}	
 	
+	private double differentLabelWeight;
 	
-	double differentLabelWeight;
-	double[] differentAttributesWeights;
-	double[] differentLabelAndAttributesWeights;
-	double[] classProbabilities;
+	private double[] differentAttributesWeights;
+	
+	private double[] differentLabelAndAttributesWeights;
+	
+	private double[] classProbabilities;
 	    
 	       
 	public ReliefWeighting(OperatorDescription description) {
 		super(description);
 	}
   
-	public IOObject[] apply() throws OperatorException {
-	    ExampleSet inputSet = getInput(ExampleSet.class);
+	public AttributeWeights calculateWeights(ExampleSet inputSet) throws OperatorException{	    
 	    inputSet.recalculateAllAttributeStatistics();
 	    
 	    // checks
@@ -183,10 +180,7 @@ public class ReliefWeighting extends Operator {
 	    	}
 	    }
 	    
-	    // normalize weights
-	    weights.normalize();
-	    
-	    return new IOObject[] { exampleSet, weights };
+	   return weights;
 	}
 
 	private void updateWeightsRegression(Map<String, SortedSet<IndexDistance>> neighborSets,
@@ -200,16 +194,23 @@ public class ReliefWeighting extends Operator {
 			IndexDistance indexDistance = i.next();
 			Example neighbor = exampleSet.getExample(indexDistance.getIndex());
 			double labelDiff = normedDifference(example, neighbor, exampleSet, label);
-			// no weighting by distance --> same influence for all neighbors
-			differentLabelWeight += labelDiff / numberOfNeighbors;
-			
-			int attributeCounter = 0;
-			for (Attribute attribute : exampleSet.getAttributes()) {
-				double diff = normedDifference(example, neighbor, exampleSet, attribute);
+			if (!Double.isNaN(labelDiff)) {
 				// no weighting by distance --> same influence for all neighbors
-				differentAttributesWeights[attributeCounter] += diff / numberOfNeighbors;
-				differentLabelAndAttributesWeights[attributeCounter] += labelDiff * diff / numberOfNeighbors;
-				attributeCounter++;
+				differentLabelWeight += labelDiff / numberOfNeighbors;
+
+				int attributeCounter = 0;
+				for (Attribute attribute : exampleSet.getAttributes()) {
+					int unknownCount = (int)exampleSet.getStatistics(attribute, Statistics.UNKNOWN);
+					if (unknownCount < exampleSet.size()) {
+						double diff = normedDifference(example, neighbor, exampleSet, attribute);
+						if (!Double.isNaN(diff)) {
+							// no weighting by distance --> same influence for all neighbors
+							differentAttributesWeights[attributeCounter] += diff / numberOfNeighbors;
+							differentLabelAndAttributesWeights[attributeCounter] += labelDiff * diff / numberOfNeighbors;
+							attributeCounter++;
+						}
+					}
+				}
 			}
 		}
 	}
@@ -222,23 +223,26 @@ public class ReliefWeighting extends Operator {
 		double classProbabilityNormalization = 1.0d - classProbabilities[(int)example.getValue(label)];
 		int classCounter = 0;
 		for (String classValue : label.getMapping().getValues()) {
-			Iterator<IndexDistance> i = neighborSets.get(classValue).iterator();
-			while (i.hasNext()) {
-				IndexDistance indexDistance = i.next();
+			for (IndexDistance indexDistance: neighborSets.get(classValue)) {
 				Example neighbor = exampleSet.getExample(indexDistance.getIndex());	
 				int attributeCounter = 0;
 				for (Attribute attribute : exampleSet.getAttributes()) {
-					double weight = weights.getWeight(attribute.getName());	
-					double diff = normedDifference(example, neighbor, exampleSet, attribute);
-					if (classValue.equals(example.getValueAsString(label))) {
-						// hit
-						weight -= diff / exampleSet.size();
-					} else { 
-						// miss
-						weight += 
-							classProbabilities[classCounter] / 
-							classProbabilityNormalization * 
-							diff / exampleSet.size();
+					double weight = weights.getWeight(attribute.getName());
+					int unknownCount = (int)exampleSet.getStatistics(attribute, Statistics.UNKNOWN);
+					if (unknownCount < exampleSet.size()) {
+						double diff = normedDifference(example, neighbor, exampleSet, attribute);
+						if (!Double.isNaN(diff)) {
+							if (classValue.equals(example.getValueAsString(label))) {
+								// hit
+								weight -= diff / (exampleSet.size() - unknownCount);
+							} else { 
+								// miss
+								weight += 
+									classProbabilities[classCounter] / 
+									classProbabilityNormalization * 
+									diff / (exampleSet.size() - unknownCount);
+							}
+						}
 					}
 					weights.setWeight(attribute.getName(), weight);
 					attributeCounter++;
@@ -250,6 +254,9 @@ public class ReliefWeighting extends Operator {
 	
 	private double normedDifference(Example first, Example second, ExampleSet exampleSet, Attribute attribute) {
 		double diff = Math.abs(first.getValue(attribute) - second.getValue(attribute));
+		if (Double.isNaN(diff))
+			return Double.NaN;
+		
 		if (attribute.isNominal()) {
 			if (diff == 0)
 				return 0;
@@ -308,14 +315,6 @@ public class ReliefWeighting extends Operator {
 	    return Math.sqrt(distance);
 	}
 	
-	public Class[] getInputClasses() {
-		return new Class[] { ExampleSet.class };
-	}
-
-	public Class[] getOutputClasses() {
-		return new Class[] { ExampleSet.class, AttributeWeights.class };
-	}
-
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 		ParameterType type = new ParameterTypeInt(PARAMETER_NUMBER_OF_NEIGHBORS, "Number of nearest neigbors for relevance calculation.", 1, Integer.MAX_VALUE, 10);

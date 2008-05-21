@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.example;
 
@@ -36,6 +34,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -46,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.swing.Icon;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -64,9 +64,10 @@ import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.SimpleDataTable;
 import com.rapidminer.datatable.SimpleDataTableRow;
 import com.rapidminer.gui.plotter.PlotterPanel;
+import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.viewer.DataTableViewer;
 import com.rapidminer.operator.IOContainer;
-import com.rapidminer.operator.Saveable;
+import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.math.AverageVector;
 
 
@@ -80,10 +81,18 @@ import com.rapidminer.tools.math.AverageVector;
  * @version $Id: AttributeWeights.java,v 2.25 2006/04/05 08:57:22 ingomierswa
  *          Exp $
  */
-public class AttributeWeights extends AverageVector implements Saveable {
+public class AttributeWeights extends AverageVector {
 
 	private static final long serialVersionUID = 7000978931118131854L;
 
+	private static final String RESULT_ICON_NAME = "transform.png";
+	
+	private static Icon resultIcon = null;
+	
+	static {
+		resultIcon = SwingTools.createIcon("16/" + RESULT_ICON_NAME);
+	}
+	
 	/** Indicates that the weights should not be sorted at all. */
 	public static final int NO_SORTING = 0;
 
@@ -209,9 +218,19 @@ public class AttributeWeights extends AverageVector implements Saveable {
 		return weightType;
 	}
 
+	/** Returns the currently used weight type. */
+	public void setWeightType(int weightType) {
+		this.weightType = weightType;
+	}
+	
 	/** Returns the currently used sorting type. */
 	public int getSortingType() {
 		return sortType;
+	}
+	
+	/** Sets the currently used sorting type. */
+	public void setSortingType(int sortingType) {
+		this.sortType = sortingType;
 	}
 
 	/** Returns the number of features in this map. */
@@ -266,21 +285,29 @@ public class AttributeWeights extends AverageVector implements Saveable {
     
 	/** Saves the attribute weights into an XML file. */
 	public void save(File file) throws IOException {
-	    writeAttributeWeights(file, "utf-8");
+	    writeAttributeWeights(file, Tools.getDefaultEncoding());
 	}
     
-    public void writeAttributeWeights(File file, String encoding) throws IOException {
-        PrintWriter out = new PrintWriter(new FileWriter(file));
-        out.println("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>");
-        out.println("<attributeweights version=\"" + RapidMiner.getVersion() + "\">");
-        Iterator i = weightMap.keySet().iterator();
-        while (i.hasNext()) {
-            String key = (String) i.next();
-            double weight = weightMap.get(key).getWeight();
-            out.println("    <weight name=\"" + key + "\" value=\"" + weight + "\"/>");
+    public void writeAttributeWeights(File file, Charset encoding) throws IOException {
+        PrintWriter out = null;
+        try {
+        	out = new PrintWriter(new FileWriter(file));
+        	out.println("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>");
+        	out.println("<attributeweights version=\"" + RapidMiner.getVersion() + "\">");
+        	Iterator i = weightMap.keySet().iterator();
+        	while (i.hasNext()) {
+        		String key = (String) i.next();
+        		double weight = weightMap.get(key).getWeight();
+        		out.println("    <weight name=\"" + key + "\" value=\"" + weight + "\"/>");
+        	}
+        	out.println("</attributeweights>");
+        } catch (IOException e) {
+        	throw e;
+        } finally {
+        	if (out != null) {
+                out.close();		
+        	}
         }
-        out.println("</attributeweights>");
-        out.close();
     }
     
 	/** Loads a new AttributeWeights object from the given XML file. */
@@ -344,7 +371,7 @@ public class AttributeWeights extends AverageVector implements Saveable {
 	    double weightMin = Double.POSITIVE_INFINITY;
 	    double weightMax = Double.NEGATIVE_INFINITY;
 	    for (String name : getAttributeNames()) {
-	    	double weight = getWeight(name);
+	    	double weight = Math.abs(getWeight(name));
 	    	weightMin = Math.min(weightMin, weight);
 	    	weightMax = Math.max(weightMax, weight);
 	    }
@@ -354,7 +381,7 @@ public class AttributeWeights extends AverageVector implements Saveable {
             AttributeWeight attributeWeight = w.next();
 	    	double newWeight = 1.0d;
             if (diff != 0.0d)
-                newWeight = (attributeWeight.getWeight() - weightMin) / diff;
+                newWeight = (Math.abs(attributeWeight.getWeight()) - weightMin) / diff;
             attributeWeight.setWeight(newWeight);
 	    }
 	}
@@ -426,8 +453,12 @@ public class AttributeWeights extends AverageVector implements Saveable {
         mainPanel.add(dataTableViewer, BorderLayout.CENTER);
 		return mainPanel;
 	}
+	
+	public Icon getResultIcon() {
+		return resultIcon;
+	}
     
-    private DataTable createSortedDataTable() {
+    public DataTable createSortedDataTable() {
         DataTable dataTable = new SimpleDataTable("Attribute Weights", new String[] { "attribute", "weight" });
         Iterator<AttributeWeight> iter = getSortedWeights();
         while (iter.hasNext()) {

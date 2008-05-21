@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools;
 
@@ -55,7 +53,14 @@ public class WekaOperatorFactory implements GenericOperatorFactory {
         "UserClassifier",
         "LMTNode",
         "PreConstructedLinearModel",
-        "RuleNode"
+        "RuleNode",
+        "FTInnerNode",
+        "FTLeavesNode",
+        "FTNode"
+    };
+    
+    private static final String[] SKIPPED_ASSOCIATORS = new String[] {
+        "FilteredAssociator"
     };
 
     private static final String[] ENSEMBLE_CLASSIFIERS = new String[] {
@@ -99,7 +104,7 @@ public class WekaOperatorFactory implements GenericOperatorFactory {
 
 	    // association rule learners
         try {
-            WekaTools.registerWekaOperators(classLoader, WekaTools.getWekaClasses(weka.associations.Associator.class), "com.rapidminer.operator.learner.weka.GenericWekaAssociationLearner", "The weka associator", "Learner.Unsupervised.Itemsets.Weka", null);
+            WekaTools.registerWekaOperators(classLoader, WekaTools.getWekaClasses(weka.associations.Associator.class, null, SKIPPED_ASSOCIATORS), "com.rapidminer.operator.learner.weka.GenericWekaAssociationLearner", "The weka associator", "Learner.Unsupervised.Itemsets.Weka", null);
         } catch (Throwable e) {
             LogService.getGlobal().log("Cannot register Weka association rule learners: " + e, LogService.WARNING);
         }

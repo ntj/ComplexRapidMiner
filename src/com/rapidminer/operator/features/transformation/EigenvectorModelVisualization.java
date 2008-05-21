@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.transformation;
 
@@ -58,10 +56,99 @@ import com.rapidminer.tools.Tools;
  * This class can be used for all eigenvector based model visualizations. 
  * 
  * @author Ingo Mierswa
- * @version $Id: EigenvectorModelVisualization.java,v 1.4 2007/06/12 23:25:07 ingomierswa Exp $
+ * @version $Id: EigenvectorModelVisualization.java,v 1.7 2008/05/09 19:22:51 ingomierswa Exp $
  */
 public class EigenvectorModelVisualization implements ActionListener {
 
+    private static class EigenvectorModel extends AbstractTableModel {
+
+        private static final long serialVersionUID = -9026248524043239399L;
+
+        private String[] attributeNames;
+        
+        private List<? extends ComponentVector> eigenVectors;
+        
+        private int numberOfComponents;
+        
+        public EigenvectorModel(List<? extends ComponentVector> eigenVectors, String[] attributeNames, int numberOfComponents) {
+        	this.eigenVectors = eigenVectors;
+        	this.attributeNames = attributeNames;
+        	this.numberOfComponents = numberOfComponents;
+        }
+        
+        public int getColumnCount() {
+            return eigenVectors.size() + 1;
+        }
+
+        public int getRowCount() {
+            return numberOfComponents;
+        }
+
+        public Object getValueAt(int rowIndex, int columnIndex) {
+            if (columnIndex == 0) {
+                return attributeNames[rowIndex];
+            } else {
+                return Tools.formatNumber(eigenVectors.get(columnIndex - 1).getVector()[rowIndex]);
+            }
+        }
+        
+        public String getColumnName(int column) {
+            if (column == 0) {
+                return "Attribute";
+            } else {
+                return "PC " + column;
+            }
+        }
+    };
+
+    
+    private static class EigenvalueModel extends AbstractTableModel {
+
+        private static final long serialVersionUID = -9026248524043239399L;
+
+        private double varianceSum;
+
+        private double[] cumulativeVariance;
+        
+        private List<? extends ComponentVector> eigenVectors;
+
+        public EigenvalueModel(List<? extends ComponentVector> eigenVectors, double[] cumulativeVariance, double varianceSum) {
+        	this.eigenVectors = eigenVectors;
+        	this.cumulativeVariance = cumulativeVariance;
+            this.varianceSum = varianceSum;
+        }
+        
+        public int getColumnCount() {
+            return 4;
+        }
+
+        public int getRowCount() {
+            return eigenVectors.size();
+        }
+
+        public Object getValueAt(int rowIndex, int columnIndex) {
+            switch (columnIndex) {
+                case 0: return "PC " + (rowIndex + 1);
+                case 1: return Tools.formatNumber(Math.sqrt(eigenVectors.get(rowIndex).getEigenvalue()));
+                case 2: return Tools.formatNumber(eigenVectors.get(rowIndex).getEigenvalue() / this.varianceSum);
+                case 3: return Tools.formatNumber(cumulativeVariance[rowIndex]);
+                default: return "unknown";
+            }
+        }
+        
+        public String getColumnName(int column) {
+            switch (column) {
+                case 0: return "Component";
+                case 1: return "Standard Deviation";
+                case 2: return "Proportion of Variance";
+                case 3: return "Cumulative Variance";
+                default: return "unknown";
+            }
+        }
+    };
+
+    
+    
     private Component[] visualizationComponent;
 
     private JPanel visualizationPanel;
@@ -104,52 +191,13 @@ public class EigenvectorModelVisualization implements ActionListener {
     }
     
     private Component getEigenvalueTable() {
-        class EigenvalueModel extends AbstractTableModel {
-
-            private static final long serialVersionUID = -9026248524043239399L;
-
-            private double varianceSum;
-            
-            public EigenvalueModel(double varianceSum) {
-                this.varianceSum = varianceSum;
-            }
-            
-            public int getColumnCount() {
-                return 4;
-            }
-
-            public int getRowCount() {
-                return eigenVectors.size();
-            }
-
-            public Object getValueAt(int rowIndex, int columnIndex) {
-                switch (columnIndex) {
-                    case 0: return "PC " + (rowIndex + 1);
-                    case 1: return Tools.formatNumber(Math.sqrt(eigenVectors.get(rowIndex).getEigenvalue()));
-                    case 2: return Tools.formatNumber(eigenVectors.get(rowIndex).getEigenvalue() / this.varianceSum);
-                    case 3: return Tools.formatNumber(cumulativeVariance[rowIndex]);
-                    default: return "unknown";
-                }
-            }
-            
-            public String getColumnName(int column) {
-                switch (column) {
-                    case 0: return "Component";
-                    case 1: return "Standard Deviation";
-                    case 2: return "Proportion of Variance";
-                    case 3: return "Cumulative Variance";
-                    default: return "unknown";
-                }
-            }
-        };
-
         double varianceSum = 0.0d;
         for (ComponentVector ev : this.eigenVectors) {
             varianceSum += ev.getEigenvalue();
         }
         
         JTable eigenvalueTable = new ExtendedJTable();
-        eigenvalueTable.setModel(new EigenvalueModel(varianceSum));
+        eigenvalueTable.setModel(new EigenvalueModel(eigenVectors, cumulativeVariance, varianceSum));
 
 
         StringBuffer result = new StringBuffer("<html><h1>" + name + " - Eigenvalues" + "</h1>");
@@ -183,39 +231,10 @@ public class EigenvectorModelVisualization implements ActionListener {
         return panel;
     }
 
-    private Component getEigenvectorTable() {
-        class EigenvectorModel extends AbstractTableModel {
-
-            private static final long serialVersionUID = -9026248524043239399L;
-            
-            public int getColumnCount() {
-                return eigenVectors.size() + 1;
-            }
-
-            public int getRowCount() {
-                return numberOfComponents;
-            }
-
-            public Object getValueAt(int rowIndex, int columnIndex) {
-                if (columnIndex == 0) {
-                    return attributeNames[rowIndex];
-                } else {
-                    return Tools.formatNumber(eigenVectors.get(columnIndex - 1).getVector()[rowIndex]);
-                }
-            }
-            
-            public String getColumnName(int column) {
-                if (column == 0) {
-                    return "Attribute";
-                } else {
-                    return "PC " + column;
-                }
-            }
-        };
-        
+    private Component getEigenvectorTable() {        
         JTable eigenvectorTable = new ExtendedJTable();
         eigenvectorTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        eigenvectorTable.setModel(new EigenvectorModel());
+        eigenvectorTable.setModel(new EigenvectorModel(eigenVectors, attributeNames, numberOfComponents));
 
 
         StringBuffer result = new StringBuffer("<html><h1>" + name + " - Eigenvectors" + "</h1>");

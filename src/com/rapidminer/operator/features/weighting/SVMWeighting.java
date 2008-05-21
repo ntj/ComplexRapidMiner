@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.features.weighting;
 
@@ -35,7 +33,6 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Statistics;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.operator.IOContainer;
-import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
@@ -55,18 +52,17 @@ import com.rapidminer.tools.OperatorService;
  * for multiple classes, too.
  * 
  * @author Ingo Mierswa
- * @version $Id: SVMWeighting.java,v 1.5 2007/07/10 18:02:02 ingomierswa Exp $
+ * @version $Id: SVMWeighting.java,v 1.8 2008/05/09 19:23:22 ingomierswa Exp $
  *
  */
-public class SVMWeighting extends Operator {
+public class SVMWeighting extends AbstractWeighting {
 
     public SVMWeighting(OperatorDescription description) {
         super(description);
     }
 
-    public IOObject[] apply() throws OperatorException {
-        ExampleSet exampleSet = getInput(ExampleSet.class);
-  
+    public AttributeWeights calculateWeights(ExampleSet exampleSet) throws OperatorException {
+       
         // checks
         Attribute label = exampleSet.getAttributes().getLabel();
         if (label == null) {
@@ -87,11 +83,11 @@ public class SVMWeighting extends Operator {
         // calculate weights
         AttributeWeights result = null;
        
-        // regression or binomnial case
+        // regression or binomial case
         if ((!label.isNominal()) || label.getMapping().size() == 2) {
         	result = calculateAttributeWeights(svmOperator, exampleSet);
         } else { 
-        	// polynominal case
+        	// polynomial case
         	exampleSet.recalculateAttributeStatistics(label);
         	int totalClassSizeSum = 0;
         	int[] classFrequencies = new int[label.getMapping().size()];
@@ -144,11 +140,8 @@ public class SVMWeighting extends Operator {
         	}
         }
         
-	    // normalization
-        result.normalize();
-        
-    	result.setSource(this.getName());
-        return new IOObject[] { exampleSet, result };
+	   	result.setSource(this.getName());
+        return result;
     }
 
     private AttributeWeights calculateAttributeWeights(Operator svmOperator, ExampleSet exampleSet) throws OperatorException {
@@ -158,14 +151,6 @@ public class SVMWeighting extends Operator {
     	return result;
     }
     
-    public Class[] getInputClasses() {
-        return new Class[] { ExampleSet.class };
-    }
-
-    public Class[] getOutputClasses() {
-        return new Class[] { ExampleSet.class, AttributeWeights.class };
-    }
-
     public List<ParameterType> getParameterTypes() {
         List<ParameterType> types = super.getParameterTypes();
         types.add(new ParameterTypeDouble(AbstractMySVMLearner.PARAMETER_C, "The SVM complexity weighting factor.", Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 0.0d)); 

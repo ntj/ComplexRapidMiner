@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.properties;
 
@@ -51,7 +49,7 @@ import com.rapidminer.parameter.ParameterTypeValue;
  * single operator. This can for example be used by parameter optimization operators. 
  * 
  * @author Ingo Mierswa
- * @version $Id: ParameterValueKeyCellEditor.java,v 1.5 2007/06/08 21:29:44 ingomierswa Exp $
+ * @version $Id: ParameterValueKeyCellEditor.java,v 1.9 2008/05/09 19:22:46 ingomierswa Exp $
  */
 public class ParameterValueKeyCellEditor extends AbstractCellEditor implements PropertyKeyCellEditor {
 
@@ -62,50 +60,53 @@ public class ParameterValueKeyCellEditor extends AbstractCellEditor implements P
     private JComboBox operatorCombo = new JComboBox();
 
     private JComboBox parameterCombo = new JComboBox();
-
+    
     private transient OperatorChain parentOperator;
 
     private transient Process process;
 
     private transient ParameterChangeListener listener = null;
     
-    private int row;
-    
     private boolean fireEvent = true;
     
-    public ParameterValueKeyCellEditor(ParameterTypeParameterValue type) {
-    }
+    
+    public ParameterValueKeyCellEditor(ParameterTypeParameterValue type) {}
     
     protected Object readResolve() {
     	this.process = this.parentOperator.getProcess();
     	return this;
     }
     
-    public void setOperator(Operator operator) {
+    public void setOperator(Operator operator, PropertyTable propertyTable) {
         this.parentOperator = (OperatorChain)operator;
         this.process = parentOperator.getProcess();
-        operatorCombo = createOperatorCombo();
-        fillParameterCombo();
+        operatorCombo = createOperatorCombo(propertyTable);
+        parameterCombo = createParameterCombo((String)operatorCombo.getSelectedItem(), propertyTable);
 
         panel.setLayout(new GridLayout(1, 2));
-
+        
         panel.add(operatorCombo);
         panel.add(parameterCombo);
+        
+        fireParameterChangedEvent();
     }
     
-    private JComboBox createOperatorCombo() {
+    private JComboBox createOperatorCombo(final PropertyTable propertyTable) {
         List<Operator> allInnerOps = parentOperator.getAllInnerOperators();
         Vector<String> allOpNames = new Vector<String>();
         Iterator<Operator> i = allInnerOps.iterator();
         while (i.hasNext())
             allOpNames.add(i.next().getName());
         Collections.sort(allOpNames);
-        JComboBox combo = new JComboBox(allOpNames);
+        final JComboBox combo = new JComboBox(allOpNames);
         combo.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
-                fillParameterCombo();
-                fireEditingStopped();
+            	String operatorName = (String)combo.getSelectedItem();
+            	panel.remove(parameterCombo);
+            	parameterCombo = createParameterCombo(operatorName, propertyTable);
+            	panel.add(parameterCombo);
                 fireParameterChangedEvent();
+                fireEditingStopped();
             }
         });
         if (combo.getItemCount() == 0)
@@ -115,24 +116,30 @@ public class ParameterValueKeyCellEditor extends AbstractCellEditor implements P
         return combo;
     }
 
-    private void fillParameterCombo() {
-        parameterCombo.removeAllItems();
+    private JComboBox createParameterCombo(String operatorName, PropertyTable propertyTable) {
+    	JComboBox combo = new JComboBox();
+    	
         Operator operator = process.getOperator((String) operatorCombo.getSelectedItem());
         if (operator != null) {
-            Iterator i = operator.getParameterTypes().iterator();
+            Iterator<ParameterType> i = operator.getParameterTypes().iterator();
             while (i.hasNext()) {
-                parameterCombo.addItem(((ParameterType) i.next()).getKey());
+            	combo.addItem(i.next().getKey());
             }
         }
-        if (parameterCombo.getItemCount() == 0)
-            parameterCombo.addItem("no parameters");
-        parameterCombo.setSelectedIndex(0);
-        parameterCombo.addItemListener(new ItemListener() {
+        
+        if (combo.getItemCount() == 0)
+        	combo.addItem("no parameters");
+        
+        combo.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
-                fireEditingStopped();
                 fireParameterChangedEvent();
+                fireEditingStopped();
             }
         });
+        
+        combo.setSelectedIndex(0);
+        
+        return combo;
     }
 
     public Object getCellEditorValue() {
@@ -140,7 +147,7 @@ public class ParameterValueKeyCellEditor extends AbstractCellEditor implements P
         return result;
     }
 
-    public void setValue(String valueName) {
+    private void setValue(String valueName) {
     	this.fireEvent = false;
         if (valueName != null) {
             String[] components = valueName.split("\\.");
@@ -169,15 +176,16 @@ public class ParameterValueKeyCellEditor extends AbstractCellEditor implements P
         return getTableCellEditorComponent(table, value, isSelected, row, column);
     }
     
-    public void setParameterChangeListener(ParameterChangeListener listener, int row) {
+    public void setParameterChangeListener(ParameterChangeListener listener) {
     	this.listener = listener;
-    	this.row = row;
     }
     
     public void fireParameterChangedEvent() {
     	if (fireEvent) {
     		if (listener != null) {
-    			listener.parameterSelectionChanged((String)operatorCombo.getSelectedItem(), (String)parameterCombo.getSelectedItem(), row);
+    			String operatorName = (String)operatorCombo.getSelectedItem();
+    			String parameterName = (String)parameterCombo.getSelectedItem();
+    			listener.parameterSelectionChanged(this.parentOperator, operatorName, parameterName);
     		}
     	}
     }

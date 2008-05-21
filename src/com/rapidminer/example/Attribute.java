@@ -1,32 +1,27 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.example;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Iterator;
 
@@ -46,13 +41,16 @@ import com.rapidminer.example.table.NominalMapping;
  * </ul>
  * 
  * @author Ingo Mierswa
- * @version $Id: Attribute.java,v 1.3 2007/07/13 22:52:14 ingomierswa Exp $
+ * @version $Id: Attribute.java,v 1.11 2008/05/09 19:22:43 ingomierswa Exp $
  */
 public interface Attribute extends Cloneable, Serializable {
 
 	/** Used to identify that this attribute is not part of any example table. */
 	public static final int UNDEFINED_ATTRIBUTE_INDEX = -1;
 
+	/** Used to identify view attributes*/ 
+	public static final int VIEW_ATTRIBUTE_INDEX = -2;
+	
     /** Indicates a missing value for nominal values. For the internal values and
      *  numerical values, Double.NaN is used which can be checked via 
      *  {@link Double#isNaN(double)}. */
@@ -77,7 +75,7 @@ public interface Attribute extends Cloneable, Serializable {
 	/** Returns the name of the attribute. */
 	public String getName();
 
-	/** Sets the name of the attribtue. */
+	/** Sets the name of the attribute. */
 	public void setName(String name);
 
 	/** Returns the index in the example table. */
@@ -94,6 +92,12 @@ public interface Attribute extends Cloneable, Serializable {
 	/** Sets the value for the column this attribute corresponds to in the given data row. */
 	public void setValue(DataRow row, double value);
 	
+	public void addTransformation(AttributeTransformation transformation);
+	
+	public AttributeTransformation getLastTransformation();
+	
+	/** Clear all transformations. */
+	public void clearTransformations();
 	// ----------------------------------------------------------------------
 
     /** Returns an iterator over all statistics objects available for this type of attribute. 
@@ -163,16 +167,7 @@ public interface Attribute extends Cloneable, Serializable {
 	/** Returns true if the attribute is nominal. */
 	public boolean isNominal();
 	
-	/** Writes the (non transient) attribute data to an output stream. */
-	public void writeAttributeData(DataOutput out) throws IOException;
-
-	/**
-	 * Reads the attribute data from the given input stream. The name and the
-	 * value type do not need to be read since this is done by the attribute
-	 * factory.
-	 */
-	public void readAttributeData(DataInput in) throws IOException;
-	
 	/** Returns a formatted string of the given value according to the attribute type. */
 	public String getAsString(double value, int digits, boolean quoteWhitespace);
+
 }

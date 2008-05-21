@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.graphs;
 
@@ -52,16 +50,29 @@ import edu.uci.ics.jung.visualization.transform.MutableTransformer;
 import edu.uci.ics.jung.visualization.transform.MutableTransformerDecorator;
 import edu.uci.ics.jung.visualization.transform.shape.GraphicsDecorator;
 
+/**
+ * This class is used for rendering the nodes of a tree model.
+ * 
+ * @author Ingo Mierswa
+ * @version $Id: TreeModelNodeRenderer.java,v 1.9 2008/05/09 19:23:24 ingomierswa Exp $
+ * 
+ * @param <V>
+ * @param <E>
+ */
 public class TreeModelNodeRenderer<V,E> implements Renderer.Vertex<V,E> {
 
-    private static final int FREQUENCY_BAR_HEIGHT = 6;
-    private static final int FREQUENCY_BAR_OFFSET_X = 4;
-    private static final int FREQUENCY_BAR_OFFSET_Y = 20;
+	private static final int FREQUENCY_BAR_MIN_HEIGHT = 2;
+    private static final int FREQUENCY_BAR_MAX_HEIGHT = 12;
+    private static final int FREQUENCY_BAR_OFFSET_X = 3;
+    private static final int FREQUENCY_BAR_OFFSET_Y = 3;
     
     private TreeModelGraphCreator graphCreator;
     
-    public TreeModelNodeRenderer(TreeModelGraphCreator graphCreator) {
+    private int maxLeafSize = 0;
+    
+    public TreeModelNodeRenderer(TreeModelGraphCreator graphCreator, int maxLeafSize) {
         this.graphCreator = graphCreator;
+        this.maxLeafSize = maxLeafSize;
     }
     
     public void paintVertex(RenderContext<V,E> rc, Layout<V,E> layout, V v) {
@@ -158,9 +169,10 @@ public class TreeModelNodeRenderer<V,E> implements Renderer.Vertex<V,E> {
             int numberOfLabels = countMap.size();
             int frequencySum = tree.getFrequencySum();
             Iterator<String> i = countMap.keySet().iterator();
+            double height = tree.getFrequencySum() / (double)maxLeafSize * (FREQUENCY_BAR_MAX_HEIGHT - FREQUENCY_BAR_MIN_HEIGHT) + FREQUENCY_BAR_MIN_HEIGHT;
             double width = shape.getBounds().getWidth() - 2 * FREQUENCY_BAR_OFFSET_X - 1;
             double xPos = shape.getBounds().getX() + FREQUENCY_BAR_OFFSET_X;
-            double yPos = shape.getBounds().getY() + FREQUENCY_BAR_OFFSET_Y;
+            double yPos = shape.getBounds().getY() + shape.getBounds().getHeight() - FREQUENCY_BAR_OFFSET_Y - height;
             int counter = 0;
             while (i.hasNext()) {
                 int count = tree.getCount(i.next());
@@ -169,7 +181,7 @@ public class TreeModelNodeRenderer<V,E> implements Renderer.Vertex<V,E> {
                     new Rectangle2D.Double(xPos, 
                                            yPos,
                                            currentWidth,
-                                           FREQUENCY_BAR_HEIGHT);
+                                           height);
                 g.setColor(PlotterAdapter.getPointColor((double) counter / (double) (numberOfLabels - 1)));
                 g.fill(frequencyRect);
                 g.setColor(Color.BLACK);
@@ -177,7 +189,8 @@ public class TreeModelNodeRenderer<V,E> implements Renderer.Vertex<V,E> {
                 counter++;
             }
             g.setColor(Color.BLACK);
-            g.draw(new Rectangle2D.Double(shape.getBounds().getX() + FREQUENCY_BAR_OFFSET_X, shape.getBounds().getY() + FREQUENCY_BAR_OFFSET_Y, width, FREQUENCY_BAR_HEIGHT));
+            g.draw(new Rectangle2D.Double(shape.getBounds().getX() + FREQUENCY_BAR_OFFSET_X, yPos, width, height));
+
             g.setPaint(oldPaint);
         }
     }

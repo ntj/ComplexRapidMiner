@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.validation.clustering;
 
@@ -49,7 +47,7 @@ import com.rapidminer.tools.IterationArrayList;
  * Compares two cluster models by searching for each concept a best matching one in the compared cluster model in terms of f-measure. The average f-measure of the best matches is then the overall cluster model similarity.
  * 
  * @author Michael Wurst
- * @version $Id: BestMatchClusterModelSimilarity.java,v 1.1 2007/05/27 22:01:05 ingomierswa Exp $
+ * @version $Id: BestMatchClusterModelSimilarity.java,v 1.5 2008/05/09 19:23:23 ingomierswa Exp $
  * 
  */
 public class BestMatchClusterModelSimilarity extends Operator {
@@ -63,6 +61,14 @@ public class BestMatchClusterModelSimilarity extends Operator {
 	public IOObject[] apply() throws OperatorException {
 		HierarchicalClusterModel cm2 = getInput(HierarchicalClusterModel.class);
 		HierarchicalClusterModel cm1 = getInput(HierarchicalClusterModel.class);
+		
+		
+		if(getParameterAsBoolean("switch")) {
+			HierarchicalClusterModel cm3 = cm1;
+			cm1 = cm2;
+			cm2 = cm3;
+		}
+		
 		if ((cm1 == null) || (cm2 == null)) {
 			PerformanceVector pv = new PerformanceVector();
 			PerformanceCriterion pc = new EstimatedPerformance("f_measure", Double.NaN, 1, false);
@@ -82,7 +88,11 @@ public class BestMatchClusterModelSimilarity extends Operator {
 		log("Reference cluster model has root node label " + cm1.getRootNode().getDescription());
 		PerformanceVector pv = new PerformanceVector();
 		double performance = 0.0;
-		performance = bestMatchSimilarity(cm1, cm2);
+		if(getParameterAsBoolean("symmetric"))
+			performance = (bestMatchSimilarity(cm1, cm2) + bestMatchSimilarity(cm2, cm1))/2;
+		else
+			performance = bestMatchSimilarity(cm1, cm2);
+
 		PerformanceCriterion pc = new EstimatedPerformance("f-measure", performance, 1, false);
 		pv.addCriterion(pc);
 		log("sim:" + performance);
@@ -119,7 +129,8 @@ public class BestMatchClusterModelSimilarity extends Operator {
 		int counter = 0;
 
 		for (int i = 0; i < clusterVector1.size(); i++) {
-			Cluster cl1 = clusterVector1.get(i);
+			ClusterNode cl1 = (ClusterNode) clusterVector1.get(i);
+			int numObjsInCl1 = cl1.getNumberOfObjectsInSubtree();
 			if (cl1.getNumberOfObjects() > 0) {
 				double max = Double.NEGATIVE_INFINITY;
 				for (int j = 0; j < clusterVector2.size(); j++) {
@@ -127,11 +138,19 @@ public class BestMatchClusterModelSimilarity extends Operator {
 					if (v > max)
 						max = v;
 				}
-				sum = sum + max;
-				counter++;
+				
+				if (getParameterAsBoolean(PARAMETER_WEIGHT_CLUSTERS)) {
+					sum = sum + ((double) numObjsInCl1)*max;
+					counter = counter + numObjsInCl1;
+				}
+				else {
+					sum = sum + max;
+					counter++;
+				}
+				
 			}
 		}
-		return sum / counter;
+			return sum / counter;
 	}
 
 	private double fmeasure(Cluster c1, Cluster c2, int n) {
@@ -169,15 +188,14 @@ public class BestMatchClusterModelSimilarity extends Operator {
 		double pr = ((double) prHits) / ((double) s1.size());
 		double re = ((double) reHits) / ((double) s2.size());
 
-		if (getParameterAsBoolean(PARAMETER_WEIGHT_CLUSTERS))
-			return ((double) s1.size()) / ((double) n) * ((re * pr) / (re + pr));
-		else
-			return 2 * ((re * pr) / (re + pr));
+		return 2 * ((re * pr) / (re + pr));
 	}
 
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 		types.add(new ParameterTypeBoolean(PARAMETER_WEIGHT_CLUSTERS, "should the result clusters be weighted by the fraction of items they contain", true));
+		types.add(new ParameterTypeBoolean("switch", "switch the both cluster models", false));
+		types.add(new ParameterTypeBoolean("symmetric","build the average of a two-way comparison", false));
 		return types;
 	}
 

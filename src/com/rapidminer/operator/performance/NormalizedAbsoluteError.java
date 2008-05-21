@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.performance;
 
@@ -49,6 +47,8 @@ public class NormalizedAbsoluteError extends MeasuredPerformance {
 	private Attribute predictedAttribute;
 
 	private Attribute labelAttribute;
+	
+	private Attribute weightAttribute;
 
 	private double deviationSum = 0.0d;
 
@@ -56,7 +56,7 @@ public class NormalizedAbsoluteError extends MeasuredPerformance {
 
 	private double trueLabelSum = 0.0d;
 
-	private int exampleCounter = 0;
+	private double exampleCounter = 0.0d;
 
 	public NormalizedAbsoluteError() {
 	}
@@ -67,6 +67,10 @@ public class NormalizedAbsoluteError extends MeasuredPerformance {
 		this.relativeSum = nae.relativeSum;
 		this.trueLabelSum = nae.trueLabelSum;
 		this.exampleCounter = nae.exampleCounter;
+        this.labelAttribute = (Attribute)nae.labelAttribute.clone();
+        this.predictedAttribute = (Attribute)nae.predictedAttribute.clone();
+        if (nae.weightAttribute != null)
+        	this.weightAttribute = (Attribute)nae.weightAttribute.clone();
 	}
 
 	public String getName() {
@@ -77,27 +81,32 @@ public class NormalizedAbsoluteError extends MeasuredPerformance {
 		return "The absolute error divided by the error made if the average would have been predicted.";
 	}
 
-	public int getExampleCount() {
+	public double getExampleCount() {
 		return exampleCounter;
 	}
 
-	public void startCounting(ExampleSet exampleSet) throws OperatorException {
-		super.startCounting(exampleSet);
+	public void startCounting(ExampleSet exampleSet, boolean useExampleWeights) throws OperatorException {
+		super.startCounting(exampleSet, useExampleWeights);
 		if (exampleSet.size() <= 1)
 			throw new UserError(null, 919, getName(), "normalized absolute error can only be calculated for test sets with more than 2 examples.");
 		this.predictedAttribute = exampleSet.getAttributes().getPredictedLabel();
 		this.labelAttribute = exampleSet.getAttributes().getLabel();
+		if (useExampleWeights)
+			this.weightAttribute = exampleSet.getAttributes().getWeight();
 		this.trueLabelSum = 0.0d;
 		this.deviationSum = 0.0d;
 		this.relativeSum = 0.0d;
-		this.exampleCounter = 0;
+		this.exampleCounter = 0.0d;
 		Iterator<Example> reader = exampleSet.iterator();
 		while (reader.hasNext()) {
 			Example example = reader.next();
 			double label = example.getLabel();
+			double weight = 1.0d;
+			if (weightAttribute != null)
+				weight = example.getValue(weightAttribute);
 			if (!Double.isNaN(label)) {
-				exampleCounter++;
-				trueLabelSum += label;
+				exampleCounter += weight;
+				trueLabelSum += label * weight;
 			}
 		}
 	}
@@ -115,9 +124,13 @@ public class NormalizedAbsoluteError extends MeasuredPerformance {
 			label = 1.0d;
 		}
 
-		double diff = Math.abs(label - plabel);
+		double weight = 1.0d;
+		if (weightAttribute != null)
+			weight = example.getValue(weightAttribute);
+		
+		double diff = weight * Math.abs(label - plabel);
 		deviationSum += diff;
-		double relDiff = Math.abs(label - (trueLabelSum / exampleCounter));
+		double relDiff = Math.abs(weight * label - (trueLabelSum / exampleCounter));
 		relativeSum += relDiff;
 	}
 

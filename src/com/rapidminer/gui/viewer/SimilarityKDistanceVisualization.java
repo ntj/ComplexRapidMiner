@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.viewer;
 
@@ -57,7 +55,7 @@ import com.rapidminer.tools.LogService;
  * A k-distance visualization for similarities.
  * 
  * @author Peter B. Volk, Michael Wurst, Ingo Mierswa
- * @version $Id: SimilarityKDistanceVisualization.java,v 1.1 2007/06/17 15:48:56 ingomierswa Exp $
+ * @version $Id: SimilarityKDistanceVisualization.java,v 1.6 2008/05/09 19:23:01 ingomierswa Exp $
  */
 public class SimilarityKDistanceVisualization extends PlotterAdapter implements ActionListener {
 
@@ -77,8 +75,6 @@ public class SimilarityKDistanceVisualization extends PlotterAdapter implements 
 
 	private SimilarityMeasure sim = null;
 
-	private boolean recalculate = true;
-
 	private JTextField k_distance_jtext;
 
 	private int updatePanelHeight;
@@ -93,6 +89,28 @@ public class SimilarityKDistanceVisualization extends PlotterAdapter implements 
 		super();
 		this.sim = sim;
 		setBackground(Color.white);
+		
+		setLayout(new BorderLayout());
+		JLabel label = null;
+		label = new JLabel("k : ");
+
+		JButton updateButton = new JButton("Update");
+		updateButton.addActionListener(this);
+
+		k_distance_jtext = new JTextField();
+		k_distance_jtext.setText(Integer.toString(this.k));
+		k_distance_jtext.setColumns(5);
+
+		JPanel updatePanel = new JPanel(new FlowLayout());
+		updatePanel.add(label);
+		updatePanel.add(k_distance_jtext);
+		updatePanel.add(updateButton);
+
+		JPanel updatePanelAligned = new JPanel(new BorderLayout());
+		updatePanelAligned.add(updatePanel, BorderLayout.WEST);
+
+		add(updatePanelAligned, BorderLayout.NORTH);
+		this.updatePanelHeight = updatePanelAligned.getHeight();
 	}
 
 	public SimilarityKDistanceVisualization(SimilarityMeasure sim, SimilarityVisualization visualization) {
@@ -110,7 +128,6 @@ public class SimilarityKDistanceVisualization extends PlotterAdapter implements 
 	/** Indicates how many bins should be used for the distribution plot. */
 	public void setK(int k) {
 		this.k = k;
-		this.recalculate = true;
 		repaint();
 	}
 
@@ -131,37 +148,39 @@ public class SimilarityKDistanceVisualization extends PlotterAdapter implements 
 
 		this.minX = 0;
 		this.maxX = this.simMatrix.getNumYLabels();
-		this.minY = 0;
 
 		Iterator itX = this.simMatrix.getXLabels(), itY = null;
 		String tempX = null, tempY = null;
 		double tempDistance = 0;
 		LinkedList<Double> sortList = null;
-		if (this.kDistanceValues == null || this.recalculate) {
-			this.kDistanceValues = new LinkedList<Double>();
-			while (itX.hasNext()) {
-				sortList = new LinkedList<Double>();
-				tempX = (String) itX.next();
-				itY = this.simMatrix.getYEntries(tempX);
-				while (itY.hasNext()) {
-					tempY = (String) itY.next();
-					tempDistance = this.simMatrix.getEntry(tempX, tempY);
-					tempY = null;
-					sortList.add(new Double(tempDistance));
-				}
-				tempX = null;
-				// sort the list
 
-				Collections.sort(sortList);
-				this.kDistanceValues.add(sortList.get(this.k - 1));
-				sortList = null;
-
+		this.kDistanceValues = new LinkedList<Double>();
+		while (itX.hasNext()) {
+			sortList = new LinkedList<Double>();
+			tempX = (String) itX.next();
+			itY = this.simMatrix.getYEntries(tempX);
+			while (itY.hasNext()) {
+				tempY = (String) itY.next();
+				tempDistance = this.simMatrix.getEntry(tempX, tempY);
+				tempY = null;
+				sortList.add(tempDistance);
 			}
-			this.recalculate = false;
-			Collections.sort(this.kDistanceValues);
-			Collections.reverse(this.kDistanceValues);
+			tempX = null;
+			// sort the list
+
+			Collections.sort(sortList);
+			double currentValue = sortList.get(this.k - 1);
+			this.minY = Math.min(minY, currentValue);
+			this.maxY = Math.max(maxY, currentValue);
+			this.kDistanceValues.add(currentValue);
+			sortList = null;
+
 		}
-		maxY = this.kDistanceValues.get(0);
+
+		Collections.sort(this.kDistanceValues);
+		Collections.reverse(this.kDistanceValues);
+
+
 		xTicSize = getNumericalTicSize(minX, maxX);
 		yTicSize = getNumericalTicSize(minY, maxY);
 		minX = Math.floor(minX / xTicSize) * xTicSize;
@@ -179,7 +198,7 @@ public class SimilarityKDistanceVisualization extends PlotterAdapter implements 
 			Iterator it = this.kDistanceValues.iterator();
 			double offset = 0;
 			while (it.hasNext()) {
-				drawPoint(g, offset + dy, ((Double) it.next() + dy) * sy, Color.RED, Color.BLACK);
+				drawPoint(g, offset + dx, ((Double) it.next() + dy) * sy, Color.RED, Color.BLACK);
 				offset += sx;
 			}
 		}
@@ -275,31 +294,6 @@ public class SimilarityKDistanceVisualization extends PlotterAdapter implements 
 
 		this.k = Integer.parseInt(k_distance_jtext.getText());
 		this.kDistanceValues = null;
-		this.recalculate = true;
 		this.simVisualiser.repaint();
-	}
-
-	public void init() {
-		setLayout(new BorderLayout());
-		JLabel label = null;
-		label = new JLabel("k : ");
-
-		JButton updateButton = new JButton("Update");
-		updateButton.addActionListener(this);
-
-		k_distance_jtext = new JTextField();
-		k_distance_jtext.setText(Integer.toString(this.k));
-		k_distance_jtext.setColumns(5);
-
-		JPanel updatePanel = new JPanel(new FlowLayout());
-		updatePanel.add(label);
-		updatePanel.add(k_distance_jtext);
-		updatePanel.add(updateButton);
-
-		JPanel updatePanelAligned = new JPanel(new BorderLayout());
-		updatePanelAligned.add(updatePanel, BorderLayout.WEST);
-
-		add(updatePanelAligned, BorderLayout.NORTH);
-		this.updatePanelHeight = updatePanelAligned.getHeight();
 	}
 }

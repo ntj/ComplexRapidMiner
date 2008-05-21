@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.performance;
 
@@ -46,7 +44,7 @@ import com.rapidminer.tools.math.Averagable;
  * on the weights defined in the performance evaluator.
  * 
  * @author Ingo Mierswa
- * @version $Id: WeightedMultiClassPerformance.java,v 1.2 2007/07/13 22:52:13 ingomierswa Exp $
+ * @version $Id: WeightedMultiClassPerformance.java,v 1.6 2008/05/09 19:22:43 ingomierswa Exp $
  */
 public class WeightedMultiClassPerformance extends MeasuredPerformance implements ClassWeightedPerformance {
 
@@ -77,7 +75,7 @@ public class WeightedMultiClassPerformance extends MeasuredPerformance implement
     /**
      * The counter for true labels and the prediction.
      */
-    private int[][] counter;
+    private double[][] counter;
 
     /** The class names of the label. Used for logging and result display. */
     private String[] classNames;
@@ -100,6 +98,9 @@ public class WeightedMultiClassPerformance extends MeasuredPerformance implement
     /** The currently used predicted label attribute. */
     private Attribute predictedLabelAttribute;
     
+    /** The weight attribute. Might be null. */
+    private Attribute weightAttribute;
+    
     
     /** Creates a WeightedMultiClassPerformance with undefined type. */
     public WeightedMultiClassPerformance() {
@@ -119,12 +120,14 @@ public class WeightedMultiClassPerformance extends MeasuredPerformance implement
             this.classNames[i] = m.classNames[i];
             this.classNameMap.put(this.classNames[i], i);
         }
-        this.counter = new int[m.counter.length][m.counter.length];
+        this.counter = new double[m.counter.length][m.counter.length];
         for (int i = 0; i < this.counter.length; i++)
             for (int j = 0; j < this.counter[i].length; j++)
                 this.counter[i][j] = m.counter[i][j];
         this.labelAttribute = (Attribute)m.labelAttribute.clone();
         this.predictedLabelAttribute = (Attribute)m.predictedLabelAttribute.clone();
+        if (m.weightAttribute != null)
+        	this.weightAttribute = (Attribute)m.weightAttribute.clone();
     }
 
     /** Creates a WeightedMultiClassPerformance with the given type. */
@@ -146,16 +149,20 @@ public class WeightedMultiClassPerformance extends MeasuredPerformance implement
     }
 
     /** Initializes the criterion and sets the label. */
-    public void startCounting(ExampleSet eSet) throws OperatorException {
+    public void startCounting(ExampleSet eSet, boolean useExampleWeights) throws OperatorException {
+    	super.startCounting(eSet, useExampleWeights);
         this.labelAttribute = eSet.getAttributes().getLabel();
         if (!this.labelAttribute.isNominal())
             throw new UserError(null, 101, "calculation of classification performance criteria", this.labelAttribute.getName());
         this.predictedLabelAttribute = eSet.getAttributes().getPredictedLabel();
         if ((this.predictedLabelAttribute == null) || (!this.predictedLabelAttribute.isNominal()))
-            throw new UserError(null, 101, "calculation of classification performance criteria", this.predictedLabelAttribute.getName());
+            throw new UserError(null, 101, "calculation of classification performance criteria", "predicted label attribute");
+        
+        if (useExampleWeights)
+        	this.weightAttribute = eSet.getAttributes().getWeight();
         
         Collection values = labelAttribute.getMapping().getValues();
-        this.counter = new int[values.size()][values.size()];
+        this.counter = new double[values.size()][values.size()];
         this.classNames = new String[values.size()];
         Iterator i = values.iterator();
         int n = 0;
@@ -170,11 +177,14 @@ public class WeightedMultiClassPerformance extends MeasuredPerformance implement
     public void countExample(Example example) {
         int label = classNameMap.get(example.getNominalValue(labelAttribute));
         int plabel = classNameMap.get(example.getNominalValue(predictedLabelAttribute));
-        counter[label][plabel]++;
+        double weight = 1.0d;
+        if (weightAttribute != null)
+        	weight = example.getValue(weightAttribute);
+        counter[label][plabel] += weight;
     }
 
-    public int getExampleCount() {
-        int total = 0;
+    public double getExampleCount() {
+        double total = 0;
         for (int i = 0; i < counter.length; i++) {
             for (int j = 0; j < counter[i].length; j++)
                 total += counter[i][j];
@@ -186,7 +196,7 @@ public class WeightedMultiClassPerformance extends MeasuredPerformance implement
     public double getMikroAverage() {
         switch (type) {
             case WEIGHTED_RECALL:
-                int[] columnSums = new int[classNames.length];
+                double[] columnSums = new double[classNames.length];
                 for (int c = 0; c < columnSums.length; c++) {
                     for (int r = 0; r < counter[c].length; r++) {
                         columnSums[c] += counter[c][r];
@@ -194,12 +204,12 @@ public class WeightedMultiClassPerformance extends MeasuredPerformance implement
                 }
                 double result = 0.0d;
                 for (int c = 0; c < columnSums.length; c++) {
-                    result += classWeights[c] * (counter[c][c] / (double)columnSums[c]);
+                    result += classWeights[c] * (counter[c][c] / columnSums[c]);
                 }
                 result /= weightSum;
                 return result;
             case WEIGHTED_PRECISION:
-                int[] rowSums = new int[classNames.length];
+                double[] rowSums = new double[classNames.length];
                 for (int r = 0; r < counter.length; r++) {
                     for (int c = 0; c < counter[r].length; c++) {
                         rowSums[r] += counter[c][r];
@@ -207,7 +217,7 @@ public class WeightedMultiClassPerformance extends MeasuredPerformance implement
                 }
                 result = 0.0d;
                 for (int r = 0; r < rowSums.length; r++) {
-                    result += classWeights[r] * (counter[r][r] / (double)rowSums[r]);
+                    result += classWeights[r] * (counter[r][r] / rowSums[r]);
                 }
                 result /= weightSum;
                 return result;
@@ -283,7 +293,7 @@ public class WeightedMultiClassPerformance extends MeasuredPerformance implement
         for (int i = 0; i < this.counter.length; i++) {
             result.append(Tools.getLineSeparator() + classNames[i] + ":");
             for (int j = 0; j < this.counter[i].length; j++) {
-                result.append("\t" + this.counter[j][i]);
+                result.append("\t" + Tools.formatIntegerIfPossible(this.counter[j][i]));
             }
         }
         return result.toString();

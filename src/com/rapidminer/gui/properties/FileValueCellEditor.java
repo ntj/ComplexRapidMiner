@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.properties;
 
@@ -38,6 +36,7 @@ import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.parameter.ParameterTypeDirectory;
 import com.rapidminer.parameter.ParameterTypeFile;
@@ -51,7 +50,7 @@ import com.rapidminer.parameter.ParameterTypeFile;
  * 
  * @see com.rapidminer.gui.properties.AttributeFileCellEditor
  * @author Simon Fischer, Ingo Mierswa
- * @version $Id: FileValueCellEditor.java,v 1.1 2007/05/27 21:59:27 ingomierswa Exp $
+ * @version $Id: FileValueCellEditor.java,v 1.4 2008/05/09 19:22:45 ingomierswa Exp $
  */
 public abstract class FileValueCellEditor extends AbstractCellEditor implements PropertyValueCellEditor {
 
@@ -99,7 +98,9 @@ public abstract class FileValueCellEditor extends AbstractCellEditor implements 
 	}
 
 	private void buttonPressed() {
-		File selectedFile = SwingTools.chooseFile(panel, (getCellEditorValue() == null) ? null : new File((String) getCellEditorValue()), true, type instanceof ParameterTypeDirectory, type.getExtension(), type.getKey());
+		String value = (String) getCellEditorValue();
+		File file = (value == null || value.length() == 0) ? null : RapidMinerGUI.getMainFrame().getProcess().resolveFileName(value);
+		File selectedFile = SwingTools.chooseFile(RapidMinerGUI.getMainFrame(), file, true, type instanceof ParameterTypeDirectory, type.getExtension(), type.getKey());
 		if ((selectedFile != null)) {
 			setText(selectedFile);
 			fireEditingStopped();

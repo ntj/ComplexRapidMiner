@@ -1,33 +1,33 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools.att;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +40,7 @@ import com.rapidminer.tools.Ontology;
  *  table like data. 
  *  
  *  @author Ingo Mierswa
- *  @version $Id: AttributeDataSourceCreator.java,v 1.1 2007/05/27 22:03:43 ingomierswa Exp $ 
+ *  @version $Id: AttributeDataSourceCreator.java,v 1.6 2008/05/09 19:23:24 ingomierswa Exp $ 
  */
 public class AttributeDataSourceCreator {
 
@@ -53,14 +53,14 @@ public class AttributeDataSourceCreator {
         return sources;
     }
     
-    public void loadData(File file, char[] commentChars, String columnSeparators, boolean useQuotes, boolean firstLineAsNames, int maxCounter) throws IOException {
+    public void loadData(File file, char[] commentChars, String columnSeparators, char decimalPointCharacter, boolean useQuotes, boolean firstLineAsNames, int maxCounter, Charset encoding) throws IOException {
         this.sources.clear();        
         String[] columnNames = null;        
         int maxColumns = -1;
         int[] valueTypes = null;
 
         RapidMinerLineReader lineReader = new RapidMinerLineReader(columnSeparators, commentChars, useQuotes);
-        BufferedReader in = new BufferedReader(new FileReader(file));
+        BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file), encoding));
 
         int counter = 0;
         boolean first = true;
@@ -81,11 +81,11 @@ public class AttributeDataSourceCreator {
                 if (firstLineAsNames) {
                     columnNames = columns;
                 } else {
-                    guessValueTypes(columns, valueTypes);
+                    guessValueTypes(columns, valueTypes, decimalPointCharacter);
                 }
                 first = false;
             } else {
-                guessValueTypes(columns, valueTypes);
+                guessValueTypes(columns, valueTypes, decimalPointCharacter);
             }
             
             counter++;
@@ -111,12 +111,13 @@ public class AttributeDataSourceCreator {
         }
     }
     
-    public static void guessValueTypes(String[] data, int[] valueTypes) {
+    public static void guessValueTypes(String[] data, int[] valueTypes, char decimalPointCharacter) {
         for (int c = 0; c < valueTypes.length; c++) {
             String value = data[c];
-            if ((value != null) && (!value.equals("?"))) {
+            if ((value != null) && (!value.equals("?")) && (value.length() > 0)) {
                 try {
-                    double d = Double.parseDouble(value);
+                	String valueString = value.replace(decimalPointCharacter, '.');
+                    double d = Double.parseDouble(valueString);
                     if ((valueTypes[c] == Ontology.INTEGER) && ((int) d != d)) {
                         valueTypes[c] = Ontology.REAL;
                     }

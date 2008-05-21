@@ -1,31 +1,32 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2007 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
+import java.nio.charset.UnsupportedCharsetException;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.GregorianCalendar;
@@ -101,7 +102,7 @@ import com.rapidminer.tools.math.StringToMatrixConverter;
  * @see com.rapidminer.operator.OperatorChain
  * 
  * @author Ralf Klinkenberg, Ingo Mierswa, Simon Fischer
- * @version $Id: Operator.java,v 1.8 2007/07/04 22:27:29 ingomierswa Exp $
+ * @version $Id: Operator.java,v 1.16 2008/05/09 19:23:19 ingomierswa Exp $
  */
 public abstract class Operator implements ConfigurationListener, PreviewListener, LoggingHandler {
 
@@ -117,6 +118,9 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 	/** Indicates if this operator is enabled. */
 	private boolean enabled = true;
 
+	/** Indicates if the tree node is expanded (only operator chains). */
+	private boolean expanded = true;
+	
 	/** Name of the operators (for logging). */
 	private String name;
 
@@ -365,13 +369,16 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}
-
-	/** Returns true if this operator is enabled. */
-    /*
-	public boolean isEnabled() {
-		return enabled;
+	
+	/** Sets the expansion mode which indicates if this operator is drawn expanded or not. */
+	public void setExpanded(boolean expanded) {
+		this.expanded = expanded;
 	}
-    */
+
+	/** Returns true if this operator should be painted expanded. */
+	public boolean isExpanded() {
+		return expanded;
+	}
     
     /** Returns true if this operator is enabled and the parent (if not null) is also enabled. */
     public boolean isEnabled() {
@@ -414,6 +421,7 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
         clone.setName(getName());
 		clone.breakPoint = new boolean[] { breakPoint[0], breakPoint[1], breakPoint[2] };
         clone.enabled = enabled;
+        clone.expanded = expanded;
         if (userDescription != null)
             clone.userDescription = userDescription;
 		clone.inputContainer = inputContainer; // reference
@@ -703,7 +711,7 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 	}
 	
 	private final void stop() throws ProcessStoppedException {
-	    getLog().log("$bProcess stopped.^b", LogService.MAXIMUM);
+	    getLog().log("$b" + getName() + "^b: Process stopped.", LogService.NOTE);
 		throw new ProcessStoppedException(this);
 	}
 	
@@ -714,7 +722,7 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 	public final void resume() {
 		if (breakpointThread != null) {
 			synchronized (breakpointThread) {
-				breakpointThread.notify();
+				breakpointThread.notifyAll();
 			}
             Process process = getProcess();
             if (process != null)
@@ -723,7 +731,7 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 	}
 
 	private void processBreakpoint(IOContainer container, int breakpointType) throws ProcessStoppedException {
-		getLog().log("$b" + getName() + "^b: Breakpoint reached", LogService.MAXIMUM);
+		getLog().log("$b" + getName() + "^b: Breakpoint reached", LogService.NOTE);
 		breakpointThread = Thread.currentThread();
 		try {
             Process process = getProcess();
@@ -1090,12 +1098,13 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 	 * <ul>
 	 * <li><b>%{n}</b> with the name of this operator</li>
 	 * <li><b>%{c}</b> with the class of this operator</li>
+	 * <li><b>%{t}</b> with the current system date and time 
 	 * <li><b>%{a}</b> with the number of times the operator was applied</li>
 	 * <li><b>%{b}</b> with the number of times the operator was applied plus
 	 * one (a shortcut for %{p[1]})</li>
-	 * <li><b>%p{[number]}</b> with the number of times the operator was applied
+	 * <li><b>%{p[number]}</b> with the number of times the operator was applied
 	 * plus number</li>
-	 * <li><b>%{t}</b> with the current system date and time
+	 * <li><b>%{v[OperatorName.ValueName]}</b> with the value &quot;ValueName&quot; of the operator &quot;OperatorName&quot;</li>
 	 * <li><b>%{%}</b> with %</li>
 	 * </ul>
 	 * <p>Returns null if str is null. Will throw a RuntimeException if a wrong 
@@ -1172,6 +1181,27 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 					if (second.length() < 2)
 						second = "0" + second;
 					result.append(second);
+					break;
+				case 'v':
+					openNumberIndex = command.indexOf('[', 3);
+					if (openNumberIndex < 0)
+						throw new RuntimeException("An operator name and a value name divided by '.' in [] must follow $v, for example $p[Learner.applycount].");
+					closeNumberIndex = command.indexOf(']', openNumberIndex);
+					if (closeNumberIndex < 0)
+						throw new RuntimeException("An operator name and a value name divided by '.' in [] must follow $v, for example $p[Learner.applycount].");
+					if (closeNumberIndex <= openNumberIndex + 1)
+						throw new RuntimeException("An operator name and a value name divided by '.' in [] must follow $v, for example $p[Learner.applycount].");
+					String operatorValueString = command.substring(openNumberIndex + 1, closeNumberIndex);
+					String[] operatorValuePair = operatorValueString.split("\\.");
+					if (operatorValuePair.length != 2) {
+						throw new RuntimeException("An operator name and a value name divided by '.' in [] must follow $v, for example $p[Learner.applycount].");						
+					}
+					Operator operator = getProcess().getOperator(operatorValuePair[0]);
+					double value = operator.getValue(operatorValuePair[1]);
+					if (Double.isNaN(value)) {
+						logError("Value '" + operatorValuePair[1] + "' of the operator '" + operatorValuePair[0] + "' not found!");
+					}
+					result.append(Tools.formatIntegerIfPossible(value));
 					break;
 				case '%':
 					result.append('%');
@@ -1290,7 +1320,13 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 			breakpointString = breakpointBuf.toString();
 		}
 
-		result.append(indent + "<operator " + "name=\"" + name + "\" " + "class=\"" + operatorDescription.getName() + "\"" + breakpointString + (!enabled ? " activated=\"no\"" : "") + ">" + Tools.getLineSeparator());
+		result.append(indent + 
+				"<operator " + "name=\"" + name + "\" " + 
+				"class=\"" + operatorDescription.getName() + "\"" + 
+				breakpointString + 
+				(!enabled ? " activated=\"no\"" : "") + 
+				((this instanceof OperatorChain) ? (expanded ? " expanded=\"yes\"" : " expanded=\"no\"") : "") + 
+				">" + Tools.getLineSeparator());
 		if ((userDescription != null) && (userDescription.length() != 0))
 			result.append(indent + "    <description text=\"" + userDescription + "\"/>" + Tools.getLineSeparator());
 		result.append(parameters.getXML(indent + "    "));
@@ -1415,6 +1451,7 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 		// breakpoints and enable check
 		String breakpointString = null;
 		String activationString = null;
+		String expansionString = null;
 		
 		Attr breakpointAttr = element.getAttributeNode("breakpoints");
 		if (breakpointAttr != null) {
@@ -1423,6 +1460,10 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 		Attr activationAttr = element.getAttributeNode("activated");
 		if (activationAttr != null) {
 			activationString = activationAttr.getValue();
+		}
+		Attr expansionAttr = element.getAttributeNode("expanded");
+		if (expansionAttr != null) {
+			expansionString = expansionAttr.getValue();
 		}
 		
 		// breakpoints
@@ -1452,6 +1493,19 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 			else {
 				throw new XMLException("Activation mode `" + activationString + "` is not defined!");
 			}
+		}
+		
+		// is expanded?
+		if (expansionString != null) {
+			if (expansionString.equals("no"))
+				setExpanded(false);
+			else if (expansionString.equals("yes"))
+				setExpanded(true);
+			else {
+				throw new XMLException("Expansion mode `" + expansionString + "` is not defined!");
+			}
+		} else {
+			setExpanded(true);
 		}
 		
 		// parameters and inner operators
@@ -1596,21 +1650,49 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 		return s.toString();
 	}
     
-    public final String getEncoding() {
-        String encoding = System.getProperty(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEFAULT_ENCODING);
-        if ((encoding == null) || (encoding.trim().length() == 0)) {
-        	logWarning("No default encoding set. Using UTF-8 as default and trying to find an encoding defined by the process...");
-        	encoding = "UTF-8";
-        }
+	/** Returns the encoding if defined by the root operator if this operator is part of a process 
+	 *  or the standard encoding defined via the system property. If both is not possible or if 
+	 *  the defined encoding name is 'SYSTEM', the default encoding of the underlying operating
+	 *  system is returned.
+	 */
+    public final Charset getEncoding() {
+        String encoding = null;
+
         Process process = getProcess();
         if (process != null) {
             try {
                 encoding = process.getRootOperator().getParameterAsString(ProcessRootOperator.PARAMETER_ENCODING);
             } catch (UndefinedParameterError e) {
-                // do nothing and simply use UTF-8
+                // do nothing and simply use system encoding
             }
         }
-        return encoding;
+        
+        if (encoding == null) {
+        	encoding = System.getProperty(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEFAULT_ENCODING);
+        	if ((encoding == null) || (encoding.trim().length() == 0)) {
+        		logWarning("No default encoding set. Using system encoding as default and trying to find an encoding defined by the process...");
+        		encoding = RapidMiner.SYSTEM_ENCODING_NAME;
+        	}
+        }
+        
+        Charset result = null;
+        if (RapidMiner.SYSTEM_ENCODING_NAME.equals(encoding)) {
+        	result = Charset.defaultCharset();
+        } else {
+        	try {
+        		result = Charset.forName(encoding);
+        	} catch (IllegalCharsetNameException e) {
+        		logWarning("Unknown encoding name: " + encoding + ", using system encoding instead.");
+        		result = Charset.defaultCharset();
+        	} catch (UnsupportedCharsetException e) {
+        		logWarning("The encoding '" + encoding + "' is not supported, using system encoding instead.");
+        		result = Charset.defaultCharset();
+        	} catch (IllegalArgumentException e) {
+        		logWarning("Empty encoding name, using system encoding instead.");
+        		result = Charset.defaultCharset();
+        	}
+        }
+        return result;
     }
     
     public boolean isDebugMode() {
