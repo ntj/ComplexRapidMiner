@@ -211,7 +211,7 @@ public class FuzzyKMeans extends AbstractFlatClusterer {
 		type.setExpert(false);
 		types.add(type);
 		ParameterType type2 = new ParameterTypeInt(PARAMETER_M, "Fuzzifier", 2, Integer.MAX_VALUE, 2);
-		type.setExpert(false);
+		type2.setExpert(false);
 		types.add(type2);
 		types.add(new ParameterTypeInt(PARAMETER_MAX_RUNS, "The maximal number of runs of k-Means with random initialization that are performed.", 1,
 				Integer.MAX_VALUE, 10));
