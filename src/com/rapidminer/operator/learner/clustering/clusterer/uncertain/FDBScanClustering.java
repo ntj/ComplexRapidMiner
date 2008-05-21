@@ -12,24 +12,16 @@ import com.rapidminer.operator.InputDescription;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.learner.clustering.ClusterModel;
-import com.rapidminer.operator.learner.clustering.DefaultCluster;
 import com.rapidminer.operator.learner.clustering.FlatClusterModel;
-import com.rapidminer.operator.learner.clustering.FlatCrispClusterModel;
 import com.rapidminer.operator.learner.clustering.IdUtils;
 import com.rapidminer.operator.learner.clustering.clusterer.AbstractDensityBasedClusterer;
-import com.rapidminer.operator.learner.clustering.clusterer.ClusteringAggregation;
-import com.rapidminer.operator.learner.clustering.clusterer.DBScanClustering;
-import com.rapidminer.operator.similarity.DistanceSimilarityConverter;
 import com.rapidminer.operator.similarity.SimilarityMeasure;
-import com.rapidminer.operator.similarity.attributebased.FuzzyObjectSimilarity;
 import com.rapidminer.operator.similarity.attributebased.Matrix;
 import com.rapidminer.operator.similarity.SimilarityUtil;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
-
-import com.rapidminer.operator.similarity.attributebased.AbstractValueBasedSimilarity;
 import com.rapidminer.operator.similarity.attributebased.uncertain.AbstractProbabilityDensityFunction;
 import com.rapidminer.operator.similarity.attributebased.uncertain.SimpleProbabilityDensityFunction;
 import com.rapidminer.operator.uncertain.AbstractSampleStrategy;
@@ -39,7 +31,7 @@ import com.rapidminer.operator.uncertain.SimpleSampling;
 /**
  * Implements the FDBSCAN algorithm.
  * 
- * @author Michael Huber, Peter B Volk
+ * @author Michael Huber, Peter B. Volk
  * @see com.rapidminer.operator.learner.clustering.clusterer.DBScanClustering
  * @see com.rapidminer.operator.learner.clustering.clusterer.uncertain.DBScanEAClustering
  * @see com.rapidminer.operator.learner.clustering.clusterer.ClusteringAggregation
