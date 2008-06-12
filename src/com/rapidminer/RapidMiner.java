@@ -43,6 +43,7 @@ import com.rapidminer.tools.ObjectVisualizerService;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.WekaTools;
 import com.rapidminer.tools.XMLException;
 import com.rapidminer.tools.XMLSerialization;
 import com.rapidminer.tools.cipher.CipherTools;
@@ -59,7 +60,7 @@ import com.rapidminer.tools.plugin.Plugin;
  * might drastically reduce runtime and / or initialization time.
  * 
  * @author Ingo Mierswa
- * @version $Id: RapidMiner.java,v 1.30 2008/05/09 19:23:19 ingomierswa Exp $
+ * @version $Id: RapidMiner.java,v 1.31 2008/06/05 14:34:32 ingomierswa Exp $
  */
 public class RapidMiner {
 
@@ -76,7 +77,7 @@ public class RapidMiner {
     
     /** The name of the property indicating the path to an additional operator description XML file. */
     public static final String PROPERTY_RAPIDMINER_OPERATORS_ADDITIONAL = "rapidminer.operators.additional";
- 
+
     /** The name of the property indicating the path to an RC file (settings). */
     public static final String PROPERTY_RAPIDMINER_RC_FILE = "rapidminer.rcfile";
     
@@ -226,11 +227,19 @@ public class RapidMiner {
 		ParameterService.ensureRapidMinerHomeSet();
 		
 		RapidMiner.splashMessage("Init Setup");
-		File wekaJar = ParameterService.getLibraryFile("weka.jar");
+		
+		// search for Weka
+		File wekaJar = null;
+		try {
+			wekaJar = WekaTools.getWekaJarAsFile();
+		} catch (Throwable e) {
+			// do nothing
+		}
+		
 		String wekaMessage = addWekaOperators + "";
 		if ((wekaJar == null) || (!wekaJar.exists())) {
 			wekaMessage = "weka not found";
-            addWekaOperators = false;
+			addWekaOperators = false;
 		}
 		
 		LogService.getGlobal().log("----------------------------------------------------", LogService.INIT);
@@ -346,7 +355,7 @@ public class RapidMiner {
 			}
 			init(operatorStream, pluginDir, loadWeka, loadJDBCDir, loadJDBCClasspath, loadPlugins);
 		} catch (IOException e) {
-			
+			// do nothing
 		} finally {
 			if (operatorStream != null) {
 				try {
@@ -443,7 +452,7 @@ public class RapidMiner {
 		try {
 			Runtime.getRuntime().runFinalization();
 		} catch (Exception e) {
-			System.out.println("ERROR during SHUTDOWN: " + e.getMessage());
+			System.err.println("ERROR during SHUTDOWN: " + e.getMessage());
 		}
 		System.exit(errorcode);	
 	}
