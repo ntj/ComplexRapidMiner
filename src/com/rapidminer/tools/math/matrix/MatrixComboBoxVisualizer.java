@@ -40,7 +40,7 @@ import com.rapidminer.tools.IterationArrayList;
  * a certain entry in the matrix.
  * 
  * @author Michael Wurst, Ingo Mierswa
- * @version $Id: MatrixComboBoxVisualizer.java,v 1.2 2008/05/09 19:23:23 ingomierswa Exp $
+ * @version $Id: MatrixComboBoxVisualizer.java,v 1.4 2008/09/12 10:30:00 tobiasmalbrecht Exp $
  * 
  */
 public class MatrixComboBoxVisualizer<Ex, Ey> extends JPanel implements ItemListener {

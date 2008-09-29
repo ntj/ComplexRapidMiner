@@ -40,8 +40,11 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
 import com.rapidminer.datatable.DataTable;
+import com.rapidminer.gui.renderer.Renderer;
+import com.rapidminer.gui.renderer.RendererService;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ExtendedJTabbedPane;
+import com.rapidminer.gui.tools.RadioCardPanel;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.viewer.DataTableViewer;
 import com.rapidminer.operator.IOContainer;
@@ -52,11 +55,11 @@ import com.rapidminer.operator.ResultObject;
 /**
  * The result display is the view of the RapidMiner GUI which refers to (intermediate)
  * results. It can display all IOObjects which are deliverd, each in a tab which
- * is displayed on the right side. If the process produces some statistics,
+ * is displayed at the top together with its icon. If the process produces some statistics,
  * e.g. performance against generation, these are plotted online.
  * 
  * @author Ingo Mierswa
- * @version $Id: ResultDisplay.java,v 1.9 2008/05/09 19:23:16 ingomierswa Exp $
+ * @version $Id: ResultDisplay.java,v 1.11 2008/07/04 16:33:36 stiefelolm Exp $
  */
 public class ResultDisplay extends JPanel {
 
@@ -127,10 +130,16 @@ public class ResultDisplay extends JPanel {
 		Iterator<ResultObject> r = results.iterator();
 		while (r.hasNext()) {
 			ResultObject resultObject = r.next();
-			if (usedResultNames.contains(resultObject.getName())) {
-				doubleUsedNames.add(resultObject.getName());
+			String resultName = RendererService.getName(resultObject.getClass());
+			
+			String usedResultName = resultName;
+			if (usedResultName == null) {
+				usedResultName = resultObject.getName();
 			}
-			usedResultNames.add(resultObject.getName());
+			if (usedResultNames.contains(usedResultName)) {
+				doubleUsedNames.add(usedResultName);
+			}
+			usedResultNames.add(usedResultName);
 		}
 
 		if (this.results.size() > 0) {
@@ -138,32 +147,57 @@ public class ResultDisplay extends JPanel {
 			Iterator<ResultObject> i = this.results.iterator();
 			while (i.hasNext()) {
 				ResultObject result = i.next();
-
+				String resultName = RendererService.getName(result.getClass());
+				
+				Component visualisationComponent;
+				if (resultName != null) {
+					Collection<Renderer> renderers = RendererService.getRenderers(resultName);
+					if (renderers.size() > 0) {
+						visualisationComponent = new RadioCardPanel();
+						for (Renderer renderer : renderers) {
+							((RadioCardPanel)visualisationComponent).addCard(renderer.getName(), renderer.getVisualizationComponent(result, resultContainer));
+						}
+					} else {
+						// create renderers via the traditional way
+						visualisationComponent = result.getVisualizationComponent(resultContainer);
+						if (visualisationComponent instanceof JLabel)
+							visualisationComponent = new ExtendedJScrollPane(visualisationComponent);
+					}
+				} else {
+					// create renderers via the traditional way
+					visualisationComponent = result.getVisualizationComponent(resultContainer);
+					if (visualisationComponent instanceof JLabel)
+						visualisationComponent = new ExtendedJScrollPane(visualisationComponent);
+				}
+				
 				// result panel
 				JPanel resultPanel = new JPanel(new BorderLayout());
-				Component visualisationComponent = result.getVisualizationComponent(resultContainer);
-				if (visualisationComponent instanceof JLabel)
-					visualisationComponent = new ExtendedJScrollPane(visualisationComponent);
 				resultPanel.putClientProperty("main.component", visualisationComponent);
 				resultPanel.add(visualisationComponent, BorderLayout.CENTER);
-
+				
 				// action buttons
 				JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 				Iterator action = result.getActions().iterator();
 				while (action.hasNext()) {
 					buttonPanel.add(new JButton((Action) action.next()));
 				}
-				resultPanel.add(buttonPanel, BorderLayout.SOUTH);
-				String tabName = result.getName();
-				if (doubleUsedNames.contains(result.getName())) {
-					tabName = result.getName() + " (" + result.getSource() + ")";
+				((JPanel)resultPanel).add(buttonPanel, BorderLayout.SOUTH);
+				
+				// name
+				String tabName = resultName;
+				if (resultName == null)
+					tabName = result.getName();
+				if (doubleUsedNames.contains(tabName)) {
+					tabName = tabName + " (" + result.getSource() + ")";
 				}
 				
+				// icon
 				Icon resultIcon = result.getResultIcon();
 				if (resultIcon == null) {
 					resultIcon = defaultResultIcon;
 				}
-				tabs.addTab(tabName, resultIcon, resultPanel, "Show the result '" + result.getName() + "'.");
+				
+				tabs.addTab(tabName, resultIcon, resultPanel, "Show the result '" + tabName + "'.");
 			}
 		} else {
 			label.setText("No results produced.");
@@ -205,5 +239,9 @@ public class ResultDisplay extends JPanel {
 		if (tabs.getSelectedIndex() == -1)
 			if (tabs.getTabCount() > 0)
 				tabs.setSelectedIndex(0);
+	}
+
+	public List<ResultObject> getResult() {
+		return results;
 	}
 }

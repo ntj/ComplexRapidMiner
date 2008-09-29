@@ -22,15 +22,20 @@
  */
 package com.rapidminer.example;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import com.rapidminer.example.set.AttributeWeightedExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.DataRowReader;
+import com.rapidminer.example.table.DoubleArrayDataRow;
 import com.rapidminer.example.table.ExampleTable;
+import com.rapidminer.example.table.MemoryExampleTable;
 import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.generator.FeatureGenerator;
 import com.rapidminer.operator.IOContainer;
@@ -42,6 +47,7 @@ import com.rapidminer.operator.preprocessing.IdTagging;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.RandomGenerator;
+import com.rapidminer.tools.math.sampling.OrderedSamplingWithoutReplacement;
 
 
 /**
@@ -49,7 +55,7 @@ import com.rapidminer.tools.RandomGenerator;
  * generation.
  * 
  * @author Simon Fischer, Ingo Mierswa
- * @version $Id: Tools.java,v 1.7 2008/05/09 19:22:42 ingomierswa Exp $
+ * @version $Id: Tools.java,v 1.10 2008/08/08 15:17:14 tobiasmalbrecht Exp $
  */
 public class Tools {
 
@@ -88,7 +94,7 @@ public class Tools {
 	}
 
 	// ================================================================================
-	// -------------------- GENERATION --------------------
+	// -------------------- Tools --------------------
 	// ================================================================================
 
 	public static String[] getRegularAttributeNames(ExampleSet exampleSet) {
@@ -98,6 +104,24 @@ public class Tools {
 			attributeNames[counter++] = attribute.getName();
 		return attributeNames;
 	}
+
+	public static String[] getRegularAttributeNamesOrConstructions(ExampleSet exampleSet) {
+		String[] attributeNames = new String[exampleSet.getAttributes().size()];
+		int counter = 0;
+		for (Attribute attribute : exampleSet.getAttributes()) {
+			if (attribute.getConstruction().isGenerated()) {
+				attributeNames[counter++] = attribute.getConstruction().toString();
+			} else {
+				attributeNames[counter++] = attribute.getName();
+			}
+		}
+		return attributeNames;
+	}
+	
+	
+	// ================================================================================
+	// -------------------- GENERATION --------------------
+	// ================================================================================
 	
 	public static Attribute[] createRegularAttributeArray(ExampleSet exampleSet) {
 		Attribute[] attributes = new Attribute[exampleSet.getAttributes().size()];
@@ -225,6 +249,10 @@ public class Tools {
 	public static void replaceValue(ExampleSet exampleSet, Attribute attribute, double oldValue, double newValue) {
 		for (Example example : exampleSet) {
 			double value = example.getValue(attribute);
+			if (Double.isNaN(oldValue) && Double.isNaN(value)) {
+				example.setValue(attribute, newValue);
+				continue;
+			}
 			if (com.rapidminer.tools.Tools.isEqual(value, oldValue)) {
 				example.setValue(attribute, newValue);
 			}
@@ -415,5 +443,68 @@ public class Tools {
 	public static void isNonEmpty(ExampleSet es) throws OperatorException {
 		if (es.size() == 0)
 			throw new UserError(null, 117);
+	}
+	
+	/** Returns a new example set based on a fresh memory example table sampled from the
+	 *  given set. */
+	public static ExampleSet getLinearSubsetCopy(ExampleSet exampleSet, int size, int offset) {
+		Map<Attribute,String> specialMap = new HashMap<Attribute, String>();
+		List<Attribute> attributes = new LinkedList<Attribute>();
+		Iterator<AttributeRole> a = exampleSet.getAttributes().allAttributeRoles();
+		while (a.hasNext()) {
+			AttributeRole role = a.next();
+			Attribute clone = (Attribute)role.getAttribute().clone(); 
+			attributes.add(clone);
+			if (role.isSpecial()) {
+				specialMap.put(clone, role.getSpecialName());
+			}
+		}
+		
+		MemoryExampleTable table = new MemoryExampleTable(attributes);
+		int maxSize = exampleSet.size();
+		for (int i = offset; (i < offset + size) && (i < maxSize); i++) {
+			Example example = exampleSet.getExample(i);
+			Iterator<Attribute> allI = exampleSet.getAttributes().allAttributes();
+			int counter = 0;
+			double[] dataRow = new double[attributes.size()];
+			while (allI.hasNext()) {
+				dataRow[counter++] = example.getValue(allI.next());
+			}
+			table.addDataRow(new DoubleArrayDataRow(dataRow));
+		}
+		
+		return table.createExampleSet(specialMap);
+	}
+	
+	/** Returns a new example set based on a fresh memory example table sampled from the
+	 *  given set. */
+	public static ExampleSet getShuffledSubsetCopy(ExampleSet exampleSet, int size, RandomGenerator randomGenerator) {
+		int[] selectedIndices = OrderedSamplingWithoutReplacement.getSampledIndices(randomGenerator, exampleSet.size(), size);
+		Map<Attribute,String> specialMap = new HashMap<Attribute, String>();
+		List<Attribute> attributes = new LinkedList<Attribute>();
+		Iterator<AttributeRole> a = exampleSet.getAttributes().allAttributeRoles();
+		while (a.hasNext()) {
+			AttributeRole role = a.next();
+			Attribute clone = (Attribute)role.getAttribute().clone(); 
+			attributes.add(clone);
+			if (role.isSpecial()) {
+				specialMap.put(clone, role.getSpecialName());
+			}
+		}
+		
+		MemoryExampleTable table = new MemoryExampleTable(attributes);
+		
+		for (int i = 0; i < selectedIndices.length; i++) {
+			Example example = exampleSet.getExample(selectedIndices[i]);
+			Iterator<Attribute> allI = exampleSet.getAttributes().allAttributes();
+			int counter = 0;
+			double[] dataRow = new double[attributes.size()];
+			while (allI.hasNext()) {
+				dataRow[counter++] = example.getValue(allI.next());
+			}
+			table.addDataRow(new DoubleArrayDataRow(dataRow));
+		}
+		
+		return table.createExampleSet(specialMap);
 	}
 }

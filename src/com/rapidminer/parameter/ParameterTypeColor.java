@@ -44,7 +44,7 @@ public class ParameterTypeColor extends ParameterTypeString {
 		super(key, description, defaultColor);
 	}
 
-	private static String color2String(Color color) {
+	public static String color2String(Color color) {
 		return color.getRed() + "," + color.getGreen() + "," + color.getBlue();
 	}
 

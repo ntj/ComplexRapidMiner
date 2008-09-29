@@ -36,6 +36,8 @@ import java.awt.Paint;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -60,7 +62,8 @@ import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ExtendedJToolBar;
 import com.rapidminer.gui.tools.IconSize;
 import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.tools.Renderable;
+import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.report.Renderable;
 
 import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;
@@ -87,9 +90,9 @@ import edu.uci.ics.jung.visualization.util.Animator;
  * The basic graph viewer component for graphs.
  *
  * @author Ingo Mierswa
- * @version $Id: GraphViewer.java,v 1.22 2008/05/09 19:23:24 ingomierswa Exp $
+ * @version $Id: GraphViewer.java,v 1.30 2008/08/19 15:40:54 homburg Exp $
  */
-public class GraphViewer<V,E> extends JPanel implements Renderable{
+public class GraphViewer<V,E> extends JPanel implements Renderable {
 	
     private static final long serialVersionUID = -7501422172633548861L;
     
@@ -353,6 +356,10 @@ public class GraphViewer<V,E> extends JPanel implements Renderable{
         this.layoutSelection.setLayout();
     }
     
+    public LayoutSelection<V, E> getLayoutSelection() {
+    	return this.layoutSelection;
+    }
+    
     private JComponent createControlPanel() {
         // === mouse behaviour ===        
         vv.setGraphMouse(graphMouse);
@@ -478,25 +485,44 @@ public class GraphViewer<V,E> extends JPanel implements Renderable{
     }
     
     public void updateLayout() {
-        changeLayout(this.layout);
+        changeLayout(this.layout, this.layoutSelection.getAnimate(), 0, 0);
     }
     
-    public void changeLayout(Layout<V, E> newLayout) {
+    public void changeLayout(Layout<V, E> newLayout, boolean animate, int desiredWidth, int desiredHeight) {
     	MultiLayerTransformer transformer = vv.getRenderContext().getMultiLayerTransformer();
     	double scale = transformer.getTransformer(Layer.VIEW).getScale();
-    	int layoutWidth  = (int)(vv.getWidth() / scale);
-    	int layoutHeight = (int)(vv.getHeight() / scale);
-        newLayout.setSize(new Dimension(layoutWidth, layoutHeight));
+    	
+    	// set desired size
+    	if ((desiredWidth > 0) && (desiredHeight > 0)) {
+    		vv.setSize(desiredWidth, desiredHeight);
+            newLayout.setSize(new Dimension(desiredWidth, desiredHeight));
+    	} else {
+    		//vv.setSize(600, 600);
+        	int layoutWidth  = (int)(vv.getWidth() / scale);
+        	int layoutHeight = (int)(vv.getHeight() / scale);
+            newLayout.setSize(new Dimension(layoutWidth, layoutHeight));
+    	}
+    	
+
         if (layout == null) {
             // initial layout --> no transition possible!
             vv.setGraphLayout(newLayout);
         } else {
             // No transition possible if no edges in graph!
-        	if (newLayout.getGraph().getEdgeCount() > 0 || newLayout.getGraph().getVertexCount() > 0) {	    
-            	LayoutTransition<V,E> lt = new LayoutTransition<V,E>(vv, layout, newLayout);
-	            Animator animator = new Animator(lt);
-	            animator.start();
-	        }
+        	if (animate) {
+        		if (newLayout.getGraph().getEdgeCount() > 0 || newLayout.getGraph().getVertexCount() > 0) {	 
+        			try {
+        				LayoutTransition<V,E> lt = new LayoutTransition<V,E>(vv, layout, newLayout);
+        				Animator animator = new Animator(lt);
+        				animator.start();
+        			} catch (Throwable e) {
+        				// any error --> no transition possible!
+        				vv.setGraphLayout(newLayout);
+        			}
+        		}
+        	} else {
+        		vv.setGraphLayout(newLayout);
+        	}
         }    
         this.layout = newLayout;
              
@@ -511,8 +537,7 @@ public class GraphViewer<V,E> extends JPanel implements Renderable{
     
     /** VertexLabel is not parameterized in Jung. In order to avoid to make all things
      *  unchecked, the default label position setting is done in this method. */
-    @SuppressWarnings("unchecked")
-	private void setDefaultLabelPosition() {
+    private void setDefaultLabelPosition() {
         vv.getRenderer().getVertexLabelRenderer().setPosition(Renderer.VertexLabel.Position.CNTR);
     }
     
@@ -537,7 +562,11 @@ public class GraphViewer<V,E> extends JPanel implements Renderable{
     }
     
     private void togglePaintEdgeLabels() {
-    	this.showEdgeLabels = !this.showEdgeLabels;
+    	setPaintEdgeLabels(!showEdgeLabels);
+    }
+    
+    public void setPaintEdgeLabels(boolean showEdgeLabels) {
+    	this.showEdgeLabels = showEdgeLabels;
     	if (this.showEdgeLabels) {
     		vv.getRenderContext().setEdgeLabelTransformer(new Transformer<E, String>() {
     			public String transform(E object) {
@@ -555,7 +584,11 @@ public class GraphViewer<V,E> extends JPanel implements Renderable{
     }
     
     private void togglePaintVertexLabels() {
-    	this.showVertexLabels = !this.showVertexLabels;
+    	setPaintVertexLabels(!showVertexLabels);
+    }
+    
+    public void setPaintVertexLabels(boolean showVertexLabels) {
+    	this.showVertexLabels = showVertexLabels;
     	if (this.showVertexLabels) {
             Renderer.Vertex<V, E> vertexRenderer = graphCreator.getVertexRenderer();
             if (vertexRenderer != null)
@@ -577,16 +610,37 @@ public class GraphViewer<V,E> extends JPanel implements Renderable{
     	}
     	vv.repaint();
     }
-
+    
+    public Component getVisualizationComponent() {
+    	return vv;
+    }
+	
+    public void prepareRendering() {}
+    
 	public int getRenderHeight(int preferredHeight) {
-		return vv.getHeight();
+		int height = vv.getHeight();
+		if (height < 1) {
+			height = preferredHeight;
+		}
+		return height;
 	}
 
 	public int getRenderWidth(int preferredWidth) {
-		return vv.getWidth();
+		int width = vv.getWidth();
+		if (width < 1) {
+			width = preferredWidth;
+		}
+		return width;
 	}
 
 	public void render(Graphics graphics, int width, int height) {
+		vv.setSize(width, height);
+		vv.setBorder(null);
+		changeLayout(this.layout, false, width, height);
 		vv.paint(graphics);
+	}
+	
+	public List<ParameterType> getParameterTypes() {
+		return new LinkedList<ParameterType>();
 	}
 }

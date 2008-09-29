@@ -28,7 +28,7 @@ import com.rapidminer.ProcessListener;
 import com.rapidminer.RapidMiner;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.IOContainer;
-import com.rapidminer.operator.ProcessRootOperator;
+import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.LogService;
@@ -133,7 +133,8 @@ public class ProcessThread extends Thread implements ProcessListener {
 		RapidMinerGUI.getMainFrame().getResultDisplay().setDataTables(process.getDataTables());
 	}
 	
-	public void processStep(ProcessRootOperator op) {}
+	public void processStartedOperator(Operator op) {}
+	public void processFinishedOperator(Operator op) {}
 
 	public void processEnded() {}
 	

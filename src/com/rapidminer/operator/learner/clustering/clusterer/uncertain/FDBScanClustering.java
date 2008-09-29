@@ -52,7 +52,7 @@ public class FDBScanClustering extends AbstractDensityBasedClusterer {
 	private static final String GLOBAL_FUZZINESS = "global_fuzziness";
 
 	//sampleRate defines the amount of samples per Object
-	private int sampleRate = 5;
+	private int sampleRate = 10;
 
 	private static final String SAMPLE_RATE = "sample_rate";
 	

@@ -22,13 +22,7 @@
  */
 package com.rapidminer.example;
 
-import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -36,20 +30,13 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.swing.Icon;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTable;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -101,22 +88,12 @@ public class AttributeWeights extends AverageVector {
     
     /** Indicates that the weights should be sorted in ascending order. */
     public static final int INCREASING = 1;
-
-    /** The names for the sorting orders. */
-    private static final String[] SORTING_ORDER_NAMES = {
-        "no sorting", "decreasing", "increasing"
-    };
     
 	/** Indicates that the the actual weights should be used for sorting. */
 	public static final int ORIGINAL_WEIGHTS = 0;
 
 	/** Indicates that the the absolute weights should be used for sorting. */
 	public static final int ABSOLUTE_WEIGHTS = 1;
-
-    /** The names for the sorting value type. */
-    private static final String[] SORTING_TYPE_NAMES = {
-        "original weights", "absolute weights"
-    };
     
 	/** This comparator sorts the names of attributes according to their weights. */
 	private class WeightComparator implements Comparator<String>, Serializable {
@@ -293,7 +270,7 @@ public class AttributeWeights extends AverageVector {
         try {
         	out = new PrintWriter(new FileWriter(file));
         	out.println("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>");
-        	out.println("<attributeweights version=\"" + RapidMiner.getVersion() + "\">");
+        	out.println("<attributeweights version=\"" + RapidMiner.getShortVersion() + "\">");
         	Iterator i = weightMap.keySet().iterator();
         	while (i.hasNext()) {
         		String key = (String) i.next();
@@ -391,107 +368,24 @@ public class AttributeWeights extends AverageVector {
 	 * weights and several weight plots.
 	 */
 	public Component getVisualizationComponent(IOContainer container) {
-        // create plotter panel
-        DataTable dataTable = createSortedDataTable();
-        final DataTableViewer dataTableViewer = new DataTableViewer(dataTable, PlotterPanel.WEIGHT_PLOTTER_SELECTION);
-        dataTableViewer.getTable().setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
-        
-        // main panel
-		final JPanel mainPanel = new JPanel();
-		mainPanel.setLayout(new BorderLayout());   
-        
-        
-		GridBagLayout layout = new GridBagLayout();
-		GridBagConstraints c = new GridBagConstraints();
-		c.fill = GridBagConstraints.BOTH;
-		c.weightx = 0;
-		c.insets = new Insets(5,5,5,5);
-        JPanel settingsPanel = new JPanel(layout);
-        mainPanel.add(settingsPanel, BorderLayout.NORTH);
-		
-        // sorting settings
-        final JComboBox sortingDirectionBox = new JComboBox(SORTING_ORDER_NAMES);        
-        sortingDirectionBox.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                int selectedIndex = sortingDirectionBox.getSelectedIndex();
-                switch (selectedIndex) {
-                    case 0: sortType = NO_SORTING; break;
-                    case 1: sortType = DECREASING; break;
-                    case 2: sortType = INCREASING; break;
-                    default: sortType = NO_SORTING; break;
-                }
-                DataTable sortedDataTable = createSortedDataTable();
-                dataTableViewer.setDataTable(sortedDataTable);
-            }
-        });
-        JLabel sortingLabel = new JLabel("sorting direction:");
-        layout.setConstraints(sortingLabel, c);
-        settingsPanel.add(sortingLabel);
-        layout.setConstraints(sortingDirectionBox, c);
-        settingsPanel.add(sortingDirectionBox);
-
-        final JComboBox sortingValueBox = new JComboBox(SORTING_TYPE_NAMES);        
-        sortingValueBox.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                int selectedIndex = sortingValueBox.getSelectedIndex();
-                switch (selectedIndex) {
-                    case 0: weightType = ORIGINAL_WEIGHTS; break;
-                    case 1: weightType = ABSOLUTE_WEIGHTS; break;
-                    default: weightType = ORIGINAL_WEIGHTS; break;
-                }
-                DataTable sortedDataTable = createSortedDataTable();
-                dataTableViewer.setDataTable(sortedDataTable);
-            }
-        });
-        JLabel valueTypeLabel = new JLabel("value type:");
-        layout.setConstraints(valueTypeLabel, c);
-        settingsPanel.add(valueTypeLabel);
-        c.gridwidth = GridBagConstraints.REMAINDER;
-        layout.setConstraints(sortingValueBox, c);
-        settingsPanel.add(sortingValueBox);   
-        
-        mainPanel.add(dataTableViewer, BorderLayout.CENTER);
-		return mainPanel;
+        DataTable dataTable = createDataTable();
+        return new DataTableViewer(dataTable, PlotterPanel.WEIGHT_PLOTTER_SELECTION);
 	}
 	
 	public Icon getResultIcon() {
 		return resultIcon;
 	}
     
-    public DataTable createSortedDataTable() {
+    public DataTable createDataTable() {
         DataTable dataTable = new SimpleDataTable("Attribute Weights", new String[] { "attribute", "weight" });
-        Iterator<AttributeWeight> iter = getSortedWeights();
-        while (iter.hasNext()) {
-            AttributeWeight attWeight = iter.next();
-            String attName = attWeight.getName();
-            attWeight = weightMap.get(attName);
+        for (Map.Entry<String, AttributeWeight> entry : weightMap.entrySet()) {
+        	String attName = entry.getKey();
+            AttributeWeight attWeight = entry.getValue();
             double index = dataTable.mapString(0, attName);
             double weightValue = attWeight.getWeight();
-            if (weightType == ABSOLUTE_WEIGHTS) 
-                weightValue = Math.abs(weightValue);
             double[] data = new double[] { index, weightValue };
             dataTable.add(new SimpleDataTableRow(data, attName));
         }        
         return dataTable;
-    }
-    
-    /**
-     * Returns an iterator over all AttributeWeight objects according to the
-     * current sorting settings.
-     */
-    private Iterator<AttributeWeight> getSortedWeights() {
-        List<AttributeWeight> allWeights = new LinkedList<AttributeWeight>();
-        Iterator<String> i = weightMap.keySet().iterator();
-        while (i.hasNext()) {
-            AttributeWeight attWeight = new AttributeWeight(weightMap.get(i.next()));
-            if (weightType == ABSOLUTE_WEIGHTS) {
-                attWeight.setWeight(Math.abs(attWeight.getWeight()));
-            }
-            allWeights.add(attWeight);
-        }
-        if (this.sortType != 0) {
-            Collections.sort(allWeights);
-        }
-        return allWeights.iterator();
     }
 }

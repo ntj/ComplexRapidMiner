@@ -32,6 +32,7 @@ import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.ExampleTable;
+import com.rapidminer.tools.Ontology;
 
 
 /**
@@ -41,13 +42,8 @@ import com.rapidminer.example.table.ExampleTable;
  *  A convenience constructor exist to create a view based on the sorting based on a
  *  specific attribute.</p>
  *  
- *  <p>
- *  Please note that this implementation is quite inefficient on databases and other
- *  non-memory example tables and should therefore only be used for small data sets.
- *  </p>
- *  
  *  @author Ingo Mierswa
- *  @version $Id: SortedExampleSet.java,v 1.9 2008/05/09 19:22:49 ingomierswa Exp $
+ *  @version $Id: SortedExampleSet.java,v 1.11 2008/07/21 17:34:54 ingomierswa Exp $
  */
 public class SortedExampleSet extends AbstractExampleSet {
 
@@ -122,7 +118,9 @@ public class SortedExampleSet extends AbstractExampleSet {
 		Iterator<Example> i = parent.iterator();
 		while (i.hasNext()) {
 			Example example = i.next();
-			if (sortingAttribute.isNominal()) {
+			if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(sortingAttribute.getValueType(), Ontology.DATE_TIME)) {
+				sortingIndex.add(new SortingIndex(Double.valueOf(example.getNumericalValue(sortingAttribute)), counter));
+			} else if (sortingAttribute.isNominal()) {
 				sortingIndex.add(new SortingIndex(example.getNominalValue(sortingAttribute), counter));
 			} else {
 				sortingIndex.add(new SortingIndex(Double.valueOf(example.getNumericalValue(sortingAttribute)), counter));

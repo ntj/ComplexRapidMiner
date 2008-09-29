@@ -1,26 +1,24 @@
 /*
  *  RapidMiner
  *
- *  Copyright (C) 2001-2006 by Rapid-I and the contributors
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
  *
  *  Complete list of developers available at our web site:
  *
  *       http://rapid-i.com
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License as 
- *  published by the Free Software Foundation; either version 2 of the
- *  License, or (at your option) any later version. 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- *  USA.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
  */
 
 import java.io.BufferedReader;
@@ -44,7 +42,7 @@ import com.rapidminer.tools.Tools;
  * classes written by a particular author.
  * 
  * @author Ingo Mierswa
- * @version $Id: StyleCheck.java,v 2.14 2007/05/28 21:23:34 ingomierswa Exp $
+ * @version $Id: StyleCheck.java,v 2.17 2008/07/13 16:39:42 ingomierswa Exp $
  */
 public class StyleCheck {
 
@@ -448,26 +446,26 @@ public class StyleCheck {
             System.out.println("Total number of lines:   " + totalLines);
             System.out.println("----------------------------------------------------------");
             
-            class AuthorCounter implements Comparable<AuthorCounter> {
+            class AuthorCounts implements Comparable<AuthorCounts> {
                 private String name;
                 private int lines;
                 private int classes;
                 private NumberFormat formatter;
                 
-                public AuthorCounter(String name, int lines, int classes, NumberFormat formatter) {
+                public AuthorCounts(String name, int lines, int classes, NumberFormat formatter) {
                     this.name = name;
                     this.lines = lines;
                     this.classes = classes;
                     this.formatter = formatter;
                 }
-                public int compareTo(AuthorCounter a) {
+                public int compareTo(AuthorCounts a) {
                     return -1 * Double.compare(this.classes, a.classes);
                 }
                 public boolean equals(Object o) {
-                	if (!(o instanceof AuthorCounter)) {
+                	if (!(o instanceof AuthorCounts)) {
                 		return false;
                 	} else {
-                		return this.name.equals(((AuthorCounter)o).name);
+                		return this.name.equals(((AuthorCounts)o).name);
                 	}
                 }
                 public int hashCode() {
@@ -491,21 +489,21 @@ public class StyleCheck {
             NumberFormat formatter = NumberFormat.getPercentInstance();
             formatter.setMaximumFractionDigits(1);
             formatter.setMinimumFractionDigits(1);
-            List<AuthorCounter> authorCounters = new LinkedList<AuthorCounter>();
+            List<AuthorCounts> authorCounters = new LinkedList<AuthorCounts>();
             Iterator<String> i = authorClassNumberMap.keySet().iterator();
             int maxLength = 0;
 			while (i.hasNext()) {
 				String author = i.next();
                 int classNumber =  authorClassNumberMap.get(author);
                 int lineNumber  = authorLineNumberMap.get(author);
-                AuthorCounter newCounter = new AuthorCounter(author, lineNumber, classNumber, formatter); 
+                AuthorCounts newCounter = new AuthorCounts(author, lineNumber, classNumber, formatter); 
                 authorCounters.add(newCounter);
                 maxLength = Math.max(maxLength, newCounter.getStringLength());
 			}
             Collections.sort(authorCounters);
-            Iterator<AuthorCounter> a = authorCounters.iterator();
+            Iterator<AuthorCounts> a = authorCounters.iterator();
             while (a.hasNext()) {
-                AuthorCounter current = a.next();
+                AuthorCounts current = a.next();
                 System.out.println(current.toString(maxLength - current.getStringLength()));
             }
             
@@ -516,7 +514,7 @@ public class StyleCheck {
 	/** Checks all Java files for a version tag. */
 	private static class LicenseChecker extends JavaFileChecker {
 
-		private static String LICENSE_LINE = "Copyright (C) 2001-2006";
+		private static String LICENSE_LINE = "Copyright (C) 2001-2008";
 
 		public void performCheck(File file) throws Exception {
 			BufferedReader in = new BufferedReader(new FileReader(file));

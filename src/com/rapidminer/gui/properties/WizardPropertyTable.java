@@ -45,7 +45,7 @@ import com.rapidminer.parameter.UndefinedParameterError;
  * @version $Id: WizardPropertyTable.java,v 2.9 2006/03/21 15:35:40 ingomierswa
  *          Exp $
  */
-public class WizardPropertyTable extends SimplePropertyTable {
+public class WizardPropertyTable extends DefaultPropertyTable {
 
 	private static final long serialVersionUID = 1510360561085238281L;
 

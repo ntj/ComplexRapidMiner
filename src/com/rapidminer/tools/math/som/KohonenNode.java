@@ -22,15 +22,18 @@
  */
 package com.rapidminer.tools.math.som;
 
+import java.io.Serializable;
+
 /**
  * This class represents a node in a KohonenNet. This node contains its current weight, which is randomly set initially,
  * but adopted during the trainingsphase.
  * 
  * @author Sebastian Land
- * @version $Id: KohonenNode.java,v 1.3 2008/05/09 19:23:19 ingomierswa Exp $
+ * @version $Id: KohonenNode.java,v 1.4 2008/06/18 14:28:36 stiefelolm Exp $
  */
-public class KohonenNode {
+public class KohonenNode implements Serializable{
 
+	private static final long serialVersionUID = -7614188662702840710L;
 	private double[] weight;
 
 	public KohonenNode(double[] weightInit) {

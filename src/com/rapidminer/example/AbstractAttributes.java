@@ -35,9 +35,11 @@ import com.rapidminer.tools.Tools;
  * corresponding add and remove methods.
  * 
  * @author Ingo Mierswa
- * @version $Id: AbstractAttributes.java,v 1.5 2008/05/09 19:22:42 ingomierswa Exp $
+ * @version $Id: AbstractAttributes.java,v 1.6 2008/07/31 17:43:41 ingomierswa Exp $
  */
 public abstract class AbstractAttributes implements Attributes {
+
+	private static final long serialVersionUID = -3419958538074776957L;
 
 	public abstract Object clone();
 	

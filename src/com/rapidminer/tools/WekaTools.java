@@ -344,6 +344,7 @@ public class WekaTools {
 	public static File getWekaJarAsFile() throws IOException {
 		String wekaJar = System.getProperty(RapidMiner.PROPERTY_RAPIDMINER_WEKA_JAR);
 		if (wekaJar != null) {
+			LogService.getGlobal().logMessage("Using "+wekaJar,LogService.WARNING);
 			return new File(wekaJar);
 		} else {
 			return ParameterService.getLibraryFile("weka.jar");
@@ -390,6 +391,7 @@ public class WekaTools {
 		List<String> classes = new LinkedList<String>();
         
 		Tools.findImplementationsInJar(jar, superclass, classes);
+		LogService.getGlobal().logWarning(classes.toString());
         Iterator<String> i = classes.iterator();
         while (i.hasNext()) {
             String name = i.next();

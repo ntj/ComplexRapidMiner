@@ -46,6 +46,7 @@ import javax.swing.JPanel;
 
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.plugin.Plugin;
 
 
 /**
@@ -53,13 +54,15 @@ import com.rapidminer.tools.Tools;
  * The product logo should have a size of approximately 270 times 70 pixels.
  * 
  * @author Ingo Mierswa
- * @version $Id: AboutBox.java,v 1.5 2008/05/09 19:22:58 ingomierswa Exp $
+ * @version $Id: AboutBox.java,v 1.6 2008/07/04 16:33:36 stiefelolm Exp $
  */
 public class AboutBox extends JDialog {
 
 	private static final long serialVersionUID = -3889559376722324215L;
 
 	private static final String PROPERTY_FILE = "about_infos.properties";
+	
+	private ContentPanel contentPanel ;
 	
 	private static class ContentPanel extends JPanel {
 		
@@ -138,7 +141,7 @@ public class AboutBox extends JDialog {
 			float xPos = (float)(getWidth() - MARGIN - stringBounds.getWidth());
 			float yPos = height;
 			g.drawString(text, xPos, yPos);
-		}	
+		}
 	}
 
 	public AboutBox(Frame owner, String productName, String productVersion, String licensor, String url, String text, Image productLogo) {
@@ -159,7 +162,7 @@ public class AboutBox extends JDialog {
 		if (name != null) {
 			setTitle("About " + name);
 		}
-		ContentPanel contentPanel = new ContentPanel(properties, productLogo);
+		contentPanel = new ContentPanel(properties, productLogo);
 		add(contentPanel, BorderLayout.CENTER);
 		
 		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -186,6 +189,7 @@ public class AboutBox extends JDialog {
 			LogService.getGlobal().logError("Cannot read splash screen infos: " + e.getMessage());
 		}
 		properties.setProperty("version", productVersion);
+		Plugin.initAboutTexts(properties);
 		return properties;
 	}
 	
@@ -198,4 +202,5 @@ public class AboutBox extends JDialog {
 		properties.setProperty("more", text);
 		return properties;
 	}
+
 }

@@ -34,13 +34,14 @@ import javax.swing.UIManager;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 
+import com.rapidminer.gui.look.RapidLookTools;
 import com.rapidminer.gui.look.painters.CashedPainter;
 
 /**
  * The UI for progress bars.
  *
  * @author Ingo Mierswa
- * @version $Id: ProgressBarUI.java,v 1.2 2008/05/09 19:22:42 ingomierswa Exp $
+ * @version $Id: ProgressBarUI.java,v 1.3 2008/08/11 07:51:07 ingomierswa Exp $
  */
 public class ProgressBarUI extends BasicProgressBarUI {
 
@@ -86,16 +87,82 @@ public class ProgressBarUI extends BasicProgressBarUI {
 		for (int i = 0; i < amount; i++) {
 			if (vertical) {
 				int newY = h - i * 10 - 12;
-				CashedPainter.drawProgressBar(c, g, true, false, x, newY, width, height);
+				drawVerticalBlock(g, x, newY, width, height);
 			} else {
-				int newX = x - 1 + i * 10;
-				CashedPainter.drawProgressBar(c, g, false, false, newX, y, width, height);
+				int newX = x - 1 + i * 10;				
+				drawHorizontalBlock(g, newX, y, width, height);
 			}
 		}
 
 		drawString(g, vertical, w, h);
 	}
 
+	private void drawVerticalBlock(Graphics g, int x, int y, int w, int h) {
+		g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][0]);
+		g.drawLine(x, y + 1, x, y + 7);
+		g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][1]);
+		g.drawLine(x + 1, y + 1, x + 1, y + 7);
+		g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][2]);
+		g.drawLine(x + 1, y, x + 1, y + 8);
+		g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][3]);
+		g.drawLine(x + 2, y, x + 2, y + 8);
+		g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][4]);
+		g.drawLine(x + 2, y + 1, x + 2, y + 7);
+
+		if (w > 0) {
+			g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][5]);
+			g.drawLine(x + 3, y, x + w - 4, y);
+			g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][6]);
+			g.fillRect(x + 3, y + 1, w - 6, 7);
+			g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][7]);
+			g.drawLine(x + 3, y + 8, x + w - 4, y + 8);
+		}
+
+		g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][8]);
+		g.drawLine(x + w - 3, y, x + w - 3, y + 8);
+		g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][9]);
+		g.drawLine(x + w - 3, y + 1, x + w - 3, y + 7);
+		g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][10]);
+		g.drawLine(x + w - 2, y, x + w - 2, y + 8);
+		g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][11]);
+		g.drawLine(x + w - 2, y + 1, x + w - 2, y + 7);
+		g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][12]);
+		g.drawLine(x + w - 1, y + 1, x + w - 1, y + 7);	
+	}
+	
+	private void drawHorizontalBlock(Graphics g, int x, int y, int w, int h) {
+		g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][0]);
+		g.drawLine(x + 1, y, x + 7, y);
+		g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][2]);
+		g.drawLine(x, y + 1, x + 8, y + 1);
+		g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][1]);
+		g.drawLine(x + 1, y + 1, x + 7, y + 1);
+		g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][2]);
+		g.drawLine(x, y + 2, x + 8, y + 2);
+		g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][3]);
+		g.drawLine(x + 1, y + 2, x + 7, y + 2);
+
+		if (h > 0) {
+			g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][7]);
+			g.drawLine(x, y + 3, x, y + h - 4);
+			g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][6]);
+			g.fillRect(x + 1, y + 3, 7, h - 6);
+			g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][5]);
+			g.drawLine(x + 8, y + 3, x + 8, y + h - 4);
+		}
+
+		g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][8]);
+		g.drawLine(x, y + h - 3, x + 8, y + h - 3);
+		g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][9]);
+		g.drawLine(x + 1, y + h - 3, x + 7, y + h - 3);
+		g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][10]);
+		g.drawLine(x, y + h - 2, x + 8, y + h - 2);
+		g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][11]);
+		g.drawLine(x + 1, y + h - 2, x + 7, y + h - 2);
+		g.setColor(RapidLookTools.getColors().getProgressBarColors()[0][12]);
+		g.drawLine(x + 1, y + h - 1, x + 7, y + h - 1);
+	}
+	
 	private void drawString(Graphics g, boolean vertical, int w, int h) {
 		if (this.progressBar.isStringPainted()) {
 			FontMetrics fontSizer = this.progressBar.getFontMetrics(this.progressBar.getFont());

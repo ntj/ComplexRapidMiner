@@ -34,7 +34,7 @@ import com.rapidminer.datatable.DataTableRow;
 /** This plotter can be used to create 2D bar plots. 
  * 
  *  @author Sebastian Land, Ingo Mierswa
- *  @version $Id: SticksPlot2D.java,v 1.4 2008/05/09 19:23:21 ingomierswa Exp $
+ *  @version $Id: SticksPlot2D.java,v 1.5 2008/07/12 16:53:15 ingomierswa Exp $
  */
 public class SticksPlot2D extends JMathPlotter2D {
 	
@@ -62,7 +62,11 @@ public class SticksPlot2D extends JMathPlotter2D {
 						while (iterator.hasNext()) {
 							DataTableRow row = (DataTableRow) iterator.next();
 							data[i][0] = row.getValue(getAxis(0));
+							if (Double.isNaN(data[i][0]))
+								data[i][0] = 0.0d;
 							data[i][1] = row.getValue(currentVariable);
+							if (Double.isNaN(data[i][1]))
+								data[i][1] = 0.0d;
 							i++;
 						}
 						// PlotPanel construction

@@ -22,6 +22,7 @@
  */
 package com.rapidminer.gui.plotter;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -30,9 +31,9 @@ import java.util.ListIterator;
  *  for histogram plotting.
  *  
  *  @author Ingo Mierswa
- *  @version $Id: Bins.java,v 1.5 2008/05/09 19:22:51 ingomierswa Exp $
+ *  @version $Id: Bins.java,v 1.6 2008/07/03 19:17:12 ingomierswa Exp $
  */
-public class Bins {
+public class Bins implements Iterable<Bin> {
 
 	private RectangleStyle rectangleStyle;
 
@@ -89,5 +90,9 @@ public class Bins {
     
 	public String toString() {
 		return binList.toString();
+	}
+
+	public Iterator<Bin> iterator() {
+		return binList.iterator();
 	}
 }

@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import com.rapidminer.operator.visualization.SymmetricalMatrix;
+import com.rapidminer.operator.visualization.dependencies.SymmetricalMatrix;
 
 
 /**
@@ -35,7 +35,7 @@ import com.rapidminer.operator.visualization.SymmetricalMatrix;
  * for adding new rows is not supported by this type of data tables.
  * 
  * @author Ingo Mierswa
- * @version $Id: DataTablePairwiseMatrixExtractionAdapter.java,v 1.2 2008/05/09 19:23:16 ingomierswa Exp $
+ * @version $Id: DataTablePairwiseMatrixExtractionAdapter.java,v 1.4 2008/08/25 08:10:35 ingomierswa Exp $
  */
 public class DataTablePairwiseMatrixExtractionAdapter extends AbstractDataTable {
 
@@ -69,6 +69,22 @@ public class DataTablePairwiseMatrixExtractionAdapter extends AbstractDataTable 
     public boolean isNominal(int index) {
         return (index <= 1);
     }
+    
+	public boolean isDate(int index) {
+		return false;
+	}
+	
+	public boolean isTime(int index) {
+		return false;
+	}
+	
+	public boolean isDateTime(int index) {
+		return false;
+	}
+	
+	public boolean isNumerical(int index) {
+		return (index > 1);
+	}
     
     public String mapIndex(int column, int value) {
         return index2NameMap[value];

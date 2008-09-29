@@ -27,15 +27,11 @@ import com.rapidminer.tools.LogService;
 /** Attribute statistics object for numerical attributes. 
  * 
  *  @author Ingo Mierswa
- *  @version $Id: NumericalStatistics.java,v 1.6 2008/05/09 19:22:42 ingomierswa Exp $
+ *  @version $Id: NumericalStatistics.java,v 1.7 2008/05/25 12:08:46 ingomierswa Exp $
  */
 public class NumericalStatistics implements Statistics {
 
     private static final long serialVersionUID = -6283236022093847887L;
-
-    private double minimum = Double.POSITIVE_INFINITY;
-
-    private double maximum = Double.NEGATIVE_INFINITY;
 
     private double sum = 0.0d;
 
@@ -47,8 +43,6 @@ public class NumericalStatistics implements Statistics {
     
     /** Clone constructor. */
     private NumericalStatistics(NumericalStatistics other) {
-        this.minimum = other.minimum;
-        this.maximum = other.maximum;
         this.sum = other.sum;
         this.squaredSum = other.squaredSum;
         this.valueCounter = other.valueCounter;
@@ -59,8 +53,6 @@ public class NumericalStatistics implements Statistics {
     }
     
     public void startCounting(Attribute attribute) {
-        this.minimum = Double.POSITIVE_INFINITY;
-        this.maximum = Double.NEGATIVE_INFINITY;
         this.sum = 0.0d;
         this.squaredSum = 0.0d;
         this.valueCounter = 0;
@@ -68,10 +60,6 @@ public class NumericalStatistics implements Statistics {
     
     public void count(double value) {
         if (!Double.isNaN(value)) {
-            if (minimum > value)
-                minimum = value;
-            if (maximum < value)
-                maximum = value;
             sum += value;
             squaredSum += value * value;
             valueCounter++;
@@ -80,19 +68,13 @@ public class NumericalStatistics implements Statistics {
 
     public boolean handleStatistics(String name) {
         return 
-            MINIMUM.equals(name) ||
-            MAXIMUM.equals(name) ||
             AVERAGE.equals(name) ||
             VARIANCE.equals(name) ||
             SUM.equals(name);
     }
     
     public double getStatistics(Attribute attribute, String name, String parameter) {
-        if (MINIMUM.equals(name)) {
-            return this.minimum;
-        } else if (MAXIMUM.equals(name)) {
-            return this.maximum;    
-        } else if (AVERAGE.equals(name)) {
+    	if (AVERAGE.equals(name)) {
             return this.sum / this.valueCounter;
         } else if (VARIANCE.equals(name)) {
             double average = this.sum / this.valueCounter;

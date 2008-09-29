@@ -50,9 +50,14 @@ import com.rapidminer.parameter.ParameterTypeFile;
  * 
  * @see com.rapidminer.gui.properties.AttributeFileCellEditor
  * @author Simon Fischer, Ingo Mierswa
- * @version $Id: FileValueCellEditor.java,v 1.4 2008/05/09 19:22:45 ingomierswa Exp $
+ * @version $Id: FileValueCellEditor.java,v 1.5 2008/07/31 17:43:41 ingomierswa Exp $
  */
 public abstract class FileValueCellEditor extends AbstractCellEditor implements PropertyValueCellEditor {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8235047960089702819L;
 
 	private JPanel panel = new JPanel();
 

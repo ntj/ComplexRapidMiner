@@ -27,9 +27,11 @@ package com.rapidminer.tools.math.som;
  * euclidian distance measure.
  * 
  * @author Sebastian Land
- * @version $Id: EuclideanDistance.java,v 1.4 2008/05/09 19:23:19 ingomierswa Exp $
+ * @version $Id: EuclideanDistance.java,v 1.5 2008/06/18 14:28:36 stiefelolm Exp $
  */
 public class EuclideanDistance implements DistanceFunction{
+
+	private static final long serialVersionUID = 1127224325142026906L;
 
 	public double getDistance(double[] point1, double[] point2) {
 		double distance = 0;

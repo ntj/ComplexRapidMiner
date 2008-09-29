@@ -22,6 +22,7 @@
  */
 package com.rapidminer.tools;
 
+import java.util.Date;
 import java.util.Random;
 
 import com.rapidminer.Process;
@@ -35,7 +36,7 @@ import com.rapidminer.parameter.UndefinedParameterError;
  * same results.
  * 
  * @author Ralf Klinkenberg, Ingo Mierswa
- * @version $Id: RandomGenerator.java,v 1.8 2008/05/09 19:22:55 ingomierswa Exp $
+ * @version $Id: RandomGenerator.java,v 1.9 2008/07/25 15:30:31 ingomierswa Exp $
  */
 public class RandomGenerator extends Random {
 
@@ -176,5 +177,10 @@ public class RandomGenerator extends Random {
 				return i;
 		}
 		return probs.length - 1;
+	}
+	
+	/** Returns a random date between the given ones. */
+	public Date nextDateInRange(Date start, Date end) {
+		return new Date(nextLongInRange(start.getTime(), end.getTime()));
 	}
 }

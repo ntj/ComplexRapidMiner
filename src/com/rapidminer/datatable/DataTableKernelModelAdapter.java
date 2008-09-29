@@ -38,7 +38,7 @@ import com.rapidminer.operator.learner.functions.kernel.KernelModel;
  * for adding new rows is not supported by this type of data tables.
  * 
  * @author Ingo Mierswa
- * @version $Id: DataTableKernelModelAdapter.java,v 1.5 2008/05/09 19:23:16 ingomierswa Exp $
+ * @version $Id: DataTableKernelModelAdapter.java,v 1.6 2008/05/25 12:08:44 ingomierswa Exp $
  */
 public class DataTableKernelModelAdapter extends AbstractDataTable {
 
@@ -105,6 +105,22 @@ public class DataTableKernelModelAdapter extends AbstractDataTable {
 		} else {
 			return index == KernelModelRow2DataTableRowWrapper.SUPPORT_VECTOR;
 		}
+	}
+	
+	public boolean isDate(int index) {
+		return false;
+	}
+
+	public boolean isTime(int index) {
+		return false;
+	}
+	
+	public boolean isDateTime(int index) {
+		return false;
+	}
+	
+	public boolean isNumerical(int index) {
+		return !isNominal(index);
 	}
 	
 	public String mapIndex(int column, int value) {

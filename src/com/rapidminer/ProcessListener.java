@@ -22,7 +22,7 @@
  */
 package com.rapidminer;
 
-import com.rapidminer.operator.ProcessRootOperator;
+import com.rapidminer.operator.Operator;
 
 /**
  * Listens to events during the run of an process.
@@ -36,8 +36,11 @@ public interface ProcessListener {
 	/** Will be invoked during process start. */
 	public void processStarts();
 	
-	/** Will be invoked every time another operator is performed in the process. */
-	public void processStep(ProcessRootOperator op);
+	/** Will be invoked every time another operator is started in the process. */
+	public void processStartedOperator(Operator op);
+	
+	/** Will be invoked every time an operator is finished */
+	public void processFinishedOperator(Operator op);
 
 	/** Will invoked when the process was successfully finished. */
 	public void processEnded();

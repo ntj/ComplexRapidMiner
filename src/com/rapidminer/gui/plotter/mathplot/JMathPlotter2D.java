@@ -31,9 +31,14 @@ import com.rapidminer.datatable.DataTable;
 /** The abstract super class for all 2D plotters using the JMathPlot library. 
  *  
  *  @author Ingo Mierswa
- *  @version $Id: JMathPlotter2D.java,v 1.4 2008/05/09 19:23:21 ingomierswa Exp $
+ *  @version $Id: JMathPlotter2D.java,v 1.5 2008/07/31 17:43:41 ingomierswa Exp $
  */
 public abstract class JMathPlotter2D extends JMathPlotter {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2547520708373816637L;
 
 	public JMathPlotter2D() {
 		super();

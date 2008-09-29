@@ -48,7 +48,7 @@ import com.rapidminer.gui.look.painters.CashedPainter;
  * The UI for toggle buttons.
  * 
  * @author Ingo Mierswa
- * @version $Id: ToggleButtonUI.java,v 1.2 2008/05/09 19:22:42 ingomierswa Exp $
+ * @version $Id: ToggleButtonUI.java,v 1.4 2008/07/13 14:16:10 ingomierswa Exp $
  */
 public class ToggleButtonUI extends BasicToggleButtonUI {
 

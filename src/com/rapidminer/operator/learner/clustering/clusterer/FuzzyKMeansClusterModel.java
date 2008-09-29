@@ -26,8 +26,6 @@ package com.rapidminer.operator.learner.clustering.clusterer;
 
 import java.text.DecimalFormat;
 import java.util.LinkedList;
-import java.util.concurrent.LinkedBlockingDeque;
-
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -255,5 +253,10 @@ public class FuzzyKMeansClusterModel extends FlatCrispClusterModel implements Ce
 			s.append(att.getName() + " = " + Tools.formatNumber(centroids[index][i++]) + " ");
 		}
 		return s.toString();
+	}
+
+	public String[] getDimensionNames() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

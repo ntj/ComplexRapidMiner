@@ -77,11 +77,14 @@ import com.rapidminer.gui.plotter.mathplot.SticksPlot2D;
 import com.rapidminer.gui.plotter.mathplot.SticksPlot3D;
 import com.rapidminer.gui.plotter.mathplot.SurfacePlot3D;
 import com.rapidminer.gui.plotter.som.SOMPlotter;
+import com.rapidminer.gui.tools.ExtendedJComboBox;
+import com.rapidminer.gui.tools.ExtendedJList;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.ExtendedListModel;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.visualization.SOMModelPlotter;
+import com.rapidminer.report.Renderable;
 import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.Renderable;
 
 
 /**
@@ -91,14 +94,16 @@ import com.rapidminer.tools.Renderable;
  * options depending on the plotter like a plot amount slider or option buttons.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: PlotterPanel.java,v 1.15 2008/05/09 19:22:51 ingomierswa Exp $
+ * @version $Id: PlotterPanel.java,v 1.27 2008/08/25 08:10:35 ingomierswa Exp $
  */
 public class PlotterPanel extends JPanel implements ItemListener, Runnable, Renderable, CoordinatesHandler {
     
 	private static final long serialVersionUID = -8724351470349745191L;
 
     public static final int DEFAULT_MAX_NUMBER_OF_DATA_POINTS = 1000;
-    	
+
+    public final static LinkedHashMap<String,Class<? extends Plotter>> COMPLETE_PLOTTER_SELECTION = new LinkedHashMap<String,Class<? extends Plotter>>();
+    
     public final static LinkedHashMap<String,Class<? extends Plotter>> WEIGHT_PLOTTER_SELECTION = new LinkedHashMap<String,Class<? extends Plotter>>();
     
     public final static LinkedHashMap<String,Class<? extends Plotter>> DATA_SET_PLOTTER_SELECTION = new LinkedHashMap<String, Class<? extends Plotter>>();
@@ -106,6 +111,41 @@ public class PlotterPanel extends JPanel implements ItemListener, Runnable, Rend
     public final static LinkedHashMap<String,Class<? extends Plotter>> MODEL_PLOTTER_SELECTION = new LinkedHashMap<String, Class<? extends Plotter>>();
     
     static { 
+        COMPLETE_PLOTTER_SELECTION.put("Scatter", ScatterPlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("Scatter Matrix", ScatterMatrixPlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("Scatter 3D", ScatterPlot3D.class);
+        COMPLETE_PLOTTER_SELECTION.put("Scatter 3D Color", ScatterPlot3DColor.class);
+        COMPLETE_PLOTTER_SELECTION.put("Bubble", BubbleChartPlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("Parallel", ParallelPlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("Deviation", DeviationChartPlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("Series", SeriesChartPlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("Survey", SurveyPlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("SOM", SOMPlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("Density", DensityPlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("Pie", PieChart2DPlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("Pie 3D", PieChart3DPlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("Ring", RingChartPlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("Bars", BarChart2DPlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("Bars 3D", BarChart3DPlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("Andrews Curves", AndrewsCurves.class);
+        COMPLETE_PLOTTER_SELECTION.put("Distribution", DistributionPlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("Histogram", HistogramPlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("Histogram Color", ColorHistogramPlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("Histogram Matrix", HistogramMatrixPlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("Histogram Color Matrix", ColorHistogramMatrixPlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("Quartile", QuartilePlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("Quartile Color", ColorQuartilePlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("Quartile Color Matrix", ColorQuartileMatrixPlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("Sticks", SticksPlot2D.class);
+        COMPLETE_PLOTTER_SELECTION.put("Sticks 3D", SticksPlot3D.class);
+        COMPLETE_PLOTTER_SELECTION.put("Box", BoxPlot2D.class);
+        COMPLETE_PLOTTER_SELECTION.put("Box 3D", BoxPlot3D.class);
+        COMPLETE_PLOTTER_SELECTION.put("RadViz", RadVizPlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("GridViz", GridVizPlotter.class);
+        COMPLETE_PLOTTER_SELECTION.put("Surface 3D", SurfacePlot3D.class);
+        COMPLETE_PLOTTER_SELECTION.put("Hinton", HintonDiagram.class);
+        COMPLETE_PLOTTER_SELECTION.put("Bound", BoundDiagram.class);
+        
         WEIGHT_PLOTTER_SELECTION.put("Lines", ScatterPlotter.class);
         WEIGHT_PLOTTER_SELECTION.put("Histogram", HistogramPlotter.class);
         WEIGHT_PLOTTER_SELECTION.put("Hinton", HintonDiagram.class);
@@ -235,17 +275,17 @@ public class PlotterPanel extends JPanel implements ItemListener, Runnable, Rend
         setDataTable(dataTable);
 	}
 
+	public void setSelectedPlotter(String name) {
+		this.selectedPlotter = name;
+		update(false);
+	}
+	
     public Plotter getSelectedPlotter() {
         return this.plotter;
     }
     
     public void setDataTable(DataTable dataTable) {
         this.dataTable = dataTable;
-        
-        // check for missing values
-        if (dataTable.containsMissingValues()) {
-            LogService.getGlobal().log("Plotter: the given data contains missing values. Probably most plotters will not be able to produce proper visualizations. Please replace missing values beforehand if possible.", LogService.ERROR);
-        }
         
         // perform sampling
         int maxRowNumber = DEFAULT_MAX_NUMBER_OF_DATA_POINTS;
@@ -261,16 +301,11 @@ public class PlotterPanel extends JPanel implements ItemListener, Runnable, Rend
         
         if (this.dataTable.getNumberOfRows() > maxRowNumber) {
             this.dataTable.sample(maxRowNumber);
-            LogService.getGlobal().log("Cannot plot all data points, using only a sample of " + maxRowNumber + " rows.", LogService.WARNING);
+            LogService.getGlobal().log("Cannot plot all data points, using only a sample of " + maxRowNumber + " rows. You can increase the number of values in the properties dialog from the tools menu, the property name is '" + MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_ROWS_MAXIMUM + "'", LogService.WARNING);
         }
 
         update(true);
     }
-    
-	private void setSelectedPlotter(String name) {
-		this.selectedPlotter = name;
-		update(false);
-	}
  
 	private void update(boolean fillPlotterList) {
 		int[] axis = null;
@@ -306,7 +341,6 @@ public class PlotterPanel extends JPanel implements ItemListener, Runnable, Rend
 		plotter.addMouseListener(mouseHandler);
 
 		JComponent plotterComponent = plotter.getPlotter();
-		plotterComponent.setBorder(BorderFactory.createEtchedBorder());
 		mainPanel.add(plotterComponent, BorderLayout.CENTER);
 		
 		GridBagLayout gridBag = new GridBagLayout();
@@ -343,7 +377,7 @@ public class PlotterPanel extends JPanel implements ItemListener, Runnable, Rend
 			gridBag.setConstraints(label, c);
 			axesSelectionPanel.add(label);
 
-			final JComboBox axisCombo = new JComboBox();
+			final JComboBox axisCombo = new ExtendedJComboBox(200);
 			axisCombo.setToolTipText(toolTip);
 			axisCombo.addItem("None");
 			for (int j = 0; j < dataTable.getNumberOfColumns(); j++) {
@@ -360,6 +394,7 @@ public class PlotterPanel extends JPanel implements ItemListener, Runnable, Rend
 			gridBag.setConstraints(axisCombo, c);
 			axesSelectionPanel.add(axisCombo);
 			
+			// log scale
 			if (plotter.isSupportingLogScale(i)) {
 				final JCheckBox logScaleBox = new JCheckBox("Log Scale", false);
 				logScaleBox.addActionListener(new ActionListener() {
@@ -388,7 +423,11 @@ public class PlotterPanel extends JPanel implements ItemListener, Runnable, Rend
 		}
 		switch (plotter.getValuePlotSelectionType()) {
 			case Plotter.MULTIPLE_SELECTION:
-				final JList plotList = new JList(dataTable.getColumnNames());
+				ExtendedListModel model = new ExtendedListModel();
+				for (String name : dataTable.getColumnNames()) {
+					model.addElement(name, "Select column '" + name + "' for plotting.");	
+				}
+				final JList plotList = new ExtendedJList(model, 200);
 				plotList.setToolTipText(toolTip);
 				plotList.setBorder(BorderFactory.createLoweredBevelBorder());
 				plotList.setCellRenderer(new LineStyleCellRenderer(plotter));
@@ -402,13 +441,16 @@ public class PlotterPanel extends JPanel implements ItemListener, Runnable, Rend
 				plotList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 				plotList.setSelectedIndices(selectedIndices);
 				JScrollPane listScrollPane = new ExtendedJScrollPane(plotList);
+				listScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 				c.weighty = 1.0;
+				c.weightx = 0;
 				gridBag.setConstraints(listScrollPane, c);
 				axesSelectionPanel.add(listScrollPane);
 				c.weighty = 0.0;
+				c.weightx = 1;
 				break;
 			case Plotter.SINGLE_SELECTION:
-				final JComboBox plotCombo = new JComboBox();
+				final JComboBox plotCombo = new ExtendedJComboBox(200);
 				plotCombo.setToolTipText(toolTip);
 				plotCombo.addItem("None");
 				for (int j = 0; j < dataTable.getNumberOfColumns(); j++) {
@@ -430,6 +472,30 @@ public class PlotterPanel extends JPanel implements ItemListener, Runnable, Rend
 				break;
 		}
         
+		// sorting
+		if (plotter.isSupportingSorting()) {
+			final JCheckBox sortingBox = new JCheckBox("Sorting", false);
+			sortingBox.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					plotter.setSorting(sortingBox.isSelected());
+				}
+			});
+			gridBag.setConstraints(sortingBox, c);
+			axesSelectionPanel.add(sortingBox);
+		}
+		
+		// sorting
+		if (plotter.isSupportingAbsoluteValues()) {
+			final JCheckBox absoluteBox = new JCheckBox("Absolute Values", false);
+			absoluteBox.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					plotter.setAbsolute(absoluteBox.isSelected());
+				}
+			});
+			gridBag.setConstraints(absoluteBox, c);
+			axesSelectionPanel.add(absoluteBox);
+		}
+		
 		// zooming
 		if (plotter.canHandleZooming()) {
 			label = new JLabel("Zooming");
@@ -461,8 +527,8 @@ public class PlotterPanel extends JPanel implements ItemListener, Runnable, Rend
 			axesSelectionPanel.add(jitterSlider);
 			jitterSlider.addChangeListener(new ChangeListener() {
 				public void stateChanged(ChangeEvent e) {
-                    //if (!jitterSlider.getValueIsAdjusting())
-					plotter.setJitter(jitterSlider.getValue());
+                    if (plotter.canHandleContinousJittering() || (!jitterSlider.getValueIsAdjusting()))
+                    	plotter.setJitter(jitterSlider.getValue());
 				}
 			});
 		}
@@ -584,6 +650,10 @@ public class PlotterPanel extends JPanel implements ItemListener, Runnable, Rend
 		}
 	}
 
+    public void prepareRendering() {
+    	plotter.prepareRendering();
+    }
+    
 	public int getRenderHeight(int preferredHeight) {
 		return plotter.getRenderHeight(preferredHeight);
 	}

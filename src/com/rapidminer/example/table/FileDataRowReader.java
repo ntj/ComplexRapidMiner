@@ -151,13 +151,13 @@ public class FileDataRowReader extends AbstractDataRowReader {
      * @param random
      *            the random generator used for sampling
 	 */
-	public FileDataRowReader(DataRowFactory factory, List<AttributeDataSource> attributeDataSources, double sampleRatio, int sampleSize, String separatorsRegExpr, char[] commentChars, boolean useQuotes, Charset encoding, RandomGenerator random) throws IOException {
+	public FileDataRowReader(DataRowFactory factory, List<AttributeDataSource> attributeDataSources, double sampleRatio, int sampleSize, String separatorsRegExpr, char[] commentChars, boolean useQuotes, boolean trimLines, Charset encoding, RandomGenerator random) throws IOException {
 		super(factory);
 		this.sampleRatio = sampleRatio;
 		this.maxNumber = sampleSize;
 		this.attributes = new Attribute[attributeDataSources.size()];
 		this.dataSourceIndex = new int[attributeDataSources.size()][2];
-		this.rapidMinerLineReader = new RapidMinerLineReader(separatorsRegExpr, commentChars, useQuotes);
+		this.rapidMinerLineReader = new RapidMinerLineReader(separatorsRegExpr, commentChars, useQuotes, trimLines);
 		this.random = random;
 		initReader(factory, attributeDataSources, sampleSize, separatorsRegExpr, useQuotes, encoding);
 	}

@@ -23,7 +23,10 @@
 package com.rapidminer.parameter;
 
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.LinkedList;
 
+import com.rapidminer.parameter.conditions.ParameterCondition;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Tools;
 
@@ -33,10 +36,15 @@ import com.rapidminer.tools.Tools;
  * parameter. Lists of ParameterTypes are provided by operators.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: ParameterType.java,v 1.6 2008/05/09 19:22:37 ingomierswa Exp $
+ * @version $Id: ParameterType.java,v 1.10 2008/07/31 17:43:41 ingomierswa Exp $
  * @see com.rapidminer.operator.Operator#getParameterTypes()
  */
 public abstract class ParameterType implements Comparable, Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5296461242851710130L;
 
 	/** The key of this parameter. */
 	private String key;
@@ -57,6 +65,11 @@ public abstract class ParameterType implements Comparable, Serializable {
 	 */
 	private boolean hidden = false;
 
+	/**
+	 * This collection assembles all conditions to be met to show this parameter within the gui.
+	 */
+	private Collection<ParameterCondition> conditions = new LinkedList<ParameterCondition>();
+	
 	/** Creates a new ParameterType. */
 	public ParameterType(String key, String description) {
 		this.key = key;
@@ -116,11 +129,16 @@ public abstract class ParameterType implements Comparable, Serializable {
 	}
 
 	/**
-	 * Returns true if this parameter is hidden and will not be shown in the
+	 * Returns true if this parameter is hidden or not all dependency conditions are fullfilled.
+	 * Then the parameter will not be shown in the
 	 * GUI. The default implementation returns true which should be the normal case. 
 	 */
 	public boolean isHidden() {
-		return hidden;
+		boolean conditionsMet = true;
+		for (ParameterCondition condition : conditions) {
+			conditionsMet &= condition.dependencyMet();
+		}
+		return hidden || !conditionsMet;
 	}
 	
 	/**
@@ -130,12 +148,26 @@ public abstract class ParameterType implements Comparable, Serializable {
 		this.hidden = hidden;
 	}
 	
+	/** Registers the given dependency condition. */
+	public void registerDependencyCondition(ParameterCondition condition) {
+		this.conditions.add(condition);
+	}
+	
 	/**
 	 * Returns true if this parameter is optional. The default implementation
 	 * returns true.
 	 */
 	public boolean isOptional() {
-		return true;
+		boolean becomeMandatory = false;
+		for (ParameterCondition condition : conditions) {
+			if (condition.dependencyMet()) {
+				becomeMandatory |= condition.becomeMandatory();
+			} else {
+				becomeMandatory = false;
+				break;
+			}
+		}
+		return !becomeMandatory;
 	}
 
 	/** Returns the key. */

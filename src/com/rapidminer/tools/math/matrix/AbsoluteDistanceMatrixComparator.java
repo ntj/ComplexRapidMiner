@@ -33,7 +33,7 @@ import com.rapidminer.tools.RandomGenerator;
  * Compare matrices using absolute distance.
  * 
  * @author Michael Wurst
- * @version $Id: AbsoluteDistanceMatrixComparator.java,v 1.3 2008/05/09 19:23:23 ingomierswa Exp $
+ * @version $Id: AbsoluteDistanceMatrixComparator.java,v 1.5 2008/09/12 10:29:52 tobiasmalbrecht Exp $
  * 
  */
 public class AbsoluteDistanceMatrixComparator<Ex, Ey> implements MatrixComparator<Ex, Ey> {

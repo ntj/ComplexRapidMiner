@@ -24,6 +24,7 @@ package com.rapidminer.gui.viewer;
 
 import java.awt.Color;
 
+import com.rapidminer.gui.tools.CellColorProvider;
 import com.rapidminer.gui.tools.ExtendedJTable;
 import com.rapidminer.gui.tools.SwingTools;
 
@@ -32,7 +33,7 @@ import com.rapidminer.gui.tools.SwingTools;
  * Can be used to display (parts of) a confusion matrix by means of a JTable.
  * 
  * @author Ingo Mierswa
- * @version $Id: ConfusionMatrixViewerTable.java,v 1.6 2008/05/09 19:23:00 ingomierswa Exp $
+ * @version $Id: ConfusionMatrixViewerTable.java,v 1.7 2008/08/25 08:10:33 ingomierswa Exp $
  */
 public class ConfusionMatrixViewerTable extends ExtendedJTable {
 
@@ -42,16 +43,17 @@ public class ConfusionMatrixViewerTable extends ExtendedJTable {
         super(new ConfusionMatrixViewerTableModel(classNames, counter), false);
         setAutoResizeMode(AUTO_RESIZE_OFF);
         setTableHeader(null);
-    }
-    
-    public Color getCellColor(int row, int col) {
-        if ((row == 0) || (row == (getRowCount() - 1)) || (col == 0) || (col == (getColumnCount() - 1))) {
-        	return SwingTools.LIGHTEST_BLUE;
-        } else {
-        	if (row == col)
-        		return SwingTools.LIGHT_YELLOW;
-        	else
-        		return SwingTools.LIGHTEST_YELLOW;
-        }
+        setCellColorProvider(new CellColorProvider() {
+            public Color getCellColor(int row, int col) {
+                if ((row == 0) || (row == (getRowCount() - 1)) || (col == 0) || (col == (getColumnCount() - 1))) {
+                	return SwingTools.LIGHTEST_BLUE;
+                } else {
+                	if (row == col)
+                		return SwingTools.LIGHT_YELLOW;
+                	else
+                		return SwingTools.LIGHTEST_YELLOW;
+                }
+            }        	
+        });
     }
 }

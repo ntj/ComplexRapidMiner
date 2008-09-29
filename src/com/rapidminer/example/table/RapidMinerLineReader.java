@@ -44,7 +44,7 @@ import com.rapidminer.tools.Tools;
  * not part of your data.
  * 
  * @author Ingo Mierswa
- * @version $Id: RapidMinerLineReader.java,v 1.4 2008/05/09 19:22:45 ingomierswa Exp $
+ * @version $Id: RapidMinerLineReader.java,v 1.6 2008/07/03 22:00:40 ingomierswa Exp $
  */
 public class RapidMinerLineReader {
 	
@@ -57,11 +57,14 @@ public class RapidMinerLineReader {
 	/** Indicates if quotes should be regarded (slower!). */
 	private boolean useQuotes = false;
 
+	/** Indicates if lines should be trimmed before they are splitted into columns. */
+	private boolean trimLines = false;
+	
 	/** The current line number. */
 	private int lineNumber = 1;
 
 	/** Indicates if quoting (&quot;) can be used to form. */
-	public RapidMinerLineReader(String separatorsRegExpr, char[] commentChars, boolean useQuotes) {
+	public RapidMinerLineReader(String separatorsRegExpr, char[] commentChars, boolean useQuotes, boolean trimLines) {
 		this.separatorPattern = Pattern.compile(separatorsRegExpr);	
 		if (commentChars != null) {
 			this.commentChars = new String[commentChars.length];
@@ -69,6 +72,7 @@ public class RapidMinerLineReader {
 				this.commentChars[i] = Character.toString(commentChars[i]);
 		}
 		this.useQuotes = useQuotes;
+		this.trimLines = trimLines;
 	}
 
 	/**
@@ -84,7 +88,10 @@ public class RapidMinerLineReader {
 			line = in.readLine();
 			if (line == null)
 				break; // eof
-			line = line.trim();
+			
+			if (trimLines)
+				line = line.trim();
+			
 			// check for comments
 			if (commentChars != null) {
 				for (int c = 0; c < commentChars.length; c++)
@@ -100,7 +107,8 @@ public class RapidMinerLineReader {
 		if (line == null)
 			return null;
 
-		String[] columns = separatorPattern.split(line);
+		String[] columns = separatorPattern.split(line, -1);
+		
 		if (useQuotes)
 			columns = Tools.mergeQuotedSplits(line, columns, "\"");
 		if (expectedNumberOfColumns != -1) {

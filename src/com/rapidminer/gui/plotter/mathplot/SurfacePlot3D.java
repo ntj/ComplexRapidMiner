@@ -40,7 +40,7 @@ import com.rapidminer.gui.plotter.conditions.RowsPlotterCondition;
 /** This plotter can be used to create 3D surface plots of equidistant data. 
  * 
  *  @author Sebastian Land, Ingo Mierswa
- *  @version $Id: SurfacePlot3D.java,v 1.4 2008/05/09 19:23:21 ingomierswa Exp $
+ *  @version $Id: SurfacePlot3D.java,v 1.5 2008/07/12 16:53:15 ingomierswa Exp $
  */
 public class SurfacePlot3D extends JMathPlotter3D {
 
@@ -72,9 +72,12 @@ public class SurfacePlot3D extends JMathPlotter3D {
 							DataTableRow row = (DataTableRow) iterator.next();
 							double x = row.getValue(getAxis(0));
 							double y = row.getValue(getAxis(1));
-							xSet.add(x);
-							ySet.add(y);
-							zMap.put(x + "+" + y, row.getValue(currentVariable));
+							double z = row.getValue(currentVariable);
+							if (!Double.isNaN(x) && !Double.isNaN(y) && !Double.isNaN(z)) {
+								xSet.add(x);
+								ySet.add(y);
+								zMap.put(x + "+" + y, z);
+							}
 						}
 						
 						// must the number of values in each dimension be the same?

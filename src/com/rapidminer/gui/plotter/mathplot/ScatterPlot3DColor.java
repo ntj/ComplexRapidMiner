@@ -35,7 +35,7 @@ import com.rapidminer.tools.math.MathFunctions;
 /** This plotter can be used to create 3D scatter plots where a 4th dimension can be shown by using a color scale. 
  * 
  *  @author Sebastian Land, Ingo Mierswa
- *  @version $Id: ScatterPlot3DColor.java,v 1.6 2008/05/09 19:23:21 ingomierswa Exp $
+ *  @version $Id: ScatterPlot3DColor.java,v 1.7 2008/07/12 16:53:15 ingomierswa Exp $
  */
 public class ScatterPlot3DColor extends JMathPlotter3D {
 
@@ -76,8 +76,13 @@ public class ScatterPlot3DColor extends JMathPlotter3D {
 							data[0][1] = row.getValue(getAxis(1));
 							data[0][2] = row.getValue(getAxis(2));	
 							double colorValue = getPointColorValue(table, row, currentVariable, min, max);
+							if (Double.isNaN(colorValue)) {
+								colorValue = 0.0d;
+							}
 							Color color = getPointColor(colorValue);
-							((Plot3DPanel)getPlotPanel()).addScatterPlot(getDataTable().getColumnName(currentVariable), color, data);
+							if (!Double.isNaN(data[0][0]) && !Double.isNaN(data[0][1]) && !Double.isNaN(data[0][2])) {
+								((Plot3DPanel)getPlotPanel()).addScatterPlot(getDataTable().getColumnName(currentVariable), color, data);
+							}
 						}
 					}
 				}

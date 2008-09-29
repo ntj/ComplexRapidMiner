@@ -26,6 +26,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -44,6 +45,7 @@ import org.jfree.ui.RectangleEdge;
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableRow;
 import com.rapidminer.gui.plotter.PlotterAdapter;
+import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.math.MathFunctions;
 
 
@@ -51,7 +53,7 @@ import com.rapidminer.tools.math.MathFunctions;
  * This is the bubble chart plotter.
  * 
  * @author Ingo Mierswa
- * @version $Id: BubbleChartPlotter.java,v 1.5 2008/05/09 19:22:58 ingomierswa Exp $
+ * @version $Id: BubbleChartPlotter.java,v 1.6 2008/05/25 12:08:44 ingomierswa Exp $
  *
  */
 public class BubbleChartPlotter extends PlotterAdapter {
@@ -215,6 +217,12 @@ public class BubbleChartPlotter extends PlotterAdapter {
 			String name = color + "";
 			if (dataTable.isNominal(colorColumn)) {
 				name = dataTable.mapIndex(colorColumn, (int)color);
+			} else if (dataTable.isDate(colorColumn)) {
+				name = Tools.formatDate(new Date((long)color));
+			} else if (dataTable.isTime(colorColumn)) {
+				name = Tools.formatTime(new Date((long)color));
+			} else if (dataTable.isDateTime(colorColumn)) {
+				name = Tools.formatDateTime(new Date((long)color));
 			}
 			dataList = dataCollection.get(name);
 			if (dataList == null) {

@@ -405,7 +405,7 @@ public class LogService implements LoggingHandler {
 	public void logFinalException(String message, Process process, Throwable exception, boolean debugMode) {
 		if (FATAL < this.minVerbosityLevel)
 			return;
-		
+		exception.printStackTrace();
 		Operator op = null;
 		if (process != null)
 			op = process.getCurrentOperator();

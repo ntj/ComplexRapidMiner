@@ -39,7 +39,7 @@ import com.rapidminer.gui.viewer.MatrixGraphCreator;
  * This class can be used to visualize matrices.
  * 
  * @author Michael Wurst, Ingo Mierswa
- * @version $Id: MatrixVisualizer.java,v 1.5 2008/05/09 19:23:23 ingomierswa Exp $
+ * @version $Id: MatrixVisualizer.java,v 1.7 2008/09/12 10:30:02 tobiasmalbrecht Exp $
  * 
  * @param <Ex>
  * @param <Ey>

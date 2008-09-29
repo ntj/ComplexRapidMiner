@@ -28,7 +28,6 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Vector;
-import java.util.concurrent.LinkedBlockingDeque;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
@@ -161,5 +160,10 @@ public class FuzzyMembershipModel extends FlatCrispClusterModel implements Centr
 			s.append(att.getName() + " = " + Tools.formatNumber(centroids[index][i++]) + " ");
 		}
 		return s.toString();
+	}
+
+	public String[] getDimensionNames() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

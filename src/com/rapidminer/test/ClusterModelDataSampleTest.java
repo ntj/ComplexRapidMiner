@@ -31,7 +31,7 @@ import com.rapidminer.operator.learner.clustering.FlatCrispClusterModel;
 * Tests for the data of several ExampleSets
 *
 * @author Marcin Skirzynski
-* @version $Id: ClusterModelDataSampleTest.java,v 1.4 2008/05/09 19:22:48 ingomierswa Exp $
+* @version $Id: ClusterModelDataSampleTest.java,v 1.6 2008/09/12 10:29:51 tobiasmalbrecht Exp $
 */
 public class ClusterModelDataSampleTest extends OperatorDataSampleTest {
 	

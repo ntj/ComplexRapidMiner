@@ -22,14 +22,14 @@
  */
 package com.rapidminer.datatable;
 
-import com.rapidminer.operator.visualization.SymmetricalMatrix;
+import com.rapidminer.operator.visualization.dependencies.SymmetricalMatrix;
 
 /**
- *  This class allows to use the entries of a {@link com.rapidminer.operator.visualization.SymmetricalMatrix} 
+ *  This class allows to use the entries of a {@link com.rapidminer.operator.visualization.dependencies.SymmetricalMatrix} 
  *  as basis for {@link com.rapidminer.datatable.DataTableRow}.
  *  
  *   @author Ingo Mierswa
- *   @version $Id: PairwiseCorrelation2DataTableRowWrapper.java,v 1.4 2008/05/09 19:23:16 ingomierswa Exp $
+ *   @version $Id: PairwiseCorrelation2DataTableRowWrapper.java,v 1.6 2008/08/25 08:10:35 ingomierswa Exp $
  */
 public class PairwiseCorrelation2DataTableRowWrapper implements DataTableRow {
 
@@ -47,7 +47,7 @@ public class PairwiseCorrelation2DataTableRowWrapper implements DataTableRow {
     }
     
     public String getId() { 
-        return null;
+        return "cor(" + this.matrix.getColumnName(firstIndex) + ", " + this.matrix.getColumnName(secondIndex) + ") = " + this.matrix.getValue(firstIndex, secondIndex);
     } 
     
     public double getValue(int index) {

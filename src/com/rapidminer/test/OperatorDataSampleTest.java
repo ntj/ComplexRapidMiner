@@ -39,7 +39,7 @@ import com.rapidminer.tools.ParameterService;
  * process.
  * 
  * @author Marcin Skirzynski, Christian Lohmann, Tobias Beckers
- * @version $Id: OperatorDataSampleTest.java,v 1.50 2008/05/09 19:22:48 ingomierswa Exp $
+ * @version $Id: OperatorDataSampleTest.java,v 1.51 2008/06/03 14:17:47 tobiasmalbrecht Exp $
  */
 public abstract class OperatorDataSampleTest extends RapidMinerTestCase {
 
@@ -106,7 +106,7 @@ public abstract class OperatorDataSampleTest extends RapidMinerTestCase {
 
 		// Learner in "Learner\Supervised"
 		//					Bayes
-		suite.addTest(new DistributedModelSampleDataTest("Learner" + File.separator + "Supervised" + File.separator + "Bayes" + File.separator +  "NaiveBayes.xml", new double[] {0.12,0.04000000000000001,0.019999999999999997,0.12}));
+		suite.addTest(new DistributionModelSampleDataTest("Learner" + File.separator + "Supervised" + File.separator + "Bayes" + File.separator +  "NaiveBayes.xml", new double[] {0.9,0.1666666666666666,0.0384615385,0.9782608696}));
 		//					Functions
 		suite.addTest(new SVMModelSampleDataTest("Learner" + File.separator + "Supervised" + File.separator + "Functions" + File.separator +  "EvoSVM.xml", new double[] {77.23214088668192,-7.332858952003095,536.0619409998441,234.7202021155585}));
 		suite.addTest(new SVMModelSampleDataTest("Learner" + File.separator + "Supervised" + File.separator + "Functions" + File.separator +  "GaussianProcesses.xml", new double[] {-14.471909578199531,-5.723394720354495,21.791351540462667,6.7619388781725105,-8.572869269432962}));

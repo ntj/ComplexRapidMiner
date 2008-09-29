@@ -37,8 +37,10 @@ import java.net.URL;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
+import java.text.DateFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -64,7 +66,7 @@ import com.rapidminer.tools.plugin.Plugin;
  * Tools for RapidMiner.
  * 
  * @author Simon Fischer, Ingo Mierswa
- * @version $Id: Tools.java,v 1.24 2008/05/09 19:22:55 ingomierswa Exp $
+ * @version $Id: Tools.java,v 1.25 2008/05/25 12:08:44 ingomierswa Exp $
  */
 public class Tools {
     
@@ -76,6 +78,15 @@ public class Tools {
 	
 	/** Number of post-comma digits needed to distinguish between display of numbers as integers or doubles. */
 	private static final double IS_DISPLAY_ZERO = 1E-8;
+	
+	/** Used for formatting values in the {@link #formatTime(Date)} method. */
+	private static final DateFormat TIME_FORMAT = DateFormat.getTimeInstance(DateFormat.SHORT, Locale.US);
+
+	/** Used for formatting values in the {@link #formatDate(Date)} method. */
+	private static final DateFormat DATE_FORMAT = DateFormat.getDateInstance(DateFormat.SHORT, Locale.US);
+	
+	/** Used for formatting values in the {@link #formatDateTime(Date)} method. */
+	private static final DateFormat DATE_TIME_FORMAT = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, Locale.US);
 	
 	/** Used for formatting values in the {@link #formatNumber(double)} method. */
 	private static final NumberFormat NUMBER_FORMAT = NumberFormat.getInstance(Locale.US);
@@ -183,9 +194,24 @@ public class Tools {
             return formatNumber(value, numberOfDigits);
         }
     }
-    
+
+    /** Format date as a short time string. */
+    public static String formatTime(Date date) {
+    	return TIME_FORMAT.format(date);
+    }
+
+    /** Format date as a short time string. */
+    public static String formatDate(Date date) {
+    	return DATE_FORMAT.format(date);
+    }
+
+    /** Format date as a short time string. */
+    public static String formatDateTime(Date date) {
+    	return DATE_TIME_FORMAT.format(date);
+    }
+
 	/** Returns the name for an ordinal number. */
-	public static final String ordinalNumber(int n) {
+	public static String ordinalNumber(int n) {
 		if ((n % 10 == 1) && (n % 100 != 11)) {
 			return n + "st";
 		}

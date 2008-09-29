@@ -30,10 +30,12 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.Tools;
 import com.rapidminer.example.set.SplittedExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DoubleArrayDataRow;
 import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.tools.Ontology;
 
 
@@ -43,10 +45,12 @@ import com.rapidminer.tools.Ontology;
  * for adding new rows is not supported by this type of data tables.
  * 
  * @author Ingo Mierswa
- * @version $Id: DataTableExampleSetAdapter.java,v 1.6 2008/05/09 19:23:16 ingomierswa Exp $
+ * @version $Id: DataTableExampleSetAdapter.java,v 1.11 2008/07/19 16:31:17 ingomierswa Exp $
  */
 public class DataTableExampleSetAdapter extends AbstractDataTable {
 
+	private static final int DEFAULT_MAX_SIZE_FOR_SHUFFLED_SAMPLING = 100000;
+	
 	private ExampleSet exampleSet;
 	
 	private List<Attribute> allAttributes = new ArrayList<Attribute>();
@@ -59,7 +63,7 @@ public class DataTableExampleSetAdapter extends AbstractDataTable {
     
     
 	public DataTableExampleSetAdapter(ExampleSet exampleSet, AttributeWeights weights) {
-        super("Example Set");
+        super("Data Table");
 		this.exampleSet = exampleSet;
         this.weights = weights;
         
@@ -88,7 +92,23 @@ public class DataTableExampleSetAdapter extends AbstractDataTable {
 	}
 	
 	public boolean isNominal(int index) {
-		return allAttributes.get(index).isNominal();
+		return Ontology.ATTRIBUTE_VALUE_TYPE.isA(allAttributes.get(index).getValueType(), Ontology.NOMINAL);
+	}
+
+	public boolean isDate(int index) {
+		return Ontology.ATTRIBUTE_VALUE_TYPE.isA(allAttributes.get(index).getValueType(), Ontology.DATE);
+	}
+
+	public boolean isTime(int index) {
+		return Ontology.ATTRIBUTE_VALUE_TYPE.isA(allAttributes.get(index).getValueType(), Ontology.TIME);
+	}
+	
+	public boolean isDateTime(int index) {
+		return Ontology.ATTRIBUTE_VALUE_TYPE.isA(allAttributes.get(index).getValueType(), Ontology.DATE_TIME);
+	}
+	
+	public boolean isNumerical(int index) {
+		return Ontology.ATTRIBUTE_VALUE_TYPE.isA(allAttributes.get(index).getValueType(), Ontology.NUMERICAL);
 	}
 	
 	public String mapIndex(int column, int value) {
@@ -146,16 +166,40 @@ public class DataTableExampleSetAdapter extends AbstractDataTable {
 	}
     
     public void sample(int newSize) {
-    	double ratio = (double)newSize / (double)getNumberOfRows(); 
-        this.exampleSet = new SplittedExampleSet(exampleSet, ratio, SplittedExampleSet.SHUFFLED_SAMPLING, -1);
-        ((SplittedExampleSet)this.exampleSet).selectSingleSubset(0);
+    	double ratio = (double)newSize / (double)getNumberOfRows();
+    	
+    	int maxNumberBeforeSampling = DEFAULT_MAX_SIZE_FOR_SHUFFLED_SAMPLING;
+    	String maxString = System.getProperty(RapidMinerGUI.PROPERTY_RAPIDMINER_GUI_MAX_STATISTICS_ROWS);
+    	if (maxString != null) {
+    		try {
+    			maxNumberBeforeSampling = Integer.parseInt(maxString);
+    		} catch (NumberFormatException e) {
+    			// do nothing
+    		}
+    	}
+    	
+    	if (getNumberOfRows() < maxNumberBeforeSampling) {
+    		this.exampleSet = new SplittedExampleSet(exampleSet, ratio, SplittedExampleSet.SHUFFLED_SAMPLING, -1);
+    		((SplittedExampleSet)this.exampleSet).selectSingleSubset(0);
+    	} else {
+        	this.exampleSet = Tools.getLinearSubsetCopy(this.exampleSet, newSize, 0);
+    	}
     }
     
     public static ExampleSet createExampleSetFromDataTable(DataTable table) {
     	List<Attribute> attributes = new ArrayList<Attribute>();
     	
     	for (int i = 0; i < table.getNumberOfColumns(); i++) {
-    		if (table.isNominal(i)) {
+    		if (table.isDate(i)) {
+    			Attribute attribute = AttributeFactory.createAttribute(table.getColumnName(i), Ontology.DATE);
+    			attributes.add(attribute);
+    		} else if (table.isTime(i)) {
+    			Attribute attribute = AttributeFactory.createAttribute(table.getColumnName(i), Ontology.TIME);
+    			attributes.add(attribute);
+    		} else if (table.isDateTime(i)) {
+    			Attribute attribute = AttributeFactory.createAttribute(table.getColumnName(i), Ontology.DATE_TIME);
+    			attributes.add(attribute);
+    		} else if (table.isNominal(i)) {
     			Attribute attribute = AttributeFactory.createAttribute(table.getColumnName(i), Ontology.NOMINAL);
     			attributes.add(attribute);
     		} else {
@@ -171,7 +215,9 @@ public class DataTableExampleSetAdapter extends AbstractDataTable {
     		double[] values = new double[attributes.size()];
     		for (int a = 0; a < values.length; a++) {
     			Attribute attribute = attributes.get(a);
-    			if (attribute.isNominal()) {
+    			if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(attribute.getValueType(), Ontology.DATE_TIME)) {
+    				values[a] = row.getValue(a);
+    			} else if (attribute.isNominal()) {
     				values[a] = attribute.getMapping().mapString(table.getValueAsString(row, a));
     			} else {
     				values[a] = row.getValue(a);

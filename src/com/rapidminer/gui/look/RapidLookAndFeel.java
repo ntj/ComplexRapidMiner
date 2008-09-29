@@ -41,7 +41,7 @@ import com.rapidminer.gui.tools.SwingTools;
  * The main look and feel class.
  *
  * @author Ingo Mierswa
- * @version $Id: RapidLookAndFeel.java,v 1.5 2008/05/09 20:57:26 ingomierswa Exp $
+ * @version $Id: RapidLookAndFeel.java,v 1.6 2008/07/12 16:53:15 ingomierswa Exp $
  */
 public class RapidLookAndFeel extends BasicLookAndFeel {
 
@@ -176,9 +176,9 @@ public class RapidLookAndFeel extends BasicLookAndFeel {
 
 		Object defaultDirectoryIcon = SwingTools.createImage("plaf/folder.png");
 
-		Integer zero = new Integer(0);
-		Integer one = new Integer(1);
-
+		Integer zero = Integer.valueOf(0);
+		Integer one = Integer.valueOf(1);
+		
 		Object sliderFocusInsets = new InsetsUIResource(2, 2, 2, 2);
 
 		Object[] defaults = {

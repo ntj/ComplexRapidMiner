@@ -103,7 +103,8 @@ public class ResultSetDataRowReader extends AbstractDataRowReader {
 			try {
 				DataRow row = getFactory().create(attributes.length);
 				for (int i = 0; i < attributes.length; i++) {
-					row.set(attributes[i], DatabaseDataRow.readColumn(resultSet, attributes[i]));
+					double value = DatabaseDataRow.readColumn(resultSet, attributes[i]);
+					row.set(attributes[i], value);
 				}
 				row.trim();
 				return row;

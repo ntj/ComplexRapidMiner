@@ -75,7 +75,7 @@ public class ParameterTypeDouble extends ParameterTypeNumber {
 	}
 
 	public boolean isOptional() {
-		return optional;
+		return super.isOptional() && optional;
 	}
 
 	public Object getDefaultValue() {

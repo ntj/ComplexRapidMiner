@@ -22,13 +22,15 @@
  */
 package com.rapidminer.tools.math.som;
 
+import java.io.Serializable;
+
 /**
  * This interface provides the methods for adapting nodes to an input.
  * 
  * @author Sebastian Land
- * @version $Id: AdaptationFunction.java,v 1.2 2008/05/09 19:23:19 ingomierswa Exp $
+ * @version $Id: AdaptationFunction.java,v 1.3 2008/06/18 14:28:36 stiefelolm Exp $
  */
-public interface AdaptationFunction {
+public interface AdaptationFunction extends Serializable{
 	
 	/**
 	 * This method returns the new value of a node, after it had adopted to a stimulus.

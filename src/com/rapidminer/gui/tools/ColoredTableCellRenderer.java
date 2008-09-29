@@ -24,6 +24,7 @@ package com.rapidminer.gui.tools;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.util.Date;
 
 import javax.swing.BorderFactory;
 import javax.swing.JTable;
@@ -39,7 +40,7 @@ import com.rapidminer.tools.Tools;
  * Numbers will be formatted with the generic number of fraction digits.
  * 
  * @author Ingo Mierswa
- * @version $Id: ColoredTableCellRenderer.java,v 1.3 2008/05/09 19:22:59 ingomierswa Exp $
+ * @version $Id: ColoredTableCellRenderer.java,v 1.4 2008/05/25 12:08:46 ingomierswa Exp $
  */
 public class ColoredTableCellRenderer implements TableCellRenderer {
 
@@ -51,6 +52,8 @@ public class ColoredTableCellRenderer implements TableCellRenderer {
 	
 	private JTextField renderer = new JTextField();
 
+	private int dateFormat = ExtendedJTable.NO_DATE_FORMAT;
+	
 	public ColoredTableCellRenderer() {
 		renderer.setBorder(BorderFactory.createEmptyBorder(0, 3, 0, 3));	
 	}
@@ -59,6 +62,10 @@ public class ColoredTableCellRenderer implements TableCellRenderer {
 		renderer.setBackground(color);
 	}
 
+	public void setDateFormat(int dateFormat) {
+		this.dateFormat = dateFormat;
+	}
+	
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
 		String text = null;
 		if (value instanceof Number) {
@@ -66,10 +73,20 @@ public class ColoredTableCellRenderer implements TableCellRenderer {
 			double numberValue = number.doubleValue();
 			text = Tools.formatIntegerIfPossible(numberValue);
 		} else {
-			if (value != null)
-				text = value.toString();
-			else
+			if (value != null) {
+				if (value instanceof Date) {
+					switch (dateFormat) {
+					case ExtendedJTable.DATE_FORMAT: text = Tools.formatDate((Date)value); break;
+					case ExtendedJTable.TIME_FORMAT: text = Tools.formatTime((Date)value); break;
+					case ExtendedJTable.DATE_TIME_FORMAT: text = Tools.formatDateTime((Date)value); break;
+					default: text = value.toString(); break;
+					}
+				} else {
+					text = value.toString();
+				}
+			} else {
 				text = "?";
+			}
 		}
 		renderer.setText(text);
 		

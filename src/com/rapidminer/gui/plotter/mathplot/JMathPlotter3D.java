@@ -26,16 +26,19 @@ import org.math.plot.Plot3DPanel;
 import org.math.plot.PlotPanel;
 
 import com.rapidminer.datatable.DataTable;
-import com.rapidminer.gui.plotter.conditions.MissingValuesPlotterCondition;
-import com.rapidminer.gui.plotter.conditions.PlotterCondition;
 
 
 /** The abstract super class for all 3D plotters using the JMathPlot library. 
  *  
  *  @author Ingo Mierswa
- *  @version $Id: JMathPlotter3D.java,v 1.5 2008/05/09 19:23:21 ingomierswa Exp $
+ *  @version $Id: JMathPlotter3D.java,v 1.7 2008/07/31 17:43:41 ingomierswa Exp $
  */
 public abstract class JMathPlotter3D extends JMathPlotter {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8695197842788069313L;
 
 	public JMathPlotter3D() {
 		super();
@@ -46,10 +49,6 @@ public abstract class JMathPlotter3D extends JMathPlotter {
 	}
 	
 	public PlotPanel createPlotPanel() { return new Plot3DPanel(); }
-	
-    public PlotterCondition getPlotterCondition() {
-        return new MissingValuesPlotterCondition();
-    }
     
 	public int getNumberOfOptionIcons() {
 		return 5;

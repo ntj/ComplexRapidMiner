@@ -65,13 +65,15 @@ public class DatabaseExampleTable extends AbstractExampleTable {
 
 	public static DatabaseExampleTable createDatabaseExampleTable(DatabaseHandler databaseHandler, String tableName) throws SQLException {
 		// derive attribute list
-    	Statement statement = databaseHandler.createStatement();
+    	Statement statement = databaseHandler.createStatement(false);
         ResultSet rs = statement.executeQuery(
         		"SELECT * FROM " + 
         		databaseHandler.getProperties().getIdentifierQuoteOpen() + 
         		tableName + 
-        		databaseHandler.getProperties().getIdentifierQuoteClose());
+        		databaseHandler.getProperties().getIdentifierQuoteClose() +
+        		" WHERE 0 = 1");
 		List<Attribute> attributes = DatabaseHandler.createAttributes(rs);
+		rs.close();
 		statement.close();
 		
 		// create database example table
@@ -84,7 +86,7 @@ public class DatabaseExampleTable extends AbstractExampleTable {
     		statement.close();
     		statement = null;
     	}
-    	this.statement = this.databaseHandler.createStatement();
+    	this.statement = this.databaseHandler.createStatement(true);
         this.resultSet = this.statement.executeQuery(
         		"SELECT * FROM " + 
         		databaseHandler.getProperties().getIdentifierQuoteOpen() + 
@@ -143,11 +145,19 @@ public class DatabaseExampleTable extends AbstractExampleTable {
 	}
 
 	public int size() {
-        try {
-            this.size = this.databaseHandler.countRecords(resultSet);
-        } catch (SQLException e) {
-            LogService.getGlobal().log("DatabaseExampleTable: cannot count number of records: " + e.getMessage(), LogService.WARNING);
-        }
+		if (this.size < 0) {
+			try {
+				Statement countStatement = this.databaseHandler.createStatement(false);
+				String countQuery = "SELECT count(*) FROM " + databaseHandler.getProperties().getIdentifierQuoteOpen() + tableName + databaseHandler.getProperties().getIdentifierQuoteClose();
+				ResultSet countResultSet = countStatement.executeQuery(countQuery);
+				countResultSet.next();
+				this.size = countResultSet.getInt(1);
+				countResultSet.close();
+				countStatement.close();
+			} catch (SQLException e) {
+				// do nothing
+			}
+		}
         return this.size;
 	}
     

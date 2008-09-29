@@ -47,7 +47,7 @@ import edu.uci.ics.jung.graph.Tree;
  * The layout selection for the {@link GraphViewer}.
  *
  * @author Ingo Mierswa
- * @version $Id: LayoutSelection.java,v 1.5 2008/05/09 19:23:24 ingomierswa Exp $
+ * @version $Id: LayoutSelection.java,v 1.7 2008/07/18 15:50:45 ingomierswa Exp $
  */
 public class LayoutSelection<V,E> extends JComboBox {
 
@@ -59,11 +59,17 @@ public class LayoutSelection<V,E> extends JComboBox {
 
     private Map<String, Class> layoutMap = null;
 
-    public LayoutSelection(GraphViewer<V, E> graphViewer, Graph graph) {
+    private boolean animate = true;
+    
+    private Layout<V, E> layout;
+    
+    
+    public LayoutSelection(GraphViewer<V, E> graphViewer, Graph<V,E> graph) {
         super();
         this.graphViewer = graphViewer;
         this.graph = graph;
-
+        this.layout = new ISOMLayout<V, E>(graph);
+        
         layoutMap = new java.util.LinkedHashMap<String, Class>();
 
         if (graph instanceof Tree) {
@@ -84,8 +90,20 @@ public class LayoutSelection<V,E> extends JComboBox {
         addActionListener(this);
     }
     
+    public Layout<V, E> getSelectedLayout() {
+    	return this.layout;
+    }
+    
     public void actionPerformed(ActionEvent arg0) {
         setLayout();
+    }
+    
+    public void setAnimate(boolean animate) {
+    	this.animate = animate;
+    }
+
+    public boolean getAnimate() {
+    	return this.animate;
     }
     
     @SuppressWarnings("unchecked")
@@ -108,8 +126,8 @@ public class LayoutSelection<V,E> extends JComboBox {
                 }
 
                 Object o = constructor.newInstance(new Object[] { graph });
-                Layout layout = (Layout) o;
-                graphViewer.changeLayout(layout);
+                this.layout = (Layout) o;
+                graphViewer.changeLayout(layout, animate, 0, 0);
             } catch (Exception e) {
                 e.printStackTrace();
             } 

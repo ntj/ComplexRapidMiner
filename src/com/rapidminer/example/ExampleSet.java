@@ -38,10 +38,10 @@ import com.rapidminer.operator.ResultObject;
  * implementation should support this view concept.
  * 
  * @author Ingo Mierswa
- * @version $Id: ExampleSet.java,v 1.8 2008/05/09 19:22:42 ingomierswa Exp $
+ * @version $Id: ExampleSet.java,v 1.9 2008/08/28 18:54:07 ingomierswa Exp $
  */
 public interface ExampleSet extends ResultObject, Cloneable, Iterable<Example> {
-        
+	
     // ------------- Misc -----------------------------
     
 	/** Clones the example set. */

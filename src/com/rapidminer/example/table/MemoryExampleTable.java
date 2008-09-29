@@ -181,7 +181,7 @@ public class MemoryExampleTable extends AbstractExampleTable {
 	 * is increased by INCREMENT attributes. This avoids a large number of array
 	 * copies in cases like automatic feature construction etc.
 	 */
-	public int addAttribute(Attribute attribute) {
+	public synchronized int addAttribute(Attribute attribute) {
 		int index = super.addAttribute(attribute);
 		if (dataList == null)
 			return index;

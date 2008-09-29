@@ -50,11 +50,9 @@ public class SimpleSampling extends AbstractSampleStrategy {
 					}else{
 						newVal[new Double((Math.log(j)/Math.log(2))).intValue()]=pdf.getMinValue(new Double((Math.log(j)/Math.log(2))).intValue());
 					}
-					
 				}
 				samples[i] = newVal;
 			}
-			
 			return samples;
 		}
 		throw new NullPointerException();

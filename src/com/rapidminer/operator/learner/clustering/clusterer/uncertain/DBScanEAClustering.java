@@ -102,8 +102,9 @@ public class DBScanEAClustering extends AbstractDensityBasedClusterer {
 	}
 
 	public double lambdaDistance(String id1, String id2, double lambda) {
-		double diff = maxDistance(id1, id2) - minDistance(id1, id2);
-		double lDist = diff * (1 - lambda) + minDistance(id1, id2);
+		double minDist = minDistance(id1, id2);
+		double diff = maxDistance(id1, id2) - minDist;
+		double lDist = diff * (1 - lambda) + minDist;
 		return lDist;
 	}
 	

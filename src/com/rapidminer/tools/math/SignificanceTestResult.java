@@ -38,6 +38,8 @@ import com.rapidminer.operator.ResultObjectAdapter;
  */
 public abstract class SignificanceTestResult extends ResultObjectAdapter {
 
+	private static final long serialVersionUID = 2586381371596047181L;
+
 	private static final String RESULT_ICON_NAME = "percent.png";
 	
 	private static Icon resultIcon = null;

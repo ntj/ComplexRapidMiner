@@ -48,7 +48,7 @@ import com.rapidminer.operator.similarity.SimilarityMeasure;
  * Visualizes a similarity measure interactively.
  * 
  * @author Ingo Mierswa
- * @version $Id: SimilarityVisualization.java,v 1.10 2008/05/09 19:23:01 ingomierswa Exp $
+ * @version $Id: SimilarityVisualization.java,v 1.11 2008/07/07 07:06:37 ingomierswa Exp $
  */
 public class SimilarityVisualization extends JPanel {
 
@@ -91,6 +91,7 @@ public class SimilarityVisualization extends JPanel {
 		group.add(graphButton);
 		togglePanel.add(graphButton);
 
+		
 		// histogram view
 		DataTable dataTable = new SimpleDataTable("Histogram", new String[] { "Histogram" });
         double sampleRatio = Math.min(1.0d, 500.0d / sim.getNumberOfIds());
@@ -130,22 +131,21 @@ public class SimilarityVisualization extends JPanel {
 		togglePanel.add(histogramButton);
 
 		// K distance view
-		//if (sim.isDistance()) {
-			final SimilarityKDistanceVisualization kDistancePlotter = 
-				new SimilarityKDistanceVisualization((sim.isDistance() ? sim : new DistanceSimilarityConverter(sim)), this);
-			final JRadioButton kdistanceButton = new JRadioButton("k-Distance View", false);
-			kdistanceButton.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					if (kdistanceButton.isSelected()) {
-						remove(1);
-						add(kDistancePlotter, BorderLayout.CENTER);
-						repaint();
-					}
+		final SimilarityKDistanceVisualization kDistancePlotter = 
+			new SimilarityKDistanceVisualization((sim.isDistance() ? sim : new DistanceSimilarityConverter(sim)));
+		final JRadioButton kdistanceButton = new JRadioButton("k-Distance View", false);
+		kdistanceButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (kdistanceButton.isSelected()) {
+					remove(1);
+					add(kDistancePlotter, BorderLayout.CENTER);
+					repaint();
 				}
-			});
-			group.add(kdistanceButton);
-            togglePanel.add(kdistanceButton);
-		//}
+			}
+		});
+		group.add(kdistanceButton);
+		togglePanel.add(kdistanceButton);
+		
 
 		add(togglePanel, BorderLayout.NORTH);
 		add(tableView, BorderLayout.CENTER);

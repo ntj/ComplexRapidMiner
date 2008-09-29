@@ -48,12 +48,15 @@ import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.JDBCDriverTable;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.io.DatabaseExampleSetWriter;
+import com.rapidminer.operator.io.DatabaseExampleSource;
 import com.rapidminer.parameter.Parameters;
+import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.jdbc.DatabaseHandler;
 import com.rapidminer.tools.jdbc.DatabaseService;
 import com.rapidminer.tools.jdbc.DriverInfo;
+import com.rapidminer.tools.jdbc.JDBCProperties;
 
 
 /**
@@ -61,7 +64,7 @@ import com.rapidminer.tools.jdbc.DriverInfo;
  * {@link DatabaseExampleSetWriter} operators.
  * 
  * @author Ingo Mierswa
- * @version $Id: DBExampleSetWriterConfigurationWizard.java,v 1.6 2008/05/09 19:22:56 ingomierswa Exp $
+ * @version $Id: DBExampleSetWriterConfigurationWizard.java,v 1.8 2008/08/21 17:48:16 ingomierswa Exp $
  */
 public class DBExampleSetWriterConfigurationWizard extends AbstractConfigurationWizard {
     
@@ -104,34 +107,51 @@ public class DBExampleSetWriterConfigurationWizard extends AbstractConfiguration
     /** Remembers the password during connections. */
     private String password = null;
     
+    /** Indicates if the system settings are derived via parameters. */
+    private boolean showSystemSetup = true;
     
     /** Creates a new wizard. */
-    public DBExampleSetWriterConfigurationWizard(ConfigurationListener listener) {
+    public DBExampleSetWriterConfigurationWizard(ConfigurationListener listener, boolean showDrivers, boolean showSystemSetup, String selectedSystem, String server, String databaseName) {
         super("Database Example Set Writer Wizard", listener);
+        this.showSystemSetup = showSystemSetup;
         
         // add all steps
-        addTitleStep();
+        addTitleStep(showDrivers);
         addDBSystemSelectionStep();
         addUserDataStep();
         addTableSelectionStep();
         
         updateSystemSelection();
+        
+        initStartParameters(listener);
+        
+        if (!showSystemSetup) {
+        	if (selectedSystem != null)
+        		systemComboBox.setSelectedItem(selectedSystem);
+        	serverField.setText(server);
+        	databaseNameField.setText(databaseName);
+        }
     }
 
-    private void addTitleStep() {
+    private void addTitleStep(boolean showDrivers) {
         StringBuffer titleString = new StringBuffer();
-        titleString.append("This wizard will guide you through the process of writing data into databases. Using this wizard will involve the following steps:" + 
-                "<ul>" + 
-                "<li>Selection of a database</li>" +
-                "<li>Definition of the username and password</li>" + 
-                "<li>Definition of a table name</li>" + 
-                "</ul>");
-        titleString.append("<br>The currently available JDBC drivers are listed below. Please make sure to copy missing drivers into the directory lib/jdbc and restart RapidMiner in order to make additional drivers available.");
+        titleString.append("This wizard will guide you through the process of writing data into databases. Using this wizard will involve the following steps:<ul>");
+        if (this.showSystemSetup) 
+        	titleString.append("<li>Selection of a database</li>");
+        titleString.append("<li>Definition of the username and password</li>" + 
+                           "<li>Definition of a table name</li>" + 
+                           "</ul>");
+        if (showDrivers)
+        	titleString.append("<br>The currently available JDBC drivers are listed below. Please make sure to copy missing drivers into the directory lib/jdbc and restart RapidMiner in order to make additional drivers available.");
 
         JPanel panel = SwingTools.createTextPanel("Welcome to the Database Example Set Writer Wizard", titleString.toString());
-        DriverInfo[] drivers = DatabaseService.getAllDriverInfos();
-        JDBCDriverTable driverTable = new JDBCDriverTable(drivers);
-        panel.add(new JScrollPane(driverTable), BorderLayout.CENTER);
+        
+        if (showDrivers) {
+        	DriverInfo[] drivers = DatabaseService.getAllDriverInfos();
+        	JDBCDriverTable driverTable = new JDBCDriverTable(drivers);
+        	panel.add(new JScrollPane(driverTable), BorderLayout.CENTER);
+        }
+        
         addStep(panel);
     }
 
@@ -165,6 +185,8 @@ public class DBExampleSetWriterConfigurationWizard extends AbstractConfiguration
         });
         c.weightx = 1.0d;
         c.gridwidth = GridBagConstraints.REMAINDER;
+        if (!showSystemSetup)
+        	systemComboBox.setEnabled(false);
         layout.setConstraints(systemComboBox, c);
         content.add(systemComboBox);
 
@@ -177,6 +199,8 @@ public class DBExampleSetWriterConfigurationWizard extends AbstractConfiguration
         
         c.weightx = 1.0d;
         c.gridwidth = GridBagConstraints.REMAINDER;
+        if (!showSystemSetup)
+        	serverField.setEnabled(false);
         layout.setConstraints(serverField, c);
         content.add(serverField);
 
@@ -189,6 +213,8 @@ public class DBExampleSetWriterConfigurationWizard extends AbstractConfiguration
         
         c.weightx = 1.0d;
         c.gridwidth = GridBagConstraints.REMAINDER;
+        if (!showSystemSetup)
+        	databaseNameField.setEnabled(false);
         layout.setConstraints(databaseNameField, c);
         content.add(databaseNameField);
                 
@@ -304,14 +330,19 @@ public class DBExampleSetWriterConfigurationWizard extends AbstractConfiguration
     }
     
     private void updateSystemSelection() {
-        if (systemComboBox.getSelectedIndex() >= DatabaseService.getJDBCProperties().size()) {
-            serverField.setEnabled(false);
-            databaseNameField.setEnabled(false);
-            urlField.setText("");
-        } else {
-            serverField.setEnabled(true);
-            databaseNameField.setEnabled(true);
-        }
+    	if (!showSystemSetup) {
+			serverField.setEnabled(false);
+			databaseNameField.setEnabled(false);  
+    	} else {
+    		if (systemComboBox.getSelectedIndex() >= DatabaseService.getJDBCProperties().size()) {
+    			serverField.setEnabled(false);
+    			databaseNameField.setEnabled(false);
+    			urlField.setText("");
+    		} else {
+    			serverField.setEnabled(true);
+    			databaseNameField.setEnabled(true);
+    		}
+    	}
     }
     
     private String getDatabaseURL() {
@@ -400,6 +431,87 @@ public class DBExampleSetWriterConfigurationWizard extends AbstractConfiguration
         JOptionPane.showMessageDialog(this, (message != null ? (message + ": ") : "") + "Connection to database has failed:" + Tools.getLineSeparator() + e.getMessage().substring(0, Math.min(300, e.getMessage().length())) + "...", "Connection failed", JOptionPane.ERROR_MESSAGE);        
     }
     
+    
+    protected void initStartParameters(ConfigurationListener listener) {
+        Parameters parameters = listener.getParameters();
+        int dbIndex = -1;
+        
+        try {
+        	Object systemObject = parameters.getParameter(DatabaseExampleSource.PARAMETER_DATABASE_SYSTEM);
+        	if (systemObject != null) {
+        		dbIndex = (Integer)systemObject;
+        		systemComboBox.setSelectedIndex(dbIndex);
+        	}
+		} catch (UndefinedParameterError e) {
+			// do nothing
+		}
+		
+		try {
+			Object urlObject = parameters.getParameter(DatabaseExampleSource.PARAMETER_DATABASE_URL);
+			if (urlObject != null) {
+				String urlString = urlObject.toString();
+				urlField.setText(urlString);
+				
+				JDBCProperties props = DatabaseService.getJDBCProperties().get(dbIndex);
+				String urlPrefix = props.getUrlPrefix();
+				String dbNameSeparator = props.getDbNameSeperator();
+				
+				int serverStart = urlPrefix.length();
+				int serverEnd = -1;
+				if (urlString.indexOf(":") >= 0) {
+					serverEnd = urlString.indexOf(":", serverStart + 1);
+				} else {
+					if (urlString.indexOf(dbNameSeparator, serverStart + 1) >= 0) {
+						serverEnd = urlString.indexOf(dbNameSeparator);
+					}
+				}
+				
+				if ((serverEnd >= serverStart) && (serverStart < urlString.length())) {
+					String serverName = urlString.substring(serverStart, serverEnd);
+					serverField.setText(serverName);
+				}
+				
+				int dbStart = -1;
+				if (urlString.indexOf(dbNameSeparator, serverStart + 1) >= 0) {
+					dbStart = urlString.lastIndexOf(dbNameSeparator) + dbNameSeparator.length();
+				}
+				
+				if (dbStart >= 0) {
+					String dbName = urlString.substring(dbStart);
+					databaseNameField.setText(dbName);
+				}
+			}
+		} catch (UndefinedParameterError e) {
+			// do nothing
+		}
+		
+		try {
+			Object userNameObject = parameters.getParameter(DatabaseExampleSource.PARAMETER_USERNAME);
+			if (userNameObject != null)
+				userNameField.setText(userNameObject.toString());
+		} catch (UndefinedParameterError e) {
+			// do nothing
+		}
+		
+		try {
+			Object passwordObject = parameters.getParameter(DatabaseExampleSource.PARAMETER_PASSWORD);
+			if (passwordObject != null) {
+				passwordField.setText(passwordObject.toString());
+			}
+		} catch (UndefinedParameterError e) {
+			// do nothing
+		}
+		
+		try {
+			Object tableObject = parameters.getParameter(DatabaseExampleSource.PARAMETER_TABLE_NAME);
+			if (tableObject != null) {
+				tableNameField.setText(tableObject.toString());
+			}
+		} catch (UndefinedParameterError e) {
+			// do nothing
+		}
+    }
+    
     protected void finish(ConfigurationListener listener) {
         try {
             disconnect();
@@ -439,9 +551,5 @@ public class DBExampleSetWriterConfigurationWizard extends AbstractConfiguration
             LogService.getGlobal().log("Problem during disconnecting: " + e.getMessage(), LogService.WARNING);
         }
         super.cancel();
-    }
-    
-    public void createConfigurationWizard(ConfigurationListener listener) {
-        (new DBExampleSourceConfigurationWizard(listener)).setVisible(true);
     }
 }

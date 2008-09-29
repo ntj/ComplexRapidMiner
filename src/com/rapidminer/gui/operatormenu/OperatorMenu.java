@@ -47,9 +47,14 @@ import com.rapidminer.tools.Tools;
  * {@link ReplaceOperatorMenu}).
  * 
  * @author Simon Fischer, Ingo Mierswa
- * @version $Id: OperatorMenu.java,v 1.5 2008/05/09 19:23:19 ingomierswa Exp $
+ * @version $Id: OperatorMenu.java,v 1.6 2008/07/31 17:43:41 ingomierswa Exp $
  */
 public abstract class OperatorMenu extends JMenu {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2685621612717488446L;
 
 	public static final OperatorMenu NEW_OPERATOR_MENU = new NewOperatorMenu();
 

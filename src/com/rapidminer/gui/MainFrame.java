@@ -75,7 +75,7 @@ import com.rapidminer.gui.actions.CheckForJDBCDriversAction;
 import com.rapidminer.gui.actions.CheckForUpdatesAction;
 import com.rapidminer.gui.actions.EditModeAction;
 import com.rapidminer.gui.actions.ExitAction;
-import com.rapidminer.gui.actions.ExportAction;
+import com.rapidminer.gui.actions.ExportViewAction;
 import com.rapidminer.gui.actions.ManageBuildingBlocksAction;
 import com.rapidminer.gui.actions.ManageTemplatesAction;
 import com.rapidminer.gui.actions.NewAction;
@@ -144,7 +144,7 @@ import de.java.print.PreviewDialog;
  * children. Most of the code is enclosed within the Actions.
  * 
  * @author Ingo Mierswa
- * @version $Id: MainFrame.java,v 1.30 2008/05/09 22:13:12 ingomierswa Exp $
+ * @version $Id: MainFrame.java,v 1.35 2008/07/12 16:53:15 ingomierswa Exp $
  */
 public class MainFrame extends JFrame implements WindowListener, BreakpointListener {
 
@@ -318,8 +318,8 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 	public final transient Action PAGE_SETUP_ACTION_24 = new PageSetupAction(this, IconSize.SMALL);
 	public final transient Action PAGE_SETUP_ACTION_32 = new PageSetupAction(this, IconSize.MIDDLE);
 
-	public final transient Action EXPORT_ACTION_24 = new ExportAction(this, IconSize.SMALL);
-	public final transient Action EXPORT_ACTION_32 = new ExportAction(this, IconSize.MIDDLE);
+	public final transient Action EXPORT_ACTION_24 = new ExportViewAction(this, IconSize.SMALL);
+	public final transient Action EXPORT_ACTION_32 = new ExportViewAction(this, IconSize.MIDDLE);
 
 	public final transient Action EXIT_ACTION_24 = new ExitAction(this, IconSize.SMALL);
 	public final transient Action EXIT_ACTION_32 = new ExitAction(this, IconSize.MIDDLE);
@@ -437,6 +437,8 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 	private transient Process process = null;
 	
 	private transient ProcessThread processThread;
+
+	private JMenuBar menuBar;
 	
 	// --------------------------------------------------------------------------------
 	
@@ -480,7 +482,7 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 		getContentPane().add(splitPaneV, BorderLayout.CENTER);
 
 		// menu bar
-		JMenuBar menuBar = new JMenuBar();
+		menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
 
 		// file menu
@@ -506,7 +508,7 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 		fileMenu.addSeparator();
 		fileMenu.add(EXIT_ACTION_24);
 		menuBar.add(fileMenu);
-
+		
 		// edit menu
 		JMenu editMenu = new JMenu("Edit");
 		editMenu.setMnemonic(KeyEvent.VK_E);
@@ -569,7 +571,7 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 		aboutItem.setToolTipText("Display information about RapidMiner");
 		aboutItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				new AboutBox(MainFrame.this, RapidMiner.getVersion(), rapidMinerLogo).setVisible(true);
+				new AboutBox(MainFrame.this, RapidMiner.getLongVersion(), rapidMinerLogo).setVisible(true);
 			}
 		});
 		helpMenu.add(aboutItem);
@@ -612,20 +614,26 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 		helpMenu.add(needSupport);
 		
 		List allPlugins = Plugin.getAllPlugins();
+		boolean addedSeparator = false;
 		if (allPlugins.size() > 0) {
-			helpMenu.addSeparator();
 			Iterator i = allPlugins.iterator();
 			while (i.hasNext()) {
 				final Plugin plugin = (Plugin) i.next();
-				JMenuItem aboutPluginItem = new JMenuItem("About " + plugin.getName() + "...", pluginsIcon);
-				aboutPluginItem.setToolTipText("Display information about " + plugin.getName());
-				aboutPluginItem.addActionListener(new ActionListener() {
-
-					public void actionPerformed(ActionEvent e) {
-						plugin.createAboutBox(MainFrame.this, rapidMinerLogo).setVisible(true);
+				if (plugin.showAboutBox()) {
+					if (!addedSeparator) {
+						addedSeparator = true;
+						helpMenu.addSeparator();						
 					}
-				});
-				helpMenu.add(aboutPluginItem);
+					JMenuItem aboutPluginItem = new JMenuItem("About " + plugin.getName() + "...", pluginsIcon);
+					aboutPluginItem.setToolTipText("Display information about " + plugin.getName());
+					aboutPluginItem.addActionListener(new ActionListener() {
+	
+						public void actionPerformed(ActionEvent e) {
+							plugin.createAboutBox(MainFrame.this, rapidMinerLogo).setVisible(true);
+						}
+					});
+					helpMenu.add(aboutPluginItem);
+				}
 			}
 		}
 
@@ -1518,5 +1526,28 @@ public class MainFrame extends JFrame implements WindowListener, BreakpointListe
 		currentStates[ConditionalAction.XML_VIEW] = mainEditor.isXMLViewActive();
 		currentStates[ConditionalAction.DESCRIPTION_VIEW] = mainEditor.isDescriptionViewActive();
 		ConditionalAction.updateAll(currentStates);
+	}
+	
+	/**
+	 * This methods provide plugins the possibility to modify the menus
+	 */
+	public void removeMenu(int index) {
+		menuBar.remove(menuBar.getMenu(index));
+	}
+	
+	public void removeMenuItem(int menuIndex, int itemIndex) {
+		menuBar.getMenu(menuIndex).remove(itemIndex);
+	}
+	
+	public void addMenuItem(int menuIndex, int itemIndex, JMenuItem item) {
+		menuBar.getMenu(menuIndex).add(item, itemIndex);
+	}
+
+	public void addMenu(int menuIndex, JMenu menu) {
+		menuBar.add(menu, menuIndex);
+	}
+	
+	public void addMenuSeparator(int menuIndex) {
+		menuBar.getMenu(menuIndex).addSeparator();
 	}
 }

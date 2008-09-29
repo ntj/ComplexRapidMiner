@@ -43,7 +43,7 @@ import com.rapidminer.tools.ClassNameMapper;
  * Compares two matrices.
  * 
  * @author Michael Wurst
- * @version $Id: MatrixComparatorOperator.java,v 1.4 2008/05/09 19:23:23 ingomierswa Exp $
+ * @version $Id: MatrixComparatorOperator.java,v 1.8 2008/09/12 10:29:52 tobiasmalbrecht Exp $
  * 
  */
 public class MatrixComparatorOperator extends Operator {
@@ -62,11 +62,11 @@ public class MatrixComparatorOperator extends Operator {
         super(description);
     }
 
-    public Class[] getInputClasses() {
+    public Class<?>[] getInputClasses() {
         return new Class[] { SimilarityMeasure.class };
     }
 
-    public Class[] getOutputClasses() {
+    public Class<?>[] getOutputClasses() {
         return new Class[] { SimilarityMeasure.class, PerformanceVector.class };
     }
 
@@ -91,7 +91,6 @@ public class MatrixComparatorOperator extends Operator {
         @SuppressWarnings("unchecked")
         double simSim = matrixComparator.compare(matrix1, matrix2, getParameterAsDouble(PARAMETER_SAMPLING_RATE));
 
-        @SuppressWarnings("unchecked")
         PerformanceCriterion simCriterion = new EstimatedPerformance("matrix_similarity", simSim, 1, matrixComparator.getReciprogalFitness());
 
         result.addCriterion(simCriterion);

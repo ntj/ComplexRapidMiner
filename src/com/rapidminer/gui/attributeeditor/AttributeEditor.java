@@ -91,7 +91,7 @@ import com.rapidminer.tools.att.AttributeSet;
  * can be edited by the user.
  * 
  * @author Simon Fischer, Ingo Mierswa
- * @version $Id: AttributeEditor.java,v 1.20 2008/05/09 19:23:21 ingomierswa Exp $
+ * @version $Id: AttributeEditor.java,v 1.22 2008/07/03 22:00:41 ingomierswa Exp $
  */
 public class AttributeEditor extends ExtendedJTable implements MouseListener, DataControlListener {
 
@@ -327,9 +327,17 @@ public class AttributeEditor extends ExtendedJTable implements MouseListener, Da
 		cellEditors.add(TYPE_ROW, new DefaultCellEditor(typeBox));
 
 		// value type
-		String[] allValueTypes = Ontology.ATTRIBUTE_VALUE_TYPE.getNames();
-		String[] valueTypes = new String[allValueTypes.length - 1];
-		System.arraycopy(allValueTypes, 1, valueTypes, 0, valueTypes.length);
+		List<String> usedTypes = new LinkedList<String>();
+		for (int i = 0; i < Ontology.VALUE_TYPE_NAMES.length; i++) {
+			if ((i != Ontology.ATTRIBUTE_VALUE) && (i != Ontology.FILE_PATH) && (!Ontology.ATTRIBUTE_VALUE_TYPE.isA(i, Ontology.DATE_TIME))) {
+				usedTypes.add(Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(i));
+			}
+		}
+		String[] valueTypes = new String[usedTypes.size()];
+		int vCounter = 0;
+		for (String type : usedTypes) {
+			valueTypes[vCounter++] = type;
+		}
 		JComboBox valueTypeBox = new JComboBox(valueTypes);
 		valueTypeBox.setToolTipText("The value type of the attribute.");
 		cellEditors.add(VALUE_TYPE_ROW, new DefaultCellEditor(valueTypeBox));
@@ -392,7 +400,7 @@ public class AttributeEditor extends ExtendedJTable implements MouseListener, Da
 		BufferedReader in = new BufferedReader(new FileReader(file));
 		RapidMinerLineReader reader = null;
 		try {
-			reader = new RapidMinerLineReader(exampleSource.getParameterAsString(ExampleSource.PARAMETER_COLUMN_SEPARATORS), exampleSource.getParameterAsString(ExampleSource.PARAMETER_COMMENT_CHARS).toCharArray(), exampleSource.getParameterAsBoolean(ExampleSource.PARAMETER_USE_QUOTES)); 
+			reader = new RapidMinerLineReader(exampleSource.getParameterAsString(ExampleSource.PARAMETER_COLUMN_SEPARATORS), exampleSource.getParameterAsString(ExampleSource.PARAMETER_COMMENT_CHARS).toCharArray(), exampleSource.getParameterAsBoolean(ExampleSource.PARAMETER_USE_QUOTES), exampleSource.getParameterAsBoolean(ExampleSource.PARAMETER_TRIM_LINES)); 
 		} catch (UndefinedParameterError e) {
 			 // cannot happen since all	parameters are optional
 			throw new IOException("Cannot create RapidMiner line reader: " + e.getMessage());
@@ -747,7 +755,8 @@ public class AttributeEditor extends ExtendedJTable implements MouseListener, Da
 							-1, 
 							exampleSource.getParameterAsString(ExampleSource.PARAMETER_COLUMN_SEPARATORS), 
 							commentCharacters, 
-							exampleSource.getParameterAsBoolean(ExampleSource.PARAMETER_USE_QUOTES), 
+							exampleSource.getParameterAsBoolean(ExampleSource.PARAMETER_USE_QUOTES),
+							exampleSource.getParameterAsBoolean(ExampleSource.PARAMETER_TRIM_LINES),
 							exampleSource.getEncoding(), 
 							RandomGenerator.getRandomGenerator(-1)); 
 			} catch (IOException e) {

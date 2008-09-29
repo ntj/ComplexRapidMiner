@@ -23,12 +23,14 @@
 package com.rapidminer.example;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.Iterator;
 
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.example.table.NumericalAttribute;
 import com.rapidminer.example.table.SparseFormatDataRowReader;
+import com.rapidminer.tools.Ontology;
 
 
 /**
@@ -41,7 +43,7 @@ import com.rapidminer.example.table.SparseFormatDataRowReader;
  * attribute selections or example subsets (samplings).
  * 
  * @author Ingo Mierswa
- * @version $Id: Example.java,v 1.7 2008/05/09 19:22:42 ingomierswa Exp $
+ * @version $Id: Example.java,v 1.8 2008/05/28 10:52:03 ingomierswa Exp $
  */
 public class Example implements Serializable {
 
@@ -109,10 +111,21 @@ public class Example implements Serializable {
      *  @throws AttributeTypeException if the given attribute has the wrong value type
      */
     public double getNumericalValue(Attribute a) {
-        if (a.isNominal()) {
+        if (!a.isNumerical()) {
             throw new AttributeTypeException("Extraction of numerical example value for non-numerical attribute '" + a.getName() + "' is not possible.");
         }
         return getValue(a);
+    }
+
+    /** Returns the date value for the given attribute. 
+     * 
+     *  @throws AttributeTypeException if the given attribute has the wrong value type
+     */
+    public Date getDateValue(Attribute a) {
+        if (!Ontology.ATTRIBUTE_VALUE_TYPE.isA(a.getValueType(), Ontology.DATE_TIME)) {
+            throw new AttributeTypeException("Extraction of date example value for non-date attribute '" + a.getName() + "' is not possible.");
+        }
+        return new Date((long)getValue(a));
     }
 
 	/**
@@ -145,7 +158,7 @@ public class Example implements Serializable {
         if (first.isNominal() && second.isNominal()) {
             return getValueAsString(first).equals(getValueAsString(second));
         } else if ((!first.isNominal()) && (!second.isNominal())) {
-            return getValue(first) == getValue(second);
+            return com.rapidminer.tools.Tools.isEqual(getValue(first), getValue(second));
         } else {
             return false;
         }

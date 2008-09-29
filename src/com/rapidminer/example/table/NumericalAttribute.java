@@ -22,6 +22,7 @@
  */
 package com.rapidminer.example.table;
 
+import com.rapidminer.example.MinMaxStatistics;
 import com.rapidminer.example.NumericalStatistics;
 import com.rapidminer.example.UnknownStatistics;
 import com.rapidminer.tools.Ontology;
@@ -30,8 +31,7 @@ import com.rapidminer.tools.Ontology;
 /**
  * This class holds all information on a single numerical attribute. In addition
  * to the information of the superclass this is some statistics data like
- * minimum, maximum and average of the values. If one of the methods designed
- * for nominal attributes is invoked a RuntimeException will be thrown.
+ * minimum, maximum and average of the values.
  * 
  * @author Ingo Mierswa
  * @version $Id: NumericalAttribute.java,v 2.8 2006/04/05 08:57:22 ingomierswa
@@ -64,6 +64,7 @@ public class NumericalAttribute extends AbstractAttribute {
 	/* pp */ NumericalAttribute(String name, int valueType) {
 		super(name, valueType);
         registerStatistics(new NumericalStatistics());
+        registerStatistics(new MinMaxStatistics());
         registerStatistics(new UnknownStatistics());
 	}
 	
@@ -81,6 +82,10 @@ public class NumericalAttribute extends AbstractAttribute {
 	
 	public boolean isNominal() {
 		return false;
+	}
+	
+	public boolean isNumerical() { 
+		return true; 
 	}
 	
 	public NominalMapping getMapping() {

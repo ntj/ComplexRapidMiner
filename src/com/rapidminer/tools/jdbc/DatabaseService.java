@@ -58,15 +58,15 @@ import com.rapidminer.tools.Tools;
  * DriverManager.getConnection(...).
  *   
  * @author Ingo Mierswa
- * @version $Id: DatabaseService.java,v 1.7 2008/05/09 19:23:22 ingomierswa Exp $
+ * @version $Id: DatabaseService.java,v 1.9 2008/08/15 19:15:00 ingomierswa Exp $
  *
  */
 public class DatabaseService {
 
     private static List<JDBCProperties> jdbcProperties = new ArrayList<JDBCProperties>();
     
-	public static void init(boolean searchForJDBDriversInLibDirectory, boolean searchForJDBCDriversInClasspath) {
-		registerAllJDBCDrivers(searchForJDBDriversInLibDirectory, searchForJDBCDriversInClasspath);
+	public static void init(File jdbcDir, boolean searchForJDBDriversInLibDirectory, boolean searchForJDBCDriversInClasspath) {
+		registerAllJDBCDrivers(jdbcDir, searchForJDBDriversInLibDirectory, searchForJDBCDriversInClasspath);
 		
 		// then try properties from the etc directory if available
 		File etcPropertyFile = ParameterService.getConfigFile("jdbc_properties.xml");
@@ -109,9 +109,12 @@ public class DatabaseService {
 		}
 	}
 	
-	private static void registerAllJDBCDrivers(boolean searchForJDBDriversInLibDirectory, boolean searchForJDBCDriversInClasspath) {
+	private static void registerAllJDBCDrivers(File jdbcDir, boolean searchForJDBDriversInLibDirectory, boolean searchForJDBCDriversInClasspath) {
 		if (searchForJDBDriversInLibDirectory) {
-			File jdbcDirectory = ParameterService.getLibraryFile("jdbc");
+			File jdbcDirectory = jdbcDir;
+			if (jdbcDirectory == null) {
+				jdbcDirectory = ParameterService.getLibraryFile("jdbc");
+			}
 			if ((jdbcDirectory != null) && (jdbcDirectory.exists())) {
 				File[] allFiles = jdbcDirectory.listFiles();
 				if (allFiles != null) {
@@ -344,6 +347,15 @@ public class DatabaseService {
 		return driverArray;
 	}
     
+	public static JDBCProperties getJDBCProperties(String name) {
+		for (JDBCProperties p : jdbcProperties) {
+			if (p.getName().equals(name)) {
+				return p;
+			}
+		}
+		return null;
+	}
+	
     public static List<JDBCProperties> getJDBCProperties() {
         return jdbcProperties;
     }

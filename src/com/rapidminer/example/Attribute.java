@@ -41,7 +41,7 @@ import com.rapidminer.example.table.NominalMapping;
  * </ul>
  * 
  * @author Ingo Mierswa
- * @version $Id: Attribute.java,v 1.11 2008/05/09 19:22:43 ingomierswa Exp $
+ * @version $Id: Attribute.java,v 1.13 2008/05/28 10:52:03 ingomierswa Exp $
  */
 public interface Attribute extends Cloneable, Serializable {
 
@@ -166,6 +166,9 @@ public interface Attribute extends Cloneable, Serializable {
 
 	/** Returns true if the attribute is nominal. */
 	public boolean isNominal();
+
+	/** Returns true if the attribute is nominal. */
+	public boolean isNumerical();
 	
 	/** Returns a formatted string of the given value according to the attribute type. */
 	public String getAsString(double value, int digits, boolean quoteWhitespace);

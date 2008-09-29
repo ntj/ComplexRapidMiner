@@ -58,7 +58,7 @@ public class ParameterTypeString extends ParameterTypeSingle {
 	}
 
 	public boolean isOptional() {
-		return optional;
+		return super.isOptional() && optional;
 	}
 
 	public Object getDefaultValue() {

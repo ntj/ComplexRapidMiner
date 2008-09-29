@@ -58,7 +58,7 @@ import edu.uci.ics.jung.graph.util.EdgeType;
  * 
  * 
  * @author Michael Wurst
- * @version $Id: MatrixGraphCreator.java,v 1.3 2008/05/09 19:23:01 ingomierswa Exp $
+ * @version $Id: MatrixGraphCreator.java,v 1.5 2008/09/12 10:32:28 tobiasmalbrecht Exp $
  *
  */
 public class MatrixGraphCreator<Ex, Ey> extends GraphCreatorAdaptor {

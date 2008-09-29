@@ -22,7 +22,6 @@
  */
 package com.rapidminer.gui.viewer;
 
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -36,6 +35,7 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
@@ -44,8 +44,11 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import com.rapidminer.gui.tools.ExtendedJList;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
+import com.rapidminer.gui.tools.ExtendedListModel;
 import com.rapidminer.operator.learner.associations.AssociationRule;
+import com.rapidminer.operator.learner.associations.AssociationRuleGenerator;
 import com.rapidminer.operator.learner.associations.AssociationRules;
 import com.rapidminer.operator.learner.associations.Item;
 
@@ -53,28 +56,21 @@ import com.rapidminer.operator.learner.associations.Item;
  * This is a gui component which can be used to define filter conditions for association rules.
  * 
  * @author Ingo Mierswa
- * @version $Id: AssociationRuleFilter.java,v 1.3 2008/05/09 19:22:59 ingomierswa Exp $
+ * @version $Id: AssociationRuleFilter.java,v 1.4 2008/08/21 13:17:07 ingomierswa Exp $
  */
 public class AssociationRuleFilter extends JPanel {
 
 	private static final long serialVersionUID = 5619543957729778883L;
-
-	private static final int MAX_CONFIDENCE = 10000;
 	
-    private JSlider confidenceSlider = new JSlider(SwingConstants.HORIZONTAL, 0, MAX_CONFIDENCE, (int)(MAX_CONFIDENCE / 10.0d)) {
-
-		private static final long serialVersionUID = 1210754337620619916L;
-		
-		public Dimension getMinimumSize() {
-            return new Dimension(40, (int)super.getMinimumSize().getHeight());
-        }
-        public Dimension getPreferredSize() {
-            return new Dimension(40, (int)super.getPreferredSize().getHeight());
-        }
-        public Dimension getMaximumSize() {
-            return new Dimension(40, (int)super.getMaximumSize().getHeight());
-        }
-    };
+	private static final int MAX_VALUE = 10000;
+	
+	private JComboBox criterionSelectorBox = new JComboBox(AssociationRuleGenerator.CRITERIA);
+	
+    private JSlider criterionMinSlider = new JSlider(SwingConstants.HORIZONTAL, 0, MAX_VALUE, MAX_VALUE / 10);
+    
+    private double[] minValues;
+    
+    private double[] maxValues;
     
 	private JList conclusionList = null;
 	
@@ -90,6 +86,45 @@ public class AssociationRuleFilter extends JPanel {
 		this.rules = rules;
 		this.itemArray = rules.getAllConclusionItems();
 
+		// init min and max values
+		this.minValues = new double[AssociationRuleGenerator.CRITERIA.length];
+		this.maxValues = new double[AssociationRuleGenerator.CRITERIA.length];
+		for (int i = 0; i < minValues.length; i++) {
+			minValues[i] = Double.POSITIVE_INFINITY;
+			maxValues[i] = Double.NEGATIVE_INFINITY;
+		}
+		for (AssociationRule rule : rules) {
+			if (!Double.isInfinite(rule.getConfidence())) {
+				this.minValues[AssociationRuleGenerator.CONFIDENCE] = Math.min(this.minValues[AssociationRuleGenerator.CONFIDENCE], rule.getConfidence());
+				this.maxValues[AssociationRuleGenerator.CONFIDENCE] = Math.max(this.maxValues[AssociationRuleGenerator.CONFIDENCE], rule.getConfidence());
+			}
+			
+			if (!Double.isInfinite(rule.getConviction())) {
+				this.minValues[AssociationRuleGenerator.CONVICTION] = Math.min(this.minValues[AssociationRuleGenerator.CONVICTION], rule.getConviction());
+				this.maxValues[AssociationRuleGenerator.CONVICTION] = Math.max(this.maxValues[AssociationRuleGenerator.CONVICTION], rule.getConviction());
+			}
+			
+			if (!Double.isInfinite(rule.getGain())) {
+				this.minValues[AssociationRuleGenerator.GAIN] = Math.min(this.minValues[AssociationRuleGenerator.GAIN], rule.getGain());
+				this.maxValues[AssociationRuleGenerator.GAIN] = Math.max(this.maxValues[AssociationRuleGenerator.GAIN], rule.getGain());
+			}
+			
+			if (!Double.isInfinite(rule.getLaplace())) {
+				this.minValues[AssociationRuleGenerator.LAPLACE] = Math.min(this.minValues[AssociationRuleGenerator.LAPLACE], rule.getLaplace());
+				this.maxValues[AssociationRuleGenerator.LAPLACE] = Math.max(this.maxValues[AssociationRuleGenerator.LAPLACE], rule.getLaplace());
+			}
+			
+			if (!Double.isInfinite(rule.getLift())) {
+				this.minValues[AssociationRuleGenerator.LIFT] = Math.min(this.minValues[AssociationRuleGenerator.LIFT], rule.getLift());
+				this.maxValues[AssociationRuleGenerator.LIFT] = Math.max(this.maxValues[AssociationRuleGenerator.LIFT], rule.getLift());
+			}
+			
+			if (!Double.isInfinite(rule.getPs())) {
+				this.minValues[AssociationRuleGenerator.PS] = Math.min(this.minValues[AssociationRuleGenerator.PS], rule.getPs());
+				this.maxValues[AssociationRuleGenerator.PS] = Math.max(this.maxValues[AssociationRuleGenerator.PS], rule.getPs());
+			}
+		}
+		
 		// layout
 		GridBagLayout layout = new GridBagLayout();
 		setLayout(layout);
@@ -115,7 +150,11 @@ public class AssociationRuleFilter extends JPanel {
 		add(conjunctionBox);
 
 		// conclusion list
-		this.conclusionList = new JList(itemArray);
+		ExtendedListModel model = new ExtendedListModel();
+		for (Item item : itemArray) {
+			model.addElement(item, "The item '" + item.toString() + "'.");
+		}
+		this.conclusionList = new ExtendedJList(model, 200);
 		this.conclusionList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		conclusionList.addListSelectionListener(new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent e) {
@@ -130,24 +169,39 @@ public class AssociationRuleFilter extends JPanel {
 		add(label);
 		
 		ExtendedJScrollPane listPane = new ExtendedJScrollPane(conclusionList);
+		listPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		c.weighty = 1;
+		c.weightx = 0;
 		layout.setConstraints(listPane, c);
 		add(listPane);
 		
 		c.weighty = 0;
-		label = new JLabel("Min. Confidence:");
+		c.weightx = 1;
+		label = new JLabel("Min. Criterion:");
 		layout.setConstraints(label, c);
 		add(label);
 		
-		confidenceSlider.addChangeListener(new ChangeListener() {
+		criterionSelectorBox.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				adjustFilter();
+			}
+		});
+		layout.setConstraints(criterionSelectorBox, c);
+		add(criterionSelectorBox);
+		
+		label = new JLabel("Min. Criterion Value:");
+		layout.setConstraints(label, c);
+		add(label);
+		
+		criterionMinSlider.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
-				if (!confidenceSlider.getValueIsAdjusting()) {
+				if (!criterionMinSlider.getValueIsAdjusting()) {
 					adjustFilter();
 				}
 			}
 		});
-		layout.setConstraints(confidenceSlider, c);
-		add(confidenceSlider);
+		layout.setConstraints(criterionMinSlider, c);
+		add(criterionMinSlider);
 	}
 	
 	private void adjustFilter() {
@@ -161,8 +215,9 @@ public class AssociationRuleFilter extends JPanel {
 				searchFilter[counter++] = itemArray[s];
 			}
 		}
-		double minConfidence = confidenceSlider.getValue() / (double)MAX_CONFIDENCE;
-		fireFilteringEvent(searchFilter, conjunctionMode, minConfidence);
+		
+		double minRatio = criterionMinSlider.getValue() / (double)MAX_VALUE;
+		fireFilteringEvent(searchFilter, conjunctionMode, minRatio);
 	}
 	
 	public void addAssociationRuleFilterListener(AssociationRuleFilterListener listener) {
@@ -173,18 +228,18 @@ public class AssociationRuleFilter extends JPanel {
 		this.listeners.remove(listener);
 	}
 	
-	private void fireFilteringEvent(Item[] searchFilter, int conjunctionMode, double minConfidence) {
-		boolean[] filter = getFilter(rules, searchFilter, conjunctionMode, minConfidence);
+	private void fireFilteringEvent(Item[] searchFilter, int conjunctionMode, double minRatio) {
+		boolean[] filter = getFilter(rules, searchFilter, conjunctionMode, minRatio);
 		for (AssociationRuleFilterListener listener : listeners) {
 			listener.setFilter(filter);
 		}
 	}
 	
-	private boolean[] getFilter(AssociationRules rules, Item[] filter, int conjunctionMode, double minConfidence) {				
+	private boolean[] getFilter(AssociationRules rules, Item[] filter, int conjunctionMode, double minRatio) {				
 		boolean[] mapping = new boolean[rules.getNumberOfRules()];
 		int counter = 0;
 		for (AssociationRule rule : rules) {
-			if (rule.getConfidence() >= minConfidence) {
+			if (getCriterionValue(rule) >= getCriterionMinValue(minRatio)) {
 				if (checkForItem(filter, rule, conjunctionMode)) {
 					mapping[counter] = true;
 				} else {
@@ -197,6 +252,30 @@ public class AssociationRuleFilter extends JPanel {
 		}
 
 		return mapping;
+	}
+	
+	private double getCriterionMinValue(double minRatio) {
+		int criterionSelection = criterionSelectorBox.getSelectedIndex();
+		return minValues[criterionSelection] + ((maxValues[criterionSelection] - minValues[criterionSelection]) * minRatio);
+	}
+	
+	private double getCriterionValue(AssociationRule rule) {
+		int criterionSelection = criterionSelectorBox.getSelectedIndex();
+		switch (criterionSelection) {
+		case AssociationRuleGenerator.LIFT:
+			return rule.getLift();
+		case AssociationRuleGenerator.CONVICTION:
+			return rule.getConviction();
+		case AssociationRuleGenerator.PS:
+			return rule.getPs();
+		case AssociationRuleGenerator.GAIN:
+			return rule.getGain();
+		case AssociationRuleGenerator.LAPLACE:
+			return rule.getLaplace();
+		case AssociationRuleGenerator.CONFIDENCE:
+		default:
+			return rule.getConfidence();
+		}
 	}
 	
 	private boolean checkForItem(Item[] filter, AssociationRule rule, int conjunctionMode) {

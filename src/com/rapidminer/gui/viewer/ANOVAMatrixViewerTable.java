@@ -24,16 +24,17 @@ package com.rapidminer.gui.viewer;
 
 import java.awt.Color;
 
+import com.rapidminer.gui.tools.CellColorProvider;
 import com.rapidminer.gui.tools.ExtendedJTable;
 import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.operator.olap.ANOVAMatrix;
+import com.rapidminer.operator.visualization.dependencies.ANOVAMatrix;
 
 
 /**
  * Can be used to display (parts of) an ANOVA matrix by means of a JTable.
  * 
  * @author Ingo Mierswa
- * @version $Id: ANOVAMatrixViewerTable.java,v 1.4 2008/05/09 19:23:01 ingomierswa Exp $
+ * @version $Id: ANOVAMatrixViewerTable.java,v 1.5 2008/08/25 08:10:33 ingomierswa Exp $
  */
 public class ANOVAMatrixViewerTable extends ExtendedJTable {
     
@@ -41,28 +42,30 @@ public class ANOVAMatrixViewerTable extends ExtendedJTable {
 	
 	private ANOVAMatrix matrix;
 	
-	public ANOVAMatrixViewerTable(ANOVAMatrix matrix) {
-        super(new ANOVAMatrixViewerTableModel(matrix), true);
-        this.matrix = matrix;
+	public ANOVAMatrixViewerTable(ANOVAMatrix _matrix) {
+        super(new ANOVAMatrixViewerTableModel(_matrix), true);
+        this.matrix = _matrix;
         setAutoResizeMode(AUTO_RESIZE_OFF);
-    }
-    
-    public Color getCellColor(int row, int col) {
-        if (col == 0) {
-        	return SwingTools.LIGHTEST_BLUE;
-        } else {
-    		int actualRow = row;
-    		if (getTableSorter() != null) {
-    			if (getTableSorter().isSorting()) {
-    				actualRow = getTableSorter().modelIndex(row);
-    			}
-    		}
-        	double value = matrix.getProbabilities()[actualRow][col - 1];
-        	if (value < matrix.getSignificanceLevel()) {
-        		return SwingTools.LIGHT_YELLOW;
-        	} else {
-        		return SwingTools.LIGHTEST_YELLOW;
-        	}
-        }
+        
+        setCellColorProvider(new CellColorProvider() {
+            public Color getCellColor(int row, int col) {
+                if (col == 0) {
+                	return SwingTools.LIGHTEST_BLUE;
+                } else {
+            		int actualRow = row;
+            		if (getTableSorter() != null) {
+            			if (getTableSorter().isSorting()) {
+            				actualRow = getTableSorter().modelIndex(row);
+            			}
+            		}
+                	double value = matrix.getProbabilities()[actualRow][col - 1];
+                	if (value < matrix.getSignificanceLevel()) {
+                		return SwingTools.LIGHT_YELLOW;
+                	} else {
+                		return SwingTools.LIGHTEST_YELLOW;
+                	}
+                }
+            }   	
+        });
     }
 }

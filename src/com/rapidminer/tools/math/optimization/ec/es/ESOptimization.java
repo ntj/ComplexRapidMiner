@@ -41,7 +41,7 @@ import com.rapidminer.tools.math.optimization.Optimization;
  * Evolutionary Strategy approach for all real-valued optimization tasks.
  * 
  * @author Ingo Mierswa
- * @version $Id: ESOptimization.java,v 1.6 2008/05/09 19:23:16 ingomierswa Exp $
+ * @version $Id: ESOptimization.java,v 1.8 2008/07/31 17:07:14 ingomierswa Exp $
  */
 public abstract class ESOptimization implements Optimization {
     
@@ -98,7 +98,13 @@ public abstract class ESOptimization implements Optimization {
     
     /** Indicates that the start population should be initialized with the maximum value. */
     public static final int INIT_TYPE_MAX = 2;
+    
+    /** Indicates that the start population should be initialized with one. */
+    public static final int INIT_TYPE_ONE = 3;
 
+    /** Indicates that the start population should be initialized with zero. */
+    public static final int INIT_TYPE_ZERO = 4;
+    
     /** This parameter indicates the minimum value for all genes. */
     private double[] min;
 
@@ -124,7 +130,7 @@ public abstract class ESOptimization implements Optimization {
     private int initType = INIT_TYPE_RANDOM;
 
     /** The type of the mutation. */
-    private int mutationType = GAUSSIAN_MUTATION;
+    //private int mutationType = GAUSSIAN_MUTATION;
     
     /** The population plotter (if enabled). */
     private PopulationPlotter populationPlotter = null;
@@ -166,7 +172,7 @@ public abstract class ESOptimization implements Optimization {
         this(createBoundArray(minValue, individualSize), createBoundArray(maxValue, individualSize), 
              populationSize, individualSize, initType, maxGenerations,
              generationsWithoutImprovement, selectionType, tournamentFraction, keepBest,
-             mutationType, crossoverProb, showPlot, random, logging);
+             mutationType, Double.NaN, crossoverProb, showPlot, random, logging);
     }
         
     /** Creates a new evolutionary SVM optimization. */
@@ -175,6 +181,7 @@ public abstract class ESOptimization implements Optimization {
             int maxGenerations, int generationsWithoutImprovement, // GA paras
             int selectionType, double tournamentFraction, boolean keepBest, // selection paras
             int mutationType, // type of mutation
+            double defaultSigma,
             double crossoverProb,
             boolean showPlot,
             RandomGenerator random,
@@ -193,7 +200,7 @@ public abstract class ESOptimization implements Optimization {
         this.initType = initType;
         this.maxGenerations = maxGenerations;
         this.generationsWithoutImprovement = generationsWithoutImprovement < 1 ? this.maxGenerations : generationsWithoutImprovement;
-        this.mutationType = mutationType;
+        //this.mutationType = mutationType;
 
         // population operators
         popOps = new LinkedList<PopulationOperator>();
@@ -228,10 +235,19 @@ public abstract class ESOptimization implements Optimization {
         popOps.add(new Crossover(crossoverProb, random));
         switch (mutationType) {
             case GAUSSIAN_MUTATION:
-                GaussianMutation gm = new GaussianMutation(new double[0], this.min, this.max, this.valueTypes, random);
+            	double[] sigma = new double[this.min.length];
+            	if (!Double.isNaN(defaultSigma)) {
+            		for (int s = 0; s < sigma.length; s++) {
+            			sigma[s] = defaultSigma;
+            		}
+            	} else {
+            		for (int s = 0; s < sigma.length; s++) {
+            			sigma[s] = (this.max[s] - this.min[s]) / 100.0d;
+            		}            		
+            	}
+                GaussianMutation gm = new GaussianMutation(sigma, this.min, this.max, this.valueTypes, random);
                 popOps.add(gm);
                 popOps.add(new VarianceAdaption(gm, individualSize, this.logging));
-                recalculateSigma(gm, this.individualSize);
                 this.mutation = gm;
                 break;
             case SWITCHING_MUTATION:
@@ -274,22 +290,28 @@ public abstract class ESOptimization implements Optimization {
     
     public void setMin(int index, double v) {
         this.min[index] = v;
+        /*
         if (mutationType == GAUSSIAN_MUTATION)
         	recalculateSigma((GaussianMutation)this.mutation, this.individualSize);
+        */
     }
 
     public void setMax(int index, double v) {
         this.max[index] = v;
+        /*
         if (mutationType == GAUSSIAN_MUTATION)
         	recalculateSigma((GaussianMutation)this.mutation, this.individualSize);
+        */
     }
     
+    /*
     protected void recalculateSigma(GaussianMutation mutation, int individualSize) {
     	double[] sigma = new double[individualSize];
     	for (int s = 0; s < sigma.length; s++)
-    		sigma[s] = Math.abs(this.max[s] - this.min[s]) / 10.0d;  
+    		sigma[s] = Math.abs(this.max[s] - this.min[s]) / 100.0d;  
     	mutation.setSigma(sigma);
     }
+    */
     
     public OptimizationValueType getValueType(int index) { 
     	return this.valueTypes[index]; 
@@ -321,6 +343,12 @@ public abstract class ESOptimization implements Optimization {
             case INIT_TYPE_MAX:
                 this.population = createMaxStartPopulation();
                 break;
+            case INIT_TYPE_ONE:
+            	this.population = createFixedStartPopulation(1.0d);
+            	break;
+            case INIT_TYPE_ZERO:
+            	this.population = createFixedStartPopulation(0.0d);
+            	break;
             default:
                 break; // this cannot happen
         }
@@ -378,7 +406,7 @@ public abstract class ESOptimization implements Optimization {
     }
 
     /** Evaluates the individuals of the given population. */
-    private void evaluate(Population population) throws OperatorException {
+    protected void evaluate(Population population) throws OperatorException {
         Individual currentBest = null;
         for (int i = population.getNumberOfIndividuals() - 1; i >= 0; i--) {
             Individual current = population.get(i);
@@ -511,4 +539,28 @@ public abstract class ESOptimization implements Optimization {
         }
         return population;
     }    
+    
+    /** Randomly creates the initial population. */
+    private Population createFixedStartPopulation(double fixedValue) {
+        Population population = new Population();
+        for (int p = 0; p < this.populationSize; p++) {
+            double[] alphas = new double[this.individualSize];
+            for (int j = 0; j < alphas.length; j++)
+                alphas[j] = fixedValue;
+            population.add(new Individual(alphas));
+        }
+        return population;
+    }
+    
+    /**
+     * Getter and setter for subclasses
+     **/
+    
+    public void increaseCurrentEvaluationCounter() {
+    	this.actualEvalCounter++;
+    }
+    
+    public void increaseTotalEvaluationCounter() {
+    	this.totalEvalCounter++;
+    }
 }

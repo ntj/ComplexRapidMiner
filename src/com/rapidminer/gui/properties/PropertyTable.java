@@ -68,11 +68,16 @@ import com.rapidminer.tools.LogService;
  * formatting and as a factory for CellEditors.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: PropertyTable.java,v 1.9 2008/05/09 19:22:46 ingomierswa Exp $
+ * @version $Id: PropertyTable.java,v 1.12 2008/07/31 17:43:41 ingomierswa Exp $
  */
 public abstract class PropertyTable extends ExtendedJTable {
 
-    private static Map<Class<? extends ParameterType>, Class<? extends PropertyValueCellEditor>> knownValueEditors = 
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -8510884721529372231L;
+
+	private static Map<Class<? extends ParameterType>, Class<? extends PropertyValueCellEditor>> knownValueEditors = 
         new HashMap<Class<? extends ParameterType>, Class<? extends PropertyValueCellEditor>>();
 
     private static Map<Class<? extends ParameterType>, Class<? extends PropertyKeyCellEditor>> knownKeyEditors = 
@@ -183,6 +188,14 @@ public abstract class PropertyTable extends ExtendedJTable {
 		setModel(model);
 	}
 
+	public int getNumberOfValueEditors() {
+		return valueEditors.size();
+	}
+	
+	public PropertyValueCellEditor getValueEditor(int index) {
+		return valueEditors.get(index);
+	}
+	
 	public TableCellEditor getCellEditor(int row, int column) {
 		if (column == 1) {
 			return valueEditors.get(row);
@@ -341,5 +354,4 @@ public abstract class PropertyTable extends ExtendedJTable {
             return editor;
         }
     }
-
 }

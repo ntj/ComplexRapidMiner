@@ -39,16 +39,16 @@ import com.rapidminer.tools.XMLException;
  * might drastically reduce runtime and / or initialization time.
  * 
  * @author Ingo Mierswa
- * @version $Id: Yale.java,v 1.4 2008/05/09 19:23:20 ingomierswa Exp $
+ * @version $Id: Yale.java,v 1.5 2008/07/11 09:52:55 ingomierswa Exp $
  */
 public class Yale {
 
 	/**
-	 * @deprecated Use {@link RapidMiner#getVersion()} instead
+	 * @deprecated Use {@link RapidMiner#getShortVersion()} instead
 	 */
 	@Deprecated
 	public static String getVersion() {
-		return RapidMiner.getVersion();
+		return RapidMiner.getShortVersion();
 	}
 
 	/**

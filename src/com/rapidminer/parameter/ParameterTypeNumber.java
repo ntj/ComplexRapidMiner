@@ -31,6 +31,11 @@ package com.rapidminer.parameter;
  */
 public abstract class ParameterTypeNumber extends ParameterTypeSingle {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1733078666760192282L;
+
 	public ParameterTypeNumber(String key, String description) {
 		super(key, description);
 	}

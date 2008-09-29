@@ -23,6 +23,7 @@
 package com.rapidminer.parameter;
 
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedMap;
@@ -41,9 +42,9 @@ import com.rapidminer.tools.Tools;
  * not set, their default value is returned.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: Parameters.java,v 1.7 2008/05/09 19:22:37 ingomierswa Exp $
+ * @version $Id: Parameters.java,v 1.8 2008/07/06 09:53:00 ingomierswa Exp $
  */
-public class Parameters implements Cloneable {
+public class Parameters implements Cloneable, Iterable<String> {
 
 	/** Maps parameter keys (i.e. Strings) to their value (Objects). */
 	private SortedMap<String, Object> keyToValueMap = new TreeMap<String, Object>();
@@ -51,6 +52,9 @@ public class Parameters implements Cloneable {
 	/** Maps parameter keys (i.e. Strings) to their <code>ParameterType</code>. */
 	private SortedMap<String, ParameterType> keyToTypeMap = new TreeMap<String, ParameterType>();
 
+	/** A list with all keys in insertion order. */
+	private List<String> keys = new LinkedList<String>();
+	
 	/** Creates an empty parameters object without any parameter types. */
 	public Parameters() {}
 
@@ -63,6 +67,7 @@ public class Parameters implements Cloneable {
 		while (i.hasNext()) {
 			ParameterType type = i.next();
 			keyToTypeMap.put(type.getKey(), type);
+			keys.add(type.getKey());
 		}
 	}
 
@@ -118,6 +123,10 @@ public class Parameters implements Cloneable {
 		return clone;
 	}
 
+	public Iterator<String> iterator() {
+		return keys.iterator();
+	}
+	
 	/** Returns the type of the parameter with the given type. */
 	public ParameterType getParameterType(String key) {
 		return keyToTypeMap.get(key);
@@ -220,5 +229,9 @@ public class Parameters implements Cloneable {
 			}
 		}
 		return result.toString();
+	}
+	
+	public String toString() {
+		return this.keyToValueMap.toString();
 	}
 }

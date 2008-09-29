@@ -36,11 +36,11 @@ import com.rapidminer.tools.Tools;
  * Main command line program.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: RapidMinerCommandLine.java,v 1.7 2008/05/09 19:23:20 ingomierswa Exp $
+ * @version $Id: RapidMinerCommandLine.java,v 1.8 2008/07/11 09:52:55 ingomierswa Exp $
  */
 public class RapidMinerCommandLine extends RapidMiner implements BreakpointListener {
 
-	private static final String LICENSE = "RapidMiner version " + RapidMiner.getVersion() + ", Copyright (C) 2001-2007" + Tools.getLineSeparator() + "RapidMiner comes with ABSOLUTELY NO WARRANTY; This is free software," + Tools.getLineSeparator() + "and you are welcome to redistribute it under certain conditions;" + Tools.getLineSeparator() + "see license information in the file named LICENSE.";
+	private static final String LICENSE = "RapidMiner version " + RapidMiner.getLongVersion() + ", Copyright (C) 2001-2008" + Tools.getLineSeparator() + "RapidMiner comes with ABSOLUTELY NO WARRANTY; This is free software," + Tools.getLineSeparator() + "and you are welcome to redistribute it under certain conditions;" + Tools.getLineSeparator() + "see license information in the file named LICENSE.";
 
 	private boolean showLogo = false;
 

@@ -28,16 +28,17 @@ import java.awt.event.MouseEvent;
 import javax.swing.table.JTableHeader;
 
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.gui.tools.CellColorProvider;
 import com.rapidminer.gui.tools.ExtendedJTable;
 import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.gui.tools.TableSorter;
+import com.rapidminer.gui.tools.ExtendedTableSorterModel;
 
 
 /**
  * Can be used to display (parts of) the meta data by means of a JTable.
  * 
  * @author Ingo Mierswa
- * @version $Id: MetaDataViewerTable.java,v 1.5 2008/05/09 19:23:01 ingomierswa Exp $
+ * @version $Id: MetaDataViewerTable.java,v 1.6 2008/08/25 08:10:33 ingomierswa Exp $
  */
 public class MetaDataViewerTable extends ExtendedJTable {
     
@@ -47,6 +48,23 @@ public class MetaDataViewerTable extends ExtendedJTable {
 
     private MetaDataViewerTableModel model = null;
     
+    
+    public MetaDataViewerTable() {
+    	setCellColorProvider(new CellColorProvider() {
+    	    public Color getCellColor(int row, int col) {
+    	        int actualRowIndex = ((ExtendedTableSorterModel)getModel()).modelIndex(row);
+    	        if (actualRowIndex < numberOfSpecialAttributeRows) {
+    	        	return SwingTools.LIGHTEST_YELLOW;
+    	        } else {
+    	            if (row % 2 == 0) {
+    	                return Color.WHITE;
+    	            } else {
+    	            	return SwingTools.LIGHTEST_BLUE;
+    	            }
+    	        }
+    	    }
+    	});
+    }
     
     public void setExampleSet(ExampleSet exampleSet) {
     	this.model = new MetaDataViewerTableModel(exampleSet);
@@ -74,18 +92,5 @@ public class MetaDataViewerTable extends ExtendedJTable {
           return model.getColumnToolTip(realColumnIndex);
         }
       };
-    }
-    
-    public Color getCellColor(int row, int col) {
-        int actualRowIndex = ((TableSorter)getModel()).modelIndex(row);
-        if (actualRowIndex < numberOfSpecialAttributeRows) {
-        	return SwingTools.LIGHTEST_YELLOW;
-        } else {
-            if (row % 2 == 0) {
-                return Color.WHITE;
-            } else {
-            	return SwingTools.LIGHTEST_BLUE;
-            }
-        }
     }
 }

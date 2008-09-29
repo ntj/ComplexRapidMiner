@@ -26,12 +26,15 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 
 import javax.swing.Icon;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
+import javax.swing.JProgressBar;
 import javax.swing.filechooser.FileFilter;
 
 import com.rapidminer.datatable.DataTable;
@@ -46,22 +49,31 @@ import com.rapidminer.tools.LogService;
  * A scatter plot matrix which uses the {@link ScatterPlotter} for each of the plots.
  * 
  * @author Ingo Mierswa
- * @version $Id: ScatterMatrixPlotter.java,v 1.6 2008/05/09 19:22:51 ingomierswa Exp $
+ * @version $Id: ScatterMatrixPlotter.java,v 1.8 2008/07/19 16:31:17 ingomierswa Exp $
  */
 public class ScatterMatrixPlotter extends PlotterAdapter {
     
 	private static final long serialVersionUID = 9049081889010883621L;
 
-	static final int MAX_NUMBER_OF_COLUMNS = 11;
+	static final int MAX_NUMBER_OF_COLUMNS = 50;
      
-	private ScatterPlotter[][] plotters = new ScatterPlotter[0][0];
+	private ScatterPlotter plotter = new ScatterPlotter();
 
+	private BufferedImage[][] images = new BufferedImage[0][0];
+		
 	private int plotDimension = -1;
 
 	private transient DataTable dataTable;
 
 	private int plotterSize;
 
+	private JProgressBar progressBar = new JProgressBar();
+	
+	private Thread calculationThread = null;
+	
+	private boolean stopUpdates = false;
+	
+	
 	public ScatterMatrixPlotter() {
 		setBackground(Color.white);
 		String sizeProperty = System.getProperty(MainFrame.PROPERTY_RAPIDMINER_GUI_PLOTTER_MATRIXPLOT_SIZE);
@@ -72,6 +84,12 @@ public class ScatterMatrixPlotter extends PlotterAdapter {
         } catch (NumberFormatException e) {
             LogService.getGlobal().log("Scatter matrix: cannot parse plotter size (was '" + sizeProperty + "'), using default size (200).", LogService.WARNING);
         }
+        
+        plotter.setDrawLegend(false);
+		plotter.setDrawAxes(false);
+		plotter.getPlotter().setSize(new Dimension(plotterSize, plotterSize));
+		
+        progressBar.setToolTipText("Shows the progress of the Scatter Matrix calculation.");
 	}
 
 	public ScatterMatrixPlotter(DataTable dataTable) {
@@ -79,20 +97,22 @@ public class ScatterMatrixPlotter extends PlotterAdapter {
 		setDataTable(dataTable);
 	}
 
+	public void forcePlotGeneration() {
+		updatePlotters();
+	}
+	
+	/** Indicates if the plotter is currently under a process of value adjustments. Might give 
+	 *  implementing plotters a hint that graphical updates should not be performed until all
+	 *  settings are made. */
+	public void stopUpdates(boolean value) {
+		this.stopUpdates = value;
+	}
+	
 	public void setDataTable(DataTable dataTable) {
 		super.setDataTable(dataTable);
 		this.dataTable = dataTable;
-		//synchronized (this.dataTable) {
-			plotters = new ScatterPlotter[dataTable.getNumberOfColumns() - 1][dataTable.getNumberOfColumns() - 1];
-			for (int x = 0; x < plotters.length; x++) {
-				for (int y = 0; y < plotters[x].length; y++) {
-					plotters[x][y] = new ScatterPlotter(dataTable);
-					plotters[x][y].setDrawLegend(false);
-					plotters[x][y].setDrawAxes(false);
-					plotters[x][y].getPlotter().setSize(new Dimension(plotterSize, plotterSize));
-				}
-			}
-		//}
+		if (!stopUpdates)
+			updatePlottersInThread();
 	}
 
     public PlotterCondition getPlotterCondition() {
@@ -101,11 +121,13 @@ public class ScatterMatrixPlotter extends PlotterAdapter {
     
 	public void paintComponent(Graphics graphics) {
 		super.paintComponent(graphics);
-		for (int x = 0; x < plotters.length; x++) {
-			for (int y = 0; y < plotters[x].length; y++) {
-				Graphics2D newSpace = (Graphics2D) graphics.create();
-				newSpace.translate(x * plotterSize, y * plotterSize + MARGIN);
-				plotters[x][y].paint2DPlots(newSpace);
+		if (calculationThread == null) {
+			for (int x = 0; x < images.length; x++) {
+				for (int y = 0; y < images[x].length; y++) {
+					Graphics2D newSpace = (Graphics2D) graphics.create();
+					newSpace.translate(x * plotterSize, y * plotterSize + MARGIN);
+					newSpace.drawImage(images[x][y], null, 0, 0);
+				}
 			}
 		}
 		
@@ -115,8 +137,10 @@ public class ScatterMatrixPlotter extends PlotterAdapter {
 		}
 	}
 
-	private void updatePlotters() {
+	private synchronized void updatePlotters() {
 		if (plotDimension >= 0) {
+			images = new BufferedImage[dataTable.getNumberOfColumns()][dataTable.getNumberOfColumns()];
+			int counter = 0;
 			int firstIndex = 0;
 			for (int x = 0; x < dataTable.getNumberOfColumns(); x++) {
 				if (x != plotDimension) {
@@ -124,35 +148,68 @@ public class ScatterMatrixPlotter extends PlotterAdapter {
 					for (int y = 0; y < dataTable.getNumberOfColumns(); y++) {
 						if (y != plotDimension) {
 							if (firstIndex == secondIndex) {
-								plotters[firstIndex][secondIndex].setAxis(ScatterPlotter.X_AXIS, -1);
-								plotters[firstIndex][secondIndex].setAxis(ScatterPlotter.Y_AXIS, -1);
-								plotters[firstIndex][secondIndex].clearPlotColumns();
+								images[firstIndex][secondIndex] = new BufferedImage(plotterSize, plotterSize, BufferedImage.TYPE_INT_ARGB);
+								Graphics2D graphics = images[firstIndex][secondIndex].createGraphics();
+								graphics.setColor(Color.WHITE);
+								graphics.fillRect(0, 0, plotterSize, plotterSize);
 							} else {
-								plotters[firstIndex][secondIndex].setAxis(ScatterPlotter.X_AXIS, x);
-								plotters[firstIndex][secondIndex].setAxis(ScatterPlotter.Y_AXIS, y);
-								plotters[firstIndex][secondIndex].clearPlotColumns();
-								plotters[firstIndex][secondIndex].setPlotColumn(plotDimension, true);
+								plotter.setDataTable(dataTable);
+								plotter.setAxis(ScatterPlotter.X_AXIS, x);
+								plotter.setAxis(ScatterPlotter.Y_AXIS, y);
+								plotter.setPlotColumn(plotDimension, true);
+
+								images[firstIndex][secondIndex] = new BufferedImage(plotterSize, plotterSize, BufferedImage.TYPE_INT_ARGB);
+								Graphics2D graphics = images[firstIndex][secondIndex].createGraphics();
+								plotter.paint2DPlots(graphics);
 							}
 							secondIndex++;
 						}
+						progressBar.setValue(++counter);
 					}
 					firstIndex++;
 				}
 			}
+			progressBar.setValue(0);
+			revalidate();
+			repaint();
 		} else {
-			for (int x = 0; x < plotters.length; x++) {
-				for (int y = 0; y < plotters[x].length; y++) {
-					plotters[x][y].setAxis(ScatterPlotter.X_AXIS, -1);
-					plotters[x][y].setAxis(ScatterPlotter.Y_AXIS, -1);
-					plotters[x][y].clearPlotColumns();
-				}
-			}
+			images = new BufferedImage[0][0];
+			revalidate();
+			repaint();
 		}
-        repaint();
+	}
+	
+	private void updatePlottersInThread() {
+		if (plotDimension >= 0) {
+			if (calculationThread == null) {
+				progressBar.setMinimum(0);
+				progressBar.setMaximum(images.length * images.length);
+				progressBar.setValue(0);
+
+				this.calculationThread = new Thread() {
+					public void run() {
+						updatePlotters();
+						calculationFinished();
+					}
+				};
+				this.calculationThread.start();
+			}
+		} else {
+			images = new BufferedImage[0][0];
+			revalidate();
+			repaint();
+		}
 	}
 
+	private void calculationFinished() {
+		calculationThread = null;
+	}
+	
 	public Dimension getPreferredSize() {
-		return new Dimension(plotters.length * plotterSize  + 2 * MARGIN, plotters.length * plotterSize + 2 * MARGIN);
+		if (images.length > 0)
+			return new Dimension((images.length - 1) * plotterSize  + 2 * MARGIN, (images.length - 1) * plotterSize + 2 * MARGIN);
+		else
+			return new Dimension(2 * MARGIN, 2 * MARGIN);
 	}
 
 	public String getAxisName(int index) {
@@ -189,20 +246,36 @@ public class ScatterMatrixPlotter extends PlotterAdapter {
 		return true;
 	}
 	
+	public boolean canHandleContinousJittering() { 
+		return false; 
+	}
+	
 	public void setJitter(int jitter) {
-		for (int x = 0; x < plotters.length; x++)
-			for (int y = 0; y < plotters[x].length; y++)
-				plotters[x][y].setJitter(jitter);
-		updatePlotters();		
+		this.plotter.setJitter(jitter);
+		if (!stopUpdates)
+			updatePlottersInThread();		
 	}
 	
 	public void setPlotColumn(int index, boolean plot) {
 		if (plot)
 			this.plotDimension = index;
-		updatePlotters();
+		else
+			this.plotDimension = -1;
+		if (!stopUpdates)
+			updatePlottersInThread();
 	}
 
 	public boolean getPlotColumn(int index) {
 		return this.plotDimension == index;
 	}
+	
+	public JComponent getOptionsComponent(int index) {
+		switch (index) {
+			case 0:
+				return progressBar;
+			default:
+				return null;
+		}
+	}
+
 }

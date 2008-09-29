@@ -47,13 +47,13 @@ import com.rapidminer.operator.learner.clustering.AbstractClusterModel;
 import com.rapidminer.operator.learner.clustering.CentroidBasedClusterModel;
 import com.rapidminer.operator.learner.clustering.FlatClusterModel;
 import com.rapidminer.operator.learner.clustering.HierarchicalClusterModel;
-import com.rapidminer.tools.Renderable;
+import com.rapidminer.report.Renderable;
 
 /**
  * Pane that contains several visualizations for a cluster model
  * 
  * @author Michael Wurst, Ingo Mierswa
- * @version $Id: ClusterModelVisualization.java,v 1.6 2008/05/09 19:23:01 ingomierswa Exp $
+ * @version $Id: ClusterModelVisualization.java,v 1.10 2008/09/12 10:32:28 tobiasmalbrecht Exp $
  * 
  */
 public class ClusterModelVisualization extends JPanel implements Renderable {
@@ -161,6 +161,10 @@ public class ClusterModelVisualization extends JPanel implements Renderable {
 		}
 	}
 
+    public void prepareRendering() {
+    	renderer.prepareRendering();
+    }
+    
 	public int getRenderHeight(int preferredHeight) {
 		return renderer.getRenderHeight(preferredHeight);
 	}

@@ -47,7 +47,7 @@ import com.rapidminer.tools.Tools;
  * approximately 270 times 70 pixels.
  * 
  * @author Ingo Mierswa
- * @version $Id: SplashScreen.java,v 1.12 2008/05/09 19:22:59 ingomierswa Exp $
+ * @version $Id: SplashScreen.java,v 1.13 2008/07/04 16:33:36 stiefelolm Exp $
  */
 public class SplashScreen extends JPanel {
 
@@ -80,6 +80,8 @@ public class SplashScreen extends JPanel {
 	private JFrame splashScreenFrame = new JFrame();
 	
 	private String message = "Starting...";
+
+	private boolean infosVisible;
 
 
 	public SplashScreen(String productVersion, Image productLogo) {
@@ -145,12 +147,14 @@ public class SplashScreen extends JPanel {
 			drawString(g, message, 255);
 		}
 		
-		g.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 10));
-		drawString(g, properties.getProperty("name") + " " + properties.getProperty("version"), 275);
-		drawString(g, properties.getProperty("license"), 290);
-		drawString(g, properties.getProperty("warranty"), 305);
-		drawString(g, properties.getProperty("copyright"), 320);
-		drawString(g, properties.getProperty("more"), 335);
+		if (infosVisible) {
+			g.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 10));
+			drawString(g, properties.getProperty("name") + " " + properties.getProperty("version"), 275);
+			drawString(g, properties.getProperty("license"), 290);
+			drawString(g, properties.getProperty("warranty"), 305);
+			drawString(g, properties.getProperty("copyright"), 320);
+			drawString(g, properties.getProperty("more"), 335);
+		}
 	}
 
 	private void drawString(Graphics2D g, String text, int height) {
@@ -164,6 +168,16 @@ public class SplashScreen extends JPanel {
 	
 	public void setMessage(String message) {
 		this.message = message;
+		repaint();
+	}
+	
+	public void setProperty(String key, String value) {
+		properties.setProperty(key, value);
+		repaint();
+	}
+
+	public void setInfosVisible(boolean b) {
+		this.infosVisible = b;
 		repaint();
 	}
 }

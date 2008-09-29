@@ -32,7 +32,7 @@ import com.rapidminer.tools.LogService;
  * DataRowReader to create DataRows of arbitrary type.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: DataRowFactory.java,v 1.9 2008/05/10 18:29:11 stiefelolm Exp $
+ * @version $Id: DataRowFactory.java,v 1.10 2008/07/13 23:25:24 ingomierswa Exp $
  */
 public class DataRowFactory {
 
@@ -237,7 +237,6 @@ public class DataRowFactory {
 	* @throws ClassCastException
 	* if data class does not match attribute type
 	* @see DatabaseDataRowReader
-	* @author Peter B. Volk
 	*/
 	public DataRow create(Double[] data, Attribute[] attributes) {
 		DataRow dataRow = create(data.length);

@@ -66,7 +66,7 @@ import com.rapidminer.tools.math.som.RitterAdaptation;
  * are different styled visualizations of the properties.
  * 
  * @author Sebastian Land, Ingo Mierswa
- * @version $Id: SOMPlotter.java,v 1.8 2008/05/09 19:23:24 ingomierswa Exp $
+ * @version $Id: SOMPlotter.java,v 1.12 2008/07/18 15:50:45 ingomierswa Exp $
  */
 public class SOMPlotter extends PlotterAdapter implements ProgressListener {
 
@@ -155,7 +155,7 @@ public class SOMPlotter extends PlotterAdapter implements ProgressListener {
         approveButton.setToolTipText("Start the calculation of the SOM (may take a while).");
 		approveButton.addActionListener(new ActionListener() {
            public void actionPerformed(ActionEvent e) {
-        	   startCalculation();
+        	   startCalculation(true);
            }
         });
         
@@ -189,6 +189,10 @@ public class SOMPlotter extends PlotterAdapter implements ProgressListener {
 		this.setDoubleBuffered(true);
 	}
 
+	public void forcePlotGeneration() {
+		startCalculation(false);
+	}
+	
 	protected Object readResolve() {
 		this.data = new RandomDataContainer();
 		this.colorizer = new SOMMatrixColorizer[] { 
@@ -207,7 +211,7 @@ public class SOMPlotter extends PlotterAdapter implements ProgressListener {
 		this.showMatrix = matrixType;
 	}
 	
-	public void startCalculation() {
+	public void startCalculation(boolean threadMode) {
 		show = false;
 		try {
 			dimensions[0] = Integer.parseInt(dimensionX.getText());
@@ -235,7 +239,7 @@ public class SOMPlotter extends PlotterAdapter implements ProgressListener {
 			SwingTools.showVerySimpleErrorMessage("Only numbers are allowed for number of training rounds.");
 			return;
 		}
-		prepareSOM(dataTable, adaptationRadius, trainRounds);	
+		prepareSOM(dataTable, adaptationRadius, trainRounds, threadMode);	
 	}
 	
     public PlotterCondition getPlotterCondition() {
@@ -247,25 +251,30 @@ public class SOMPlotter extends PlotterAdapter implements ProgressListener {
 		
 		// painting only if approved
 		if (show) {
-			// init graphics
-			Graphics2D g = (Graphics2D) graphics;
-            
-            int pixWidth  = getWidth() - 2 * MARGIN;
-            int pixHeight = getHeight() - 2 * MARGIN;
-            
-			// painting background
-            g.drawImage(this.image, MARGIN, MARGIN, pixWidth, pixHeight, Color.WHITE, null);
-
-			// painting points
-            drawPoints(g);
-
-			// painting Legend
-			drawLegend(graphics, this.dataTable, colorColumn);
-			
-			// paint Tooltip
-			drawToolTip((Graphics2D) graphics);
+			paintSom(graphics);
 		}
 	}
+	
+	public void paintSom(Graphics graphics) {
+		// init graphics
+		Graphics2D g = (Graphics2D) graphics;
+        
+        int pixWidth  = getWidth() - 2 * MARGIN;
+        int pixHeight = getHeight() - 2 * MARGIN;
+        
+		// painting background
+        g.drawImage(this.image, MARGIN, MARGIN, pixWidth, pixHeight, Color.WHITE, null);
+
+		// painting points
+        drawPoints(g);
+
+		// painting Legend
+		drawLegend(graphics, this.dataTable, colorColumn);
+		
+		// paint Tooltip
+		drawToolTip((Graphics2D) graphics);		
+	}
+	
 	protected void drawPoints(Graphics2D g) {
         int pixWidth  = getWidth() - 2 * MARGIN;
         int pixHeight = getHeight() - 2 * MARGIN;
@@ -343,7 +352,7 @@ public class SOMPlotter extends PlotterAdapter implements ProgressListener {
 		repaint();
 	}
 	
-	public void prepareSOM(DataTable dataTable, double adaptationRadius, int trainRounds) {
+	public void prepareSOM(DataTable dataTable, double adaptationRadius, int trainRounds, boolean threadMode) {
 		// reseting Data already applied flag
 		examplesApplied = false;
 		// generating data for SOM
@@ -364,12 +373,29 @@ public class SOMPlotter extends PlotterAdapter implements ProgressListener {
 		adaptationFunction.setLearnRateStart(0.8);
 		net.setAdaptationFunction(adaptationFunction);
 		net.init(dataDimension, dimensions, false);
-		// registering this as ProgressListener
-		net.addProgressListener(this);
-		// train SOM
+
 		net.setTrainingRounds(trainRounds);
-		// net.train();
-		net.start();
+		
+		// train SOM
+		if (threadMode) {
+			// registering this as ProgressListener
+			net.addProgressListener(this);
+			Thread trainThread = new Thread() {
+				public void run() {
+					net.train();
+				}
+			};			
+			trainThread.start();
+		} else {
+			net.train();
+			createMatrices();
+			try {
+				// necessary for preventing graphical errors in reporting
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// do nothing
+			}
+		}
 	}
 
 	protected void createMatrices() {

@@ -30,14 +30,20 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
+import java.util.jar.Attributes;
 import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 
 import com.rapidminer.RapidMiner;
+import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.templates.BuildingBlock;
 import com.rapidminer.gui.tools.AboutBox;
 import com.rapidminer.tools.LogService;
@@ -63,10 +69,16 @@ import com.rapidminer.tools.Tools;
  * </p>
  * 
  * @author Simon Fischer, Ingo Mierswa
- * @version $Id: Plugin.java,v 1.6 2008/05/09 19:22:57 ingomierswa Exp $
+ * @version $Id: Plugin.java,v 1.12 2008/07/12 17:46:46 ingomierswa Exp $
  */
 public class Plugin {
 
+	/** The name for the manifest entry RapidMiner-Type which can be used to indicate that a jar file is a RapidMiner plugin. */
+	public static final String RAPIDMINER_TYPE = "RapidMiner-Type";
+	
+	/** The value for the manifest entry RapidMiner-Type which indicates that a jar file is a RapidMiner plugin. */
+	public static final String RAPIDMINER_TYPE_PLUGIN = "RapidMiner_Plugin";
+	
 	/**
 	 * The jar archive of the plugin which must be placed in the
 	 * <code>lib/plugins</code> subdirectory of RapidMiner.
@@ -137,7 +149,7 @@ public class Plugin {
 
 	/** Checks the RapidMiner version and plugin dependencies. */
 	private boolean checkDependencies(List plugins) {
-		if (RapidMiner.getVersion().compareTo(necessaryRapidMinerVersion) < 0)
+		if (RapidMiner.getLongVersion().compareTo(necessaryRapidMinerVersion) < 0)
 			return false;
 		// other plugins
 		Iterator i = pluginDependencies.iterator();
@@ -197,6 +209,8 @@ public class Plugin {
 
 	/** Register the operators of this plugin in RapidMiner. */
 	public void register() {
+		InputStream in = null;
+		// trying normal plugins
 		URL operatorsURL = this.classLoader.getResource("META-INF/operators.xml");
 		if (operatorsURL == null) {
 			operatorsURL = this.classLoader.getResource("operators.xml");
@@ -204,9 +218,28 @@ public class Plugin {
 				LogService.getGlobal().log(name + ": putting operators.xml in root directory of jar is deprecated. Use META-INF directory instead!", LogService.WARNING);
 			}
 		}
-		if (operatorsURL == null) {
-			LogService.getGlobal().log("Plugin '" + archive.getName() + "' does not contain operators.xml!", LogService.ERROR);
+		if (operatorsURL != null) {
+			// register operators
+			try {
+				in = operatorsURL.openStream();
+			} catch (IOException e) {
+				LogService.getGlobal().log("Cannot read operators.xml from '" + archive.getName() + "'!", LogService.ERROR);
+			}
 		} else {
+			// if no operators.xml found: Try via PluginInit method getOperatorStream()
+			try {
+				Class<?> pluginInitator = Class.forName("com.rapidminer.PluginInit",false, getClassLoader());
+				Method registerOperatorMethod = pluginInitator.getMethod("getOperatorStream", new Class[] {ClassLoader.class});
+				in = (InputStream) registerOperatorMethod.invoke(null, new Object[] {getClassLoader()});
+			} catch (ClassNotFoundException e) {
+			} catch (SecurityException e) {
+			} catch (NoSuchMethodException e) {
+			} catch (IllegalArgumentException e) {
+			} catch (IllegalAccessException e) {
+			} catch (InvocationTargetException e) {
+			}
+		}
+		if (in != null) {
 			// add URLs of plugins this plugin depends on
 			Iterator i = pluginDependencies.iterator();
 			while (i.hasNext()) {
@@ -214,14 +247,8 @@ public class Plugin {
 				Plugin other = getPlugin(pluginName);
 				mergeClassLoader(other);
 			}
-			// register operators
-			InputStream in = null;
-			try {
-				in = operatorsURL.openStream();
-			} catch (IOException e) {
-				LogService.getGlobal().log("Cannot read operators.xml from '" + archive.getName() + "'!", LogService.ERROR);
-			}
-			LogService.getGlobal().log("Loading " + name, LogService.INIT);
+		
+			//LogService.getGlobal().log("Loading " + name, LogService.INIT);
 			OperatorService.registerOperators(archive.getName(), in, this.classLoader, true);
 		}
 	}
@@ -288,19 +315,28 @@ public class Plugin {
 	}
 
 	/** Returns a list of Plugins found in the plugins directory. */
-	public static void findPlugins(File pluginDir) {
+	public static void findPlugins(File pluginDir, boolean showWarningForNonPluginJars) {
 		if (!(pluginDir.exists() && pluginDir.isDirectory()))
 			return;
+		
 		File[] files = pluginDir.listFiles(new FilenameFilter() {
-
 			public boolean accept(File dir, String name) {
 				return name.endsWith(".jar");
 			}
 		});
+		
 		allPlugins = new LinkedList<Plugin>();
 		for (int i = 0; i < files.length; i++) {
 			try {
-				allPlugins.add(new Plugin(files[i]));
+				JarFile jarFile = new JarFile(files[i]);
+				Manifest manifest = jarFile.getManifest();
+				Attributes attributes = manifest.getMainAttributes();
+				if (RAPIDMINER_TYPE_PLUGIN.equals(attributes.getValue(RAPIDMINER_TYPE))) {
+					allPlugins.add(new Plugin(files[i]));
+				} else {
+					if (showWarningForNonPluginJars)
+						LogService.getGlobal().logWarning("The jar file '" + jarFile.getName() + "' does not contain an entry '" + RAPIDMINER_TYPE + "' in its manifest and will therefore not be loaded (if this file actually is a plugin updating the plugin file might help).");
+				}
 			} catch (Throwable e) {
 				LogService.getGlobal().log("Cannot load plugin '" + files[i] + "': " + e.getMessage(), LogService.ERROR);
 			}
@@ -329,11 +365,11 @@ public class Plugin {
 
 	/** Returns a list of Plugins found in the given plugins directory. If the given directory is null, 
 	 *  then RapidMiner tries to find plugins in the directory rapidminer.home/lib/plugins. */
-	public static void registerAllPlugins(File pluginDirectory) {
+	public static void registerAllPlugins(File pluginDirectory, boolean showWarningForNonPluginJars) {
 		File pluginDir = pluginDirectory;
 		if (pluginDir == null)
 			pluginDir = ParameterService.getPluginDir();
-		findPlugins(pluginDir);
+		findPlugins(pluginDir, showWarningForNonPluginJars);
 		Iterator i = allPlugins.iterator();
 		while (i.hasNext()) {
 			Plugin plugin = (Plugin) i.next();
@@ -344,7 +380,7 @@ public class Plugin {
 		}
 
 		if (allPlugins.size() > 0) {
-			LogService.getGlobal().log("Found " + allPlugins.size() + " plugins in " + ParameterService.getPluginDir(), LogService.INIT);
+			//LogService.getGlobal().log("Found " + allPlugins.size() + " plugins in " + ParameterService.getPluginDir(), LogService.INIT);
 			i = allPlugins.iterator();
 			while (i.hasNext()) {
 				((Plugin) i.next()).register();
@@ -385,5 +421,62 @@ public class Plugin {
 				return plugin;
 		}
 		return null;
+	}
+	
+	/**
+	 * This method will try to invoke the method void initGui(MainFrame) of  
+	 * PluginInit class of every plugin.
+	 */
+	public static void initPluginGuis(MainFrame mainframe) {
+		callPluginInitMethods("initGui", new Class[] {MainFrame.class}, new Object[] {mainframe});
+	}
+
+	public static void initPluginUpdateManager() {
+		callPluginInitMethods("initPluginManager", new Class[] {}, new Object[] {});		
+	}
+
+	public static void initFinalChecks() {
+		callPluginInitMethods("initFinalChecks", new Class[] {}, new Object[] {});		
+	}
+	
+	private static void callPluginInitMethods(String methodName, Class[] arguments, Object[] argumentValues) {
+		List<Plugin> plugins = getAllPlugins();
+		for (Plugin plugin: plugins) {
+			try {
+				Class<?> pluginInitator = Class.forName("com.rapidminer.PluginInit",false, plugin.getClassLoader());
+				Method initGuiMethod = pluginInitator.getMethod(methodName, arguments);
+				initGuiMethod.invoke(null, argumentValues);
+			} catch (ClassNotFoundException e) {
+			} catch (SecurityException e) {
+			} catch (NoSuchMethodException e) {
+			} catch (IllegalArgumentException e) {
+			} catch (IllegalAccessException e) {
+			} catch (InvocationTargetException e) {
+			}
+		}
+	}
+
+	public static void initPluginSplashTexts() {
+		callPluginInitMethods("initSplashTexts", new Class[] {}, new Object[] {});				
+	}
+
+	public static void initAboutTexts(Properties properties) {
+		callPluginInitMethods("initAboutTexts", new Class[] {Properties.class}, new Object[] {properties});
+	}
+
+	public boolean showAboutBox() {
+		try {
+			Class<?> pluginInitator = Class.forName("com.rapidminer.PluginInit",false, this.getClassLoader());
+			Method initGuiMethod = pluginInitator.getMethod("showAboutBox", new Class[] {});
+			Boolean showAboutBox = (Boolean) initGuiMethod.invoke(null, new Object[] {});
+			return showAboutBox.booleanValue();
+		} catch (ClassNotFoundException e) {
+		} catch (SecurityException e) {
+		} catch (NoSuchMethodException e) {
+		} catch (IllegalArgumentException e) {
+		} catch (IllegalAccessException e) {
+		} catch (InvocationTargetException e) {
+		}
+		return true;
 	}
 }

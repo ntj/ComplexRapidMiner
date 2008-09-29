@@ -31,7 +31,7 @@ import junit.framework.TestCase;
  * Tests the simple sparse matrix.
  * 
  * @author Michael Wurst, Ingo Mierswa
- * @version $Id: SimpleSparseMatrixTest.java,v 1.3 2008/05/09 19:23:24 ingomierswa Exp $
+ * @version $Id: SimpleSparseMatrixTest.java,v 1.5 2008/09/12 10:31:33 tobiasmalbrecht Exp $
  */
 public class SimpleSparseMatrixTest extends TestCase {
 

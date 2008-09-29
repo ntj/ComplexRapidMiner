@@ -30,7 +30,7 @@ package com.rapidminer.tools;
  * constants.
  * 
  * @author Simon Fischer, Ingo Mierswa
- * @version $Id: Ontology.java,v 1.3 2008/05/09 19:22:55 ingomierswa Exp $
+ * @version $Id: Ontology.java,v 1.5 2008/06/05 14:34:32 ingomierswa Exp $
  */
 public class Ontology {
 
@@ -62,17 +62,18 @@ public class Ontology {
 
 	public static final int STRING = 5;
 
-	public static final int ORDERED = 6;
+	public static final int BINOMINAL = 6; // nominal, only +1 and -1
 
-	public static final int CLUSTER = 7;
+	public static final int POLYNOMINAL = 7;
 
-	public static final int BINOMINAL = 8; // nominal, only +1 and -1
+	public static final int FILE_PATH = 8; // path to a file
 
-	public static final int POLYNOMINAL = 9;
-
-	public static final int FILE_PATH = 10; // path to a file
-
-    public static final int DATE = 11;
+    public static final int DATE_TIME = 9;
+    
+    public static final int DATE = 10;
+    
+    public static final int TIME = 11;
+    
     
 	public static final String[] VALUE_TYPE_NAMES = { 
         "attribute_value", 
@@ -81,12 +82,12 @@ public class Ontology {
         "integer", 
         "real", 
         "string", 
-        "ordered", 
-        "cluster", 
         "binominal", 
         "polynominal", 
         "file_path",
-        "date"
+        "date_time",        
+        "date",
+        "time"
 	};
 
 	/** An ontology for value types (nominal, numerical...) */
@@ -98,58 +99,40 @@ public class Ontology {
                 NUMERICAL,       // integer
                 NUMERICAL,       // real
                 NOMINAL,         // string 
-                NOMINAL,         // ordered
-                NOMINAL,         // cluster
-                NOMINAL,         // binominal (boolean classification)
+                NOMINAL,         // binominal (boolean)
                 NOMINAL,         // polynominal
                 NOMINAL,         // file_path
-                ORDERED          // date
+                ATTRIBUTE_VALUE, // date_time
+                DATE_TIME,       // date
+                DATE_TIME        // time
         }, VALUE_TYPE_NAMES);
 
 	// -------------------- BLOCK TYPE --------------------
 
 	public static final int ATTRIBUTE_BLOCK = 0;
 
-	public static final int VALUE_SERIES = 1;
-
-	public static final int NON_SERIES = 2;
-
-	public static final int SINGLE_VALUE = 3;
-
-	public static final int INTERVAL = 4;
-
-	public static final int X = 5;
-
-	public static final int Y = 6;
-
-	public static final int VALUE_SERIES_START = 7;
-
-	public static final int VALUE_SERIES_END = 8;
-
-	public static final int INTERVAL_START = 9;
-
-	public static final int INTERVAL_END = 10;
+	public static final int SINGLE_VALUE = 1;
 	
-	public static final int VALUE_MATRIX = 11;
+	public static final int VALUE_SERIES = 2;
+
+	public static final int VALUE_SERIES_START = 3;
+
+	public static final int VALUE_SERIES_END = 4;
 	
-	public static final int VALUE_MATRIX_START = 12;
+	public static final int VALUE_MATRIX = 5;
 	
-	public static final int VALUE_MATRIX_END = 13;
+	public static final int VALUE_MATRIX_START = 6;
 	
-	public static final int VALUE_MATRIX_ROW_START = 14;
+	public static final int VALUE_MATRIX_END = 7;
+	
+	public static final int VALUE_MATRIX_ROW_START = 8;
 	
 	public static final String[] BLOCK_TYPE_NAMES = { 
-        "attribute_block", 
-        "value_series", 
-        "non_series", 
+        "attribute_block",
         "single_value", 
-        "interval", 
-        "x", 
-        "y", 
+        "value_series", 
         "value_series_start", 
         "value_series_end", 
-        "interval_start", 
-        "interval_end",
         "value_matrix",
         "value_matrix_start",
         "value_matrix_end",
@@ -159,21 +142,15 @@ public class Ontology {
 	/** An ontology for block types (single, time series...) */
 	public static final Ontology ATTRIBUTE_BLOCK_TYPE = 
         new Ontology(new int[] { 
-                NO_PARENT, 
-                ATTRIBUTE_BLOCK, 
-                ATTRIBUTE_BLOCK, 
-                NON_SERIES, 
-                NON_SERIES, 
-                SINGLE_VALUE, 
-                SINGLE_VALUE, 
-                VALUE_SERIES, 
-                VALUE_SERIES, 
-                INTERVAL, 
-                INTERVAL,
-                ATTRIBUTE_BLOCK,
-                VALUE_MATRIX,
-                VALUE_MATRIX,
-                VALUE_MATRIX 
+                NO_PARENT,        // attribute block
+                ATTRIBUTE_BLOCK,  // single value
+                ATTRIBUTE_BLOCK,  // value series 
+                VALUE_SERIES,     // value series start
+                VALUE_SERIES,     // value series end
+                ATTRIBUTE_BLOCK,  // value matrix
+                VALUE_MATRIX,     // value matrix start
+                VALUE_MATRIX,     // value matrix end
+                VALUE_MATRIX      // value matrix row start
         }, BLOCK_TYPE_NAMES);
 
     

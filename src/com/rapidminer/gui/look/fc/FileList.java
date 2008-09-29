@@ -72,7 +72,7 @@ import com.rapidminer.gui.tools.SwingTools;
  * The actual file selection list.
  *
  * @author Ingo Mierswa
- * @version $Id: FileList.java,v 1.7 2008/05/09 20:57:26 ingomierswa Exp $
+ * @version $Id: FileList.java,v 1.8 2008/07/01 14:16:13 ingomierswa Exp $
  */
 public class FileList extends JPanel implements PropertyChangeListener {
 
@@ -431,7 +431,7 @@ public class FileList extends JPanel implements PropertyChangeListener {
 		this.browseScrollPane.getVerticalScrollBar().setUnitIncrement(10);
 		
 		JScrollPane bookmarkPane = new JScrollPane(this.bookmarkList);
-		bookmarkPane.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 0, new Color(150, 150, 150)));
+		bookmarkPane.setBorder(BorderFactory.createTitledBorder("Bookmarks"));
 
 		this.add(this.mainSplitPane, BorderLayout.CENTER);
 
@@ -697,7 +697,7 @@ public class FileList extends JPanel implements PropertyChangeListener {
 			}
 		}
 		this.lastSelected = t;
-		synchFilechoserSelction();
+		synchFilechoserSelection();
 	}
 
 	@Override
@@ -709,7 +709,7 @@ public class FileList extends JPanel implements PropertyChangeListener {
 		}
 	}
 
-	protected void synchFilechoserSelction() {
+	protected void synchFilechoserSelection() {
 		int counter = 0;
 		this.selectedFilesArray = new File[this.selectedFilesVector.size()];
 
@@ -895,7 +895,7 @@ public class FileList extends JPanel implements PropertyChangeListener {
 					this.selectedFilesVector.add(item);
 					item.repaint();
 				}
-				synchFilechoserSelction();
+				synchFilechoserSelection();
 			}
 		}
 	}

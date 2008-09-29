@@ -1,0 +1,114 @@
+/*
+ *  RapidMiner
+ *
+ *  Copyright (C) 2001-2008 by Rapid-I and the contributors
+ *
+ *  Complete list of developers available at our web site:
+ *
+ *       http://rapid-i.com
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see http://www.gnu.org/licenses/.
+ */
+package com.rapidminer.tools.math.distribution;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+import com.rapidminer.tools.Tools;
+
+
+/**
+ * The distribution for a discrete variable.
+ * 
+ * @author Tobias Malbrecht
+ * @version $Id: DiscreteDistribution.java,v 1.2 2008/07/13 20:38:24 ingomierswa Exp $
+ */
+public class DiscreteDistribution implements Distribution {
+
+	private static final long serialVersionUID = 7573474548080998479L;
+
+	private String attributeName;
+	
+	private double[] probabilities;
+	
+	private String[] valueNames;
+	
+	public DiscreteDistribution(String attributeName, double[] probabilities, String[] valueNames) {
+		this.attributeName = attributeName;
+		this.probabilities = probabilities;
+		this.valueNames = valueNames;
+	}
+	
+	public final boolean isDiscrete() {
+		return true;
+	}
+	
+	public final boolean isContinuous() {
+		return false;
+	}
+	
+	public double getProbability(double value) {
+		int index = (int) value;
+		if (index >= 0 && index < probabilities.length) {
+			return probabilities[index];
+		} else {
+			return Double.NaN;
+		}
+	}
+
+	/** Returns the name of the attribute the distribution belongs to. */
+	public String getAttributeName() {
+		return attributeName;
+	}
+
+	/** This method returns a collection of all nominal attribute values. */
+	public Collection<Double> getValues() {
+		Collection<Double> values = new ArrayList<Double>();
+		for (int i = 0; i < probabilities.length; i++) {
+			values.add((double) i);
+		}
+		return values;
+	}
+	
+	public String mapValue(double value) {
+		int index = (int) value;
+		if (index >= 0 && index < valueNames.length) {
+			return valueNames[index];
+		} else {
+			return null;
+		}
+	}
+	
+	public String toString() {
+		StringBuffer distributionDescription = new StringBuffer();
+		boolean first = true;
+		for (int i = 0; i < valueNames.length; i++) {
+			if (!first) {
+				distributionDescription.append("\t");
+			}
+			distributionDescription.append(valueNames[i]);
+			first = false;
+		}
+		first = true;
+		distributionDescription.append(Tools.getLineSeparator());
+		for (int i = 0; i < valueNames.length; i++) {
+			if (!first) {
+				distributionDescription.append("\t");
+			}
+			distributionDescription.append(Tools.formatNumber(probabilities[i]));
+			first = false;
+		}
+		return distributionDescription.toString();
+	}
+}

@@ -42,6 +42,11 @@ import com.rapidminer.example.UnknownStatistics;
  */
 public abstract class NominalAttribute extends AbstractAttribute {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3830980883541763869L;
+
 	/* pp */ NominalAttribute(String name, int valueType) {
 		super(name, valueType);
         registerStatistics(new NominalStatistics());
@@ -54,6 +59,10 @@ public abstract class NominalAttribute extends AbstractAttribute {
 	
 	public boolean isNominal() { 
 		return true; 
+	}
+	
+	public boolean isNumerical() { 
+		return false; 
 	}
 	
 	/**

@@ -47,6 +47,10 @@ public class ParameterTypeCategory extends ParameterTypeSingle {
 		this.defaultValue = defaultValue;
 	}
 
+	public boolean isOptional() {
+		return super.isOptional() && (defaultValue == -1);
+	}
+	
 	public int getDefault() {
 		return defaultValue;
 	}

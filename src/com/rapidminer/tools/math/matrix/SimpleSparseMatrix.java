@@ -32,7 +32,7 @@ import java.util.Set;
  * A simple sparse matrix implementation based on hash structures. The basic idea is, that every value not explicitely given is assumed to be zero.
  * 
  * @author Michael Wurst
- * @version $Id: SimpleSparseMatrix.java,v 1.5 2008/05/09 19:23:23 ingomierswa Exp $
+ * @version $Id: SimpleSparseMatrix.java,v 1.7 2008/09/12 10:29:54 tobiasmalbrecht Exp $
  * 
  */
 public class SimpleSparseMatrix<Ex, Ey> extends AbstractMatrix<Ex, Ey> {

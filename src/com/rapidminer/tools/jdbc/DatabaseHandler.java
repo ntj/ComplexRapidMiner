@@ -60,10 +60,26 @@ import com.rapidminer.tools.Tools;
  * terminator.</p>
  * 
  * @author Ingo Mierswa
- * @version $Id: DatabaseHandler.java,v 1.8 2008/05/09 19:23:22 ingomierswa Exp $
+ * @version $Id: DatabaseHandler.java,v 1.14 2008/08/25 14:57:52 tobiasmalbrecht Exp $
  */
 public class DatabaseHandler {
+	
+	public static final String[] OVERWRITE_MODES = new String[] {
+		"none",
+		"overwrite first, append then",
+		"overwrite",
+		"append"
+	};
+	
+	public static final int OVERWRITE_MODE_NONE            = 0;
+	
+	public static final int OVERWRITE_MODE_OVERWRITE_FIRST = 1;
+	
+	public static final int OVERWRITE_MODE_OVERWRITE       = 2;
+	
+	public static final int OVERWRITE_MODE_APPEND          = 3;
 
+	
 	/** Used for logging purposes. */
 	private String databaseURL;
 
@@ -153,11 +169,16 @@ public class DatabaseHandler {
 	 *  ResultSet is scrollable and also updatable. It will also directly show 
 	 *  all changes to the database made by others after this ResultSet was obtained.
 	 *  Will throw an {@link SQLException} if the handler is not connected. */
-	public Statement createStatement() throws SQLException {
+	public Statement createStatement(boolean scrollableAndUpdatable) throws SQLException {
 		if (connection == null) {
 			throw new SQLException("Could not create a statement for '" + databaseURL + "': not connected.");
 		}
-		return connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+		Statement statement = null;
+		if (scrollableAndUpdatable)
+			statement = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+		else
+			statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		return statement;
 	}
 
 	/** Create a prepared statement where result sets will have the properties 
@@ -165,11 +186,16 @@ public class DatabaseHandler {
 	 *  ResultSet is scrollable and also updatable. It will also directly show 
 	 *  all changes to the database made by others after this ResultSet was obtained.
 	 *  Will throw an {@link SQLException} if the handler is not connected. */
-	public PreparedStatement createPreparedStatement(String sqlString) throws SQLException {
+	public PreparedStatement createPreparedStatement(String sqlString, boolean scrollableAndUpdatable) throws SQLException {
 		if (connection == null) {
 			throw new SQLException("Could not create a prepared statement for '" + databaseURL + "': not connected.");
 		}
-		return connection.prepareStatement(sqlString, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+		PreparedStatement statement = null;
+		if (scrollableAndUpdatable)
+			statement = connection.prepareStatement(sqlString, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+		else
+			statement = connection.prepareStatement(sqlString, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		return statement;
 	}
 	
     /**
@@ -201,7 +227,7 @@ public class DatabaseHandler {
 			throw new SQLException("Query: Only SQL-Statements starting with SELECT are allowed: " + sqlQuery);
 		}
 
-		Statement st = createStatement();
+		Statement st = createStatement(true);
 		ResultSet rs = st.executeQuery(sqlQuery);
 		return rs;
 	}
@@ -210,7 +236,7 @@ public class DatabaseHandler {
 	/** Adds a column for the given attribute to the table with name tableName. */
 	public void addColumn(Attribute attribute, String tableName) throws SQLException {
 		// drop the column if necessary 
-		Statement statement = createStatement();
+		Statement statement = createStatement(false);
 		boolean exists = false;
 		try {
             // check if column already exists (no exception and more than zero rows :-)
@@ -272,9 +298,9 @@ public class DatabaseHandler {
 	 * 
 	 *  @throws SQLException if the table should be overwritten but a table with this name already exists
 	 */
-	public void createTable(ExampleSet exampleSet, String tableName, boolean overwrite) throws SQLException {
+	public void createTable(ExampleSet exampleSet, String tableName, int overwriteMode, boolean firstAttempt) throws SQLException {
 		// either drop the table or throw an exception (depending on the parameter 'overwrite')
-		Statement statement = createStatement();
+		Statement statement = createStatement(true);
 		boolean exists = false;
 		try {
             // check if table already exists (no exception and more than zero columns :-)
@@ -285,20 +311,43 @@ public class DatabaseHandler {
 		} catch (SQLException e) {
 			// exception will be throw if table does not exist
 		}
-        if (exists) {
-        	if (overwrite) {
-        		statement.executeUpdate("DROP TABLE " + properties.getIdentifierQuoteOpen() + tableName + properties.getIdentifierQuoteClose());
-        	} else {
-        		throw new SQLException("Table with name '"+tableName+"' already exists and overwriting mode is not activated." + Tools.getLineSeparator() + 
-        				               "Please change table name or activate overwriting mode.");
-        	}
-        }
 		
-        // create new table
-        exampleSet.recalculateAllAttributeStatistics(); // necessary for updating the possible nominal values
-        String createTableString = getCreateTableString(exampleSet, tableName);
-		statement.executeUpdate(createTableString);
-        statement.close();
+		// drop table?
+        if (exists) {
+        	switch (overwriteMode) {
+        	case OVERWRITE_MODE_NONE:
+            	throw new SQLException("Table with name '"+tableName+"' already exists and overwriting mode is not activated." + Tools.getLineSeparator() + 
+            	"Please change table name or activate overwriting mode.");
+        	case OVERWRITE_MODE_OVERWRITE:
+            	statement.executeUpdate("DROP TABLE " + properties.getIdentifierQuoteOpen() + tableName + properties.getIdentifierQuoteClose());
+            	
+            	// create new table
+            	exampleSet.recalculateAllAttributeStatistics(); // necessary for updating the possible nominal values
+            	String createTableString = getCreateTableString(exampleSet, tableName);
+            	statement.executeUpdate(createTableString);
+            	statement.close();
+            	break;
+        	case OVERWRITE_MODE_OVERWRITE_FIRST:
+        		if (firstAttempt) {
+                	statement.executeUpdate("DROP TABLE " + properties.getIdentifierQuoteOpen() + tableName + properties.getIdentifierQuoteClose());
+                	
+                	// create new table
+                	exampleSet.recalculateAllAttributeStatistics(); // necessary for updating the possible nominal values
+                	createTableString = getCreateTableString(exampleSet, tableName);
+                	statement.executeUpdate(createTableString);
+                	statement.close();        			
+        		}
+        		break;
+        	default:
+        		break;
+        	}
+        } else {
+        	// create new table
+        	exampleSet.recalculateAllAttributeStatistics(); // necessary for updating the possible nominal values
+        	String createTableString = getCreateTableString(exampleSet, tableName);
+        	statement.executeUpdate(createTableString);
+        	statement.close();
+        }
         
         // fill table
 		PreparedStatement insertStatement = getInsertIntoTableStatement(tableName, exampleSet.getAttributes().allSize());
@@ -316,7 +365,7 @@ public class DatabaseHandler {
 			result.append("?");
 		}
 		result.append(")");
-		return createPreparedStatement(result.toString());
+		return createPreparedStatement(result.toString(), true);
 	}
 
 	private void applyInsertIntoTable(PreparedStatement statement, Example example, Iterator<AttributeRole> attributes) throws SQLException {
@@ -397,24 +446,6 @@ public class DatabaseHandler {
 		
 		return result.toString();
 	}
-	
-    /**
-     * Counts the number of records in the given result set.
-     * 
-     * @param rs the ResultSet.
-     */
-    public int countRecords(ResultSet rs) throws SQLException {
-        int numberOfRows = 0;
-
-        // move the cursor in the ResultSet to the beginning:
-        rs.beforeFirst();
-        while (rs.next()) {
-            numberOfRows++;
-        }
-        rs.beforeFirst();
-
-        return numberOfRows;
-    }
     
 	/**
 	 * Returns for the given SQL-type the name of the corresponding RapidMiner-Type
@@ -453,7 +484,7 @@ public class DatabaseHandler {
 			case Types.DATE:
 			case Types.TIME:
 			case Types.TIMESTAMP:
-				return Ontology.ORDERED;
+				return Ontology.NOMINAL;
 
 			default:
 				return Ontology.NOMINAL;
@@ -539,8 +570,8 @@ public class DatabaseHandler {
 
         Statement statement = null;
         try {
-        	statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
-        	ResultSet rs = statement.executeQuery("SELECT * FROM " + properties.getIdentifierQuoteOpen() + tableName + properties.getIdentifierQuoteClose());
+        	statement = createStatement(false);
+        	ResultSet rs = statement.executeQuery("SELECT * FROM " + properties.getIdentifierQuoteOpen() + tableName + properties.getIdentifierQuoteClose() + " WHERE 0 = 1");
         	List<ColumnIdentifier> result = new LinkedList<ColumnIdentifier>();
 
         	ResultSetMetaData metadata;

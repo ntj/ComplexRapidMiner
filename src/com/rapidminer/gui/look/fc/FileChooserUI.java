@@ -61,6 +61,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
@@ -80,6 +81,7 @@ import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicFileChooserUI;
 
 import sun.awt.shell.ShellFolder;
+import sun.swing.FilePane;
 
 import com.rapidminer.gui.look.borders.Borders;
 
@@ -87,7 +89,7 @@ import com.rapidminer.gui.look.borders.Borders;
  * The UI for the extended file chooser.
  *
  * @author Ingo Mierswa
- * @version $Id: FileChooserUI.java,v 1.5 2008/05/09 20:57:26 ingomierswa Exp $
+ * @version $Id: FileChooserUI.java,v 1.6 2008/07/01 14:16:13 ingomierswa Exp $
  */
 public class FileChooserUI extends BasicFileChooserUI {
 	
@@ -102,6 +104,59 @@ public class FileChooserUI extends BasicFileChooserUI {
 	public static final String FILECHOOSER_VIEW_DETAILS = "Details";
 	
 	
+	/**
+	 * Creates a new folder.
+	 */
+	protected class NewFolderAction extends AbstractAction {
+		
+		private static final long serialVersionUID = -119998626996460617L;
+
+		protected NewFolderAction() {
+			super(FilePane.ACTION_NEW_FOLDER);
+		}
+		
+		public void actionPerformed(ActionEvent e) {
+			if (UIManager.getBoolean("FileChooser.readOnly")) {
+				return;
+			}
+			JFileChooser fc = getFileChooser();
+			File currentDirectory = fc.getCurrentDirectory();
+			File newFolder = null;
+			try {
+				newFolder = fc.getFileSystemView().createNewFolder(currentDirectory);
+				
+				String name = JOptionPane.showInputDialog(getFileChooser(), "Please insert the name of the new folder:", newFolder.getName());
+				try {
+					if ((name == null ) || (name.equals(""))) {
+						JOptionPane.showConfirmDialog(getFileChooser(), "Please insert a valid name.", "Create Folder", JOptionPane.PLAIN_MESSAGE, JOptionPane.ERROR_MESSAGE);
+					} else {
+						if (newFolder.renameTo(new File(newFolder.getParentFile(), name))) {
+							newFolder = new File(newFolder.getParentFile(), name);
+						} else {
+							JOptionPane.showConfirmDialog(getFileChooser(), "An error occured while renaming the new folder.", "Create Folder", JOptionPane.PLAIN_MESSAGE, JOptionPane.ERROR_MESSAGE);
+						}
+					}
+				} catch (Exception exp) {
+					// do nothing
+				}
+				
+				if (fc.isMultiSelectionEnabled()) {
+					fc.setSelectedFiles(new File[] { newFolder });
+				} else {
+					fc.setSelectedFile(newFolder);
+				}
+			} catch (IOException exc) {
+				JOptionPane.showMessageDialog(
+						fc,
+						"Cannot create new folder: " + exc,
+					    "Error", JOptionPane.ERROR_MESSAGE);
+				return;
+			} 
+
+			fc.rescanCurrentDirectory();
+		}
+	}
+    
 	private static class ButtonAreaLayout implements LayoutManager {
 		
 		private int horizontalGap = 5;
@@ -337,12 +392,7 @@ public class FileChooserUI extends BasicFileChooserUI {
 
 			this.directories.clear();
 
-			File[] baseFolders;
-			if (FileChooserUI.this.useShellFolder) {
-				baseFolders = (File[]) ShellFolder.get("fileChooserComboBoxFolders");
-			} else {
-				baseFolders = this.fileSystemView.getRoots();
-			}
+			File[] baseFolders = this.fileSystemView.getRoots();
 			this.directories.addAll(Arrays.asList(baseFolders));
 
 			File canonical = null;
@@ -654,8 +704,6 @@ public class FileChooserUI extends BasicFileChooserUI {
 	private FilterComboBoxModel filterComboBoxModel;
 
 	private JTextField fileNameTextField;
-
-	private boolean useShellFolder;
 
 	private JButton approveButton;
 
@@ -980,20 +1028,7 @@ public class FileChooserUI extends BasicFileChooserUI {
 		topPanel.add(Box.createRigidArea(HORIZONTAL_STRUT_5));
 
 		topPanel.setBackground((Color) UIManager.get("control"));
-
-		// Use ShellFolder class to populate combobox only if
-		// FileSystemView.getRoots() returns one folder and that is
-		// the same as the first item in the ShellFolder combobox list.
-		{
-			this.useShellFolder = false;
-			File[] roots = fsv.getRoots();
-			if ((roots != null) && (roots.length == 1)) {
-				File[] cbFolders = (File[]) ShellFolder.get("fileChooserComboBoxFolders");
-				if ((cbFolders != null) && (cbFolders.length > 0) && (roots[0] == cbFolders[0])) {
-					this.useShellFolder = true;
-				}
-			}
-		}
+		
 
 		// ************************************** //
 		// ******* Add the directory pane ******* //
@@ -1076,6 +1111,16 @@ public class FileChooserUI extends BasicFileChooserUI {
 		groupLabels(new AlignedLabel[] { fileNameLabel, filesOfTypeLabel });
 	}
 
+	public Action getNewFolderAction() {
+		Action newFolderAction = new NewFolderAction();
+		// Note: Don't return null for readOnly, it might
+		// break older apps.
+		if (UIManager.getBoolean("FileChooser.readOnly")) {
+			newFolderAction.setEnabled(false);
+		}
+		return newFolderAction;
+	}
+    
 	protected JPanel getButtonPanel() {
 		if (this.buttonPanel == null) {
 			this.buttonPanel = new JPanel();

@@ -39,7 +39,7 @@ import javax.swing.filechooser.FileSystemView;
  * A IO helper class for the bookmarks.
  *
  * @author Ingo Mierswa
- * @version $Id: BookmarkIO.java,v 1.4 2008/05/09 19:22:53 ingomierswa Exp $
+ * @version $Id: BookmarkIO.java,v 1.5 2008/08/05 08:14:28 ingomierswa Exp $
  */
 public class BookmarkIO {
 
@@ -143,7 +143,6 @@ public class BookmarkIO {
 			in.close();
 			Collections.sort(bookmarks);
 		} catch (Exception e) {
-			// important: catch ALL exceptions!
 			bookmarks.clear();
 		} finally {
 			if (in != null) {
@@ -157,7 +156,7 @@ public class BookmarkIO {
 		return bookmarks;
 	}
 	
-	public static void writeBookmarks(List<Bookmark> bookmarks, File bookmarkFile) {
+	public static void writeBookmarks(Collection<Bookmark> bookmarks, File bookmarkFile) {
 		PrintWriter out = null;
 		try {
 			out = new PrintWriter(new FileWriter(bookmarkFile));
@@ -169,7 +168,6 @@ public class BookmarkIO {
 			out.close();
 		} catch (Exception e) {
 			// do nothing
-			// important: catch ALL exceptions!
 		} finally {
 			if (out != null) {
 				out.close();

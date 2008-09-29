@@ -34,7 +34,7 @@ import com.rapidminer.datatable.DataTableRow;
 /** This plotter can be used to create 3D box plots. 
  * 
  *  @author Sebastian Land, Ingo Mierswa
- *  @version $Id: BoxPlot3D.java,v 1.4 2008/05/09 19:23:21 ingomierswa Exp $
+ *  @version $Id: BoxPlot3D.java,v 1.5 2008/07/12 16:53:15 ingomierswa Exp $
  */
 public class BoxPlot3D extends JMathPlotter3D {
 
@@ -63,9 +63,17 @@ public class BoxPlot3D extends JMathPlotter3D {
 						while (iterator.hasNext()) {
 							DataTableRow row = (DataTableRow) iterator.next();
 							data[i][0] = row.getValue(getAxis(0));
+							if (Double.isNaN(data[i][0]))
+								data[i][0] = 0.0d;
 							data[i][1] = row.getValue(getAxis(1));
-							data[i][2] = row.getValue(currentVariable);	
-							deviation[i][0] = deviation[i][1] = deviation[i][2] = row.getValue(currentVariable);					
+							if (Double.isNaN(data[i][1]))
+								data[i][1] = 0.0d;
+							data[i][2] = row.getValue(currentVariable);
+							if (Double.isNaN(data[i][2]))
+								data[i][2] = 0.0d;
+							deviation[i][0] = deviation[i][1] = deviation[i][2] = row.getValue(currentVariable);
+							if (Double.isNaN(deviation[i][0]))
+								deviation[i][0] = deviation[i][1] = deviation[i][2] = 0.0d;
 							i++;
 						}
 						// PlotPanel construction

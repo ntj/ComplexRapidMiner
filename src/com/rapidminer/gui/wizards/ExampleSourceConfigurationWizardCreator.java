@@ -27,15 +27,19 @@ package com.rapidminer.gui.wizards;
  *  operator.
  *
  *  @author Ingo Mierswa
- *  @version $Id: ExampleSourceConfigurationWizardCreator.java,v 1.3 2008/05/09 19:22:56 ingomierswa Exp $
+ *  @version $Id: ExampleSourceConfigurationWizardCreator.java,v 1.5 2008/08/15 19:15:00 ingomierswa Exp $
  */
-public class ExampleSourceConfigurationWizardCreator implements ConfigurationWizardCreator {
+public class ExampleSourceConfigurationWizardCreator extends AbstractConfigurationWizardCreator {
 
 	private static final long serialVersionUID = 2690870634059674565L;
 
 	/** Necessary for construction by reflection. */
 	public ExampleSourceConfigurationWizardCreator() {}
 
+	public String getButtonText() {
+		return "Start Data Loading Wizard...";
+	}
+	
     public void createConfigurationWizard(ConfigurationListener listener) {
         (new ExampleSourceConfigurationWizard(listener)).setVisible(true);
     }

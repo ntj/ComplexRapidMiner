@@ -32,10 +32,10 @@ import com.rapidminer.example.table.ExampleTable;
 
 
 /**
- * Thie example set treats all special attributes as regular attributes.
+ * This example set treats all special attributes as regular attributes.
  * 
  * @author Ingo Mierswa
- * @version $Id: NonSpecialAttributesExampleSet.java,v 1.7 2008/05/09 19:22:49 ingomierswa Exp $
+ * @version $Id: NonSpecialAttributesExampleSet.java,v 1.8 2008/07/21 17:34:54 ingomierswa Exp $
  */
 public class NonSpecialAttributesExampleSet extends AbstractExampleSet {
     

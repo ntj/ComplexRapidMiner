@@ -50,7 +50,7 @@ import com.rapidminer.tools.Ontology;
  * attributes to the example set.
  * 
  * @author Simon Fischer, Ingo Mierswa
- * @version $Id: AttributeParser.java,v 1.7 2008/05/09 19:22:43 ingomierswa Exp $
+ * @version $Id: AttributeParser.java,v 1.8 2008/08/20 16:50:50 ingomierswa Exp $
  */
 public class AttributeParser {
 
@@ -145,7 +145,7 @@ public class AttributeParser {
 				if (name.startsWith(ConstantGenerator.FUNCTION_NAME)) {
 					throw new GenerationException("The function name '" + ConstantGenerator.FUNCTION_NAME + "' must be used with empty arguments!");
 				} else {
-					Attribute attribute = AttributeFactory.createAttribute(name, Ontology.NUMERICAL);
+					Attribute attribute = AttributeFactory.createAttribute(name, Ontology.REAL);
 					attributes.add(attribute);
 					start = construction.length();
 				}
@@ -155,7 +155,7 @@ public class AttributeParser {
 				if (name.startsWith(ConstantGenerator.FUNCTION_NAME)) {
 					throw new GenerationException("The function name '" + ConstantGenerator.FUNCTION_NAME + "' must be used with empty arguments!");
 				} else {
-					Attribute attribute = AttributeFactory.createAttribute(name, Ontology.NUMERICAL);
+					Attribute attribute = AttributeFactory.createAttribute(name, Ontology.REAL);
 					attributes.add(attribute);
 					start = end + 1;
 				}

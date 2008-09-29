@@ -28,11 +28,11 @@ import java.awt.Graphics2D;
 /** Defines the style of plotted rectangles, i.e. the color.
  *  
  *  @author Ingo Mierswa
- *  @version $Id: RectangleStyle.java,v 1.3 2008/05/09 19:22:51 ingomierswa Exp $
+ *  @version $Id: RectangleStyle.java,v 1.4 2008/07/04 08:39:22 ingomierswa Exp $
  */
 public class RectangleStyle {
 
-	public static final int ALPHA = 30;
+	public static final int ALPHA = 80;
 	
     public static final int NUMBER_OF_STYLES = 10;
     

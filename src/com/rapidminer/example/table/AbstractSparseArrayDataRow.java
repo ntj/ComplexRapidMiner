@@ -35,7 +35,12 @@ import com.rapidminer.example.Tools;
  */
 public abstract class AbstractSparseArrayDataRow extends DataRow implements SparseDataRow {
 
-    /** Stores the used attribute indices. */
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 4946925205115859758L;
+
+	/** Stores the used attribute indices. */
     private int[] x;
 
     /** Number of inserted elements. */

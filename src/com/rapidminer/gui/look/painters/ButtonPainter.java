@@ -38,7 +38,7 @@ import com.rapidminer.gui.look.RapidLookTools;
  * This is a cached painter for the buttons.
  *
  * @author Ingo Mierswa
- * @version $Id: ButtonPainter.java,v 1.2 2008/05/09 19:23:16 ingomierswa Exp $
+ * @version $Id: ButtonPainter.java,v 1.4 2008/07/13 14:16:10 ingomierswa Exp $
  */
 public class ButtonPainter extends AbstractCachedPainter {
 	
@@ -49,86 +49,102 @@ public class ButtonPainter extends AbstractCachedPainter {
 	}
 
 	public synchronized void paint(Component c, Graphics g, int x, int y, int w, int h) {
-		paint(c, g, x, y, w, h, new Object[] {});
+		paint(c, g, x, y, w, h, new Object[0]);
 	}
 
+	public void paintToImage(Component c, Graphics g, int w, int h) {
+		paintToImage(c, g, w, h, new Object[0]);
+	}
+	
+	public void paintButtonPressed(Graphics g, int w, int h) {
+		g.setColor(RapidLookTools.getColors().getButtonSkinColors()[8]);
+		g.drawLine(2, 1, w - 3, 1);
+		g.setColor(RapidLookTools.getColors().getButtonSkinColors()[8]);
+		g.drawLine(1, 2, w - 2, 2);
+		g.setColor(RapidLookTools.getColors().getButtonSkinColors()[21]);
+		g.drawLine(1, 3, w - 2, 3);
+		g.drawLine(1, 4, w - 2, 4);
+		g.drawLine(1, 5, w - 2, 5);
+
+		Graphics2D g2 = (Graphics2D) g;
+		g2.setPaint(new GradientPaint(0, 0, RapidLookTools.getColors().getButtonSkinColors()[19], 0, h, RapidLookTools.getColors().getButtonSkinColors()[20]));
+		g.fillRect(1, 6, w - 2, h - 11);
+		g.setColor(RapidLookTools.getColors().getButtonSkinColors()[5]);
+		g.drawLine(1, h - 5, w - 2, h - 5);
+		g.drawLine(1, h - 4, w - 2, h - 4);
+		g.setColor(RapidLookTools.getColors().getButtonSkinColors()[6]);
+		g.drawLine(1, h - 3, w - 2, h - 3);
+		g.setColor(RapidLookTools.getColors().getButtonSkinColors()[7]);
+		g.drawLine(1, h - 2, w - 2, h - 2);
+		g.setColor(RapidLookTools.getColors().getButtonSkinColors()[8]);
+		g.drawLine(2, h - 1, w - 3, h - 1);
+	}
+	
+	public void paintButton(Graphics g, int w, int h) {
+		g.setColor(Color.white);
+		g.drawLine(2, 1, w - 3, 1);
+		g.drawLine(1, 2, w - 2, 2);
+		g.setColor(RapidLookTools.getColors().getButtonSkinColors()[9]);
+		g.drawLine(1, 3, w - 2, 3);
+		g.setColor(RapidLookTools.getColors().getButtonSkinColors()[4]);
+		g.drawLine(1, 4, w - 2, 4);
+		g.setColor(RapidLookTools.getColors().getButtonSkinColors()[1]);
+		g.drawLine(1, 5, w - 2, 5);
+		g.setColor(RapidLookTools.getColors().getButtonSkinColors()[10]);
+		g.drawLine(1, 6, w - 2, 6);
+		g.setColor(RapidLookTools.getColors().getButtonSkinColors()[2]);
+		g.drawLine(1, 7, w - 2, 7);
+		g.setColor(RapidLookTools.getColors().getButtonSkinColors()[18]);
+		g.drawLine(1, 8, w - 2, 8);
+		g.setColor(RapidLookTools.getColors().getButtonSkinColors()[3]);
+		g.fillRect(1, 9, w - 2, h - 15);
+		g.setColor(RapidLookTools.getColors().getButtonSkinColors()[11]);
+		g.drawLine(1, h - 6, w - 2, h - 6);
+		g.setColor(RapidLookTools.getColors().getButtonSkinColors()[12]);
+		g.drawLine(1, h - 5, w - 2, h - 5);
+		g.setColor(RapidLookTools.getColors().getButtonSkinColors()[13]);
+		g.drawLine(1, h - 4, w - 2, h - 4);
+		g.setColor(RapidLookTools.getColors().getButtonSkinColors()[14]);
+		g.drawLine(1, h - 3, w - 2, h - 3);
+		g.setColor(RapidLookTools.getColors().getButtonSkinColors()[15]);
+		g.drawLine(1, h - 2, w - 2, h - 2);
+		g.setColor(RapidLookTools.getColors().getButtonSkinColors()[16]);
+		g.drawLine(2, h - 1, w - 3, h - 1);
+	}
+	
+	public void paintButtonDisabled(Graphics g, int w, int h, boolean selected) {
+		if (selected) {
+			g.setColor(RapidLookTools.getColors().getButtonSkinColors()[11]);
+		} else {
+			g.setColor(RapidLookTools.getColors().getButtonSkinColors()[17]);
+		}
+		g.drawLine(2, 1, w - 3, 1);
+		g.drawLine(1, 2, w - 2, 2);
+		g.drawLine(1, 3, w - 2, 3);
+		g.drawLine(1, 4, w - 2, 4);
+		g.drawLine(1, 5, w - 2, 5);
+		g.drawLine(1, 6, w - 2, 6);
+		g.drawLine(1, 7, w - 2, 7);
+		g.fillRect(1, 8, w - 2, h - 14);
+		g.drawLine(1, h - 6, w - 2, h - 6);
+		g.drawLine(1, h - 5, w - 2, h - 5);
+		g.drawLine(1, h - 4, w - 2, h - 4);
+		g.drawLine(1, h - 3, w - 2, h - 3);
+		g.drawLine(1, h - 2, w - 2, h - 2);
+		g.drawLine(2, h - 1, w - 3, h - 1);
+	}
+	
 	@Override
 	protected void paintToImage(Component c, Graphics g, int w, int h, Object[] args) {
 		ButtonModel buttonModel = ((AbstractButton) c).getModel();
 		if (buttonModel.isEnabled()) {
 			if ((buttonModel.isArmed() && buttonModel.isPressed()) || buttonModel.isSelected()) {
-				g.setColor(RapidLookTools.getColors().getButtonSkinColors()[0]);
-				g.drawLine(2, 1, w - 3, 1);
-				g.setColor(RapidLookTools.getColors().getButtonSkinColors()[1]);
-				g.drawLine(1, 2, w - 2, 2);
-				g.setColor(RapidLookTools.getColors().getButtonSkinColors()[2]);
-				g.drawLine(1, 3, w - 2, 3);
-				g.drawLine(1, 4, w - 2, 4);
-				g.drawLine(1, 5, w - 2, 5);
-
-				Graphics2D g2 = (Graphics2D) g;
-				g2.setPaint(new GradientPaint(0, 0, RapidLookTools.getColors().getButtonSkinColors()[3], 0, h, RapidLookTools.getColors().getButtonSkinColors()[4]));
-				g.fillRect(1, 6, w - 2, h - 11);
-				g.setColor(RapidLookTools.getColors().getButtonSkinColors()[5]);
-				g.drawLine(1, h - 5, w - 2, h - 5);
-				g.drawLine(1, h - 4, w - 2, h - 4);
-				g.setColor(RapidLookTools.getColors().getButtonSkinColors()[6]);
-				g.drawLine(1, h - 3, w - 2, h - 3);
-				g.setColor(RapidLookTools.getColors().getButtonSkinColors()[7]);
-				g.drawLine(1, h - 2, w - 2, h - 2);
-				g.setColor(RapidLookTools.getColors().getButtonSkinColors()[8]);
-				g.drawLine(2, h - 1, w - 3, h - 1);
+				paintButtonPressed(g, w, h);
 			} else {
-				g.setColor(Color.white);
-				g.drawLine(2, 1, w - 3, 1);
-				g.drawLine(1, 2, w - 2, 2);
-				g.setColor(RapidLookTools.getColors().getButtonSkinColors()[9]);
-				g.drawLine(1, 3, w - 2, 3);
-				g.setColor(RapidLookTools.getColors().getButtonSkinColors()[4]);
-				g.drawLine(1, 4, w - 2, 4);
-				g.setColor(RapidLookTools.getColors().getButtonSkinColors()[1]);
-				g.drawLine(1, 5, w - 2, 5);
-				g.setColor(RapidLookTools.getColors().getButtonSkinColors()[10]);
-				g.drawLine(1, 6, w - 2, 6);
-				g.setColor(RapidLookTools.getColors().getButtonSkinColors()[2]);
-				g.drawLine(1, 7, w - 2, 7);
-				g.setColor(RapidLookTools.getColors().getButtonSkinColors()[18]);
-				g.drawLine(1, 8, w - 2, 8);
-				g.setColor(RapidLookTools.getColors().getButtonSkinColors()[3]);
-				g.fillRect(1, 9, w - 2, h - 15);
-				g.setColor(RapidLookTools.getColors().getButtonSkinColors()[11]);
-				g.drawLine(1, h - 6, w - 2, h - 6);
-				g.setColor(RapidLookTools.getColors().getButtonSkinColors()[12]);
-				g.drawLine(1, h - 5, w - 2, h - 5);
-				g.setColor(RapidLookTools.getColors().getButtonSkinColors()[13]);
-				g.drawLine(1, h - 4, w - 2, h - 4);
-				g.setColor(RapidLookTools.getColors().getButtonSkinColors()[14]);
-				g.drawLine(1, h - 3, w - 2, h - 3);
-				g.setColor(RapidLookTools.getColors().getButtonSkinColors()[15]);
-				g.drawLine(1, h - 2, w - 2, h - 2);
-				g.setColor(RapidLookTools.getColors().getButtonSkinColors()[16]);
-				g.drawLine(2, h - 1, w - 3, h - 1);
+				paintButton(g, w, h);
 			}
 		} else { //disabled button
-			if (buttonModel.isSelected()) {
-				g.setColor(RapidLookTools.getColors().getButtonSkinColors()[11]);
-			} else {
-				g.setColor(RapidLookTools.getColors().getButtonSkinColors()[17]);
-			}
-			g.drawLine(2, 1, w - 3, 1);
-			g.drawLine(1, 2, w - 2, 2);
-			g.drawLine(1, 3, w - 2, 3);
-			g.drawLine(1, 4, w - 2, 4);
-			g.drawLine(1, 5, w - 2, 5);
-			g.drawLine(1, 6, w - 2, 6);
-			g.drawLine(1, 7, w - 2, 7);
-			g.fillRect(1, 8, w - 2, h - 14);
-			g.drawLine(1, h - 6, w - 2, h - 6);
-			g.drawLine(1, h - 5, w - 2, h - 5);
-			g.drawLine(1, h - 4, w - 2, h - 4);
-			g.drawLine(1, h - 3, w - 2, h - 3);
-			g.drawLine(1, h - 2, w - 2, h - 2);
-			g.drawLine(2, h - 1, w - 3, h - 1);
+			paintButtonDisabled(g, w, h, buttonModel.isSelected());
 		}
 	}
 

@@ -29,11 +29,11 @@ import java.awt.Graphics2D;
 import java.awt.Stroke;
 import java.awt.geom.Rectangle2D;
 
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JSlider;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+//import javax.swing.JComponent;
+//import javax.swing.JLabel;
+//import javax.swing.JSlider;
+//import javax.swing.event.ChangeEvent;
+//import javax.swing.event.ChangeListener;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -62,18 +62,19 @@ import com.rapidminer.example.Tools;
 import com.rapidminer.operator.MissingIOObjectException;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorException;
-import com.rapidminer.operator.learner.bayes.Distribution;
 import com.rapidminer.operator.learner.bayes.DistributionModel;
 import com.rapidminer.operator.learner.bayes.NaiveBayes;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.OperatorService;
+import com.rapidminer.tools.math.distribution.ContinuousDistribution;
+import com.rapidminer.tools.math.distribution.DiscreteDistribution;
 
 /**
  * This plotter can be used in order to plot a distribution model
  * like the one which can be delivered by NaiveBayes.
  * 
  * @author Sebastian Land, Ingo Mierswa, Tobias Malbrecht
- * @version $Id: DistributionPlotter.java,v 1.7 2008/05/09 19:22:51 ingomierswa Exp $
+ * @version $Id: DistributionPlotter.java,v 1.9 2008/08/07 09:01:18 tobiasmalbrecht Exp $
  */
 public class DistributionPlotter extends PlotterAdapter {
 
@@ -93,16 +94,16 @@ public class DistributionPlotter extends PlotterAdapter {
 	
 	private boolean createFromDataTable = false;
 	
-	private JSlider kernelSlider = new JSlider(1,200,1);
+//	private JSlider kernelSlider = new JSlider(1,200,1);
 	
 	public DistributionPlotter() {
-		kernelSlider.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-				if (!kernelSlider.getValueIsAdjusting()) {
-					repaint();
-				}
-			}
-		});
+//		kernelSlider.addChangeListener(new ChangeListener() {
+//			public void stateChanged(ChangeEvent e) {
+//				if (!kernelSlider.getValueIsAdjusting()) {
+//					repaint();
+//				}
+//			}
+//		});
 	}
 	
 	public DistributionPlotter(DistributionModel model) {
@@ -134,8 +135,8 @@ public class DistributionPlotter extends PlotterAdapter {
 					wrappedExampleSet.getAttributes().setLabel(label);
 					try {
 						NaiveBayes modelLearner = (NaiveBayes)OperatorService.createOperator(NaiveBayes.class);
-						modelLearner.setParameter(NaiveBayes.PARAMETER_USE_KERNEL, "true");
-						modelLearner.setParameter(NaiveBayes.PARAMETER_NUMBER_OF_KERNELS, kernelSlider.getValue() + "");
+//						modelLearner.setParameter(NaiveBayes.PARAMETER_USE_KERNEL, "true");
+//						modelLearner.setParameter(NaiveBayes.PARAMETER_NUMBER_OF_KERNELS, kernelSlider.getValue() + "");
 						this.model = (DistributionModel)modelLearner.learn(wrappedExampleSet);
 					} catch (OperatorCreationException e) {
 						LogService.getGlobal().logWarning("Cannot create distribution model generator. Skip plot...");
@@ -160,10 +161,10 @@ public class DistributionPlotter extends PlotterAdapter {
 		if (plot) {
 			JFreeChart chart = null;
 			try {
-				if (!Double.isNaN(model.getUpperBound(plotColumn))) {
-					chart = createNumericalChart();
-				} else {
+				if (model.isDiscrete(plotColumn)) {
 					chart = createNominalChart();
+				} else {
+					chart = createNumericalChart();
 				}
 			} catch (Exception e) {
 				// do nothing - just do not draw the chart
@@ -187,18 +188,18 @@ public class DistributionPlotter extends PlotterAdapter {
 	}
 
 	private XYDataset createNumericalDataSet() {
-		//NormalDistribution normal = new NormalDistribution(1.464d, 0.174d);
-		//normal.getProbability(1.5d);
-
 		XYSeriesCollection dataSet = new XYSeriesCollection();
 		double start = model.getLowerBound(plotColumn);
 		double end = model.getUpperBound(plotColumn);
 		double stepSize = (end - start) / (NUMBER_OF_STEPS - 1);
-		for (int classIndex : model.getClasses()) {
-			XYSeries series = new XYSeries(model.getLabelName(classIndex));
+		for (int classIndex : model.getClassIndices()) {
+			XYSeries series = new XYSeries(model.getClassName(classIndex));
+			ContinuousDistribution distribution = (ContinuousDistribution) model.getDistribution(classIndex, plotColumn);
 			for (double currentValue = start; currentValue <= end; currentValue += stepSize) {
-				series.add(currentValue, model.getProbabilityForAttribute(
-						classIndex, plotColumn, currentValue));
+				double probability = distribution.getProbability(currentValue);
+				if (!Double.isNaN(probability)) {
+					series.add(currentValue, distribution.getProbability(currentValue));
+				}
 			}
 			dataSet.addSeries(series);
 		}
@@ -238,8 +239,7 @@ public class DistributionPlotter extends PlotterAdapter {
 		} else {
 			for (int i = 0; i < dataset.getSeriesCount(); i++) {
 				renderer.setSeriesStroke(i, stroke);
-				Color color = getPointColor((double) i
-						/ (double) (dataset.getSeriesCount() - 1));
+				Color color = getPointColor((double) i / (double) (dataset.getSeriesCount() - 1));
 				renderer.setSeriesPaint(i, color);
 				renderer.setSeriesFillPaint(i, color);
 			}
@@ -275,30 +275,27 @@ public class DistributionPlotter extends PlotterAdapter {
 			renderer.setSeriesFillPaint(0, Color.RED);
 		} else {
 			for (int i = 0; i < dataset.getRowCount(); i++) {
-				Color color = getPointColor((double) i
-						/ (double) (dataset.getRowCount() - 1));
+				Color color = getPointColor((double) i / (double) (dataset.getRowCount() - 1));
 				renderer.setSeriesPaint(i, color);
 				renderer.setSeriesFillPaint(i, color);
 			}
 		}
 		plot.setRenderer(renderer);
-		
 		return chart;
 	}
 
 	private CategoryDataset createNominalDataSet() {
 		DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-		for (Integer classIndex : model.getClasses()) {
-			Distribution distribution = model.getDistribution(classIndex, plotColumn);
-			String labelName = model.getLabelName(classIndex);
-			for (Double value : model.getValues(plotColumn)) {
+		for (Integer classIndex : model.getClassIndices()) {
+			DiscreteDistribution distribution = (DiscreteDistribution) model.getDistribution(classIndex, plotColumn);
+			String labelName = model.getClassName(classIndex);
+			for (Double value : distribution.getValues()) {
 				String valueName;
 				if (Double.isNaN(value))
 					valueName = "unkown";
 				else
 					valueName = distribution.mapValue(value);
-				dataset.addValue(model.getProbabilityForAttribute(classIndex,
-						plotColumn, value), labelName, valueName);
+				dataset.addValue(distribution.getProbability(value), labelName, valueName);
 			}
 		}
 		return dataset;
@@ -337,16 +334,16 @@ public class DistributionPlotter extends PlotterAdapter {
 		return "Class Column:";
 	}
 	
-	public JComponent getOptionsComponent(int index) {
-		switch (index) {
-			case 0:
-				JLabel label = new JLabel("Number of Kernels:");
-                label.setToolTipText("Select the number of kernels used for the estimation of the distribution of numerical attributes.");
-                return label;
-			case 1:
-				return kernelSlider;
-			default:
-				return null;
-		}
-	}
+//	public JComponent getOptionsComponent(int index) {
+//		switch (index) {
+////			case 0:
+////				JLabel label = new JLabel("Number of Kernels:");
+////                label.setToolTipText("Select the number of kernels used for the estimation of the distribution of numerical attributes.");
+////                return label;
+////			case 1:
+////				return kernelSlider;
+//			default:
+//				return null;
+//		}
+//	}
 }

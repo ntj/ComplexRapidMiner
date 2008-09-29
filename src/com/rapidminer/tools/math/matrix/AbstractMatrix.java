@@ -34,12 +34,17 @@ import com.rapidminer.tools.Tools;
  * Abstract class that implements basic matrix operations as visualization.
  * 
  * @author Michael Wurst, Ingo Mierswa
- * @version $Id: AbstractMatrix.java,v 1.6 2008/05/09 19:23:23 ingomierswa Exp $
+ * @version $Id: AbstractMatrix.java,v 1.9 2008/09/12 10:30:02 tobiasmalbrecht Exp $
  * 
  */
 public abstract class AbstractMatrix<Ex, Ey> extends ResultObjectAdapter implements Matrix<Ex, Ey> {
 
-    public String getName() {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 3535952607148655768L;
+
+	public String getName() {
         return "Matrix";
     }
 

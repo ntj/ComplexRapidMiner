@@ -22,6 +22,7 @@
  */
 package com.rapidminer.tools.math.som;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
@@ -30,9 +31,11 @@ import java.util.Random;
  * This class can be used to train a Kohonen net.
  * 
  * @author Sebastian Land
- * @version $Id: KohonenNet.java,v 1.5 2008/05/09 19:23:19 ingomierswa Exp $
+ * @version $Id: KohonenNet.java,v 1.7 2008/07/18 15:50:46 ingomierswa Exp $
  */
-public class KohonenNet extends Thread {
+public class KohonenNet implements Serializable {
+
+	private static final long serialVersionUID = -5445606750204819559L;
 
 	private long randomSeed = 19091982;
 
@@ -102,10 +105,6 @@ public class KohonenNet extends Thread {
 		updateProgressListener(10);
 	}
 
-	public void run() {
-		train();
-	}
-
 	public void train() {
 		if (phase == 1) {
 			data.setRandomGenerator(this.randomGenerator);
@@ -135,7 +134,8 @@ public class KohonenNet extends Thread {
 					}
 				}
 			}
-			// Training has been successfull
+			// Training has been successful: data not needed anymore
+			data = null;
 			phase = 2;
 			updateProgressListener(90);
 			informProgressExit();

@@ -42,7 +42,7 @@ import com.rapidminer.parameter.ParameterTypeInt;
  * A simple generic density based clusterer.
  * 
  * @author Michael Wurst, Ingo Mierswa
- * @version $Id: AbstractDensityBasedClusterer.java,v 1.5 2008/05/09 19:22:49 ingomierswa Exp $
+ * @version $Id: AbstractDensityBasedClusterer.java,v 1.7 2008/09/12 10:31:43 tobiasmalbrecht Exp $
  */
 public abstract class AbstractDensityBasedClusterer extends AbstractFlatClusterer {
 

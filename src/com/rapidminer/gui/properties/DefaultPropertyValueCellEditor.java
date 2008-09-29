@@ -90,7 +90,8 @@ public class DefaultPropertyValueCellEditor extends DefaultCellEditor implements
 		editorComponent.setBackground(javax.swing.UIManager.getColor("Table.cellBackground"));
 		useEditorAsRenderer = true;
 		((JComboBox) editorComponent).removeItemListener(this.delegate);
-		((JComboBox) editorComponent).setEditable(true);
+		if (type.isEditable())
+			((JComboBox) editorComponent).setEditable(true);
 		this.delegate = new EditorDelegate() {
 
 			private static final long serialVersionUID = -5592150438626222295L;

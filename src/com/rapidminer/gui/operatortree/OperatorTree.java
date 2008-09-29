@@ -29,6 +29,8 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.Action;
 import javax.swing.JMenu;
@@ -81,7 +83,7 @@ import com.rapidminer.operator.ProcessRootOperator;
  * 
  * @see com.rapidminer.gui.operatortree.OperatorTreeModel
  * @author Ingo Mierswa
- * @version $Id: OperatorTree.java,v 1.20 2008/05/09 19:23:26 ingomierswa Exp $
+ * @version $Id: OperatorTree.java,v 1.21 2008/07/13 14:16:10 ingomierswa Exp $
  */
 public class OperatorTree extends JTree implements TreeSelectionListener, TreeExpansionListener, MouseListener {
 
@@ -212,27 +214,53 @@ public class OperatorTree extends JTree implements TreeSelectionListener, TreeEx
 
 	/** Creates a new operator tree model and restores the expansion state of the complete tree. */
 	public void setOperator(Operator root) {
+		// store expansion --> necessary since otherwise the expansion state will be overwritten during model setting
+		Map<String, Boolean> expansionMap = new HashMap<String, Boolean>();
+		fillExpansionMap(root, expansionMap);
+		
 		boolean showDisabled = treeModel != null ? treeModel.showDisabledOperators() : true;
 		this.treeModel = new OperatorTreeModel(root, this);
 		this.treeModel.setShowDisabledOperators(showDisabled);
 		setModel(treeModel);
 		setRootVisible(true);
-		restoreExpansionState(new TreePath(this.treeModel.getRoot()));
+		
+		// restore expansion
+		restoreExpansionState(new TreePath(this.treeModel.getRoot()), expansionMap);
+		expansionMap.clear();
 	}
 	
-	private void restoreExpansionState(TreePath path) {
+	private void fillExpansionMap(Operator operator, Map<String, Boolean> expansionMap) {
+		if (operator instanceof OperatorChain) {
+			if (operator.isExpanded())
+				expansionMap.put(operator.getName(), true);
+			else
+				expansionMap.put(operator.getName(), false);
+		}
+		
+		if (operator instanceof OperatorChain) {
+			OperatorChain chain = (OperatorChain)operator;
+			for (Operator child : chain.getAllInnerOperators()) {
+				fillExpansionMap(child, expansionMap);
+			}
+		}
+	}
+	
+	private void restoreExpansionState(TreePath path, Map<String, Boolean> expansionMap) {
 		Operator operator = (Operator)path.getLastPathComponent();
-		if (operator.isExpanded()) {
-			expandPath(path);
-			if (operator instanceof OperatorChain) {
-				OperatorChain chain = (OperatorChain)operator;
-				for (Operator child : chain.getAllInnerOperators()) {
-					TreePath childPath = path.pathByAddingChild(child);
-					restoreExpansionState(childPath);
-				}
-			}	
-		} else {
-			collapsePath(path);
+		if (operator instanceof OperatorChain) {
+			OperatorChain chain = (OperatorChain)operator;
+			for (Operator child : chain.getAllInnerOperators()) {
+				TreePath childPath = path.pathByAddingChild(child);
+				restoreExpansionState(childPath, expansionMap);
+			}
+		}
+		
+		if (operator instanceof OperatorChain) {
+			if (expansionMap.get(operator.getName())) {
+				expandPath(path);
+			} else {
+				collapsePath(path);
+			}
 		}
 	}
 

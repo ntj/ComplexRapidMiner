@@ -40,7 +40,7 @@ import com.rapidminer.tools.Ontology;
  *  table like data. 
  *  
  *  @author Ingo Mierswa
- *  @version $Id: AttributeDataSourceCreator.java,v 1.6 2008/05/09 19:23:24 ingomierswa Exp $ 
+ *  @version $Id: AttributeDataSourceCreator.java,v 1.7 2008/07/03 22:00:41 ingomierswa Exp $ 
  */
 public class AttributeDataSourceCreator {
 
@@ -53,13 +53,13 @@ public class AttributeDataSourceCreator {
         return sources;
     }
     
-    public void loadData(File file, char[] commentChars, String columnSeparators, char decimalPointCharacter, boolean useQuotes, boolean firstLineAsNames, int maxCounter, Charset encoding) throws IOException {
+    public void loadData(File file, char[] commentChars, String columnSeparators, char decimalPointCharacter, boolean useQuotes, boolean trimLines, boolean firstLineAsNames, int maxCounter, Charset encoding) throws IOException {
         this.sources.clear();        
         String[] columnNames = null;        
         int maxColumns = -1;
         int[] valueTypes = null;
 
-        RapidMinerLineReader lineReader = new RapidMinerLineReader(columnSeparators, commentChars, useQuotes);
+        RapidMinerLineReader lineReader = new RapidMinerLineReader(columnSeparators, commentChars, useQuotes, trimLines);
         BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file), encoding));
 
         int counter = 0;

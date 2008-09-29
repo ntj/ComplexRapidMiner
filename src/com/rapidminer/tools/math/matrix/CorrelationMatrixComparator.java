@@ -35,7 +35,7 @@ import com.rapidminer.tools.math.MathFunctions;
  * Compares two matrics using Pearson correlation.
  * 
  * @author Michael Wurst
- * @version $Id: CorrelationMatrixComparator.java,v 1.4 2008/05/09 19:23:23 ingomierswa Exp $
+ * @version $Id: CorrelationMatrixComparator.java,v 1.6 2008/09/12 10:29:52 tobiasmalbrecht Exp $
  * 
  */
 public class CorrelationMatrixComparator<Ex, Ey> implements MatrixComparator<Ex, Ey> {

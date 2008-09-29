@@ -38,16 +38,16 @@ import javax.swing.JTextPane;
 import com.rapidminer.datatable.SimpleDataTable;
 import com.rapidminer.datatable.SimpleDataTableRow;
 import com.rapidminer.gui.plotter.mathplot.SticksPlot3D;
-import com.rapidminer.tools.Tableable;
+import com.rapidminer.report.Tableable;
 
 /** This viewer class can be used to display performance criteria based on a multi class confusion matrix. 
  *  The viewer consists of two parts, first a part containing the general performance info string and second
  *  a table with the complete confusion matrix.
  * 
  *  @author Ingo Mierswa
- *  @version $Id: ConfusionMatrixViewer.java,v 1.6 2008/05/09 19:22:59 ingomierswa Exp $
+ *  @version $Id: ConfusionMatrixViewer.java,v 1.8 2008/07/07 07:06:37 ingomierswa Exp $
  */
-public class ConfusionMatrixViewer extends JPanel implements Tableable{
+public class ConfusionMatrixViewer extends JPanel implements Tableable {
 	
 	private static final long serialVersionUID = 3448880915145528006L;
 
@@ -126,12 +126,19 @@ public class ConfusionMatrixViewer extends JPanel implements Tableable{
 
 		add(togglePanel, BorderLayout.NORTH);
 	}
+	
+	public String getColumnName(int columnIndex) {
+		return table.getColumnName(columnIndex);
+	}
+	
 	public String getCell(int row, int column) {
 		return table.getCell(row, column);
 	}
+	
 	public int getColumnNumber() {
 		return table.getColumnNumber();
 	}
+	
 	public int getRowNumber() {
 		return table.getRowNumber();
 	}

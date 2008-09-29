@@ -34,7 +34,7 @@ import com.rapidminer.datatable.DataTableRow;
 /** This plotter can be used to create 3D scatter plots. 
  * 
  *  @author Sebastian Land, Ingo Mierswa
- *  @version $Id: ScatterPlot3D.java,v 1.4 2008/05/09 19:23:21 ingomierswa Exp $
+ *  @version $Id: ScatterPlot3D.java,v 1.5 2008/07/12 16:53:15 ingomierswa Exp $
  */
 public class ScatterPlot3D extends JMathPlotter3D {
 	
@@ -63,7 +63,12 @@ public class ScatterPlot3D extends JMathPlotter3D {
 							DataTableRow row = iterator.next();
 							data[i][0] = row.getValue(getAxis(0));
 							data[i][1] = row.getValue(getAxis(1));
-							data[i][2] = row.getValue(currentVariable);		
+							data[i][2] = row.getValue(currentVariable);
+							if (Double.isNaN(data[i][0]) || Double.isNaN(data[i][1]) || Double.isNaN(data[i][2])) {
+								data[i][0] = 0.0d;
+								data[i][1] = 0.0d;
+								data[i][2] = 0.0d;
+							}
 							i++;
 						}
 						// PlotPanel construction

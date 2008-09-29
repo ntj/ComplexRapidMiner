@@ -57,7 +57,7 @@ import com.rapidminer.tools.LogService;
  * This is the deviation chart plotter.
  * 
  * @author Ingo Mierswa
- * @version $Id: SeriesChartPlotter.java,v 1.4 2008/05/09 19:22:58 ingomierswa Exp $
+ * @version $Id: SeriesChartPlotter.java,v 1.5 2008/05/25 12:08:44 ingomierswa Exp $
  */
 public class SeriesChartPlotter extends PlotterAdapter {
 
@@ -213,7 +213,7 @@ public class SeriesChartPlotter extends PlotterAdapter {
             int columnCount = 0;
 			for (int c = 0; c < dataTable.getNumberOfColumns(); c++) {
 				if (getPlotColumn(c)) {
-					if (!dataTable.isNominal(c)) {
+					if (dataTable.isNumerical(c)) {
 						YIntervalSeries series = new YIntervalSeries(this.dataTable.getColumnName(c));
 						Iterator<DataTableRow> i = dataTable.iterator();
 						int index = 1;
@@ -230,7 +230,7 @@ public class SeriesChartPlotter extends PlotterAdapter {
 			}
 			
 			if ((getAxis(0) > -1) && (getAxis(1) > -1)) {
-				if ((!dataTable.isNominal(getAxis(0))) && (!dataTable.isNominal(getAxis(1)))) {
+				if ((dataTable.isNumerical(getAxis(0))) && (dataTable.isNumerical(getAxis(1)))) {
 					YIntervalSeries series = new YIntervalSeries("Bounds");
 					Iterator<DataTableRow> i = dataTable.iterator();
 					int index = 1;

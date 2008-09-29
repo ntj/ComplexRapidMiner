@@ -22,21 +22,54 @@
  */
 package com.rapidminer.gui.wizards;
 
+import com.rapidminer.tools.Tools;
+
 /**
  *  This creator can be used to create wizards for the 
  *  {@link com.rapidminer.operator.io.DatabaseExampleSource} operator.
  *
  *  @author Ingo Mierswa
- *  @version $Id: DBExampleSetWriterConfigurationWizardCreator.java,v 1.3 2008/05/09 19:22:56 ingomierswa Exp $
+ *  @version $Id: DBExampleSetWriterConfigurationWizardCreator.java,v 1.6 2008/08/21 17:48:16 ingomierswa Exp $
  */
-public class DBExampleSetWriterConfigurationWizardCreator implements ConfigurationWizardCreator {
+public class DBExampleSetWriterConfigurationWizardCreator extends AbstractConfigurationWizardCreator {
 
 	private static final long serialVersionUID = -3326459655851921317L;
 
 	/** Necessary for construction by reflection. */
 	public DBExampleSetWriterConfigurationWizardCreator() {}
 
+	public String getButtonText() {
+		return "Start Data Writing Wizard...";
+	}
+	
     public void createConfigurationWizard(ConfigurationListener listener) {
-        (new DBExampleSetWriterConfigurationWizard(listener)).setVisible(true);
+    	boolean showDrivers = true;
+        boolean showDatabaseConfiguration = true;
+        String system = null;
+        String server = null;
+        String dbName = null;
+        
+        if (getParameters() != null) {
+        	showDrivers = Tools.booleanValue(getParameters().get(DBExampleSourceConfigurationWizardCreator.PARAMETER_SHOW_DATABASE_DRIVERS), true);
+        	showDatabaseConfiguration = Tools.booleanValue(getParameters().get(DBExampleSourceConfigurationWizardCreator.PARAMETER_SHOW_DATABASE_CONFIGURATION), true);
+        	if (!showDatabaseConfiguration) {
+        		Object systemObject = getParameters().get(DBExampleSourceConfigurationWizardCreator.PARAMETER_SYSTEM);
+        		if (systemObject != null) {
+        			system = systemObject.toString();
+        		}
+        		
+        		Object serverObject = getParameters().get(DBExampleSourceConfigurationWizardCreator.PARAMETER_SERVER);
+        		if (serverObject != null) {
+        			server = serverObject.toString();
+        		}
+        		
+        		Object dbNameObject = getParameters().get(DBExampleSourceConfigurationWizardCreator.PARAMETER_DB_NAME);
+        		if (dbNameObject != null) {
+        			dbName = dbNameObject.toString();
+        		}
+        	}
+        }
+        
+        (new DBExampleSetWriterConfigurationWizard(listener, showDrivers, showDatabaseConfiguration, system, server, dbName)).setVisible(true);
     }
 }

@@ -27,9 +27,11 @@ package com.rapidminer.tools.math.som;
  * node to an input stimulus.
  * 
  * @author Sebastian Land
- * @version $Id: RitterAdaptation.java,v 1.3 2008/05/09 19:23:19 ingomierswa Exp $
+ * @version $Id: RitterAdaptation.java,v 1.4 2008/06/18 14:28:36 stiefelolm Exp $
  */
 public class RitterAdaptation implements AdaptationFunction {
+
+	private static final long serialVersionUID = 254565250431806677L;
 
 	private double learnRateStart = 0.8;
 

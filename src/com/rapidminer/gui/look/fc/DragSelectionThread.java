@@ -29,7 +29,7 @@ import java.util.Enumeration;
  * A thread for dragging.
  *
  * @author Ingo Mierswa
- * @version $Id: DragSelectionThread.java,v 1.2 2008/05/09 19:22:53 ingomierswa Exp $
+ * @version $Id: DragSelectionThread.java,v 1.3 2008/07/01 14:16:13 ingomierswa Exp $
  */
 public class DragSelectionThread implements Runnable {
 
@@ -77,6 +77,6 @@ public class DragSelectionThread implements Runnable {
 				}
 			}
 		}
-		this.fileList.synchFilechoserSelction();
+		this.fileList.synchFilechoserSelection();
 	}
 }

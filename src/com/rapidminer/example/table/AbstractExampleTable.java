@@ -46,9 +46,14 @@ import com.rapidminer.tools.att.AttributeSet;
  * can use the same data and access the attribute values by reference.
  * 
  * @author Ingo Mierswa
- * @version $Id: AbstractExampleTable.java,v 1.6 2008/05/09 19:22:44 ingomierswa Exp $
+ * @version $Id: AbstractExampleTable.java,v 1.7 2008/07/31 17:43:41 ingomierswa Exp $
  */
 public abstract class AbstractExampleTable implements ExampleTable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6996954528182122684L;
 
 	/**
 	 * List of instances of {@link Attribute}. The <i>i</i>-th entry in the

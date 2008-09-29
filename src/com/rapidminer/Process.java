@@ -59,6 +59,7 @@ import com.rapidminer.operator.ProcessRootOperator;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.WrongNumberOfInnerOperatorsException;
 import com.rapidminer.parameter.UndefinedParameterError;
+import com.rapidminer.report.ReportStream;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.RandomGenerator;
@@ -77,7 +78,7 @@ import com.rapidminer.tools.XMLException;
  * GUI beforehand) and start it by invoking the {@link #run()} method.</p>
  * 
  * @author Ingo Mierswa
- * @version $Id: Process.java,v 1.14 2008/05/09 19:23:19 ingomierswa Exp $
+ * @version $Id: Process.java,v 1.20 2008/07/21 17:34:54 ingomierswa Exp $
  */
 public class Process implements Cloneable {
 
@@ -115,11 +116,17 @@ public class Process implements Cloneable {
 	 */
 	private Map<String, DataTable> dataTableMap = new HashMap<String, DataTable>();
 	
+	
+	/**
+	 * Maps names of report streams to reportStream objects
+	 */
+	private Map<String, ReportStream> reportStreamMap = new HashMap<String, ReportStream>();
+	
 	/** Indicates the current process state. */
 	private int processState = PROCESS_STATE_STOPPED;
 	
     /** The logging for this process. */
-    private LogService logService;
+    private LogService logService = LogService.getGlobal();
     
     
 	// -------------------
@@ -135,7 +142,7 @@ public class Process implements Cloneable {
 		} catch (Exception e) {
 			throw new RuntimeException("Cannot initialize root operator of the process: " + e.getMessage(), e);
 		}
-		initLogging();
+		//initLogging();
 	}
 
     /** Creates a new process from the given URL. */
@@ -143,7 +150,7 @@ public class Process implements Cloneable {
 		InputStream in = url.openStream();
 		readProcess(in);
 		in.close();
-        initLogging();
+        //initLogging();
 	}
 
     /** Creates a new process from the given process file. This might have been created 
@@ -160,7 +167,7 @@ public class Process implements Cloneable {
 				in.close();
 		}
 		this.processFile = file;
-        initLogging();
+        //initLogging();
 	}
 
 	/** Reads an process configuration from an XML String. */
@@ -168,13 +175,13 @@ public class Process implements Cloneable {
 		ByteArrayInputStream in = new ByteArrayInputStream(xmlString.getBytes());
 		readProcess(in);
 		in.close();
-        initLogging();
+        //initLogging();
 	}
 
 	/** Reads an process configuration from the given file. */
 	public Process(InputStream in) throws IOException, XMLException {
 		readProcess(in);
-        initLogging();
+        //initLogging();
 	}
 
 	/** Clone constructor. Makes a deep clone of the operator tree and the process file. 
@@ -188,12 +195,14 @@ public class Process implements Cloneable {
 			this.processFile = new File(other.processFile.getAbsolutePath());
 		else
 			this.processFile = null;
-        initLogging();
+        //initLogging();
 	}
 
+	/*
     private void initLogging() {
         initLogging(LogService.UNKNOWN_LEVEL);
     }
+    */
     
     private void initLogging(int logVerbosity) {
         try {
@@ -291,6 +300,40 @@ public class Process implements Cloneable {
 		dataTableMap.clear();
 	}
 
+	/**
+	 * This method adds a new report stream with the given name
+	 */
+	public void addReportStream(ReportStream stream) {
+		reportStreamMap.put(stream.getName(), stream);
+	}
+	
+	/**
+	 * Returns the reportStream with given name
+	 */
+	public ReportStream getReportStream(String name) {
+		if ((name == null) || (name.length() == 0)) {
+			if (reportStreamMap.size() == 1) {
+				return reportStreamMap.values().iterator().next();
+			} else {
+				return null;
+			}
+		} else {
+			return reportStreamMap.get(name);
+		}
+	}
+	
+	/**
+	 * Removes this reportStream from process. This report Stream will not be
+	 * notified about new report items.
+	 * @param name of the report stream given in the ReportGenerator operator
+	 */
+	public void removeReportStream(String name) {
+		reportStreamMap.remove(name);
+	}
+	
+	public void clearReportStreams() {
+		reportStreamMap.clear();
+	}
 	
 	// ----------------------
 	// Operator Handling
@@ -511,7 +554,6 @@ public class Process implements Cloneable {
 			RapidMiner.cleanUp();
         
         initLogging(logVerbosity);
-        //getLog().init(this, logVerbosity);
 		stopProcess = false;
 		logService.log("Initialising process setup", LogService.INIT);
 		
@@ -520,6 +562,7 @@ public class Process implements Cloneable {
         
 		checkProcess(inputContainer);
 		clearDataTables();
+		clearReportStreams();
 		clearMacros();
 		AttributeFactory.resetNameCounters();
 		
@@ -571,10 +614,9 @@ public class Process implements Cloneable {
 			IOContainer result = rootOperator.apply(input);
 			long end = System.currentTimeMillis();
 
-			logService.log("Process finished after " + ((end - start) / 1000) + " seconds", LogService.NOTE);
 			logService.log("Process:" + Tools.getLineSeparator() + getRootOperator().createProcessTree(3), LogService.INIT);
 			logService.log("Produced output:" + Tools.getLineSeparator() + result, LogService.INIT);
-			logService.log("Process finished successfully", LogService.NOTE);
+			logService.log("Process finished successfully after " + ((end - start) / 1000) + " seconds", LogService.NOTE);
 
 			return result;
 		} catch (OperatorException e) {
@@ -604,6 +646,7 @@ public class Process implements Cloneable {
 		}
 		ResultService.close();
 		logService.flush();
+		logService = LogService.getGlobal();
 	}
 
 	
@@ -627,7 +670,7 @@ public class Process implements Cloneable {
 			writer.println("<?xml version=\"1.0\" encoding=\""+encoding+"\"?>");
 
 			// write process
-			writer.println("<process version=\"" + RapidMiner.getVersion() + "\">" + Tools.getLineSeparator());
+			writer.println("<process version=\"" + RapidMiner.getShortVersion() + "\">" + Tools.getLineSeparator());
 			rootOperator.writeXML(writer, "  ");
 			writer.println("</process>");
 		} catch (IOException e) {

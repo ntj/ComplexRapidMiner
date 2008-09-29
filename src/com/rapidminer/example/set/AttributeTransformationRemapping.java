@@ -30,7 +30,7 @@ import com.rapidminer.example.table.NominalMapping;
 /** This transformation returns the remapped value.
  *  
  *  @author Ingo Mierswa
- *  @version $Id: AttributeTransformationRemapping.java,v 1.3 2008/05/09 19:22:49 ingomierswa Exp $
+ *  @version $Id: AttributeTransformationRemapping.java,v 1.4 2008/08/22 09:02:32 ingomierswa Exp $
  */
 public class AttributeTransformationRemapping implements AttributeTransformation {
 	
@@ -65,7 +65,8 @@ public class AttributeTransformationRemapping implements AttributeTransformation
         			return index;
         		}
         	} catch (AttributeTypeException e) {
-        		throw new AttributeTypeException("Attribute '" + attribute.getName() + "': " + e.getMessage());
+        		return value;
+        		//throw new AttributeTypeException("Attribute '" + attribute.getName() + "': " + e.getMessage());
         	}
         } else {
             return value;
@@ -85,7 +86,8 @@ public class AttributeTransformationRemapping implements AttributeTransformation
         			return newValue;
         		}
         	} catch (AttributeTypeException e) {
-        		throw new AttributeTypeException("Attribute '" + attribute.getName() + "': " + e.getMessage());
+        		return value;
+        		//throw new AttributeTypeException("Attribute '" + attribute.getName() + "': " + e.getMessage());
         	}
         } else {
             return value;
@@ -95,5 +97,4 @@ public class AttributeTransformationRemapping implements AttributeTransformation
 	public boolean isReversable() {
 		return true;
 	}
-	
 }

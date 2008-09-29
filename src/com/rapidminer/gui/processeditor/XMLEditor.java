@@ -23,6 +23,8 @@
 package com.rapidminer.gui.processeditor;
 
 import java.awt.BorderLayout;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
@@ -45,9 +47,9 @@ import com.rapidminer.operator.Operator;
  * parsing.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: XMLEditor.java,v 1.4 2008/05/09 19:23:16 ingomierswa Exp $
+ * @version $Id: XMLEditor.java,v 1.5 2008/07/13 14:16:10 ingomierswa Exp $
  */
-public class XMLEditor extends JPanel implements ProcessEditor {
+public class XMLEditor extends JPanel implements ProcessEditor, FocusListener {
 
 	private static final long serialVersionUID = 4172143138689034659L;
 		
@@ -61,6 +63,7 @@ public class XMLEditor extends JPanel implements ProcessEditor {
 		
 		// create text area
 		this.editor = new com.rapidminer.gui.tools.XMLEditor();
+		this.editor.addFocusListener(this);
 		
 		// add popup menu for right click
 		add(editor, BorderLayout.CENTER);
@@ -88,7 +91,7 @@ public class XMLEditor extends JPanel implements ProcessEditor {
 		}
 	}
 	
-	public void validateProcess() throws Exception {
+	public synchronized void validateProcess() throws Exception {
 		InputStream in = new ByteArrayInputStream(editor.getText().getBytes());
 		Process newExp = new Process(in);
 		in.close();
@@ -97,6 +100,16 @@ public class XMLEditor extends JPanel implements ProcessEditor {
 			newExp.setProcessFile(RapidMinerGUI.getMainFrame().getProcess().getProcessFile());
 			RapidMinerGUI.getMainFrame().setProcess(newExp, true);
 			mainFrame.processChanged();
+		}
+	}
+
+	public void focusGained(FocusEvent e) {}
+
+	public void focusLost(FocusEvent e) {
+		try {
+			validateProcess();
+		} catch (Exception e1) {
+			// do nothing
 		}
 	}
 }

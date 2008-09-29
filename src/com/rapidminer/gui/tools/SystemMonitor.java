@@ -39,7 +39,7 @@ import javax.swing.JPanel;
  * not possible to ask for the processor usage with methods from Java.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: SystemMonitor.java,v 1.5 2008/05/09 19:22:58 ingomierswa Exp $
+ * @version $Id: SystemMonitor.java,v 1.6 2008/07/01 13:19:26 stiefelolm Exp $
  */
 public class SystemMonitor extends JPanel {
 
@@ -85,7 +85,7 @@ public class SystemMonitor extends JPanel {
 	}
 	
 	public void startMonitorThread() {
-		new Thread() {
+		new Thread("SystemMonitor-Thread") {
 
 			{
 				setDaemon(true);

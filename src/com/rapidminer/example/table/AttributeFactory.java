@@ -59,7 +59,9 @@ public class AttributeFactory {
 	/** Creates a simple single attribute depending on the given value type. */
 	public static Attribute createAttribute(String name, int valueType) {
 		String attributeName = (name != null) ? name : createName();
-		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.BINOMINAL)) {
+		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.DATE_TIME)) {
+			return new DateAttribute(attributeName, valueType);
+		} else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.BINOMINAL)) {
 			return new BinominalAttribute(attributeName);
 		} else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.NOMINAL)) {
 			return new PolynominalAttribute(attributeName, valueType);
@@ -135,7 +137,9 @@ public class AttributeFactory {
 
 	/**
 	 * Changes the value type of the given attribute and returns a new attribute
-	 * with the same properties but the new value type.
+	 * with the same properties but the new value type. Since values within examples are
+	 * not altered it is not suggested to use this method to change attributes within an
+	 * exampleset in use. Operators should create a new attribute to ensure parallel executability.
 	 */
 	public static Attribute changeValueType(Attribute attribute, int valueType) {
 		Attribute result = createAttribute(attribute.getName(), valueType);

@@ -51,6 +51,10 @@ public class Bin {
 		return weightCounter;
 	}
 	
+	public void setCounter(double counter) {
+		this.weightCounter = counter;
+	}
+	
 	public double getCounter() {
 		return weightCounter;
 	}

@@ -55,7 +55,7 @@ import com.rapidminer.tools.LogService;
  * A k-distance visualization for similarities.
  * 
  * @author Peter B. Volk, Michael Wurst, Ingo Mierswa
- * @version $Id: SimilarityKDistanceVisualization.java,v 1.6 2008/05/09 19:23:01 ingomierswa Exp $
+ * @version $Id: SimilarityKDistanceVisualization.java,v 1.7 2008/07/07 07:06:37 ingomierswa Exp $
  */
 public class SimilarityKDistanceVisualization extends PlotterAdapter implements ActionListener {
 
@@ -83,8 +83,6 @@ public class SimilarityKDistanceVisualization extends PlotterAdapter implements 
 
 	private int k = DEFAULT_K_NUMBER;
 
-	private SimilarityVisualization simVisualiser = null;
-
 	public SimilarityKDistanceVisualization(SimilarityMeasure sim) {
 		super();
 		this.sim = sim;
@@ -111,11 +109,6 @@ public class SimilarityKDistanceVisualization extends PlotterAdapter implements 
 
 		add(updatePanelAligned, BorderLayout.NORTH);
 		this.updatePanelHeight = updatePanelAligned.getHeight();
-	}
-
-	public SimilarityKDistanceVisualization(SimilarityMeasure sim, SimilarityVisualization visualization) {
-		this(sim);
-		this.simVisualiser = visualization;
 	}
 
 	public JComponent getOptionsComponent(int index) {
@@ -294,6 +287,6 @@ public class SimilarityKDistanceVisualization extends PlotterAdapter implements 
 
 		this.k = Integer.parseInt(k_distance_jtext.getText());
 		this.kDistanceValues = null;
-		this.simVisualiser.repaint();
+		repaint();
 	}
 }

@@ -32,7 +32,7 @@ import com.rapidminer.operator.similarity.clustermodel.TreeDistance;
  * Tests for Similarity in Learner/Unsupervised/Clustering/Similarity
  *
  * @author Marcin Skirzynski
- * @version $Id: SimilaritySampleDataTest.java,v 1.7 2008/05/09 19:22:48 ingomierswa Exp $
+ * @version $Id: SimilaritySampleDataTest.java,v 1.9 2008/09/12 10:29:52 tobiasmalbrecht Exp $
  */
 public class SimilaritySampleDataTest extends OperatorDataSampleTest {
 	

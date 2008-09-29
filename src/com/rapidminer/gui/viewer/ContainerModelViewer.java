@@ -38,7 +38,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.operator.ContainerModel;
+import com.rapidminer.operator.GroupedModel;
 import com.rapidminer.operator.IOContainer;
 
 
@@ -56,7 +56,7 @@ public class ContainerModelViewer extends JPanel {
 	/** The currently used visualization component. */
 	private Component current;
 
-	public ContainerModelViewer(final ContainerModel model, final IOContainer container) {
+	public ContainerModelViewer(final GroupedModel model, final IOContainer container) {
 		this.current = null;
 
 		final GridBagLayout gridBag = new GridBagLayout();
@@ -91,15 +91,24 @@ public class ContainerModelViewer extends JPanel {
 			}
 		});
 
-		JScrollPane listScrollPane = new ExtendedJScrollPane(modelList);
+		if (model.getNumberOfModels() > 1) {
+			JScrollPane listScrollPane = new ExtendedJScrollPane(modelList);
 
-		c.gridwidth = GridBagConstraints.RELATIVE;
-		c.weightx = 0.1;
-		c.weighty = 0;
-		gridBag.setConstraints(listScrollPane, c);
-		add(listScrollPane);
+			c.gridwidth = GridBagConstraints.RELATIVE;
+			c.weightx = 0.1;
+			c.weighty = 0;
+			gridBag.setConstraints(listScrollPane, c);
+			add(listScrollPane);
 
-		// select first model
-		modelList.setSelectedIndices(new int[] { 0 });
+			// select first model
+			modelList.setSelectedIndices(new int[] { 0 });
+		} else {
+			current = model.getModel(modelList.getSelectedIndex()).getVisualizationComponent(container);
+			c.gridwidth = GridBagConstraints.REMAINDER;
+			c.weightx = 1;
+			c.weighty = 1;
+			gridBag.setConstraints(current, c);
+			add(current);
+		}
 	}
 }

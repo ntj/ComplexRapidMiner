@@ -104,7 +104,7 @@ public class CheckForUpdatesThread extends Thread {
             
         // check all version tags
         Iterator<String> i = remoteVersions.iterator();
-        VersionNumber newestVersion = getVersionNumber(Version.getVersion());
+        VersionNumber newestVersion = getVersionNumber(Version.getLongVersion());
         while (i.hasNext()) {
             String remoteVersionString = i.next();
             if (remoteVersionString != null) {
@@ -115,10 +115,10 @@ public class CheckForUpdatesThread extends Thread {
             }
         }
         
-        if ((newestVersion != null) && (isNewer(newestVersion, getVersionNumber(Version.getVersion())))) {
-            JOptionPane.showMessageDialog(mainFrame, "New version of RapidMiner is available:" + Tools.getLineSeparator() + Tools.getLineSeparator() + "          RapidMiner " + newestVersion + Tools.getLineSeparator() + Tools.getLineSeparator() + "Please download it from:" + Tools.getLineSeparator() + "          http://www.rapidminer.com", "New RapidMiner version", JOptionPane.INFORMATION_MESSAGE);
+        if ((newestVersion != null) && (isNewer(newestVersion, getVersionNumber(Version.getLongVersion())))) {
+            JOptionPane.showMessageDialog(mainFrame, "New version of the RapidMiner Community Edition is available:" + Tools.getLineSeparator() + Tools.getLineSeparator() + "          RapidMiner " + newestVersion + Tools.getLineSeparator() + Tools.getLineSeparator() + "Please download it from:" + Tools.getLineSeparator() + "          http://www.rapidminer.com", "New RapidMiner version", JOptionPane.INFORMATION_MESSAGE);
         } else if (showFailureDialog) {
-            JOptionPane.showMessageDialog(mainFrame, "No newer versions of RapidMiner available!", "RapidMiner is up to date", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(mainFrame, "No newer versions of the RapidMiner Community Edition available!", "RapidMiner CE is up to date", JOptionPane.INFORMATION_MESSAGE);
         }
 	}
 	

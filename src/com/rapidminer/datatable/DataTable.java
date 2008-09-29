@@ -27,6 +27,7 @@ import java.io.PrintWriter;
 import java.util.Iterator;
 
 import com.rapidminer.Process;
+import com.rapidminer.report.Tableable;
 
 
 /**
@@ -37,14 +38,30 @@ import com.rapidminer.Process;
  * also {@link com.rapidminer.example.ExampleSet}s can also be used as an data table object.
  * 
  * @author Ingo Mierswa
- * @version $Id: DataTable.java,v 1.4 2008/05/09 19:23:16 ingomierswa Exp $
+ * @version $Id: DataTable.java,v 1.6 2008/07/07 10:52:20 ingomierswa Exp $
  */
-public interface DataTable extends Iterable<DataTableRow> {
+public interface DataTable extends Iterable<DataTableRow>, Tableable {
 
-	/** Indicates if the column with the given index is nominal. For numerical columns, the value false 
+	/** Indicates if the column with the given index is nominal. For numerical or date columns, the value false 
 	 *  should be returned. */
 	public boolean isNominal(int index);
+
+	/** Indicates if the column with the given index is nominal. For numerical or date columns, the value false 
+	 *  should be returned. */
+	public boolean isTime(int index);
 	
+	/** Indicates if the column with the given index is nominal. For numerical or date columns, the value false 
+	 *  should be returned. */
+	public boolean isDate(int index);
+	
+	/** Indicates if the column with the given index is nominal. For numerical or date columns, the value false 
+	 *  should be returned. */
+	public boolean isDateTime(int index);
+
+	/** Indicates if the column with the given index is nominal. For numerical or date columns, the value false 
+	 *  should be returned. */
+	public boolean isNumerical(int index);
+
 	/** If a column is nominal, the index value must be mapped to the nominal value by this method. 
 	 *  If the given column is not nominal, this method might throw a {@link NullPointerException}. */
 	public String mapIndex(int column, int index);

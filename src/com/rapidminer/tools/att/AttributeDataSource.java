@@ -68,7 +68,7 @@ public class AttributeDataSource {
 	private Attribute attribute;
 
 	private String attributeType;
-
+	
 	public AttributeDataSource(Attribute attribute, File file, int column, String attributeType) {
 		this.attribute = attribute;
 		this.file = file;
@@ -204,9 +204,9 @@ public class AttributeDataSource {
 							throw new XMLException("blocktype must be an index number or a legal block type name (was: '" + blockTypeAttr.getValue() + "')");
 					}
 				}
-
+    			
 				List<String> classList = null;
-                if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.NOMINAL)) {
+				if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.NOMINAL)) {
                     // nominal? check possible values...
                     classList = new LinkedList<String>();
                     

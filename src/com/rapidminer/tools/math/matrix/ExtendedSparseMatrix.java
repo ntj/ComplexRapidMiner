@@ -31,7 +31,7 @@ import com.rapidminer.operator.IOObject;
  * A sparse implementation of an extended matrix.
  * 
  * @author Michael Wurst
- * @version $Id: ExtendedSparseMatrix.java,v 1.3 2008/05/09 19:23:23 ingomierswa Exp $
+ * @version $Id: ExtendedSparseMatrix.java,v 1.5 2008/09/12 10:29:54 tobiasmalbrecht Exp $
  * 
  */
 public class ExtendedSparseMatrix<Ex, Ey> extends AbstractMatrix<Ex, Ey> implements ExtendedMatrix<Ex, Ey> {

@@ -27,13 +27,14 @@ import com.rapidminer.example.NominalStatistics;
 import com.rapidminer.example.NumericalStatistics;
 import com.rapidminer.example.UnknownStatistics;
 import com.rapidminer.operator.ViewModel;
+import com.rapidminer.tools.Ontology;
 
 /**
  * A view attribute is based on a ViewModel (Preprocessing Model) and
  * applies the model on the fly.
  *
  * @author Sebastian Land
- * @version $Id: ViewAttribute.java,v 1.8 2008/05/09 19:22:44 ingomierswa Exp $
+ * @version $Id: ViewAttribute.java,v 1.10 2008/05/28 10:52:03 ingomierswa Exp $
  */
 public class ViewAttribute extends AbstractAttribute {
 	
@@ -43,6 +44,8 @@ public class ViewAttribute extends AbstractAttribute {
 
 	private boolean isNominal;
 
+	private boolean isNumerical;
+	
 	private ViewModel model;
 
 	private Attribute parent;
@@ -52,6 +55,7 @@ public class ViewAttribute extends AbstractAttribute {
 		if (other.mapping != null)
 			this.mapping = (NominalMapping) other.mapping.clone();
 		this.isNominal = other.isNominal;
+		this.isNumerical = other.isNumerical;
 		this.model = other.model;
 		if (other.parent != null)
 			this.parent = (Attribute)other.parent.clone();
@@ -61,7 +65,9 @@ public class ViewAttribute extends AbstractAttribute {
 		super(name, valueType);
 		this.model = model;
 		this.mapping = mapping;
-		this.isNominal = mapping != null;
+		this.isNominal = mapping != null && Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.NOMINAL);
+		this.isNumerical = Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.NUMERICAL);
+		
 		this.parent = parent;
 		if (isNominal) {
 			registerStatistics(new NominalStatistics());
@@ -121,7 +127,11 @@ public class ViewAttribute extends AbstractAttribute {
 	public boolean isNominal() {
 		return isNominal;
 	}
-
+	
+	public boolean isNumerical() { 
+		return isNumerical; 
+	}
+	
 	public void setMapping(NominalMapping nominalMapping) {
 		mapping = nominalMapping;
 	}

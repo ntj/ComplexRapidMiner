@@ -22,21 +22,69 @@
  */
 package com.rapidminer.gui.wizards;
 
+import com.rapidminer.tools.Tools;
+
 /**
  *  This creator can be used to create wizards for the 
  *  {@link com.rapidminer.operator.io.DatabaseExampleSource} operator.
  *
  *  @author Ingo Mierswa
- *  @version $Id: DBExampleSourceConfigurationWizardCreator.java,v 1.3 2008/05/09 19:22:56 ingomierswa Exp $
+ *  @version $Id: DBExampleSourceConfigurationWizardCreator.java,v 1.6 2008/08/21 17:48:16 ingomierswa Exp $
  */
-public class DBExampleSourceConfigurationWizardCreator implements ConfigurationWizardCreator {
+public class DBExampleSourceConfigurationWizardCreator extends AbstractConfigurationWizardCreator {
 
 	private static final long serialVersionUID = -3326459655851921317L;
 
+	public static final String PARAMETER_SHOW_DATABASE_DRIVERS = "show_database_drivers";
+	
+	public static final String PARAMETER_ONLY_TABLE_NAMES = "only_table_name";
+
+	public static final String PARAMETER_SHOW_DATABASE_CONFIGURATION = "show_database_configuration";
+
+	public static final String PARAMETER_SYSTEM = "system";
+	
+	public static final String PARAMETER_SERVER = "server";
+	
+	public static final String PARAMETER_DB_NAME = "db_name";
+	
+	
 	/** Necessary for construction by reflection. */
 	public DBExampleSourceConfigurationWizardCreator() {}
 
+	public String getButtonText() {
+		return "Start Data Loading Wizard...";
+	}
+	
     public void createConfigurationWizard(ConfigurationListener listener) {
-        (new DBExampleSourceConfigurationWizard(listener)).setVisible(true);
+    	boolean showDrivers = true;
+        boolean showOnlyTableNames = false;
+        boolean showDatabaseConfiguration = true;
+        String system = null;
+        String server = null;
+        String dbName = null;
+        
+        if (getParameters() != null) {
+        	showDrivers = Tools.booleanValue(getParameters().get(PARAMETER_SHOW_DATABASE_DRIVERS), true);
+        	showOnlyTableNames = Tools.booleanValue(getParameters().get(PARAMETER_ONLY_TABLE_NAMES), false);
+        	showDatabaseConfiguration = Tools.booleanValue(getParameters().get(PARAMETER_SHOW_DATABASE_CONFIGURATION), true);
+        	if (!showDatabaseConfiguration) {
+        		Object systemObject = getParameters().get(PARAMETER_SYSTEM);
+        		if (systemObject != null) {
+        			system = systemObject.toString();
+        		}
+        		
+        		Object serverObject = getParameters().get(PARAMETER_SERVER);
+        		if (serverObject != null) {
+        			server = serverObject.toString();
+        		}
+        		
+        		Object dbNameObject = getParameters().get(PARAMETER_DB_NAME);
+        		if (dbNameObject != null) {
+        			dbName = dbNameObject.toString();
+        		}
+        	}
+        }
+        
+        (new DBExampleSourceConfigurationWizard(listener, showDrivers, showOnlyTableNames, showDatabaseConfiguration, system, server, dbName)).setVisible(true);
     }
 }

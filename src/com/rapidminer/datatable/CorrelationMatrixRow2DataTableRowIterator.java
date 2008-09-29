@@ -24,7 +24,7 @@ package com.rapidminer.datatable;
 
 import java.util.Iterator;
 
-import com.rapidminer.operator.visualization.SymmetricalMatrix;
+import com.rapidminer.operator.visualization.dependencies.SymmetricalMatrix;
 
 
 /**
@@ -32,7 +32,7 @@ import com.rapidminer.operator.visualization.SymmetricalMatrix;
  *  {@link com.rapidminer.datatable.CorrelationMatrixRow2DataTableRowWrapper} objects.
  *  
  *   @author Ingo Mierswa
- *   @version $Id: CorrelationMatrixRow2DataTableRowIterator.java,v 1.4 2008/05/09 19:23:16 ingomierswa Exp $
+ *   @version $Id: CorrelationMatrixRow2DataTableRowIterator.java,v 1.5 2008/08/25 08:10:35 ingomierswa Exp $
  */
 public class CorrelationMatrixRow2DataTableRowIterator implements Iterator<DataTableRow> {
 

@@ -32,14 +32,20 @@ import javax.swing.table.DefaultTableModel;
  * 
  * @see com.rapidminer.gui.properties.MatrixPropertyTable
  * @author Helge Homburg
- * @version $Id: MatrixPropertyTableModel.java,v 1.3 2008/05/09 19:22:46 ingomierswa Exp $
+ * @version $Id: MatrixPropertyTableModel.java,v 1.4 2008/07/13 11:00:55 ingomierswa Exp $
  */
 public class MatrixPropertyTableModel extends DefaultTableModel {
 
 	private static final long serialVersionUID = 0L;
 	
-	public MatrixPropertyTableModel(int rows, int columns) {
+	private String baseName;
+	
+	private String columnBaseName;
+	
+	public MatrixPropertyTableModel(String baseName, String columnBaseName, int rows, int columns) {
 		super(rows, columns);
+		this.baseName = baseName;
+		this.columnBaseName = columnBaseName;
 	}
 	
 	public Vector getColumnIdentifiers() {
@@ -48,9 +54,9 @@ public class MatrixPropertyTableModel extends DefaultTableModel {
 	
 	public String getColumnName(int column) {
 		if (column > 0) {
-			return " True Class " + column + " ";
+			return columnBaseName + " " + column + " ";
 		} else {
-			return "Cost Matrix";
+			return baseName;
 		}
 	}
 }

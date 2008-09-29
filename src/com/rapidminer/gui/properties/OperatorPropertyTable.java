@@ -56,7 +56,7 @@ import com.rapidminer.parameter.UndefinedParameterError;
  * @version $Id: OperatorPropertyTable.java,v 2.13 2006/03/27 13:21:58
  *          ingomierswa Exp $
  */
-public class OperatorPropertyTable extends SimplePropertyTable {
+public class OperatorPropertyTable extends DefaultPropertyTable {
 
 	private static final long serialVersionUID = -4129852766426437419L;
 
@@ -127,6 +127,7 @@ public class OperatorPropertyTable extends SimplePropertyTable {
     }
     
 	public void setOperator(Operator operator) {
+		
 		// this is necessary for stopping the current editing process and save the changes 
 		stopCurrentEditing();
         
@@ -164,12 +165,15 @@ public class OperatorPropertyTable extends SimplePropertyTable {
 			} 
 			getModel().setValueAt(value, i, 1);
 		}
+		
 		updateEditorsAndRenderers(this);
 
 		getModel().addTableModelListener(new TableModelListener() {
 			public void tableChanged(TableModelEvent e) {
 				setValue(e.getFirstRow(), getModel().getValueAt(e.getFirstRow(), 1));
 				mainFrame.processChanged();
+				getModel().removeTableModelListener(this);
+				refresh();
 			}
 		});
 		

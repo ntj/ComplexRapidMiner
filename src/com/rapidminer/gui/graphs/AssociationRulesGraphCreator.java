@@ -48,7 +48,7 @@ import edu.uci.ics.jung.graph.Graph;
  * Creates a graph model for a set of association rules.
  *
  * @author Ingo Mierswa
- * @version $Id: AssociationRulesGraphCreator.java,v 1.5 2008/05/09 19:23:24 ingomierswa Exp $
+ * @version $Id: AssociationRulesGraphCreator.java,v 1.6 2008/08/21 13:17:07 ingomierswa Exp $
  */
 public class AssociationRulesGraphCreator extends GraphCreatorAdaptor implements AssociationRuleFilterListener {
 
@@ -168,7 +168,7 @@ public class AssociationRulesGraphCreator extends GraphCreatorAdaptor implements
 	
     /** Returns true for rule nodes. */
     public boolean isBold(String id) {
-        return toolTipInfos.get(id) != null;
+        return toolTipInfos.get(id) == null;
     }
     
 

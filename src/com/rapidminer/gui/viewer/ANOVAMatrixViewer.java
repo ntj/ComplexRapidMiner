@@ -31,7 +31,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextPane;
 
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.operator.olap.ANOVAMatrix;
+import com.rapidminer.operator.visualization.dependencies.ANOVAMatrix;
 import com.rapidminer.tools.Tools;
 
 
@@ -42,7 +42,7 @@ import com.rapidminer.tools.Tools;
  *  background color.
  * 
  *  @author Ingo Mierswa
- *  @version $Id: ANOVAMatrixViewer.java,v 1.3 2008/05/09 19:23:01 ingomierswa Exp $
+ *  @version $Id: ANOVAMatrixViewer.java,v 1.4 2008/08/25 08:10:33 ingomierswa Exp $
  */
 public class ANOVAMatrixViewer extends JPanel {
 	

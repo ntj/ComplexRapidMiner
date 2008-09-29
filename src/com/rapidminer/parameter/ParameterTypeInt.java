@@ -66,6 +66,14 @@ public class ParameterTypeInt extends ParameterTypeNumber {
 		this.optional = true;
 	}
 
+	public void setMinValue(int min) {
+		this.min = min;
+	}
+
+	public void getMaxValue(int max) {
+		this.max = max;
+	}
+	
 	public double getMinValue() {
 		return min;
 	}
@@ -87,7 +95,7 @@ public class ParameterTypeInt extends ParameterTypeNumber {
 	}
 
 	public boolean isOptional() {
-		return optional;
+		return super.isOptional() && optional;
 	}
 
 	public Object getDefaultValue() {
@@ -125,7 +133,7 @@ public class ParameterTypeInt extends ParameterTypeNumber {
 
 	public String getRange() {
 		String range = "integer; ";
-		if (min == Integer.MIN_VALUE)
+		if (min == -Integer.MAX_VALUE)
 			range += "-\u221E";
 		else
 			range += min;

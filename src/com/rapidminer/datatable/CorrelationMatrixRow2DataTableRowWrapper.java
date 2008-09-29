@@ -22,14 +22,14 @@
  */
 package com.rapidminer.datatable;
 
-import com.rapidminer.operator.visualization.SymmetricalMatrix;
+import com.rapidminer.operator.visualization.dependencies.SymmetricalMatrix;
 
 /**
- *  This class allows to use the rows of a {@link com.rapidminer.operator.visualization.SymmetricalMatrix} 
+ *  This class allows to use the rows of a {@link com.rapidminer.operator.visualization.dependencies.SymmetricalMatrix} 
  *  as basis for {@link com.rapidminer.datatable.DataTableRow}.
  *  
  *   @author Ingo Mierswa
- *   @version $Id: CorrelationMatrixRow2DataTableRowWrapper.java,v 1.4 2008/05/09 19:23:16 ingomierswa Exp $
+ *   @version $Id: CorrelationMatrixRow2DataTableRowWrapper.java,v 1.5 2008/08/25 08:10:35 ingomierswa Exp $
  */
 public class CorrelationMatrixRow2DataTableRowWrapper implements DataTableRow {
 

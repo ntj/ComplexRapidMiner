@@ -24,11 +24,14 @@ package com.rapidminer.datatable;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+
 import com.rapidminer.tools.Tableable;
+import com.rapidminer.tools.Tools;
 
 /**
  * This abstract data table implementation provides some default implementations for data
@@ -38,7 +41,7 @@ import com.rapidminer.tools.Tableable;
  * In addition, IO methods are also provided by this abstract implementation.
  * 
  * @author Ingo Mierswa
- * @version $Id: AbstractDataTable.java,v 1.4 2008/05/09 19:23:16 ingomierswa Exp $
+ * @version $Id: AbstractDataTable.java,v 1.7 2008/07/07 10:52:20 ingomierswa Exp $
  */
 public abstract class AbstractDataTable implements DataTable, Tableable {
 	
@@ -83,10 +86,17 @@ public abstract class AbstractDataTable implements DataTable, Tableable {
 	}
 
 	public String getValueAsString(DataTableRow row, int column) {
-		if (isNominal(column))
+		if (isDate(column)) {
+			return Tools.formatDate(new Date((long)row.getValue(column)));
+		} else if (isDateTime(column)) {
+			return Tools.formatDateTime(new Date((long)row.getValue(column)));
+		} else if (isTime(column)) {
+			return Tools.formatTime(new Date((long)row.getValue(column)));
+		} else if (isNominal(column)) {
 			return mapIndex(column, (int)row.getValue(column));
-		else
+		} else {
 			return row.getValue(column) + "";
+		}
 	}
 	
 	public void write(PrintWriter out) throws IOException {
@@ -129,10 +139,16 @@ public abstract class AbstractDataTable implements DataTable, Tableable {
 	
 	public String getCell(int row, int column) {
 		double value = getRow(row).getValue(column);
-		if (isNominal(column)) {
+		if (isDate(column)) {
+			return Tools.formatDate(new Date((long)value));
+		} else if (isDateTime(column)) {
+			return Tools.formatDateTime(new Date((long)value));
+		} else if (isTime(column)) {
+			return Tools.formatTime(new Date((long)value));
+		} else if (isNominal(column)) {
 			return mapIndex(column, (int)value);
 		} else {
-			return Double.toString(value);
+			return Tools.formatIntegerIfPossible(value);
 		}
 	}
 }

@@ -51,7 +51,7 @@ import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.RectangleInsets;
 
 import com.rapidminer.gui.plotter.PlotterAdapter;
-import com.rapidminer.tools.Renderable;
+import com.rapidminer.report.Renderable;
 import com.rapidminer.tools.math.ROCData;
 
 
@@ -59,7 +59,7 @@ import com.rapidminer.tools.math.ROCData;
  * This is the ROC chart plotter.
  * 
  * @author Ingo Mierswa
- * @version $Id: ROCChartPlotter.java,v 1.5 2008/05/09 19:22:59 ingomierswa Exp $
+ * @version $Id: ROCChartPlotter.java,v 1.10 2008/07/19 16:31:17 ingomierswa Exp $
  */
 public class ROCChartPlotter extends JPanel implements Renderable {
 
@@ -69,14 +69,14 @@ public class ROCChartPlotter extends JPanel implements Renderable {
     
     /** The data set used for the plotter. */
     private YIntervalSeriesCollection dataset = null;
-        
+    
     private Map<String,List<ROCData>> rocDataLists = new HashMap<String, List<ROCData>>();
     
     public ROCChartPlotter() {
         super();
         setBackground(Color.white);
     }
-   
+    
     public void addROCData(String name, ROCData singleROCData) {
         List<ROCData> tempList = new LinkedList<ROCData>();
         tempList.add(singleROCData);
@@ -115,6 +115,14 @@ public class ROCChartPlotter extends JPanel implements Renderable {
             renderer.setSeriesStroke(0, stroke);
             renderer.setSeriesPaint(0, Color.RED);
             renderer.setSeriesFillPaint(0, Color.RED);            
+        } else if (dataset.getSeriesCount() == 2) {        	
+        	renderer.setSeriesStroke(0, stroke);
+        	renderer.setSeriesPaint(0, Color.RED);
+        	renderer.setSeriesFillPaint(0, Color.RED);
+        	
+        	renderer.setSeriesStroke(1, stroke);
+        	renderer.setSeriesPaint(1, Color.BLUE);
+        	renderer.setSeriesFillPaint(1, Color.BLUE);
         } else {
             for (int i = 0; i < dataset.getSeriesCount(); i++) {
                 renderer.setSeriesStroke(i, stroke);
@@ -133,32 +141,53 @@ public class ROCChartPlotter extends JPanel implements Renderable {
         this.dataset = new YIntervalSeriesCollection();
 
         Iterator<Map.Entry<String, List<ROCData>>> r = rocDataLists.entrySet().iterator();
+        boolean showThresholds = true;
+        if (rocDataLists.size() > 1)
+        	showThresholds = false;
+        
         while (r.hasNext()) {
             Map.Entry<String, List<ROCData>> entry = r.next();
-            YIntervalSeries series = new YIntervalSeries(entry.getKey());
+            YIntervalSeries rocSeries = new YIntervalSeries(entry.getKey());
+            YIntervalSeries thresholdSeries = new YIntervalSeries(entry.getKey() + " (Thresholds)");
             List<ROCData> dataList = entry.getValue();
             for (int i = 0; i <= NUMBER_OF_POINTS; i++) {
-                double sum = 0.0d;
-                double squaredSum = 0.0d;
+            	
+                double rocSum = 0.0d;
+                double rocSquaredSum = 0.0d;
+                double thresholdSum = 0.0d;
+                double thresholdSquaredSum = 0.0d;
                 for (ROCData data : dataList) {
-                    double value = data.getInterpolatedTruePositives(i / (double)NUMBER_OF_POINTS) / data.getTotalPositives();
-                    sum += value;
-                    squaredSum += value * value;               
+                    double rocValue = data.getInterpolatedTruePositives(i / (double)NUMBER_OF_POINTS) / data.getTotalPositives();
+                    rocSum += rocValue;
+                    rocSquaredSum += rocValue * rocValue;
+                    
+                    double thresholdValue = data.getInterpolatedThreshold(i / (double)NUMBER_OF_POINTS);
+                    thresholdSum += thresholdValue;
+                    thresholdSquaredSum += thresholdValue * thresholdValue;   
                 }
-                double mean = sum / dataList.size();
-                double deviation = Math.sqrt(squaredSum / dataList.size() - (mean * mean));
-                series.add(i / (double)NUMBER_OF_POINTS, mean, mean - deviation, mean + deviation);            
+                
+                double rocMean = rocSum / dataList.size();
+                double rocDeviation = Math.sqrt(rocSquaredSum / dataList.size() - (rocMean * rocMean));
+                rocSeries.add(i / (double)NUMBER_OF_POINTS, rocMean, rocMean - rocDeviation, rocMean + rocDeviation);
+                
+                double thresholdMean = thresholdSum / dataList.size();
+                double thresholdDeviation = Math.sqrt(thresholdSquaredSum / dataList.size() - (thresholdMean * thresholdMean));
+                thresholdSeries.add(i / (double)NUMBER_OF_POINTS, thresholdMean, thresholdMean - thresholdDeviation, thresholdMean + thresholdDeviation);
+
             }
-            dataset.addSeries(series);
+            dataset.addSeries(rocSeries);
+            
+            if (showThresholds)
+            	dataset.addSeries(thresholdSeries);
         }
     }
     
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        paintDeviationChart(g);
+        paintDeviationChart(g, getWidth(), getHeight());
     }
     
-    public void paintDeviationChart(Graphics graphics) {      
+    public void paintDeviationChart(Graphics graphics, int width, int height) {      
         prepareData();
         
         JFreeChart chart = createChart(this.dataset);
@@ -174,19 +203,30 @@ public class ROCChartPlotter extends JPanel implements Renderable {
             legend.setHorizontalAlignment(HorizontalAlignment.LEFT);
         }
         
-        Rectangle2D drawRect = new Rectangle2D.Double(0, 0, getWidth(), getHeight());
+        Rectangle2D drawRect = new Rectangle2D.Double(0, 0, width, height);
         chart.draw((Graphics2D)graphics, drawRect);
     }
 
+    public void prepareRendering() {}
+    
 	public int getRenderHeight(int preferredHeight) {
-		return getHeight();
+		int height = getHeight();
+		if (height < 1) {
+			height = preferredHeight;
+		}
+		return height;
 	}
 
 	public int getRenderWidth(int preferredWidth) {
-		return getWidth();
+		int width = getWidth();
+		if (width < 1) {
+			width = preferredWidth;
+		}
+		return width;
 	}
-
+	
 	public void render(Graphics graphics, int width, int height) {
-		paintComponent(graphics);
+		setSize(width, height);
+		paintDeviationChart(graphics, width, height);
 	}
 }

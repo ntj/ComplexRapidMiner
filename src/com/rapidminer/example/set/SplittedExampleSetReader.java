@@ -60,10 +60,13 @@ public class SplittedExampleSetReader extends AbstractExampleReader {
 		while (next == null) {
 			current++;
 
+			if (!partition.hasNext(current))
+				return false;
+			
 			Example example = reader.next();
 			if (example == null)
 				return false;
-
+			
 			if (current >= partition.getTotalSize())
 				return false;
 

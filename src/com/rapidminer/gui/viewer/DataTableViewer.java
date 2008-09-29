@@ -38,21 +38,23 @@ import com.rapidminer.datatable.DataTable;
 import com.rapidminer.gui.plotter.Plotter;
 import com.rapidminer.gui.plotter.PlotterPanel;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.tools.Tableable;
+import com.rapidminer.report.Tableable;
 
 
 /**
  * Can be used to display (parts of) the data by means of a JTable.
  * 
  * @author Ingo Mierswa
- * @version $Id: DataTableViewer.java,v 1.6 2008/05/09 19:23:01 ingomierswa Exp $
+ * @version $Id: DataTableViewer.java,v 1.8 2008/07/07 07:06:37 ingomierswa Exp $
  */
 public class DataTableViewer extends JPanel implements Tableable {
     
-	public static final int TABLE_MODE = 0;
-	public static final int PLOT_MODE  = 1;
-	
     private static final long serialVersionUID = 6878549119308753961L;
+    
+    
+	public static final int TABLE_MODE = 0;
+	
+	public static final int PLOT_MODE  = 1;
 
     private JLabel generalInfo = new JLabel();
     
@@ -159,6 +161,10 @@ public class DataTableViewer extends JPanel implements Tableable {
         if (plotterPanel != null) {
         	plotterPanel.setDataTable(dataTable);
         }
+    }
+    
+    public String getColumnName(int columnIndex) {
+    	return dataTableViewerTable.getColumnName(columnIndex);
     }
 
 	public String getCell(int row, int column) {

@@ -43,10 +43,14 @@ import com.rapidminer.tools.Tools;
  * Handles several averagables.
  * 
  * @author Ingo Mierswa
- * @version $Id: AverageVector.java,v 1.5 2008/05/09 19:23:03 ingomierswa Exp $
+ * @version $Id: AverageVector.java,v 1.6 2008/07/31 17:43:41 ingomierswa Exp $
  */
 public abstract class AverageVector extends ResultObjectAdapter implements Comparable, Cloneable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6207859713603581755L;
 	private List<Averagable> averagesList = new ArrayList<Averagable>();
 
 	public abstract Object clone() throws CloneNotSupportedException;

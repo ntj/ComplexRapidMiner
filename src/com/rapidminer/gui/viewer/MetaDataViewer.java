@@ -37,6 +37,7 @@ import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
@@ -44,14 +45,14 @@ import javax.swing.JScrollPane;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.tools.Tableable;
+import com.rapidminer.report.Tableable;
 
 
 /**
  * Can be used to display (parts of) the meta data by means of a JTable.
  * 
  * @author Ingo Mierswa
- * @version $Id: MetaDataViewer.java,v 1.7 2008/05/09 19:23:00 ingomierswa Exp $
+ * @version $Id: MetaDataViewer.java,v 1.10 2008/07/12 16:53:15 ingomierswa Exp $
  */
 public class MetaDataViewer extends JPanel implements Tableable{
 
@@ -82,6 +83,31 @@ public class MetaDataViewer extends JPanel implements Tableable{
         public void actionPerformed(ActionEvent e) {
             metaDataTable.getMetaDataModel().setShowColumn(index, isSelected());
         }
+    }
+    
+    private static class CalculateStatisticsItem extends JMenuItem implements ActionListener {
+    
+		private static final long serialVersionUID = 6114799407333674792L;
+		
+		private static final String ICON_NAME = "calculator.png";
+		
+		private static final Icon ICON;
+		
+		static {
+			ICON = SwingTools.createIcon("24/" + ICON_NAME);
+		}
+		
+		private MetaDataViewerTableModel metaDataModel;
+    	
+    	public CalculateStatisticsItem(MetaDataViewerTableModel metaDataModel) {
+    		super("Calculate Statistics (might take time)", ICON);
+    		this.metaDataModel = metaDataModel;
+    		addActionListener(this);
+    	}
+
+		public void actionPerformed(ActionEvent e) {
+			this.metaDataModel.calculateStatistics();
+		}
     }
     
     private static final long serialVersionUID = 5466205420267797125L;
@@ -126,6 +152,7 @@ public class MetaDataViewer extends JPanel implements Tableable{
         			for (int i = 0; i < MetaDataViewerTableModel.COLUMN_NAMES.length; i++) {
         				menu.add(new ToggleShowColumnItem(MetaDataViewerTableModel.COLUMN_NAMES[i], i, metaDataTable.getMetaDataModel().getShowColumn(i), metaDataTable));
         			}
+        			menu.add(new CalculateStatisticsItem(metaDataTable.getMetaDataModel()));
         			menu.show(optionMenuButton, e.getX(), e.getY());
         		}
         	});
@@ -147,7 +174,6 @@ public class MetaDataViewer extends JPanel implements Tableable{
 
     public void setExampleSet(ExampleSet exampleSet) {
     	if (exampleSet != null) {
-    		exampleSet.recalculateAllAttributeStatistics();
     		StringBuffer infoText = new StringBuffer("ExampleSet (");
     		int noExamples = exampleSet.size();
     		infoText.append(noExamples);
@@ -166,6 +192,10 @@ public class MetaDataViewer extends JPanel implements Tableable{
     	}
     }
 
+    public String getColumnName(int columnIndex) {
+    	return metaDataTable.getColumnName(columnIndex);
+    }
+    
 	public String getCell(int row, int column) {
 		return metaDataTable.getCell(row, column);
 	}

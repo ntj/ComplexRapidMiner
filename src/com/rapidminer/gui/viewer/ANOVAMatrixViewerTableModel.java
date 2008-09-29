@@ -24,14 +24,14 @@ package com.rapidminer.gui.viewer;
 
 import javax.swing.table.AbstractTableModel;
 
-import com.rapidminer.operator.olap.ANOVAMatrix;
+import com.rapidminer.operator.visualization.dependencies.ANOVAMatrix;
 import com.rapidminer.tools.Tools;
 
 
 /** The model for the {@link com.rapidminer.gui.viewer.ANOVAMatrixViewerTable}. 
  * 
  *  @author Ingo Mierswa
- *  @version $Id: ANOVAMatrixViewerTableModel.java,v 1.3 2008/05/09 19:23:01 ingomierswa Exp $
+ *  @version $Id: ANOVAMatrixViewerTableModel.java,v 1.4 2008/08/25 08:10:33 ingomierswa Exp $
  */
 public class ANOVAMatrixViewerTableModel extends AbstractTableModel {
     

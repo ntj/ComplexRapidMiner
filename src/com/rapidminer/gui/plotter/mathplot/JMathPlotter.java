@@ -44,10 +44,15 @@ import com.rapidminer.gui.plotter.PlotterLegend;
  *  class can be used. Another method usually implemented is {@link #getNumberOfAxes()}.
  *  
  *  @author Ingo Mierswa, Sebastian Land
- *  @version $Id: JMathPlotter.java,v 1.7 2008/05/09 19:23:21 ingomierswa Exp $
+ *  @version $Id: JMathPlotter.java,v 1.8 2008/07/31 17:43:41 ingomierswa Exp $
  */
 public abstract class JMathPlotter extends PlotterAdapter {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7018389000051768349L;
+
 	/** Indicates the position of the JMathPlot legend. */
 	private static final String LEGEND_POSITION = "NORTH";
 	

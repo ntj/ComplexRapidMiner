@@ -29,6 +29,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Rectangle2D;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -52,11 +53,11 @@ import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableRow;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.plotter.PlotterAdapter;
-import com.rapidminer.operator.olap.aggregation.AggregationFunction;
-import com.rapidminer.operator.olap.aggregation.AggregationOperator;
-import com.rapidminer.operator.olap.aggregation.AverageFunction;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.math.function.AbstractAggregationFunction;
+import com.rapidminer.tools.math.function.AggregationFunction;
+import com.rapidminer.tools.math.function.AverageFunction;
 
 
 /**
@@ -65,11 +66,13 @@ import com.rapidminer.tools.Tools;
  * attribute.
  * 
  * @author Ingo Mierswa
- * @version $Id: AbstractBarChartPlotter.java,v 1.7 2008/05/09 19:22:58 ingomierswa Exp $
+ * @version $Id: AbstractBarChartPlotter.java,v 1.13 2008/08/20 11:09:50 tobiasmalbrecht Exp $
  *
  */
 public abstract class AbstractBarChartPlotter extends PlotterAdapter {
     
+	private static final long serialVersionUID = 1208210421840512091L;
+
 	/** The maximal number of printable categories. */
 	private static final int MAX_CATEGORIES = 200;
 	
@@ -94,6 +97,10 @@ public abstract class AbstractBarChartPlotter extends PlotterAdapter {
 	/** The used aggregation function. */
 	private JComboBox aggregationFunction = null;
 	
+	/** Indicates if absolute values should be used. */
+	private boolean absolute = false;
+	
+	
 	public AbstractBarChartPlotter() {
 		super();
 		setBackground(Color.white);
@@ -105,9 +112,9 @@ public abstract class AbstractBarChartPlotter extends PlotterAdapter {
 			}
 		});
 		
-		String[] allFunctions = new String[AggregationOperator.KNOWN_AGGREGATION_FUNCTION_NAMES.length + 1];
+		String[] allFunctions = new String[AbstractAggregationFunction.KNOWN_AGGREGATION_FUNCTION_NAMES.length + 1];
 		allFunctions[0] = "none";
-		System.arraycopy(AggregationOperator.KNOWN_AGGREGATION_FUNCTION_NAMES, 0, allFunctions, 1, AggregationOperator.KNOWN_AGGREGATION_FUNCTION_NAMES.length);
+		System.arraycopy(AbstractAggregationFunction.KNOWN_AGGREGATION_FUNCTION_NAMES, 0, allFunctions, 1, AbstractAggregationFunction.KNOWN_AGGREGATION_FUNCTION_NAMES.length);
 		aggregationFunction = new JComboBox(allFunctions);
 		aggregationFunction.setToolTipText("Select the type of the aggregation function which should be used for grouped values.");
 		aggregationFunction.addActionListener(new ActionListener() {
@@ -130,6 +137,15 @@ public abstract class AbstractBarChartPlotter extends PlotterAdapter {
 		repaint();
 	}
 	
+    public void setAbsolute(boolean absolute) {
+    	this.absolute = absolute;
+    	repaint();
+    }
+    
+    public boolean isSupportingAbsoluteValues() {
+    	return true;
+    }
+    
     public void setPlotColumn(int index, boolean plot) {
 		if (plot)
 			this.valueColumn = index;
@@ -179,7 +195,7 @@ public abstract class AbstractBarChartPlotter extends PlotterAdapter {
 			AggregationFunction aggregation = null;
 			if (aggregationFunction.getSelectedIndex() > 0) {
 				try {
-					aggregation = AggregationOperator.createAggregationFunction(AggregationOperator.KNOWN_AGGREGATION_FUNCTION_NAMES[aggregationFunction.getSelectedIndex() - 1]);
+					aggregation = AbstractAggregationFunction.createAggregationFunction(AbstractAggregationFunction.KNOWN_AGGREGATION_FUNCTION_NAMES[aggregationFunction.getSelectedIndex() - 1]);
 				} catch (Exception e) {
 					LogService.getGlobal().logWarning("Cannot instantiate aggregation function '" + aggregationFunction.getSelectedItem() + "', using 'average' as default.");
 					aggregation = new AverageFunction();
@@ -190,7 +206,7 @@ public abstract class AbstractBarChartPlotter extends PlotterAdapter {
 			
 			categoryDataSet.clear();
 			
-			if ((groupByColumn >= 0) && (!dataTable.isNominal(groupByColumn)))
+			if ((groupByColumn >= 0) && (dataTable.isNumerical(groupByColumn)))
 				return 0;
 			
 			while (i.hasNext()) {
@@ -202,15 +218,33 @@ public abstract class AbstractBarChartPlotter extends PlotterAdapter {
 				}
 				
 				if (!Double.isNaN(value)) {
+					if (absolute)
+						value = Math.abs(value);
+					
 					// name
-					String valueString = 
-						dataTable.isNominal(valueColumn) ? 
-					    dataTable.mapIndex(valueColumn, (int)value) : 
-					    Tools.formatIntegerIfPossible(value); 
+					String valueString = null;
+					if (dataTable.isDate(valueColumn)) {
+						valueString = Tools.formatDate(new Date((long)value));
+					} else if (dataTable.isTime(valueColumn)) {
+						valueString = Tools.formatTime(new Date((long)value));
+					} else if (dataTable.isDateTime(valueColumn)) {
+						valueString = Tools.formatDateTime(new Date((long)value));
+					} else if (dataTable.isNominal(valueColumn)) {
+						valueString = dataTable.mapIndex(valueColumn, (int)value);
+					} else {
+						valueString = Tools.formatIntegerIfPossible(value);
+					}
+					     
 					String legendName = valueString + "";
 					if (legendByColumn >= 0) {
 						double nameValue = row.getValue(legendByColumn);
-						if (dataTable.isNominal(legendByColumn)) {
+						if (dataTable.isDate(legendByColumn)) {
+							legendName = Tools.formatDate(new Date((long)nameValue));
+						} else if (dataTable.isTime(legendByColumn)) {
+							legendName = Tools.formatTime(new Date((long)nameValue));
+						} else if (dataTable.isDateTime(legendByColumn)) {
+							legendName = Tools.formatDateTime(new Date((long)nameValue));
+						} else if (dataTable.isNominal(legendByColumn)) {
 							legendName = dataTable.mapIndex(legendByColumn, (int)nameValue) + " (" + valueString + ")";
 						} else {
 							legendName = Tools.formatIntegerIfPossible(nameValue) + " (" + valueString + ")";
@@ -220,7 +254,13 @@ public abstract class AbstractBarChartPlotter extends PlotterAdapter {
 					String groupByName = legendName;
 					if (groupByColumn >= 0) {
 						double nameValue = row.getValue(groupByColumn);
-						if (dataTable.isNominal(groupByColumn)) {
+						if (dataTable.isDate(groupByColumn)) {
+							groupByName = Tools.formatDate(new Date((long)nameValue));
+						} else if (dataTable.isTime(groupByColumn)) {
+							groupByName = Tools.formatTime(new Date((long)nameValue));
+						} else if (dataTable.isDateTime(groupByColumn)) {
+							groupByName = Tools.formatDateTime(new Date((long)nameValue));
+						} else if (dataTable.isNominal(groupByColumn)) {
 							groupByName = dataTable.mapIndex(groupByColumn, (int)nameValue);
 						} else {
 							groupByName = Tools.formatIntegerIfPossible(nameValue) + "";
@@ -338,5 +378,23 @@ public abstract class AbstractBarChartPlotter extends PlotterAdapter {
                 return useDistinct;
 		}
 		return null;
+	}
+	
+	/** The default implementation delivers an empty set. */
+	public Collection<String> getAdditionalParameterKeys() {
+		Collection<String> result = new LinkedList<String>();
+		result.add("aggregation");
+		result.add("use_distinct");
+		return result;
+	}
+	
+	/** The default implementation does nothing. */
+	public void setAdditionalParameter(String key, String value) {
+		if ("aggregation".equals(key)) {
+			this.aggregationFunction.setSelectedItem(value);
+		} else if ("use_distinct".equals(key)) {
+			boolean distinct = Tools.booleanValue(value, false);
+			this.useDistinct.setSelected(distinct);
+		}
 	}
 }

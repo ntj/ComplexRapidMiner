@@ -33,10 +33,15 @@ import com.rapidminer.example.Attribute;
  * may use a double array, a sparse representation, a file or a database.
  * 
  * @author Simon Fischer, Ingo Mierswa
- * @version $Id: DataRow.java,v 1.6 2008/05/09 19:22:44 ingomierswa Exp $
+ * @version $Id: DataRow.java,v 1.7 2008/07/31 17:43:41 ingomierswa Exp $
  */
 public abstract class DataRow implements Serializable {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3482048832637144523L;
+
 	/** Returns the value for the given index. */
 	protected abstract double get(int index, double defaultValue);
 

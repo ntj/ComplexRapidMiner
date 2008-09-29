@@ -29,6 +29,7 @@ import javax.swing.table.JTableHeader;
 
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableListener;
+import com.rapidminer.gui.tools.CellColorProvider;
 import com.rapidminer.gui.tools.ExtendedJTable;
 import com.rapidminer.gui.tools.SwingTools;
 
@@ -37,7 +38,7 @@ import com.rapidminer.gui.tools.SwingTools;
  * Can be used to display (parts of) a DataTable by means of a JTable.
  * 
  * @author Ingo Mierswa
- * @version $Id: DataTableViewerTable.java,v 1.6 2008/05/09 19:23:01 ingomierswa Exp $
+ * @version $Id: DataTableViewerTable.java,v 1.8 2008/08/25 08:10:33 ingomierswa Exp $
  */
 public class DataTableViewerTable extends ExtendedJTable implements DataTableListener {
     
@@ -57,11 +58,44 @@ public class DataTableViewerTable extends ExtendedJTable implements DataTableLis
     
     private DataTableViewerTableModel model;
     
-    
     public DataTableViewerTable(boolean autoResize) {
-        super();
-        if (!autoResize)
-        	setAutoResizeMode(AUTO_RESIZE_OFF);
+    	this(null, true, false, autoResize);
+    }
+    
+    public DataTableViewerTable(DataTable dataTable, boolean sortable, boolean columnMovable, boolean autoResize) {
+        super(sortable, columnMovable, autoResize);
+        if (dataTable != null) {
+        	setDataTable(dataTable);
+        }
+        setCellColorProvider(new CellColorProvider() {
+            public Color getCellColor(int row, int col) {
+                switch (rendererType) {
+                	case ALTERNATING:
+                		if (row % 2 == 0) {
+                			return Color.WHITE;
+                		} else {
+                			return SwingTools.LIGHTEST_BLUE;
+                		}
+                	case SCALED:
+                	case ABS_SCALED:
+                	default:
+                		Object valueObject = getValueAt(row, col);
+                		try {
+                			double value = Double.parseDouble(valueObject.toString());
+                			if (rendererType == ABS_SCALED)
+                				value = Math.abs(value);
+                			float scaled = (float)((value - min) / (max - min));
+                			Color color = 
+                				new Color(1.0f - scaled * 0.2f, 
+                						  1.0f - scaled * 0.2f, 
+                						  1.0f);
+                			return color;
+                		} catch (NumberFormatException e) {
+                			return Color.WHITE;
+                		}
+                }
+            }	
+        });
     }
 
 	public void dataTableUpdated(DataTable source) {
@@ -122,33 +156,5 @@ public class DataTableViewerTable extends ExtendedJTable implements DataTableLis
     				return "";
     		}
     	};
-    }
-    
-    public Color getCellColor(int row, int col) {
-        switch (rendererType) {
-        	case ALTERNATING:
-        		if (row % 2 == 0) {
-        			return Color.WHITE;
-        		} else {
-        			return SwingTools.LIGHTEST_BLUE;
-        		}
-        	case SCALED:
-        	case ABS_SCALED:
-        	default:
-        		Object valueObject = getValueAt(row, col);
-        		try {
-        			double value = Double.parseDouble(valueObject.toString());
-        			if (rendererType == ABS_SCALED)
-        				value = Math.abs(value);
-        			float scaled = (float)((value - min) / (max - min));
-        			Color color = 
-        				new Color(1.0f - scaled * 0.2f, 
-        						  1.0f - scaled * 0.2f, 
-        						  1.0f);
-        			return color;
-        		} catch (NumberFormatException e) {
-        			return Color.WHITE;
-        		}
-        }
     }
 }

@@ -33,6 +33,7 @@ import java.util.Locale;
 
 import javax.imageio.ImageIO;
 
+import com.rapidminer.gui.renderer.RendererService;
 import com.rapidminer.gui.tools.SplashScreen;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
@@ -60,7 +61,7 @@ import com.rapidminer.tools.plugin.Plugin;
  * might drastically reduce runtime and / or initialization time.
  * 
  * @author Ingo Mierswa
- * @version $Id: RapidMiner.java,v 1.31 2008/06/05 14:34:32 ingomierswa Exp $
+ * @version $Id: RapidMiner.java,v 1.38 2008/08/12 17:23:38 ingomierswa Exp $
  */
 public class RapidMiner {
 
@@ -95,12 +96,12 @@ public class RapidMiner {
     
     /** A file path to an operator description XML file. */
     public static final String PROPERTY_RAPIDMINER_INIT_OPERATORS = "rapidminer.init.operators";
-
-    /** A file path to the directory containing the plugin Jar files. */
-    public static final String PROPERTY_RAPIDMINER_INIT_PLUGINS_LOCATION = "rapidminer.init.plugins.location";
     
     /** Boolean parameter indicating if the operators based on Weka should be initialized. */
     public static final String PROPERTY_RAPIDMINER_INIT_WEKA = "rapidminer.init.weka";
+
+    /** A file path to the directory containing the JDBC drivers (usually the lib/jdbc directory of RapidMiner). */
+    public static final String PROPERTY_RAPIDMINER_INIT_JDBC_LIB_LOCATION = "rapidminer.init.jdbc.location";
     
     /** Boolean parameter indicating if the drivers located in the lib directory of RapidMiner should be initialized. */
     public static final String PROPERTY_RAPIDMINER_INIT_JDBC_LIB = "rapidminer.init.jdbc.lib";
@@ -110,6 +111,9 @@ public class RapidMiner {
     
     /** Boolean parameter indicating if the plugins should be initialized at all. */
     public static final String PROPERTY_RAPIDMINER_INIT_PLUGINS = "rapidminer.init.plugins";
+    
+    /** A file path to the directory containing the plugin Jar files. */
+    public static final String PROPERTY_RAPIDMINER_INIT_PLUGINS_LOCATION = "rapidminer.init.plugins.location";
     
     
     // ---  OTHER PROPERTIES  ---
@@ -143,7 +147,7 @@ public class RapidMiner {
 	private static final java.util.Set<ParameterType> PROPERTY_TYPES = new java.util.TreeSet<ParameterType>();
 
 	static {
-		System.setProperty(PROPERTY_RAPIDMINER_VERSION, RapidMiner.getVersion());
+		System.setProperty(PROPERTY_RAPIDMINER_VERSION, RapidMiner.getLongVersion());
         registerRapidMinerProperty(new ParameterTypeInt(PROPERTY_RAPIDMINER_GENERAL_FRACTIONDIGITS_NUMBERS, "The number of fraction digits of formatted numbers.", 0, Integer.MAX_VALUE, 3));
         registerRapidMinerProperty(new ParameterTypeInt(PROPERTY_RAPIDMINER_GENERAL_FRACTIONDIGITS_PERCENT, "The number of fraction digits of formatted percent values.", 0, Integer.MAX_VALUE, 2));
 		registerRapidMinerProperty(new ParameterTypeString(PROPERTY_RAPIDMINER_TOOLS_EDITOR, "Path to external Java editor. %f is replaced by filename and %l by the linenumber.", true));
@@ -157,8 +161,12 @@ public class RapidMiner {
 	
 	private static SplashScreen splashScreen;
 	
-	public static String getVersion() {
-		return Version.getVersion();
+	public static String getShortVersion() {
+		return Version.getShortVersion();
+	}
+
+	public static String getLongVersion() {
+		return Version.getLongVersion();
 	}
 	
 	/**
@@ -199,6 +207,26 @@ public class RapidMiner {
 			                boolean addPlugins) {
 		init(operatorsXMLStream, null, pluginDir, addWekaOperators, searchJDBCInLibDir, searchJDBCInClasspath, addPlugins);
 	}
+
+	/**
+	 * Initializes RapidMiner.
+	 * 
+	 * @param operatorsXMLStream the stream to the operators.xml (operator description), use core operators.xml if null
+	 * @param pluginDir the directory where plugins are located, use core plugin directory if null
+	 * @param addWekaOperators inidcates if the operator wrappers for Weka should be loaded
+	 * @param searchJDBCInLibDir indicates if JDBC drivers from the directory RAPID_MINER_HOME/lib/jdbc should be loaded
+	 * @param searchJDBCInClasspath indicates if JDBC drivers from the classpath libraries should be loaded
+	 * @param addPlugins indicates if the plugins should be loaded 
+	 */
+	public static void init(InputStream operatorsXMLStream, 
+			                File pluginDir,
+			                File jdbcDir,
+			                boolean addWekaOperators, 
+			                boolean searchJDBCInLibDir, 
+			                boolean searchJDBCInClasspath, 
+			                boolean addPlugins) {
+		init(operatorsXMLStream, null, pluginDir, jdbcDir, addWekaOperators, searchJDBCInLibDir, searchJDBCInClasspath, addPlugins);
+	}
 	
 	/**
 	 * Initializes RapidMiner.
@@ -206,6 +234,7 @@ public class RapidMiner {
 	 * @param operatorsXMLStream the stream to the core operators.xml (operator description), use core operators.xml if null
 	 * @param additionalXMLStream the stream to possibly additional operators.xml (operator description), use no additional if null
 	 * @param pluginDir the directory where plugins are located, use core plugin directory if null
+	 * @param jdbcDir the directory where the JDBC drivers are located, use core lib/jdbc directory if null
 	 * @param addWekaOperators inidcates if the operator wrappers for Weka should be loaded
 	 * @param searchJDBCInLibDir indicates if JDBC drivers from the directory RAPID_MINER_HOME/lib/jdbc should be loaded
 	 * @param searchJDBCInClasspath indicates if JDBC drivers from the classpath libraries should be loaded
@@ -213,7 +242,8 @@ public class RapidMiner {
 	 */
 	public static void init(InputStream operatorsXMLStream,
 							InputStream additionalXMLStream,
-			                File pluginDir, 
+			                File pluginDir,
+			                File jdbcDir,
 			                boolean addWekaOperators, 
 			                boolean searchJDBCInLibDir, 
 			                boolean searchJDBCInClasspath, 
@@ -226,6 +256,14 @@ public class RapidMiner {
 	    RapidMiner.splashMessage("Ensure RapidMiner Home is set");
 		ParameterService.ensureRapidMinerHomeSet();
 		
+	    if (addPlugins) {
+	    	RapidMiner.splashMessage("Register Plugins");
+	    	Plugin.registerAllPlugins(pluginDir, true);
+	    }
+	    Plugin.initPluginSplashTexts();
+	    RapidMiner.showSplashInfos();
+	    
+	    
 		RapidMiner.splashMessage("Init Setup");
 		
 		// search for Weka
@@ -258,13 +296,8 @@ public class RapidMiner {
 		ParameterService.init(operatorsXMLStream, additionalXMLStream, addWekaOperators);
 		
 	    RapidMiner.splashMessage("Loading JDBC Drivers");
-	    DatabaseService.init(searchJDBCInLibDir, searchJDBCInClasspath);
+	    DatabaseService.init(jdbcDir, searchJDBCInLibDir, searchJDBCInClasspath);
 	    
-	    if (addPlugins) {
-	    	RapidMiner.splashMessage("Register Plugins");
-	    	Plugin.registerAllPlugins(pluginDir);
-	    }
-		
 		RapidMiner.splashMessage("Initialize XML serialization");
 		XMLSerialization.init(Plugin.getMajorClassLoader());
 		
@@ -280,6 +313,15 @@ public class RapidMiner {
 				LogService.getGlobal().logError("Cannot generate encryption key: " + e.getMessage());
 			}
 		}
+		
+		// initialize renderers
+		RapidMiner.splashMessage("Initialize renderers");
+		RendererService.init();
+	}
+
+	private static void showSplashInfos() {
+		if (getSplashScreen() != null)
+			getSplashScreen().setInfosVisible(true);
 	}
 
 	/**
@@ -310,7 +352,7 @@ public class RapidMiner {
 	public static void init(boolean addWekaOperators, boolean searchJDBCInLibDir, boolean searchJDBCInClasspath, boolean addPlugins) {
 		init(null, addWekaOperators, searchJDBCInLibDir, searchJDBCInClasspath, addPlugins);
 	}
-
+    
 	/**
 	 * Initializes RapidMiner. Will use the core operators.xml operator description, all 
 	 * available Weka operators, and all JDBC drivers found in the directory 
@@ -319,14 +361,15 @@ public class RapidMiner {
 	 * Use the method {@link #init(InputStream, File, boolean, boolean, boolean, boolean)}
 	 * for more sophisticated initialization possibilities. Alternatively, you could
 	 * also set the following system properties, e.g. during startup via 
-	 * &quot;-Drapidminer.init.weka=false&quot;:
+	 * &quot;-Drapidminer.init.weka=false&quot; or with {@link System#setProperty(String, String)}:
 	 * <ul>
-	 * <li>rapidminer.init.operators</li>
-	 * <li>rapidminer.init.plugins.location</li>
-	 * <li>rapidminer.init.weka</li>
-	 * <li>rapidminer.init.jdbc.lib</li>
-	 * <li>rapidminer.init.jdbc.classpath</li>
-	 * <li>rapidminer.init.plugins</li>
+	 * <li>rapidminer.init.operators (file path)</li>
+	 * <li>rapidminer.init.plugins (true or false)</li>
+	 * <li>rapidminer.init.plugins.location (directory path)</li>
+	 * <li>rapidminer.init.weka (true or false)</li>
+	 * <li>rapidminer.init.jdbc.lib (true or false)</li>
+	 * <li>rapidminer.init.jdbc.lib.location (directory path)</li>
+	 * <li>rapidminer.init.jdbc.classpath (true or false)</li>
 	 * </ul>
 	 */
 	public static void init() {		
@@ -341,6 +384,11 @@ public class RapidMiner {
 	    String loadJDBCDirString = System.getProperty(PROPERTY_RAPIDMINER_INIT_JDBC_LIB);
 	    boolean loadJDBCDir = Tools.booleanValue(loadJDBCDirString, true);
 	    
+		File jdbcDir = null;
+		String jdbcDirString = System.getProperty(PROPERTY_RAPIDMINER_INIT_JDBC_LIB_LOCATION);
+		if (jdbcDirString != null)
+			jdbcDir = new File(jdbcDirString);
+	    
 	    String loadJDBCClasspathString = System.getProperty(PROPERTY_RAPIDMINER_INIT_JDBC_CLASSPATH);
 	    boolean loadJDBCClasspath = Tools.booleanValue(loadJDBCClasspathString, false);
 	
@@ -353,7 +401,7 @@ public class RapidMiner {
 			if (operatorsXML != null) {
 				operatorStream = new FileInputStream(operatorsXML);
 			}
-			init(operatorStream, pluginDir, loadWeka, loadJDBCDir, loadJDBCClasspath, loadPlugins);
+			init(operatorStream, pluginDir, jdbcDir, loadWeka, loadJDBCDir, loadJDBCClasspath, loadPlugins);
 		} catch (IOException e) {
 			// do nothing
 		} finally {
@@ -394,7 +442,7 @@ public class RapidMiner {
 	}
 	
 	public static SplashScreen showSplash(Image productLogo) {
-		RapidMiner.splashScreen = new SplashScreen(getVersion(), productLogo);
+		RapidMiner.splashScreen = new SplashScreen(getShortVersion(), productLogo);
 		RapidMiner.splashScreen.showSplashScreen();
 		return RapidMiner.splashScreen;
 	}
@@ -409,6 +457,10 @@ public class RapidMiner {
 		}
 	}
 
+	public static SplashScreen getSplashScreen() {
+		return RapidMiner.splashScreen;
+	}
+	
 	public static Frame getSplashScreenFrame() {
 		if (RapidMiner.splashScreen != null)
 			return RapidMiner.splashScreen.getSplashScreenFrame();

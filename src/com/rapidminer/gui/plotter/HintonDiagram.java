@@ -29,7 +29,10 @@ import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.swing.Icon;
 
@@ -42,17 +45,15 @@ import com.rapidminer.tools.Tools;
 /** Presents values by boxes more filled the higher the values are.
  * 
  *  @author Daniel Hakenjos, Ingo Mierswa
- *  @version $Id: HintonDiagram.java,v 1.3 2008/05/09 19:22:51 ingomierswa Exp $
+ *  @version $Id: HintonDiagram.java,v 1.4 2008/07/12 23:50:38 ingomierswa Exp $
  */
 public class HintonDiagram extends PlotterAdapter implements MouseListener {
 
 	private static final long serialVersionUID = -1299407916734619185L;
-
-	private double[] values;
+	
+	private List<NameValue> values = new ArrayList<NameValue>();
 
 	private double maxWeight;
-
-	private String[] names;
 
 	private int boxSize = 51;
 
@@ -65,6 +66,11 @@ public class HintonDiagram extends PlotterAdapter implements MouseListener {
     private int plotIndex = -1;
     
     private transient DataTable dataTable;
+    
+    private boolean absolute = false;
+    
+    private boolean sorting = false;
+    
     
     public HintonDiagram() {
         super();
@@ -116,28 +122,42 @@ public class HintonDiagram extends PlotterAdapter implements MouseListener {
         return boxSize;
     }
     
+    public void setAbsolute(boolean absolute) {
+    	this.absolute = absolute;
+    	repaint();
+    }
+    
+    public boolean isSupportingAbsoluteValues() {
+    	return true;
+    }
+    
+    public void setSorting(boolean sorting) {
+    	this.sorting = sorting;
+    	repaint();
+    }
+    
+    public boolean isSupportingSorting() {
+    	return true;
+    }
+    
     private void prepareData() {
-        if (plotIndex < 0) {
-            this.values = new double[0];
-            this.names  = new String[0];
-        } else {
-            int size = dataTable.getNumberOfRows();
-            this.values = new double[size];
-            this.names = new String[size];
-            
+    	this.values.clear();
+        if (plotIndex >= 0) {
             Iterator<DataTableRow> i = dataTable.iterator();
-            int counter = 0;
             this.maxWeight = Double.NEGATIVE_INFINITY;
             while (i.hasNext()) {
                 DataTableRow row = i.next();
-                this.values[counter] = row.getValue(plotIndex);
-                this.maxWeight = Math.max(maxWeight, Math.abs(this.values[counter]));
+                double value = row.getValue(plotIndex);
+                if (absolute)
+                	value = Math.abs(value);
+                this.maxWeight = Math.max(maxWeight, Math.abs(value));
                 String id = row.getId();
                 if (id == null)
-                    id = this.values[counter] + "";
-                this.names[counter] = id;
-                counter++;
+                    id = value + "";
+                values.add(new NameValue(id, value));
             }
+            if (sorting)
+            	Collections.sort(values);
         }       
     }
     
@@ -155,12 +175,12 @@ public class HintonDiagram extends PlotterAdapter implements MouseListener {
 		horizontalCount = (int) Math.floor(((double) (width + 1)) / ((double) (boxSize + 1)));
 		verticalCount = (int) Math.floor(((double) (height + 1)) / ((double) (boxSize + 1)));
 
-		if (horizontalCount * verticalCount < values.length) {
-			while (horizontalCount * verticalCount < values.length) {
+		if (horizontalCount * verticalCount < values.size()) {
+			while (horizontalCount * verticalCount < values.size()) {
 				verticalCount++;
 			}
-		} else if (horizontalCount * verticalCount > values.length) {
-			while (horizontalCount * (verticalCount - 1) > values.length) {
+		} else if (horizontalCount * verticalCount > values.size()) {
+			while (horizontalCount * (verticalCount - 1) > values.size()) {
 				verticalCount--;
 			}
 		} else {
@@ -181,14 +201,16 @@ public class HintonDiagram extends PlotterAdapter implements MouseListener {
 		int att = 0;
 		int horiz = 1;
 		int vert = 1;
-		while (att < values.length) {
-			if (values[att] < 0.0d) {
+		while (att < values.size()) {
+			NameValue nameValue = values.get(att);
+			double value = nameValue.getValue();
+			if (value < 0.0d) {
 				g.setColor(SwingTools.LIGHT_BLUE);
 			} else {
 				g.setColor(SwingTools.LIGHT_YELLOW);
 			}
 
-			int breite = (int) (Math.abs(values[att]) / maxWeight * boxSize);
+			int breite = (int) (Math.abs(value) / maxWeight * boxSize);
 			int centerx = (horiz - 1) * (boxSize + 1) + (boxSize + 1) / 2;
 			int centery = (vert - 1) * (boxSize + 1) + (boxSize + 1) / 2;
 			g.fillRect(centerx - breite / 2, centery - breite / 2, breite, breite);
@@ -240,10 +262,11 @@ public class HintonDiagram extends PlotterAdapter implements MouseListener {
 		vert = Math.min(vert, verticalCount);
 
 		int index = (vert - 1) * horizontalCount + horiz;
-		index = Math.min(index, values.length);
+		index = Math.min(index, values.size());
 		index = Math.max(index, 0);
 
-		return names[index - 1] + ": " + Tools.formatNumber(values[index - 1]);
+		NameValue nameValue = values.get(index - 1);
+		return nameValue.getName() + ": " + Tools.formatNumber(nameValue.getValue());
 	}
 
 	public void mouseClicked(MouseEvent event) {

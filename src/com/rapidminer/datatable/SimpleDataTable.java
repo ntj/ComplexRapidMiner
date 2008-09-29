@@ -35,7 +35,7 @@ import com.rapidminer.tools.Tools;
  * A simple data table implementation which stores the data itself. 
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: SimpleDataTable.java,v 1.5 2008/05/09 19:23:16 ingomierswa Exp $
+ * @version $Id: SimpleDataTable.java,v 1.6 2008/05/25 12:08:44 ingomierswa Exp $
  */
 public class SimpleDataTable extends AbstractDataTable {
     
@@ -81,6 +81,22 @@ public class SimpleDataTable extends AbstractDataTable {
 	
 	public boolean isNominal(int column) {
 		return (index2StringMap.get(column) != null);
+	}
+	
+	public boolean isDate(int index) {
+		return false;
+	}
+	
+	public boolean isTime(int index) {
+		return false;
+	}
+	
+	public boolean isDateTime(int index) {
+		return false;
+	}
+	
+	public boolean isNumerical(int index) {
+		return !isNominal(index);
 	}
 	
 	public String mapIndex(int column, int index) {

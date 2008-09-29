@@ -29,7 +29,10 @@ import java.awt.Polygon;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.swing.Icon;
 
@@ -43,17 +46,15 @@ import com.rapidminer.tools.Tools;
  * A bound diagram used for displaying attribute weights.
  * 
  * @author Daniel Hakenjos, Ingo Mierswa
- * @version $Id: BoundDiagram.java,v 1.3 2008/05/09 19:22:51 ingomierswa Exp $
+ * @version $Id: BoundDiagram.java,v 1.4 2008/07/12 23:50:38 ingomierswa Exp $
  */
 public class BoundDiagram extends PlotterAdapter implements MouseListener {
 
 	private static final long serialVersionUID = 3155061651939372589L;
 
-	private double[] values;
+	private List<NameValue> values = new ArrayList<NameValue>();
 
 	private double maxWeight;
-
-	private String[] names;
 
 	private int radius;
 
@@ -68,6 +69,10 @@ public class BoundDiagram extends PlotterAdapter implements MouseListener {
     private int plotIndex = -1;
     
     private transient DataTable dataTable;
+    
+    private boolean absolute = false;
+    
+    private boolean sorting = false;
     
     
     public BoundDiagram() {
@@ -89,12 +94,12 @@ public class BoundDiagram extends PlotterAdapter implements MouseListener {
 
 	/** Calculates the angles. */
 	public void calculateAngles() {
-		float anglegesamt = 360.0f;
-		float delta = anglegesamt / values.length;
+		float totalAngle = 360.0f;
+		float delta = totalAngle / values.size();
 
 		float angle = 0.0f;
 
-		angles = new double[values.length];
+		angles = new double[values.size()];
 
 		for (int i = 0; i < angles.length; i++) {
 			angles[i] = angle;
@@ -104,8 +109,8 @@ public class BoundDiagram extends PlotterAdapter implements MouseListener {
 
 	/** Calculate the attribute vectors. */
 	public void calculateAttributeVectors() {
-		attributeVectorX = new double[values.length];
-		attributeVectorY = new double[values.length];
+		attributeVectorX = new double[values.size()];
+		attributeVectorY = new double[values.size()];
 
 		double angle;
 		double radius = 1.0f;
@@ -113,7 +118,7 @@ public class BoundDiagram extends PlotterAdapter implements MouseListener {
 		int angleInt;
 
 		double x = 0.0f, y = 0.0f;
-		for (int dimindex = 0; dimindex < values.length; dimindex++) {
+		for (int dimindex = 0; dimindex < values.size(); dimindex++) {
 			angleInt = (int) angles[dimindex];
 			angle = angles[dimindex];
 
@@ -158,27 +163,23 @@ public class BoundDiagram extends PlotterAdapter implements MouseListener {
 	}
 
     private void prepareData() {
-        if (plotIndex < 0) {
-            this.values = new double[0];
-            this.names  = new String[0];
-        } else {
-            int size = dataTable.getNumberOfRows();
-            this.values = new double[size];
-            this.names = new String[size];
-            
+    	this.values.clear();
+        if (plotIndex >= 0) {            
             Iterator<DataTableRow> i = dataTable.iterator();
-            int counter = 0;
             this.maxWeight = Double.NEGATIVE_INFINITY;
             while (i.hasNext()) {
                 DataTableRow row = i.next();
-                this.values[counter] = row.getValue(plotIndex);
-                this.maxWeight = Math.max(maxWeight, Math.abs(this.values[counter]));
+                double value = row.getValue(plotIndex);
+                if (absolute)
+                	value = Math.abs(value);
+                this.maxWeight = Math.max(maxWeight, Math.abs(value));
                 String id = row.getId();
                 if (id == null)
-                    id = this.values[counter] + "";
-                this.names[counter] = id;
-                counter++;
+                    id = value + "";
+                values.add(new NameValue(id, value));
             }
+            if (sorting)
+            	Collections.sort(values);
         }      
         calculateAngles();
         calculateAttributeVectors();   
@@ -210,22 +211,23 @@ public class BoundDiagram extends PlotterAdapter implements MouseListener {
 		Polygon polygon;
 		double ratio;
 		int x, y;
-		for (int att = 0; att < values.length; att++) {
+		for (int att = 0; att < values.size(); att++) {
+			NameValue nameValue = values.get(att);
 			polygon = new Polygon();
 			polygon.addPoint(centerX, centerY);
 
-			ratio = Math.abs(values[att]) / maxWeight;
+			ratio = Math.abs(nameValue.getValue()) / maxWeight;
 			x = centerX + ((int) (ratio * radius * attributeVectorX[att]));
 			y = centerY - ((int) (ratio * radius * attributeVectorY[att]));
 			polygon.addPoint(x, y);
 
-			x = centerX + ((int) (ratio * radius * attributeVectorX[(att + 1) % values.length]));
-			y = centerY - ((int) (ratio * radius * attributeVectorY[(att + 1) % values.length]));
+			x = centerX + ((int) (ratio * radius * attributeVectorX[(att + 1) % values.size()]));
+			y = centerY - ((int) (ratio * radius * attributeVectorY[(att + 1) % values.size()]));
 			polygon.addPoint(x, y);
 
 			polygon.addPoint(centerX, centerY);
 
-			if (values[att] < 0.0d) {
+			if (nameValue.getValue() < 0.0d) {
 				g.setColor(SwingTools.LIGHT_BLUE);
 				g.fillPolygon(polygon);
 				g.setColor(Color.DARK_GRAY);
@@ -279,6 +281,24 @@ public class BoundDiagram extends PlotterAdapter implements MouseListener {
 		return null;
 	}
 
+    public void setAbsolute(boolean absolute) {
+    	this.absolute = absolute;
+    	repaint();
+    }
+    
+    public boolean isSupportingAbsoluteValues() {
+    	return true;
+    }
+    
+    public void setSorting(boolean sorting) {
+    	this.sorting = sorting;
+    	repaint();
+    }
+    
+    public boolean isSupportingSorting() {
+    	return true;
+    }
+    
 	private String getAttributeName(int x, int y) {
 		// get the closest attribute vector
 		double distanceX, distanceY, distance;
@@ -286,7 +306,7 @@ public class BoundDiagram extends PlotterAdapter implements MouseListener {
 		double minDistance2 = Double.POSITIVE_INFINITY;
 		int minIndex = 0, minIndex2 = 0;
 
-		for (int att = 0; att < values.length; att++) {
+		for (int att = 0; att < values.size(); att++) {
 			distanceX = radius + 10.0d + attributeVectorX[att] * radius - x;
 			distanceY = radius + 10.0d - attributeVectorY[att] * radius - y;
 			distanceX = distanceX * distanceX;
@@ -305,10 +325,13 @@ public class BoundDiagram extends PlotterAdapter implements MouseListener {
 			}
 		}
 
-		if ((minIndex2 + 1) % values.length == minIndex) {
-			return names[minIndex2] + ": " + Tools.formatNumber(values[minIndex2]);
+		NameValue nameValue = null;
+		if ((minIndex2 + 1) % values.size() == minIndex) {
+			nameValue = values.get(minIndex2);
+		} else {
+			nameValue = values.get(minIndex);
 		}
-		return names[minIndex] + ": " + Tools.formatNumber(values[minIndex]);
+		return nameValue.getName() + ": " + Tools.formatNumber(nameValue.getValue());
 	}
 
 	public void mouseClicked(MouseEvent event) {

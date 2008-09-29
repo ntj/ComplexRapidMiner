@@ -58,7 +58,7 @@ import com.rapidminer.gui.look.RapidLookTools;
  * A table for the file details.
  *
  * @author Ingo Mierswa
- * @version $Id: FileTable.java,v 1.2 2008/05/09 19:22:53 ingomierswa Exp $
+ * @version $Id: FileTable.java,v 1.3 2008/07/01 14:16:13 ingomierswa Exp $
  */
 public class FileTable extends JTable implements MouseListener, MouseMotionListener {
 
@@ -357,7 +357,7 @@ public class FileTable extends JTable implements MouseListener, MouseMotionListe
 			}
 		}
 
-		this.fileList.synchFilechoserSelction();
+		this.fileList.synchFilechoserSelection();
 	}
 
 	@Override

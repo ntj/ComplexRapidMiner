@@ -30,7 +30,7 @@ import com.rapidminer.operator.IOObject;
  * A matrix with basic functionality.
  * 
  * @author Michael Wurst
- * @version $Id: Matrix.java,v 1.5 2008/05/09 19:23:23 ingomierswa Exp $
+ * @version $Id: Matrix.java,v 1.7 2008/09/12 10:30:03 tobiasmalbrecht Exp $
  * 
  */
 public interface Matrix<Ex, Ey> extends IOObject {

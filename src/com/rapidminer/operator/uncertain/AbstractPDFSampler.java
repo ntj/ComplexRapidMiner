@@ -5,27 +5,22 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.rapidminer.example.Attribute;
-import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.SimpleExampleSet;
-import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.DataRowFactory;
 import com.rapidminer.example.table.DoubleArrayDataRow;
-import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.example.table.MemoryExampleTable;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.similarity.attributebased.uncertain.AbstractProbabilityDensityFunction;
-import com.rapidminer.operator.similarity.attributebased.uncertain.SimpleProbabilityDensityFunction;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeDouble;
-import com.rapidminer.parameter.ParameterTypeFile;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.UndefinedParameterError;
 
@@ -45,6 +40,10 @@ public abstract class AbstractPDFSampler extends Operator {
 	protected static final String ADD_ORIGINAL_POINT = "Add original measurement";
 	protected static final String ABSOLUTE_ERROR = "Absolute error";
 	protected static final String SPLIT_TO_NEW_EXAMPLE_SETS = "Splitt";
+	protected static final String NUM_THREADS = "Num Concurrent Threads for sampling";
+	private MemoryExampleTable newMT;
+	private AbstractSampleStrategy st;
+	private MemoryExampleTable[] resultMT;
 
 	public AbstractPDFSampler(OperatorDescription description) {
 		super(description);
@@ -61,36 +60,50 @@ public abstract class AbstractPDFSampler extends Operator {
 			listAtt.add(a);
 		}
 
-		MemoryExampleTable newMT = new MemoryExampleTable(listAtt);
-		AbstractSampleStrategy st = getSamplingStrategy();
+		newMT = new MemoryExampleTable(listAtt);
+		st = getSamplingStrategy();
 		// copy to data to a new instance of the example set
 		st.setSampleRate(getParameterAsInt(SAMPLE_FREQUENCY));
 
-		for (Example e : es) {
-			st.setValue(getValues(e));
-			Double[][] newExamples = st.getSamples();
-			if (newExamples.length > 0) {
-				Attribute[] attributeArray = es.getExampleTable()
-						.getAttributes();
-				DataRow dr = es.getExampleTable().getDataRow(0);
-				int dataManagement = 0;
-				if (dr instanceof DoubleArrayDataRow) {
-					dataManagement = DataRowFactory.TYPE_DOUBLE_ARRAY;
-				}
-				DataRowFactory dataRowFactory = new DataRowFactory(
-						dataManagement);
-				for (int i = 0; i < newExamples.length; i++) {
+		resultMT = new MemoryExampleTable[getParameterAsInt(SAMPLE_FREQUENCY)];
 
-					DataRow dataRow = dataRowFactory.create(newExamples[i],
-							attributeArray);
-					if (getParameterAsBoolean(ADD_ORIGINAL_POINT)) {
-						newMT.addDataRow(dataRow);
-					}
-				}
-				newMT.addDataRow(dr);
+		for (int i = 0; i < getParameterAsInt(SAMPLE_FREQUENCY); i++) {
+			resultMT[i] = new MemoryExampleTable(listAtt);
+		}
+		getValues();
+		LinkedList<SamplingThread> ll = new LinkedList<SamplingThread>();
+		int size = es.size();
+		int sizePerThread = size / getParameterAsInt(NUM_THREADS);
+		for (int i = 1; i <= getParameterAsInt(NUM_THREADS); i++) {
+			// create the threads
+			if (i == getParameterAsInt(NUM_THREADS)) {
+				ll.add(new SamplingThread(sizePerThread * (i - 1), size, es,
+						this, st));
+			} else {
+				ll.add(new SamplingThread(sizePerThread * (i - 1),
+						sizePerThread * (i), es, this, st));
 			}
 		}
-		return new IOObject[] { new SimpleExampleSet(newMT) };
+		System.err.println("Starting Sampling threads started");
+		for (SamplingThread ct : ll) {
+			ct.start();
+		}
+		System.err.println("All Sampling threads started");
+		for (SamplingThread ct : ll) {
+			try {
+				ct.join();
+			} catch (InterruptedException e) {
+
+				e.printStackTrace();
+			}
+		}
+		System.err.println("All threads for sampling joined.");
+		IOObject[] result = new IOObject[getParameterAsInt(SAMPLE_FREQUENCY)];
+		for (int i = 0; i < getParameterAsInt(SAMPLE_FREQUENCY); i++) {
+			result[i] = new SimpleExampleSet(resultMT[i]);
+		}
+
+		return result;
 	}
 
 	protected abstract AbstractProbabilityDensityFunction getPDF()
@@ -154,6 +167,11 @@ public abstract class AbstractPDFSampler extends Operator {
 				"Specifies the sampling frequency", 0, 10000000, 1);
 		type.setExpert(false);
 		types.add(type);
+		type = new ParameterTypeInt(NUM_THREADS,
+				"Specifies the number of concurrent threadsfor sampling", 1, 4,
+				1);
+		type.setExpert(false);
+		types.add(type);
 		type = new ParameterTypeDouble(GLOBAL_UNCERTAINTY,
 				"The uncertainty specification around the points", 0, 10000000,
 				1);
@@ -161,6 +179,11 @@ public abstract class AbstractPDFSampler extends Operator {
 		types.add(type);
 		type = new ParameterTypeBoolean(ADD_ORIGINAL_POINT,
 				"Add the original Measurement in the sampled set", true);
+		type.setExpert(false);
+		types.add(type);
+
+		type = new ParameterTypeBoolean(SPLIT_TO_NEW_EXAMPLE_SETS,
+				"Specifies if the ", true);
 		type.setExpert(false);
 		types.add(type);
 
@@ -175,5 +198,24 @@ public abstract class AbstractPDFSampler extends Operator {
 		types.add(type);
 
 		return types;
+	}
+
+	public void addDataRow(DataRow dataRow, int i) {
+		if (getParameterAsBoolean(SPLIT_TO_NEW_EXAMPLE_SETS)) {
+			resultMT[i].addDataRow(dataRow);
+		} else {
+			newMT.addDataRow(dataRow);
+		}
+
+	}
+
+	public void addOriginalPoint(DataRow dr) {
+		if (getParameterAsBoolean(ADD_ORIGINAL_POINT)) {
+			newMT.addDataRow(dr);
+		}
+	}
+
+	public double[] getValuesFromExample(Example e) {
+		return getValues(e);
 	}
 }

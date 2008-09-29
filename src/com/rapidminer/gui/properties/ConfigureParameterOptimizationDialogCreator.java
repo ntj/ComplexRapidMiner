@@ -22,17 +22,22 @@
  */
 package com.rapidminer.gui.properties;
 
+import com.rapidminer.gui.wizards.AbstractConfigurationWizardCreator;
 import com.rapidminer.gui.wizards.ConfigurationListener;
-import com.rapidminer.gui.wizards.ConfigurationWizardCreator;
 
 /**
  * The creator for the parameter specification dialog.
  * 
  * @author Tobias Malbrecht
- * @version $Id: ConfigureParameterOptimizationDialogCreator.java,v 1.2 2008/05/09 19:22:46 ingomierswa Exp $
+ * @version $Id: ConfigureParameterOptimizationDialogCreator.java,v 1.4 2008/08/15 19:15:00 ingomierswa Exp $
  */
-public class ConfigureParameterOptimizationDialogCreator implements ConfigurationWizardCreator {
+public class ConfigureParameterOptimizationDialogCreator extends AbstractConfigurationWizardCreator {
+	
 	public static final long serialVersionUID = 32891471478295L;
+	
+	public String getButtonText() {
+		return "Edit Parameter Settings...";
+	}
 	
 	public void createConfigurationWizard(ConfigurationListener listener) {
 		(new ConfigureParameterOptimizationDialog(listener)).setVisible(true);

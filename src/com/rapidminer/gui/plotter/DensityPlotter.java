@@ -36,8 +36,6 @@ import java.util.Random;
 
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableRow;
-import com.rapidminer.gui.plotter.conditions.MissingValuesPlotterCondition;
-import com.rapidminer.gui.plotter.conditions.PlotterCondition;
 import com.rapidminer.tools.math.MathFunctions;
 
 
@@ -45,7 +43,7 @@ import com.rapidminer.tools.math.MathFunctions;
  *  a color for all pixels in between. 
  *  
  *  @author Ingo Mierswa
- *  @version $Id: DensityPlotter.java,v 1.4 2008/05/09 19:22:51 ingomierswa Exp $
+ *  @version $Id: DensityPlotter.java,v 1.5 2008/07/12 16:53:15 ingomierswa Exp $
  */
 public class DensityPlotter extends PlotterAdapter {
 
@@ -201,21 +199,26 @@ public class DensityPlotter extends PlotterAdapter {
     			double densityColor = row.getValue(densityColorIndex);
     			double xValue = row.getValue(axes[X_AXIS]);
     			double yValue = row.getValue(axes[Y_AXIS]);
-    			this.minDensityColor = MathFunctions.robustMin(this.minDensityColor, densityColor);
-    			this.maxDensityColor = MathFunctions.robustMax(this.maxDensityColor, densityColor);
-    			this.min[X_AXIS] = MathFunctions.robustMin(this.min[X_AXIS], xValue);
-    			this.max[X_AXIS] = MathFunctions.robustMax(this.max[X_AXIS], xValue);
-    			this.min[Y_AXIS] = MathFunctions.robustMin(this.min[Y_AXIS], yValue);
-    			this.max[Y_AXIS] = MathFunctions.robustMax(this.max[Y_AXIS], yValue);
-                double pointColor = 0.0d;
-                Color borderColor = Color.BLACK;
-    			if (pointColorIndex >= 0) {
-    				pointColor = row.getValue(pointColorIndex);
-                    borderColor = getPointBorderColor(this.dataTable, row, pointColorIndex);
+    			if (!Double.isNaN(xValue) && !Double.isNaN(yValue)) {
+    				this.minDensityColor = MathFunctions.robustMin(this.minDensityColor, densityColor);
+    				this.maxDensityColor = MathFunctions.robustMax(this.maxDensityColor, densityColor);
+    				this.min[X_AXIS] = MathFunctions.robustMin(this.min[X_AXIS], xValue);
+    				this.max[X_AXIS] = MathFunctions.robustMax(this.max[X_AXIS], xValue);
+    				this.min[Y_AXIS] = MathFunctions.robustMin(this.min[Y_AXIS], yValue);
+    				this.max[Y_AXIS] = MathFunctions.robustMax(this.max[Y_AXIS], yValue);
+    				double pointColor = 0.0d;
+    				Color borderColor = Color.BLACK;
+    				if (pointColorIndex >= 0) {
+    					pointColor = row.getValue(pointColorIndex);
+    					if (Double.isNaN(pointColor)) {
+    						pointColor = 0.0d;
+    					}
+    					borderColor = getPointBorderColor(this.dataTable, row, pointColorIndex);
+    				}
+    				this.minPointColor = MathFunctions.robustMin(this.minPointColor, pointColor);
+    				this.maxPointColor = MathFunctions.robustMax(this.maxPointColor, pointColor);
+    				points.add(new Point(xValue, yValue, densityColor, pointColor, borderColor, row.getId()));
     			}
-                this.minPointColor = MathFunctions.robustMin(this.minPointColor, pointColor);
-                this.maxPointColor = MathFunctions.robustMax(this.maxPointColor, pointColor);
-    			points.add(new Point(xValue, yValue, densityColor, pointColor, borderColor, row.getId()));
     		}
             
     		Collections.shuffle(points, new Random(2001));
@@ -347,9 +350,7 @@ public class DensityPlotter extends PlotterAdapter {
             setToolTip(null, 0.0d, 0.0d);
         }
     }
-    public PlotterCondition getPlotterCondition() {
-        return new MissingValuesPlotterCondition();
-    }
+
     private void setToolTip(String toolTip, double x, double y) {
         this.currentToolTip = toolTip;
         this.toolTipX = x;

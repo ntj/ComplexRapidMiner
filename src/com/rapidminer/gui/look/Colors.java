@@ -32,7 +32,7 @@ import com.rapidminer.gui.tools.SwingTools;
  * The colors used for the RapidLook look and feel.
  * 
  * @author Ingo Mierswa
- * @version $Id: Colors.java,v 1.6 2008/05/09 19:23:17 ingomierswa Exp $
+ * @version $Id: Colors.java,v 1.8 2008/07/13 14:16:10 ingomierswa Exp $
  */
 public class Colors {
 
@@ -58,7 +58,33 @@ public class Colors {
 	};
 	
 	private ColorUIResource[] buttonSkinColors = new ColorUIResource[] { 
-			new ColorUIResource(253, 254, 255), 
+			new ColorUIResource(253, 254, 255), // begin pressed // 0
+			new ColorUIResource(253, 253, 255), // both 
+			new ColorUIResource(249, 251, 255), // both
+			new ColorUIResource(248, 250, 255), // both
+			new ColorUIResource(254, 254, 255), // both
+			new ColorUIResource(234, 234, 235), // 5
+			new ColorUIResource(230, 232, 235),
+			new ColorUIResource(224, 229, 235), 
+			new ColorUIResource(209, 221, 234), // end pressed
+			new ColorUIResource(254, 254, 255),
+			new ColorUIResource(253, 254, 255), // 10
+			new ColorUIResource(246, 249, 255), 
+			new ColorUIResource(243, 247, 255), 
+			new ColorUIResource(239, 244, 255), 
+			new ColorUIResource(233, 240, 255), 
+			new ColorUIResource(225, 235, 255), // 15
+			new ColorUIResource(217, 230, 255),
+			new ColorUIResource(252, 253, 255), 
+			new ColorUIResource(247, 251, 255),
+			new ColorUIResource(224, 228, 235), // start down
+			new ColorUIResource(239, 244, 255),  // 20
+			new ColorUIResource(218, 230, 240)  // 21
+	};
+
+	/*
+	 	private ColorUIResource[] buttonSkinColors = new ColorUIResource[] { 
+			new ColorUIResource(253, 254, 255), // begin pressed
 			new ColorUIResource(253, 253, 255), 
 			new ColorUIResource(249, 251, 255), 
 			new ColorUIResource(248, 250, 255), 
@@ -66,8 +92,8 @@ public class Colors {
 			new ColorUIResource(254, 254, 255),
 			new ColorUIResource(250, 252, 255),
 			new ColorUIResource(244, 249, 255), 
-			new ColorUIResource(229, 241, 254), 
-			new ColorUIResource(254, 254, 255), 
+			new ColorUIResource(229, 241, 254), // end pressed
+			new ColorUIResource(254, 254, 255),
 			new ColorUIResource(253, 254, 255),
 			new ColorUIResource(246, 249, 255), 
 			new ColorUIResource(243, 247, 255), 
@@ -78,7 +104,8 @@ public class Colors {
 			new ColorUIResource(252, 253, 255), 
 			new ColorUIResource(247, 251, 255)
 	};
-
+	 */
+	
 	private ColorUIResource[] tabbedPaneColors = new ColorUIResource[] { 
 			new ColorUIResource(220, 225, 230), // 0 
 			new ColorUIResource(215, 220, 225), 

@@ -22,6 +22,8 @@
  */
 package com.rapidminer.gui.viewer;
 
+import java.text.DateFormat;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,21 +32,24 @@ import javax.swing.table.AbstractTableModel;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
+import com.rapidminer.example.AttributeTypeException;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Statistics;
 import com.rapidminer.example.Tools;
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.tools.Ontology;
 
 
 /** The model for the {@link com.rapidminer.gui.viewer.MetaDataViewerTable}. 
  * 
  *  @author Ingo Mierswa
- *  @version $Id: MetaDataViewerTableModel.java,v 1.8 2008/05/09 19:22:59 ingomierswa Exp $
+ *  @version $Id: MetaDataViewerTableModel.java,v 1.12 2008/07/12 17:46:46 ingomierswa Exp $
  */
 public class MetaDataViewerTableModel extends AbstractTableModel {
 
     private static final long serialVersionUID = -1598719681189990076L;
 
+    public static final int DEFAULT_MAX_NUMBER_OF_ROWS_FOR_STATISTICS = 100000;
 
     public static final int TYPE       = 0;
     public static final int INDEX      = 1;
@@ -104,7 +109,34 @@ public class MetaDataViewerTableModel extends AbstractTableModel {
         		this.specialAttributes[counter] = role.getAttribute(); 
         		counter++;
         	}
+        	
+        	// calculate statistics
+        	int maxNumberForStatistics = DEFAULT_MAX_NUMBER_OF_ROWS_FOR_STATISTICS;
+        	String maxString = System.getProperty(RapidMinerGUI.PROPERTY_RAPIDMINER_GUI_MAX_STATISTICS_ROWS);
+        	if (maxString != null) {
+        		try {
+        			maxNumberForStatistics = Integer.parseInt(maxString);
+        		} catch (NumberFormatException e) {
+        			// do nothing
+        		}
+        	}
+        	
+    		if (exampleSet.size() < maxNumberForStatistics) {
+    			calculateStatistics();
+    		} else {
+    			setShowColumn(MetaDataViewerTableModel.STATISTICS_AVERAGE, false);
+    			setShowColumn(MetaDataViewerTableModel.STATISTICS_RANGE, false);
+    			setShowColumn(MetaDataViewerTableModel.STATISTICS_SUM, false);
+    			setShowColumn(MetaDataViewerTableModel.STATISTICS_UNKNOWN, false);
+    		}
         }
+    }
+    
+    public void calculateStatistics() {
+    	exampleSet.recalculateAllAttributeStatistics();
+		setShowColumn(MetaDataViewerTableModel.STATISTICS_AVERAGE, true);
+		setShowColumn(MetaDataViewerTableModel.STATISTICS_RANGE, true);
+		setShowColumn(MetaDataViewerTableModel.STATISTICS_UNKNOWN, true);
     }
 
     public void setShowColumn(int index, boolean show) {
@@ -122,7 +154,6 @@ public class MetaDataViewerTableModel extends AbstractTableModel {
         while (i.hasNext()) 
             this.currentMapping[counter++] = i.next();
         fireTableStructureChanged();
-        
     }
     
     public boolean getShowColumn(int index) {
@@ -179,17 +210,40 @@ public class MetaDataViewerTableModel extends AbstractTableModel {
             case VALUE_TYPE: return Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(attribute.getValueType());
             case BLOCK_TYPE: return Ontology.ATTRIBUTE_BLOCK_TYPE.mapIndex(attribute.getBlockType());
             case STATISTICS_AVERAGE:
-                if (attribute.isNominal()) {
+            	// DATE
+            	if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(attribute.getValueType(), Ontology.DATE_TIME)) {
+            		long minMilliseconds = (long)exampleSet.getStatistics(attribute, Statistics.MINIMUM);
+            		long maxMilliseconds = (long)exampleSet.getStatistics(attribute, Statistics.MAXIMUM);
+            		long difference = maxMilliseconds - minMilliseconds;
+            		String duration = "length = ";
+            		if (attribute.getValueType() == Ontology.DATE) {
+            			// days
+            			duration += com.rapidminer.tools.Tools.formatIntegerIfPossible(Math.round((double)difference / (24.0d * 60.0d * 60.0d * 1000.0d))) + " days";
+            		} else if (attribute.getValueType() == Ontology.TIME) {
+            			// hours
+            			duration += com.rapidminer.tools.Tools.formatIntegerIfPossible(Math.round((double)difference / (60.0d * 60.0d * 1000.0d))) + " hours";
+            		} else if (attribute.getValueType() == Ontology.DATE_TIME) {
+            			// days
+            			duration += com.rapidminer.tools.Tools.formatIntegerIfPossible(Math.round((double)difference / (24.0d * 60.0d * 60.0d * 1000.0d))) + " days";
+            		}
+                    return duration;
+            	} else if (attribute.isNominal()) {
+            		// NOMINAL
                     int modeIndex = (int)exampleSet.getStatistics(attribute, Statistics.MODE);
                     String mode = null;
-                    if (modeIndex != -1) 
-                        mode = attribute.getMapping().mapIndex(modeIndex);
+                    try {
+                        if (modeIndex != -1) 
+                            mode = attribute.getMapping().mapIndex(modeIndex);
+                    } catch (AttributeTypeException e) {
+                        // do nothing
+                    }
                     if (mode != null) {  
                         return "mode = " + mode + " (" + com.rapidminer.tools.Tools.formatIntegerIfPossible(exampleSet.getStatistics(attribute, Statistics.COUNT, mode)) + ")";
                     } else {
                         return "mode = unknown";
                     }
                 } else {
+                	// NUMERICAL
                     double average  = exampleSet.getStatistics(attribute, Statistics.AVERAGE);
                     double variance = Math.sqrt(exampleSet.getStatistics(attribute, Statistics.VARIANCE));
                     return 
@@ -197,7 +251,28 @@ public class MetaDataViewerTableModel extends AbstractTableModel {
                         com.rapidminer.tools.Tools.formatIntegerIfPossible(variance);
                 }
             case STATISTICS_RANGE:
-                if (attribute.isNominal()) {
+            	// DATE
+            	if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(attribute.getValueType(), Ontology.DATE_TIME)) {
+            		long minMilliseconds = (long)exampleSet.getStatistics(attribute, Statistics.MINIMUM);
+            		long maxMilliseconds = (long)exampleSet.getStatistics(attribute, Statistics.MAXIMUM);
+            		String minResult = null;
+            		String maxResult = null;
+            		if (attribute.getValueType() == Ontology.DATE) {
+            			DateFormat format = DateFormat.getDateInstance();
+            			minResult = format.format(new Date(minMilliseconds));
+            			maxResult = format.format(new Date(maxMilliseconds));
+            		} else if (attribute.getValueType() == Ontology.TIME) {
+            			DateFormat format = DateFormat.getTimeInstance();
+            			minResult = format.format(new Date(minMilliseconds));
+            			maxResult = format.format(new Date(maxMilliseconds));
+            		} else if (attribute.getValueType() == Ontology.DATE_TIME) {
+            			DateFormat format = DateFormat.getDateTimeInstance();
+            			minResult = format.format(new Date(minMilliseconds));
+            			maxResult = format.format(new Date(maxMilliseconds));
+            		}
+                    return "[" + minResult + " ; " + maxResult + "]";
+            	} else if (attribute.isNominal()) {
+            		// NOMINAL
                     StringBuffer str = new StringBuffer();
                     Iterator<String> i = attribute.getMapping().getValues().iterator();
                     int n = 0;
@@ -212,6 +287,7 @@ public class MetaDataViewerTableModel extends AbstractTableModel {
                     }
                     return str.toString();
                 } else {
+                	// NUMERICAL
                     return 
                         "[" + com.rapidminer.tools.Tools.formatNumber(exampleSet.getStatistics(attribute, Statistics.MINIMUM)) + 
                         " ; " + com.rapidminer.tools.Tools.formatNumber(exampleSet.getStatistics(attribute, Statistics.MAXIMUM)) + "]";

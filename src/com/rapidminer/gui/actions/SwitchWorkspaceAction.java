@@ -39,7 +39,7 @@ import com.rapidminer.tools.ParameterService;
  * Start the corresponding action.
  * 
  * @author Ingo Mierswa
- * @version $Id: SwitchWorkspaceAction.java,v 1.8 2008/05/09 19:22:46 ingomierswa Exp $
+ * @version $Id: SwitchWorkspaceAction.java,v 1.10 2008/07/21 17:34:54 ingomierswa Exp $
  */
 public class SwitchWorkspaceAction extends AbstractAction {
 
@@ -63,10 +63,12 @@ public class SwitchWorkspaceAction extends AbstractAction {
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		InitialSettingsDialog dialog = new InitialSettingsDialog(RapidMinerGUI.getMainFrame(), ParameterService.getUserWorkspace(), "rm_workspace", null, -1, false);
+		InitialSettingsDialog dialog = new InitialSettingsDialog(RapidMinerGUI.getMainFrame(), ParameterService.getUserWorkspace(), "rm_workspace", null, ParameterService.getRapidMinerHome(), -1, false);
 		dialog.setVisible(true);
-		String newPath = dialog.getWorkspacePath();
-		File newWorkspace = new File(newPath);
-		ParameterService.setUserWorkspace(newWorkspace);
+		if (dialog.isOk()) {
+			String newPath = dialog.getWorkspacePath();
+			File newWorkspace = new File(newPath);
+			ParameterService.setUserWorkspace(newWorkspace);
+		}
 	}
 }

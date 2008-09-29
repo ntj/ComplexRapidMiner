@@ -29,6 +29,9 @@ import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
 
 import javax.swing.Icon;
 import javax.swing.JLabel;
@@ -37,7 +40,6 @@ import javax.swing.border.Border;
 
 import com.rapidminer.BreakpointListener;
 import com.rapidminer.ProcessListener;
-import com.rapidminer.operator.ProcessRootOperator;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.Operator;
 
@@ -51,10 +53,74 @@ import com.rapidminer.operator.Operator;
  * invoking {@link #startClockThread()} after construction.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: StatusBar.java,v 1.5 2008/05/09 19:22:59 ingomierswa Exp $
+ * @version $Id: StatusBar.java,v 1.9 2008/07/29 09:29:25 ingomierswa Exp $
  */
 public class StatusBar extends JPanel implements BreakpointListener, ProcessListener {
 
+	private static class OperatorEntry {
+		
+		private Collection<OperatorEntry> children = new LinkedList<OperatorEntry>();
+		private Operator operator;
+
+		public OperatorEntry(Operator operator) {
+			this.operator = operator;
+		}
+
+		public void addOperator(Operator operator) {
+			synchronized (children) {
+				if (this.operator == operator.getParent())
+					children.add(new OperatorEntry(operator));
+				else {
+					for (OperatorEntry childEntry : children)
+						childEntry.addOperator(operator);
+				}
+			}
+		}
+
+		public void removeOperator(Operator operator) {
+			synchronized (children) {
+				Iterator<OperatorEntry> iterator = children.iterator();
+				while (iterator.hasNext()) {
+					OperatorEntry childEntry = iterator.next();
+					if (childEntry.getOperator() == operator)
+						iterator.remove();
+					else
+						childEntry.removeOperator(operator);
+				}
+			}
+		}
+
+		public String toString(OperatorEntry entry, long time) {
+			synchronized (children) {
+				StringBuffer buffer = new StringBuffer();
+				Operator currentOperator = entry.getOperator();
+				buffer.append("[" + currentOperator.getApplyCount() + "] "
+						+ currentOperator.getName() + "  "
+						+ ((time - currentOperator.getStartTime()) / 1000)
+						+ " s");
+				Iterator<OperatorEntry> iterator = children.iterator();
+				if (iterator.hasNext())
+					buffer.append("  >  ");
+				while (iterator.hasNext()) {
+					OperatorEntry childEntry = iterator.next();
+					if (children.size() > 1)
+						buffer.append("  ( ");
+					buffer.append(childEntry.toString(childEntry, time));
+					if (children.size() > 1)
+						buffer.append(" )  ");
+					if (iterator.hasNext())
+						buffer.append("  |  ");
+				}
+				return buffer.toString();
+			}
+		}
+
+		public Operator getOperator() {
+			return operator;
+		}
+	}
+	
+	
 	private static final String INACTIVE_ICON_NAME = "24/bullet_ball_glass_grey.png";
 	private static final String RUNNING_ICON_NAME  = "24/bullet_ball_glass_green.png";
 	private static final String STOPPED_ICON_NAME  = "24/bullet_ball_glass_red.png";
@@ -71,12 +137,13 @@ public class StatusBar extends JPanel implements BreakpointListener, ProcessList
 	
 	private static final long serialVersionUID = 1189363377612273467L;
 
-	private JLabel clock = createLabel(getTime(), true);
+	private JLabel clockLabel = createLabel(getTime(), true);
 
-	private JLabel operator = createLabel("                         ", false);
+	private JLabel operatorLabel = createLabel("                         ", false);
 
-	private transient Operator currentOperator = null;
-
+	//private transient Collection<Operator> currentOperators = new LinkedList<Operator>();
+	private OperatorEntry rootOperator = null;
+	
 	private JLabel trafficLightLabel = new JLabel();
 	
 	private int breakpoint = -1;
@@ -98,34 +165,27 @@ public class StatusBar extends JPanel implements BreakpointListener, ProcessList
 
 		constraints.weightx = 1;
 		constraints.gridwidth = GridBagConstraints.RELATIVE;
-		layout.setConstraints(operator, constraints);
-		add(operator);
+		layout.setConstraints(operatorLabel, constraints);
+		add(operatorLabel);
 
-		clock.setToolTipText("The current system time.");
+		clockLabel.setToolTipText("The current system time.");
 		constraints.weightx = 0;
 		constraints.gridwidth = GridBagConstraints.REMAINDER;
-		layout.setConstraints(clock, constraints);
-		add(clock);
+		layout.setConstraints(clockLabel, constraints);
+		add(clockLabel);
 	}
 
 	public void startClockThread() {
-		new Thread() {
+		new Thread("StatusBar-Thread") {
 			public void run() {
 				setPriority(MIN_PRIORITY);
 				while (true) {
 					try {
-						clock.setText(getTime());
+						clockLabel.setText(getTime());
 						if (specialText != null) {
 							setText(specialText);
-						} else if (currentOperator != null) {
-							long execTime = System.currentTimeMillis() - currentOperator.getStartTime();
-							if (execTime > 1000) {
-								if (breakpoint < 0) {
-									setText("[" + currentOperator.getApplyCount() + "] " + currentOperator.getName() + "  " + (execTime / 1000) + " s");
-								}
-							}
 						} else {
-							setText("");
+							setText();
 						}
 						sleep(1000);
 					} catch (InterruptedException e) {
@@ -180,34 +240,43 @@ public class StatusBar extends JPanel implements BreakpointListener, ProcessList
 
 	public void breakpointReached(Operator op, IOContainer io, int location) {
 		breakpoint = location;
-		operator.setText("[" + op.getApplyCount() + "] " + op.getName() + ": breakpoint reached " + BreakpointListener.BREAKPOINT_POS_NAME[breakpoint] + " operator, press resume...");
+		operatorLabel.setText("[" + op.getApplyCount() + "] " + op.getName() + ": breakpoint reached " + BreakpointListener.BREAKPOINT_POS_NAME[breakpoint] + " operator, press resume...");
 		trafficLightLabel.setIcon(stoppedIcon);
 	}
 
 	public void resume() {
 		breakpoint = -1;
-		if (currentOperator != null)
+		if (rootOperator != null)
 			setText();
 		else
-			operator.setText(" ");
+			operatorLabel.setText(" ");
 		trafficLightLabel.setIcon(runningIcon);
 	}
 
 	public void processStarts() {
-		currentOperator = null;
-		operator.setText("");
+		rootOperator = null;
+		operatorLabel.setText("");
 		specialText = null;
 		trafficLightLabel.setIcon(runningIcon);
 	}
 	
-	public void processStep(ProcessRootOperator op) {
-		currentOperator = op.getProcess().getCurrentOperator();
-		setText();
+	public void processStartedOperator(Operator op) {
+		if (rootOperator == null)
+			rootOperator = new OperatorEntry(op);
+		else
+			rootOperator.addOperator(op);
+		//setStartText(op);
+	}
+	
+	public void processFinishedOperator(Operator op) {
+		if (rootOperator != null)
+			rootOperator.removeOperator(op);
+		//setEndText(op);
 	}
 
 	public void processEnded() {
-		operator.setText("");
-		currentOperator = null;
+		operatorLabel.setText("");
+		rootOperator = null;
 		specialText = null;
 		trafficLightLabel.setIcon(inactiveIcon);
 	}
@@ -223,10 +292,23 @@ public class StatusBar extends JPanel implements BreakpointListener, ProcessList
 	}
 
 	private synchronized void setText(String text) {
-		operator.setText(text);
+		operatorLabel.setText(text);
 	}
 
 	private void setText() {
-		setText("[" + currentOperator.getApplyCount() + "] " + currentOperator.getName());
+		if (rootOperator != null)
+			operatorLabel.setText(rootOperator.toString(rootOperator, System.currentTimeMillis()));
+		else
+			operatorLabel.setText("");
 	}
+	
+	/*
+	private void setStartText(Operator op) {
+		setText("started: [" + op.getApplyCount() + "] " + op.getName());
+	}
+	
+	private void setEndText(Operator op) {
+		setText("ended: [" + op.getApplyCount() + "] " + op.getName());
+	}
+	*/
 }

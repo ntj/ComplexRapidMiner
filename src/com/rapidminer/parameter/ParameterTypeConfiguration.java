@@ -22,6 +22,8 @@
  */
 package com.rapidminer.parameter;
 
+import java.util.Map;
+
 import com.rapidminer.gui.wizards.ConfigurationListener;
 import com.rapidminer.gui.wizards.ConfigurationWizardCreator;
 import com.rapidminer.tools.LogService;
@@ -32,7 +34,7 @@ import com.rapidminer.tools.LogService;
  * of operator configuration wizard.
  * 
  * @author Ingo Mierswa
- * @version $Id: ParameterTypeConfiguration.java,v 1.4 2008/05/09 19:22:37 ingomierswa Exp $
+ * @version $Id: ParameterTypeConfiguration.java,v 1.5 2008/08/15 19:15:00 ingomierswa Exp $
  */
 public class ParameterTypeConfiguration extends ParameterType {
 
@@ -42,9 +44,16 @@ public class ParameterTypeConfiguration extends ParameterType {
     
     private transient ConfigurationListener wizardListener;
     
+    private Map<String, String> parameters = null;
+    
     public ParameterTypeConfiguration(Class<? extends ConfigurationWizardCreator> wizardCreatorClass, ConfigurationListener wizardListener) {
+    	this(wizardCreatorClass, null, wizardListener);
+    }
+    
+    public ParameterTypeConfiguration(Class<? extends ConfigurationWizardCreator> wizardCreatorClass, Map<String, String> parameters, ConfigurationListener wizardListener) {
         super("configure_operator", "Configure this operator by means of a Wizard.");
         this.wizardCreatorClass = wizardCreatorClass;
+        this.parameters = parameters;
         this.wizardListener = wizardListener;
     }
     
@@ -53,6 +62,7 @@ public class ParameterTypeConfiguration extends ParameterType {
     	ConfigurationWizardCreator creator = null;
     	try {
     		creator = wizardCreatorClass.newInstance();
+    		creator.setParameters(parameters);
     	} catch (InstantiationException e) {
     		LogService.getGlobal().log("Problem during creation of wizard: " + e.getMessage(), LogService.WARNING);
     	} catch (IllegalAccessException e) {

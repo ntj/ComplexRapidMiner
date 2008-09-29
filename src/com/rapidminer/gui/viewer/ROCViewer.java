@@ -32,7 +32,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
 
-import com.rapidminer.tools.Renderable;
+import com.rapidminer.report.Renderable;
 import com.rapidminer.tools.math.ROCData;
 import com.rapidminer.tools.math.ROCDataGenerator;
 
@@ -42,13 +42,14 @@ import com.rapidminer.tools.math.ROCDataGenerator;
  * together with their standard deviations.
  *  
  * @author Ingo Mierswa
- * @version $Id: ROCViewer.java,v 1.5 2008/05/09 19:23:01 ingomierswa Exp $
+ * @version $Id: ROCViewer.java,v 1.8 2008/07/19 16:31:17 ingomierswa Exp $
  */
 public class ROCViewer extends JPanel implements Renderable {
 
     private static final long serialVersionUID = -5441366103559588567L;
 
     private ROCChartPlotter plotter;
+    
     public ROCViewer(String message, ROCDataGenerator rocGenerator, List<ROCData> rocData) {
         setLayout(new BorderLayout());
                 
@@ -69,6 +70,10 @@ public class ROCViewer extends JPanel implements Renderable {
         add(plotter, BorderLayout.CENTER);
     }
 
+    public void prepareRendering() {
+    	plotter.prepareRendering();
+    }
+    
 	public int getRenderHeight(int preferredHeight) {
 		return plotter.getRenderHeight(preferredHeight);
 	}

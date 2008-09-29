@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<attributeset default_source="clustermodel.dat">
+
+  <attribute
+    name         = "IDEAL_DOSE"
+    sourcecol    = "1"
+    valuetype    = "real"/>
+
+  <attribute
+    name         = "JH_MASKFEATURE"
+    sourcecol    = "2"
+    valuetype    = "nominal">
+       <value>L</value>
+       <value>C</value>
+       <value>d</value>
+  </attribute>
+
+  <attribute
+    name         = "JH_ACTIVEPERCENTCLEAR"
+    sourcecol    = "3"
+    valuetype    = "real"/>
+
+  <attribute
+    name         = "JH_TOTALPERCENTCLEAR"
+    sourcecol    = "4"
+    valuetype    = "real"/>
+
+  <attribute
+    name         = "JH_TECHNOLOGY"
+    sourcecol    = "5"
+    valuetype    = "nominal">
+       <value>UG8</value>
+       <value>ALLGEMEIN</value>
+       <value>0.18</value>
+       <value>0.15</value>
+       <value>C090D</value>
+       <value>C080D</value>
+       <value>UG6</value>
+       <value>C11N</value>
+       <value>C11RF</value>
+       <value>C070D</value>
+       <value>UG7</value>
+       <value></value>
+       <value>C11FL</value>
+       <value>C060D</value>
+       <value>C120FL</value>
+       <value>L90FL</value>
+       <value>0.13</value>
+       <value>0.2</value>
+       <value>SPT9</value>
+       <value>C058D</value>
+       <value>C048G</value>
+       <value>UG11</value>
+       <value>UG10</value>
+       <value>0.09</value>
+       <value>DRAM70</value>
+       <value>C12N</value>
+       <value>UG9</value>
+       <value>UG5</value>
+       <value>C065T</value>
+       <value>d</value>
+  </attribute>
+
+  <attribute
+    name         = "jh_customer"
+    sourcecol    = "6"
+    valuetype    = "nominal">
+       <value>AMD</value>
+       <value>QIMONDA</value>
+       <value>ATMEL</value>
+       <value>INFINEON</value>
+       <value>CROLLES 2</value>
+       <value>NTC</value>
+       <value>BENCHMARK</value>
+       <value>TOWER</value>
+       <value>ASML BV</value>
+       <value>ZEISS JENA</value>
+       <value>TPN-ASAKA</value>
+       <value>d</value>
+  </attribute>
+
+  <attribute
+    name         = "LOT_NUMBER"
+    sourcecol    = "7"
+    valuetype    = "nominal">
+       <value>6525</value>
+       <value>6425</value>
+       <value>6626</value>
+       <value>6512</value>
+       <value>6609</value>
+       <value>6509</value>
+       <value>6526</value>
+       <value>6819</value>
+       <value>6908</value>
+       <value>6901</value>
+       <value>6825</value>
+       <value>6912</value>
+       <value>6921</value>
+       <value>6915</value>
+       <value>6X18</value>
+       <value>6X19</value>
+       <value>6926</value>
+       <value>6616</value>
+       <value>6X26</value>
+       <value>6Y17</value>
+       <value>6Y23</value>
+       <value>6Z01</value>
+       <value>6917</value>
+       <value>6925</value>
+       <value>6X31</value>
+       <value>6Z12</value>
+       <value>6Z17</value>
+       <value>6Z07</value>
+       <value>7105</value>
+       <value>6Z02</value>
+       <value>7207</value>
+       <value>7301</value>
+       <value>7214</value>
+       <value>7306</value>
+       <value>7315</value>
+       <value>7328</value>
+       <value>7406</value>
+       <value>7508</value>
+       <value>7601</value>
+       <value></value>
+       <value>7404</value>
+       <value>7507</value>
+       <value>A750</value>
+       <value>7319</value>
+       <value>7517</value>
+       <value>7303</value>
+       <value>5827</value>
+       <value>5816</value>
+       <value>7317</value>
+       <value>7501</value>
+       <value>7514</value>
+       <value>7615</value>
+       <value>7424</value>
+       <value>7720</value>
+       <value>7629</value>
+       <value>7308</value>
+       <value>7806</value>
+       <value>7619</value>
+       <value>7612</value>
+       <value>7430</value>
+       <value>7823</value>
+       <value>7710</value>
+       <value>7819</value>
+       <value>7803</value>
+       <value>7807</value>
+       <value>7817</value>
+       <value>7305</value>
+       <value>7618</value>
+       <value>7730</value>
+       <value>7625</value>
+       <value>7828</value>
+       <value>7513</value>
+       <value>7403</value>
+       <value>7708</value>
+       <value>7810</value>
+       <value>7607</value>
+       <value>7911</value>
+       <value>7726</value>
+       <value>7901</value>
+       <value>6804</value>
+       <value>7805</value>
+       <value>7820</value>
+       <value>7912</value>
+       <value>7822</value>
+       <value>7824</value>
+       <value>7910</value>
+       <value>7908</value>
+       <value>7X04</value>
+       <value>7904</value>
+       <value>7X13</value>
+       <value>7115</value>
+       <value>7920</value>
+       <value>7913</value>
+       <value>7X22</value>
+       <value>7x22</value>
+       <value>7927</value>
+       <value>7925</value>
+       <value>7X30</value>
+       <value>7X19</value>
+       <value>7130</value>
+       <value>7608</value>
+       <value>7830</value>
+       <value>7624</value>
+       <value>7909</value>
+       <value>7Y09</value>
+       <value>7Y13</value>
+       <value>7530</value>
+       <value>7Z01</value>
+       <value>7Z15</value>
+       <value>7Z12</value>
+       <value>7928</value>
+       <value>7Y10</value>
+       <value>6X12</value>
+       <value>7Z20</value>
+       <value>8109</value>
+       <value>7Z25</value>
+       <value>7Z14</value>
+       <value>8201</value>
+       <value>8105</value>
+       <value>8125</value>
+       <value>7Y29</value>
+       <value>7Z23</value>
+       <value>8206</value>
+       <value>8123</value>
+       <value>8214</value>
+       <value>5904</value>
+       <value>8210</value>
+       <value>8212</value>
+       <value>8223</value>
+       <value>8209</value>
+       <value>8219</value>
+       <value>8220</value>
+       <value>8221</value>
+       <value>7Z09</value>
+       <value>8302</value>
+       <value>8309</value>
+       <value>8323</value>
+       <value>7Y24</value>
+       <value>8225</value>
+       <value>8213</value>
+       <value>8305</value>
+       <value>8215</value>
+       <value>8401</value>
+       <value>8316</value>
+       <value>##</value>
+  </attribute>
+
+  <id
+    name         = "JOB"
+    sourcecol    = "8"
+    valuetype    = "integer"/>
+
+  <cluster
+    name         = "cluster"
+    sourcecol    = "9"
+    valuetype    = "nominal">
+       <value>1</value>
+       <value>2</value>
+  </cluster>
+
+  <label
+    name         = "label"
+    sourcecol    = "10"
+    valuetype    = "nominal">
+       <value>1</value>
+       <value>2</value>
+  </label>
+
+</attributeset>

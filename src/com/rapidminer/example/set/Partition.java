@@ -37,7 +37,7 @@ import com.rapidminer.tools.LogService;
  * starts at 0.
  * 
  * @author Simon Fischer, Ingo Mierswa
- * @version $Id: Partition.java,v 1.6 2008/05/09 19:22:49 ingomierswa Exp $
+ * @version $Id: Partition.java,v 1.7 2008/07/12 16:53:15 ingomierswa Exp $
  */
 public class Partition implements Cloneable, Serializable {
 
@@ -52,6 +52,9 @@ public class Partition implements Cloneable, Serializable {
 	/** Maps every example to its partition index. */
 	private int[] elements;
 
+	/** Indicates the position of the last element for each partition. */
+	private int[] lastElementIndex;
+	
 	/**
 	 * Maps every example index to the true index of the data row in the example
 	 * table.
@@ -96,6 +99,9 @@ public class Partition implements Cloneable, Serializable {
 		this.elements = new int[p.elements.length];
 		System.arraycopy(p.elements, 0, this.elements, 0, p.elements.length);
 
+		this.lastElementIndex = new int[p.lastElementIndex.length];
+		System.arraycopy(p.lastElementIndex, 0, this.lastElementIndex, 0, p.lastElementIndex.length);
+		
 		recalculateTableIndices();
 	}
 
@@ -113,14 +119,20 @@ public class Partition implements Cloneable, Serializable {
 	private void init(int[] newElements, int noOfPartitions) {
 		LogService.getGlobal().log("Create new partition with " + newElements.length + " elements and " + noOfPartitions + " partitions.", LogService.STATUS);
 		partitionSizes = new int[noOfPartitions];
+		lastElementIndex = new int[noOfPartitions];
 		elements = newElements;
-		for (int i = 0; i < elements.length; i++)
-			if (elements[i] >= 0)
+		for (int i = 0; i < elements.length; i++) {
+			if (elements[i] >= 0) {
 				partitionSizes[elements[i]]++;
+				lastElementIndex[elements[i]] = i;
+			}
+		}
 
+		// select all partitions
 		mask = new boolean[noOfPartitions];
 		for (int i = 0; i < mask.length; i++)
 			mask[i] = true;
+		
 		recalculateTableIndices();
 	}
 
@@ -156,6 +168,19 @@ public class Partition implements Cloneable, Serializable {
         }
         
         return hc; 
+    }
+    
+    /** Returns true if the last possible index stored in lastElementIndex for all currently selected partitions is
+     *  not yet reached. Might be used to prune iterations (especially useful for linear partitions). */
+    public boolean hasNext(int index) {
+    	for (int p = 0; p < mask.length; p++) {
+    		if (mask[p]) {
+    			if (index <= lastElementIndex[p]) {
+    				return true;
+    			}
+    		}
+    	}
+    	return false;
     }
     
 	/** Clears the selection, i.e. deselects all subsets. */

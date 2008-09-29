@@ -55,15 +55,18 @@ import com.rapidminer.gui.dialog.InitialSettingsDialog;
 import com.rapidminer.gui.dialog.ResultHistory;
 import com.rapidminer.gui.look.RapidLookAndFeel;
 import com.rapidminer.gui.look.fc.BookmarkIO;
-import com.rapidminer.gui.tools.CheckForUpdatesThread;
+import com.rapidminer.gui.tools.CommunityUpdateManager;
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.gui.tools.UpdateManager;
 import com.rapidminer.gui.tools.VersionNumber;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
+import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.plugin.Plugin;
 
 
 /**
@@ -71,22 +74,38 @@ import com.rapidminer.tools.Tools;
  * {@link MainFrame} and some other GUI relevant informations and methods.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: RapidMinerGUI.java,v 1.34 2008/05/09 19:23:23 ingomierswa Exp $
+ * @version $Id: RapidMinerGUI.java,v 1.43 2008/09/15 09:31:56 ingomierswa Exp $
  */
 public class RapidMinerGUI extends RapidMiner {
 
     public static final String PROPERTY_GEOMETRY_X                      = "rapidminer.gui.geometry.x";
+    
     public static final String PROPERTY_GEOMETRY_Y                      = "rapidminer.gui.geometry.y";
+    
     public static final String PROPERTY_GEOMETRY_WIDTH                  = "rapidminer.gui.geometry.width";
+    
     public static final String PROPERTY_GEOMETRY_HEIGHT                 = "rapidminer.gui.geometry.height";
+    
     public static final String PROPERTY_GEOMETRY_DIVIDER_MAIN           = "rapidminer.gui.geometry.divider.main";
+    
     public static final String PROPERTY_GEOMETRY_DIVIDER_EDITOR         = "rapidminer.gui.geometry.divider.editor";;
+    
     public static final String PROPERTY_GEOMETRY_DIVIDER_LOGGING        = "rapidminer.gui.geometry.divider.logging";
+    
     public static final String PROPERTY_GEOMETRY_DIVIDER_GROUPSELECTION = "rapidminer.gui.geometry.divider.groupselection";
+    
     public static final String PROPERTY_EXPERT_MODE                     = "rapidminer.gui.expertmode";
             
+    
+    // --- Properties ---
+    
 	public static final String PROPERTY_RAPIDMINER_GUI_UPDATE_CHECK  = "rapidminer.gui.update.check";
+	
 	public static final String PROPERTY_RAPIDMINER_GUI_LOOK_AND_FEEL = "rapidminer.gui.look";
+	
+	public static final String PROPERTY_RAPIDMINER_GUI_MAX_STATISTICS_ROWS = "rapidminer.gui.max_statistics_rows";
+
+	public static final String PROPERTY_RAPIDMINER_GUI_MAX_SORTABLE_ROWS = "rapidminer.gui.max_sortable_rows";
 	
 	public static final String[] LOOK_AND_FEELS = {
 		"modern",
@@ -99,8 +118,11 @@ public class RapidMinerGUI extends RapidMiner {
 	static {
 		RapidMiner.registerRapidMinerProperty(new ParameterTypeBoolean(PROPERTY_RAPIDMINER_GUI_UPDATE_CHECK, "Check for new RapidMiner versions at start up time?", true)); 
 		RapidMiner.registerRapidMinerProperty(new ParameterTypeCategory(PROPERTY_RAPIDMINER_GUI_LOOK_AND_FEEL, "Indicates which look and feel should be used (you have to restart RapidMiner in order to see changes).", LOOK_AND_FEELS, LOOK_AND_FEEL_MODERN));
+		RapidMiner.registerRapidMinerProperty(new ParameterTypeInt(PROPERTY_RAPIDMINER_GUI_MAX_STATISTICS_ROWS, "Indicates the maximum number of rows for the automatic calculation of statistics and other time intensive data viewing actions.", 1, Integer.MAX_VALUE, 100000));
+		RapidMiner.registerRapidMinerProperty(new ParameterTypeInt(PROPERTY_RAPIDMINER_GUI_MAX_SORTABLE_ROWS, "Indicates the maximum number of rows for sortable tables.", 1, Integer.MAX_VALUE, 100000));
 	}
 
+	
 	private static final int NUMBER_OF_RECENT_FILES = 8;
 
 	private static MainFrame mainFrame;
@@ -108,8 +130,6 @@ public class RapidMinerGUI extends RapidMiner {
 	private static LinkedList<File> recentFiles = new LinkedList<File>();
 
 	private static ResultHistory resultHistory = new ResultHistory();
-	
-	private static CheckForUpdatesThread updateCheckThread = null;
 	
 	/**
 	 * This thread listens for System shutdown and cleans up after shutdown.
@@ -123,6 +143,8 @@ public class RapidMinerGUI extends RapidMiner {
 		}
 	}
 
+	private static UpdateManager updateManager = new CommunityUpdateManager();
+
 	public void run(File file) throws Exception {		
 		// check if resources were copied
 		URL logoURL = Tools.getResource("rapidminer_logo.png");
@@ -130,12 +152,12 @@ public class RapidMinerGUI extends RapidMiner {
 			System.err.println("ERROR: cannot find resources. Probably the ant target 'copy-resources' must be performed!");
 			RapidMiner.quit(1);
 		}
-			
+
 		RapidMiner.showSplash();
 		
 		RapidMiner.splashMessage("Basic Initialization");
 		RapidMiner.init();
-		
+
 	    // set locale fix to US
 	    RapidMiner.splashMessage("Using US Local");
 	    Locale.setDefault(Locale.US);
@@ -161,12 +183,18 @@ public class RapidMinerGUI extends RapidMiner {
 		RapidMiner.splashMessage("Loading GUI Properties");
 		loadGUIProperties(mainFrame);
 		
+		RapidMiner.splashMessage("Initialize Plugin GUI");
+		Plugin.initPluginGuis(mainFrame);
+		
 		RapidMiner.splashMessage("Showing Frame");
 		mainFrame.setVisible(true);
 
 		RapidMiner.splashMessage("Initialize Process Logging");
         mainFrame.getProcess().getLog().initGUI();
         
+        RapidMiner.splashMessage("Initialize Checks");
+		Plugin.initFinalChecks();
+		
 		RapidMiner.splashMessage("Ready.");
 		
 		RapidMiner.hideSplash();
@@ -180,6 +208,7 @@ public class RapidMinerGUI extends RapidMiner {
 		}
 
 		// check for updates
+		Plugin.initPluginUpdateManager();
 		String updateProperty = System.getProperty(PROPERTY_RAPIDMINER_GUI_UPDATE_CHECK);
 		if (Tools.booleanValue(updateProperty, true)) {
 			boolean check = true;
@@ -265,7 +294,7 @@ public class RapidMinerGUI extends RapidMiner {
 	private void performInitialSettings() {
 		boolean firstStart = false;
 		VersionNumber lastVersionNumber = null;
-		VersionNumber currentVersionNumber = new VersionNumber(getVersion());
+		VersionNumber currentVersionNumber = new VersionNumber(getLongVersion());
 		
 		File lastVersionFile = new File(ParameterService.getUserRapidMinerDir(), "lastversion");
 		if (!lastVersionFile.exists()) {
@@ -326,8 +355,11 @@ public class RapidMinerGUI extends RapidMiner {
 			}
 		}
 		
-		InitialSettingsDialog dialog = new InitialSettingsDialog(getSplashScreenFrame(), oldWorkspace, "rm_workspace", null, lookAndFeel, true);
+		InitialSettingsDialog dialog = new InitialSettingsDialog(getSplashScreenFrame(), oldWorkspace, "rm_workspace", null, ParameterService.getRapidMinerHome(), lookAndFeel, true);
 		dialog.setVisible(true);
+		if (!dialog.isOk()) {
+			SwingTools.showVerySimpleErrorMessage("RapidMiner needs a workspace directory in order to properly work.\nUsing default, you can change the workspace in the file menu.");
+		}
 		String newPath = dialog.getWorkspacePath();
 		File newWorkspace = new File(newPath);
 		ParameterService.setUserWorkspace(newWorkspace);
@@ -340,7 +372,7 @@ public class RapidMinerGUI extends RapidMiner {
 		PrintWriter out = null;
 		try {
 			out = new PrintWriter(new FileWriter(versionFile));
-			out.println(getVersion());
+			out.println(getLongVersion());
 		} catch (IOException e) {
 			LogService.getGlobal().logWarning("Cannot write current version into property file.");
 		} finally {
@@ -472,8 +504,7 @@ public class RapidMinerGUI extends RapidMiner {
 	}
 
 	public static void checkForUpdates(boolean showFailureDialog) {
-		updateCheckThread = new CheckForUpdatesThread(getMainFrame(), showFailureDialog);
-		updateCheckThread.start();
+		updateManager.checkForUpdates(getMainFrame(), showFailureDialog);
 	}
 	
 	private static void saveGUIProperties() {
@@ -575,5 +606,9 @@ public class RapidMinerGUI extends RapidMiner {
 		}
 		RapidMiner.setInputHandler(new GUIInputHandler());
 		new RapidMinerGUI().run(file);
+	}
+	
+	public static void registerUpdateManager(UpdateManager manager) {
+		RapidMinerGUI.updateManager = manager;
 	}
 }

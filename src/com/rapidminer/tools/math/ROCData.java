@@ -32,7 +32,7 @@ import com.rapidminer.tools.Tools;
  * This container holds all ROC data points for a single ROC curve.
  * 
  * @author Ingo Mierswa
- * @version $Id: ROCData.java,v 1.5 2008/05/09 19:23:02 ingomierswa Exp $
+ * @version $Id: ROCData.java,v 1.6 2008/05/30 22:04:02 ingomierswa Exp $
  */
 public class ROCData implements Iterable<ROCPoint> {
 
@@ -80,6 +80,28 @@ public class ROCData implements Iterable<ROCPoint> {
             last = p;
         }
         return getTotalPositives();
+    }
+    
+    public double getInterpolatedThreshold(double d) {
+        if (Tools.isZero(d))
+            return 1.0d;
+        
+        if (Tools.isGreaterEqual(d, getTotalPositives()))
+            return 0.0d;
+        
+        ROCPoint last = null;
+        for (ROCPoint p : this) {
+            double fpDivN = p.getFalsePositives() / getTotalNegatives();
+            if (Tools.isGreater(fpDivN, d)) {
+                if (last == null) {
+                    return 1.0d;
+                } else {
+                    return last.getConfidence();
+                }
+            }
+            last = p;
+        }
+        return 0.0d;
     }
     
     public Iterator<ROCPoint> iterator() {

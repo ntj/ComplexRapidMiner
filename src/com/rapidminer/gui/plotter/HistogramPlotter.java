@@ -27,15 +27,19 @@ import java.awt.Component;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 import java.text.DecimalFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 import javax.swing.Icon;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JSlider;
@@ -44,6 +48,7 @@ import javax.swing.event.ChangeListener;
 
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableRow;
+import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.math.MathFunctions;
 
 
@@ -125,6 +130,11 @@ public class HistogramPlotter extends PlotterAdapter {
 	
 	protected int currentXPlotterColumn = -1;
 	
+	private int jitterAmount = 0;
+
+	private boolean logScale = false;
+	
+	private boolean absolute = false;
 	
 	public HistogramPlotter() {
 		super();
@@ -170,9 +180,35 @@ public class HistogramPlotter extends PlotterAdapter {
                 }
             });
             return binNumberSlider;
+        } else if (index == 2) {
+        	final JCheckBox logScaleBox = new JCheckBox("Log Scale");
+        	logScaleBox.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					setLogScale(logScaleBox.isSelected());
+				}
+        	});
+        	return logScaleBox;
         } else {
             return null;
         }
+    }
+    
+    public void setLogScale(boolean logScale) {
+    	this.logScale = logScale;
+    	repaint();
+    }
+    
+    public boolean isLogScale() {
+    	return this.logScale;
+    }
+    
+    public void setAbsolute(boolean absolute) {
+    	this.absolute = absolute;
+    	repaint();
+    }
+    
+    public boolean isSupportingAbsoluteValues() {
+    	return true;
     }
     
 	/** Indicates how many bins should be used for the distribution plot. */
@@ -210,6 +246,17 @@ public class HistogramPlotter extends PlotterAdapter {
 	public void setKey(String key) {
 		this.key = key;
 	}
+
+	/** Returns true. */
+	public boolean canHandleJitter() {
+		return true;
+	}
+	
+	/** Sets the level of jitter and initiates a repaint. */
+	public void setJitter(int jitter) {
+		this.jitterAmount = jitter;
+		repaint();
+	}
 	
 	public void prepareData() {		
 		this.minX = Double.POSITIVE_INFINITY;
@@ -240,6 +287,8 @@ public class HistogramPlotter extends PlotterAdapter {
 					if (getPlotColumn(d)) {
 						currentXPlotterColumn = d;
 						double value = row.getValue(d);
+						if (absolute)
+							value = Math.abs(value);
 						if (!Double.isNaN(value)) {
 							minX[d] = MathFunctions.robustMin(value, minX[d]);
 							this.minX = MathFunctions.robustMin(value, this.minX);
@@ -263,12 +312,35 @@ public class HistogramPlotter extends PlotterAdapter {
 				for (int d = 0; d < row.getNumberOfValues(); d++) {
 					if (getPlotColumn(d)) {
 						Bins bins = allPlots.get(d); 
-						bins.addPoint(row.getValue(d));
+						double value = row.getValue(d);
+						if (absolute)
+							value = Math.abs(value);
+						bins.addPoint(value);
 						this.maxY = Math.max(bins.getMaxCounter(), this.maxY);
 					}
 				}
 			}
-		}	
+		}
+		
+		// rescale counters for logscale?
+		if (isLogScale()) {
+			this.maxY = 0.0d;
+			for (Bins bins : allPlots.values()) {
+				for (Bin bin : bins) {
+					double counter = bin.getCounter();
+					if (counter > 1.0d) {
+						double newValue = Math.log10(counter); 
+						bin.setCounter(newValue);
+						this.maxY = Math.max(newValue, this.maxY);
+					} else if (counter == 1) {
+						// hack in order to prevent 1 counters from vanishing since log(1) = 0
+						bin.setCounter(0.2d);
+						this.maxY = Math.max(0.2d, this.maxY);
+					}
+				}
+			}
+		}
+		
 		this.minY = 0;
 		
 		if (dataTable.getNumberOfRows() == 0) {
@@ -314,7 +386,7 @@ public class HistogramPlotter extends PlotterAdapter {
 					g.draw(rectangle);
 				}
 			}
-			offset += 2;
+			offset += this.jitterAmount;
 		}
 	}
 	
@@ -342,6 +414,15 @@ public class HistogramPlotter extends PlotterAdapter {
 			int index = (int)Math.round(x);
 			if ((index >= 0) && (index < dataTable.getNumberOfValues(currentXPlotterColumn)))
 				label = dataTable.mapIndex(currentXPlotterColumn, index);
+		} else if ((getNumberOfPlots(dataTable) == 1) && (dataTable.isDate(currentXPlotterColumn))) {
+			long index = (long)Math.round(x);
+			label = Tools.formatDate(new Date(index));
+		} else if ((getNumberOfPlots(dataTable) == 1) && (dataTable.isTime(currentXPlotterColumn))) {
+			long index = (long)Math.round(x);
+			label = Tools.formatTime(new Date(index));
+		} else if ((getNumberOfPlots(dataTable) == 1) && (dataTable.isDateTime(currentXPlotterColumn))) {
+			long index = (long)Math.round(x);
+			label = Tools.formatDateTime(new Date(index));
 		} else {
 			label = format.format(x);	
 		}

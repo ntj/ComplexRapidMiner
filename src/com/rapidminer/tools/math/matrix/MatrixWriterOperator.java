@@ -69,7 +69,7 @@ import com.rapidminer.parameter.ParameterTypeFile;
  * </code> The indexes for the y dimension start with zero. All entries not mentioned are assumed to be zero.
  * 
  * @author Michael Wurst
- * @version $Id: MatrixWriterOperator.java,v 1.4 2008/05/09 19:23:23 ingomierswa Exp $
+ * @version $Id: MatrixWriterOperator.java,v 1.8 2008/09/12 10:30:02 tobiasmalbrecht Exp $
  * 
  */
 public class MatrixWriterOperator extends Operator {
@@ -93,15 +93,14 @@ public class MatrixWriterOperator extends Operator {
 
     }
 
-    public Class[] getInputClasses() {
+    public Class<?>[] getInputClasses() {
         return new Class[] { ExtendedMatrix.class };
     }
 
-    public Class[] getOutputClasses() {
+    public Class<?>[] getOutputClasses() {
         return new Class[0];
     }
 
-    @SuppressWarnings("unchecked")
     public IOObject[] apply() throws OperatorException {
     	/*
         SimpleXMLMatrixDAO matrixWriter = new SimpleXMLMatrixDAO();

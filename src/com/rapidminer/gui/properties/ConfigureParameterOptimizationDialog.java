@@ -81,7 +81,7 @@ import com.rapidminer.tools.Tools;
  * ranges for optimization purposes.
  * 
  * @author Tobias Malbrecht
- * @version $Id: ConfigureParameterOptimizationDialog.java,v 1.5 2008/05/19 10:14:27 tobiasmalbrecht Exp $
+ * @version $Id: ConfigureParameterOptimizationDialog.java,v 1.6 2008/08/07 09:04:36 tobiasmalbrecht Exp $
  */
 public class ConfigureParameterOptimizationDialog extends JDialog {
 	
@@ -658,6 +658,15 @@ public class ConfigureParameterOptimizationDialog extends JDialog {
 			}
 			if (!parameterValuesMap.containsKey(operator.getName() + "." + parameter.getKey())) {
 				parametersListModel.addElement(parameter.getKey(), parameter.getDescription());
+				if (parameter.isNumerical() ||
+					parameter instanceof ParameterTypeCategory ||
+					parameter instanceof ParameterTypeStringCategory ||
+					parameter instanceof ParameterTypeString ||
+					parameter instanceof ParameterTypeBoolean ||
+					parameter instanceof ParameterTypeFile) {
+				} else {
+					parametersListModel.setEnabled(parameter.getKey(), false);
+				}
 			}
 		}
 	}
@@ -674,10 +683,10 @@ public class ConfigureParameterOptimizationDialog extends JDialog {
 				parameterValue = createNumericalParameterValues(operator, type);
 			} else {
 				if (type instanceof ParameterTypeCategory ||
-					type instanceof ParameterTypeStringCategory ||
-					type instanceof ParameterTypeString ||
-					type instanceof ParameterTypeBoolean ||
-					type instanceof ParameterTypeFile) {
+						type instanceof ParameterTypeStringCategory ||
+						type instanceof ParameterTypeString ||
+						type instanceof ParameterTypeBoolean ||
+						type instanceof ParameterTypeFile) {
 					parameterValue = new ParameterValueList(operator, type, getDefaultListParameterValues(type));
 				}
 			}

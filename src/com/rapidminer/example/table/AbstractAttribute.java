@@ -40,9 +40,11 @@ import com.rapidminer.tools.Ontology;
  * Most methods of {@link Attribute} are already implemented here.
  *  
  * @author Ingo Mierswa
- * @version $Id: AbstractAttribute.java,v 1.14 2008/05/09 19:22:45 ingomierswa Exp $
+ * @version $Id: AbstractAttribute.java,v 1.15 2008/07/31 17:43:41 ingomierswa Exp $
  */
 public abstract class AbstractAttribute implements Attribute {
+
+	private static final long serialVersionUID = -9167755945651618227L;
 
 	/** The basic information about the attribute. Will only be shallowly cloned. */
 	private AttributeDescription attributeDescription;

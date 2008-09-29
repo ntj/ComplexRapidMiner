@@ -41,6 +41,8 @@ public class ParameterTypeStringCategory extends ParameterTypeSingle {
 
 	private String[] categories = new String[0];
 
+	private boolean editable = true;
+	
 	public ParameterTypeStringCategory(String key, String description, String[] categories) {
 		this(key, description, categories, null);
 	}
@@ -55,10 +57,18 @@ public class ParameterTypeStringCategory extends ParameterTypeSingle {
 		if (defaultValue == null) {
 			return false;
 		} else {
-			return true;
+			return super.isOptional();
 		}
 	}
 
+	public void setEditable(boolean editable) {
+		this.editable = editable;
+	}
+	
+	public boolean isEditable() {
+		return editable;
+	}
+	
 	public Object getDefaultValue() {
 		return defaultValue;
 	}

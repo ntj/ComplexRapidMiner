@@ -25,6 +25,7 @@ package com.rapidminer.gui.plotter;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -35,7 +36,11 @@ import java.awt.Stroke;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.swing.Icon;
 import javax.swing.JComponent;
@@ -46,6 +51,10 @@ import com.rapidminer.datatable.DataTableRow;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.plotter.conditions.BasicPlotterCondition;
 import com.rapidminer.gui.plotter.conditions.PlotterCondition;
+import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypeBoolean;
+import com.rapidminer.parameter.ParameterTypeInt;
+import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.math.MathFunctions;
@@ -62,7 +71,7 @@ import com.rapidminer.tools.math.MathFunctions;
  *  methods might include the methods for plot column and axis column handling.
  *  
  *  @author Ingo Mierswa
- *  @version $Id: PlotterAdapter.java,v 1.14 2008/05/09 19:22:51 ingomierswa Exp $
+ *  @version $Id: PlotterAdapter.java,v 1.22 2008/07/25 15:30:31 ingomierswa Exp $
  */
 public class PlotterAdapter extends JPanel implements Plotter {
 	
@@ -305,6 +314,18 @@ public class PlotterAdapter extends JPanel implements Plotter {
 	
 	// ===============================================================================================
     
+	public String getPlotterName() {
+		return Tools.classNameWOPackage(getClass());
+	}
+	
+	/** This default implementation does nothing. Subclasses might implement this method to enforce plotter
+	 *  generation for reporting / file writing. */
+	public void forcePlotGeneration() {}
+	
+	/** This default implementation does nothing. Subclasses might use this hint that graphical updates should not be performed until all
+	 *  settings are made. */
+	public void stopUpdates(boolean value) {}
+	
 	private static void setMinLegendColor(Color minColor) {
 		MIN_LEGEND_COLOR = minColor;
 	}
@@ -335,6 +356,8 @@ public class PlotterAdapter extends JPanel implements Plotter {
 	/** Returns false. Subclasses should overwrite this method if they want to allow jittering. 
 	 *  Subclasses overriding this method should also override {@link #setJitter(int)}. */
 	public boolean canHandleJitter() { return false; }
+	
+	public boolean canHandleContinousJittering() { return true; }
 	
 	/** Returns false. Subclasses should overwrite this method if they want to allow zooming. 
 	 *  Subclasses overriding this method should also override {@link #setZooming(int)}.*/
@@ -463,6 +486,23 @@ public class PlotterAdapter extends JPanel implements Plotter {
 	
 	/** Sets if the given axis should be plotted with log scale. The default implementation does nothing. */
 	public void setLogScale(int axis, boolean logScale) {}
+	
+	/** Returns false. */
+	public boolean isSupportingAbsoluteValues() {
+		return false;
+	}
+
+	/** Returns false. */
+	public boolean isSupportingSorting() {
+		return false;
+	}
+
+	/** Does nothing. */
+	public void setAbsolute(boolean absolute) {}
+
+	/** Does nothing. */
+	public void setSorting(boolean sorting) {}
+	
 	
 	/** Invokes {@link #repaint()}. Will be invoked since all plotters are {@link com.rapidminer.datatable.DataTableListener}s. */
 	public final void dataTableUpdated(DataTable source) {
@@ -631,6 +671,8 @@ public class PlotterAdapter extends JPanel implements Plotter {
                 LogService.getGlobal().logWarning("Plotter: cannot draw nominal legend since number of different values is too high (more than "+maxNominalValuesString+")! Using numerical legend instead.");
 				drawNumericalLegend(graphics, table, legendColumn, alpha);				
 			}
+		} else if ((table.isDate(legendColumn)) || (table.isTime(legendColumn)) || (table.isDateTime(legendColumn))) {
+			drawDateLegend(graphics, table, legendColumn, alpha);
 		} else {
 			drawNumericalLegend(graphics, table, legendColumn, alpha);
 		}
@@ -659,6 +701,36 @@ public class PlotterAdapter extends JPanel implements Plotter {
 			currentX += stringBounds.getWidth() + 15;
 		}
 	}
+
+	private void drawDateLegend(Graphics graphics, DataTable table, int legendColumn, int alpha) {
+		double min = Double.POSITIVE_INFINITY;
+		double max = Double.NEGATIVE_INFINITY;
+		synchronized (table) {
+			Iterator<DataTableRow> i = table.iterator();
+			while (i.hasNext()) {
+				DataTableRow row = i.next();
+				double colorValue = row.getValue(legendColumn);
+				min = MathFunctions.robustMin(min, colorValue);
+				max = MathFunctions.robustMax(max, colorValue);
+			}
+		}
+		String minColorString = null;
+		String maxColorString = null;
+		if (table.isDate(legendColumn)) {
+			minColorString = Tools.formatDate(new Date((long)min));
+			maxColorString = Tools.formatDate(new Date((long)max));
+		} else if (table.isTime(legendColumn)) {
+			minColorString = Tools.formatTime(new Date((long)min));
+			maxColorString = Tools.formatTime(new Date((long)max));
+		} else if (table.isDateTime(legendColumn)) {
+			minColorString = Tools.formatDateTime(new Date((long)min));
+			maxColorString = Tools.formatDateTime(new Date((long)max));
+		} else {
+			minColorString = Tools.formatNumber(min);
+			maxColorString = Tools.formatNumber(max);
+		}
+		drawNumericalLegend(graphics, minColorString, maxColorString, alpha);		
+	}
 	
 	private void drawNumericalLegend(Graphics graphics, DataTable table, int legendColumn, int alpha) {
 		double min = Double.POSITIVE_INFINITY;
@@ -680,6 +752,11 @@ public class PlotterAdapter extends JPanel implements Plotter {
 		// key or legend
 		String minColorString = Tools.formatNumber(minColor);
 		String maxColorString = Tools.formatNumber(maxColor);
+		drawNumericalLegend(graphics, minColorString, maxColorString, alpha);
+	}
+	
+	/** This method can be used to draw a legend on the given graphics context. */
+	private void drawNumericalLegend(Graphics graphics, String minColorString, String maxColorString, int alpha) {
 		Graphics2D g = (Graphics2D)graphics.create();
 		Rectangle2D minStringBounds = LABEL_FONT.getStringBounds(minColorString, g.getFontRenderContext());
 		Rectangle2D maxStringBounds = LABEL_FONT.getStringBounds(maxColorString, g.getFontRenderContext());
@@ -809,16 +886,179 @@ public class PlotterAdapter extends JPanel implements Plotter {
     		newSpace.fill(weightRect);
     	}
     }
+    
+    public Dimension getPreferredSize() {
+    	return new Dimension(800, 600);
+    }
 
+    public void prepareRendering() {
+    	forcePlotGeneration();
+    }
+    
 	public int getRenderHeight(int preferredHeight) {
-		return getHeight();
+		return Math.max(getPreferredSize().height, preferredHeight);
 	}
 
 	public int getRenderWidth(int preferredWidth) {
-		return getWidth();
+		return Math.max(getPreferredSize().width, preferredWidth);
 	}
 
 	public void render(Graphics graphics, int width, int height) {
-		paint(graphics);
+		setSize(width, height);
+		getPlotter().paint(graphics);
+	}
+	
+	// =======================================================
+	//   Parameter Handling
+	// =======================================================
+	
+	private String transformParameterName(String name) {
+		String result = name.toLowerCase();
+		result = result.replaceAll("\\W", "_");
+		return result;
+	}
+	
+	public void setParameter(DataTable dataTable, String key, Object value) {
+		// plotting axes?
+		String compareKey = null;
+		for (int i = 0; i < getNumberOfAxes(); i++) {
+			String axisName = getAxisName(i);
+			compareKey = transformParameterName(getPlotterName()) + "_axis_" + transformParameterName(axisName);
+			if (compareKey.equals(key)) {
+				if (value != null) {
+					int columnIndex = dataTable.getColumnIndex(value.toString());
+					if (columnIndex >= 0) {
+						setAxis(i, columnIndex);
+					}
+				}
+				return;
+			}
+
+			if (isSupportingLogScale(i)) {
+				compareKey = transformParameterName(getPlotterName()) + "_axis_" + transformParameterName(axisName) + "_log_scale";
+				if (compareKey.equals(key)) {
+					int columnIndex = dataTable.getColumnIndex(value.toString());
+					if (columnIndex >= 0) {
+						setLogScale(i, Tools.booleanValue(value.toString(), false));
+					}
+					return;
+				}					
+			}
+		}
+		
+		// plotting dimensions?
+		switch (getValuePlotSelectionType()) {
+			case Plotter.MULTIPLE_SELECTION:
+				compareKey = transformParameterName(getPlotterName()) + "_plot_columns";
+				if (compareKey.equals(key)) {
+					String[] names = value.toString().split(",");
+					for (String n : names) {
+						String name = n.trim();
+						int columnIndex = dataTable.getColumnIndex(name);
+						if (columnIndex >= 0) {
+							setPlotColumn(columnIndex, true);
+						}
+					}
+					return;
+				}	
+				break;
+			case Plotter.SINGLE_SELECTION:
+				compareKey = transformParameterName(getPlotterName()) + "_plot_column";
+				if (compareKey.equals(key)) {
+					int columnIndex = dataTable.getColumnIndex(value.toString());
+					if (columnIndex >= 0) {
+						setPlotColumn(columnIndex, true);
+					}
+					return;
+				}	
+				break;
+			case Plotter.NO_SELECTION:
+				// do nothing
+				break;
+		}
+		
+		// zooming?
+		if (canHandleZooming()) {
+			compareKey = transformParameterName(getPlotterName()) + "_zoom_factor";
+			if (compareKey.equals(key)) {
+				int zoomFactor = Integer.valueOf(value.toString());
+				setZooming(zoomFactor);
+				return;
+			}	
+		}
+		
+		// jitter?
+		if (canHandleJitter()) {
+			compareKey = transformParameterName(getPlotterName()) + "_jitter_amount";
+			if (compareKey.equals(key)) {
+				int jitterAmount = Integer.valueOf(value.toString());
+				setJitter(jitterAmount);
+				return;
+			}	
+		}
+		
+		// try additional parameter
+		if (value instanceof String) {
+			// remove plotter name
+			String plotterName = transformParameterName(getPlotterName()) + "_";
+			if (key.startsWith(plotterName)) {
+				String actualKey = key.substring(plotterName.length());
+				setAdditionalParameter(actualKey, (String)value);	
+			}
+			
+		}
+	}
+	
+	/** The default implementation delivers an empty set. */
+	public Collection<String> getAdditionalParameterKeys() {
+		return new LinkedList<String>();
+	}
+	
+	/** The default implementation does nothing. */
+	public void setAdditionalParameter(String key, String value) {}
+	
+	public List<ParameterType> getParameterTypes() {
+		List<ParameterType> types = new LinkedList<ParameterType>();
+		
+		// plotting axes
+		for (int i = 0; i < getNumberOfAxes(); i++) {
+			String axisName = getAxisName(i);
+			types.add(new ParameterTypeString(transformParameterName(getPlotterName()) + "_axis_" + transformParameterName(axisName), "The name of the column which should be used for this axis", true));
+
+			if (isSupportingLogScale(i)) {
+				types.add(new ParameterTypeBoolean(transformParameterName(getPlotterName()) + "_axis_" + transformParameterName(axisName) + "_log_scale", "Indicates if this axis should be plotter with a log scale.", false));
+			}
+		}
+
+		// plotting dimensions
+		switch (getValuePlotSelectionType()) {
+			case Plotter.MULTIPLE_SELECTION:
+				types.add(new ParameterTypeString(transformParameterName(getPlotterName()) + "_plot_columns", "A comma separated list of the names of the columns which should be used for plotting.", true));
+				break;
+			case Plotter.SINGLE_SELECTION:
+				types.add(new ParameterTypeString(transformParameterName(getPlotterName()) + "_plot_column", "The name of the column which should be used for plotting.", true));
+				break;
+			case Plotter.NO_SELECTION:
+				// do nothing
+				break;
+		}
+        
+		// zooming
+		if (canHandleZooming()) {
+			types.add(new ParameterTypeInt(transformParameterName(getPlotterName()) + "_zoom_factor", "The zoom factor for this plotter.", 1, 100, getInitialZoomFactor()));
+		}
+		
+		// jitter
+		if (canHandleJitter()) {
+			types.add(new ParameterTypeInt(transformParameterName(getPlotterName()) + "_jitter_amount", "The jittering amount for this plotter.", 0, 100, 0));
+		}
+		
+		// additional parameters
+		Collection<String> additionalKeys = getAdditionalParameterKeys();
+		for (String key : additionalKeys) {
+			types.add(new ParameterTypeString(transformParameterName(getPlotterName()) + "_" + key, "The value of the additional parameter '" + key + "'.", true));
+		}
+		
+		return types;
 	}
 }

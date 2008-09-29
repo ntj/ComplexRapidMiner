@@ -31,15 +31,15 @@ import javax.swing.JScrollPane;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ExtendedJTable;
 import com.rapidminer.operator.similarity.SimilarityMeasure;
-import com.rapidminer.tools.Tableable;
+import com.rapidminer.report.Tableable;
 
 /**
  * The table for the similarity viewer.
  *
  * @author Ingo Mierswa
- * @version $Id: SimilarityTable.java,v 1.4 2008/05/09 19:23:01 ingomierswa Exp $
+ * @version $Id: SimilarityTable.java,v 1.6 2008/07/07 07:06:37 ingomierswa Exp $
  */
-public class SimilarityTable extends JPanel implements Tableable{
+public class SimilarityTable extends JPanel implements Tableable {
 
 	private static final long serialVersionUID = 8251521865453407142L;
 
@@ -63,6 +63,10 @@ public class SimilarityTable extends JPanel implements Tableable{
 		add(tablePane);
 	}
 
+    public String getColumnName(int columnIndex) {
+    	return similarityTable.getColumnName(columnIndex);
+    }
+    
 	public String getCell(int row, int column) {
 		return similarityTable.getCell(row, column);
 	}

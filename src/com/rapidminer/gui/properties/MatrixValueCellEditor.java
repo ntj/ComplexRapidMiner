@@ -41,7 +41,7 @@ import com.rapidminer.tools.math.StringToMatrixConverter;
  * 
  * @see com.rapidminer.gui.properties.MatrixPropertyDialog
  * @author Helge Homburg
- * @version $Id: MatrixValueCellEditor.java,v 1.5 2008/05/09 19:22:45 ingomierswa Exp $
+ * @version $Id: MatrixValueCellEditor.java,v 1.6 2008/07/13 11:00:56 ingomierswa Exp $
  */
 public class MatrixValueCellEditor extends AbstractCellEditor implements PropertyValueCellEditor {
 
@@ -52,12 +52,9 @@ public class MatrixValueCellEditor extends AbstractCellEditor implements Propert
 	private JButton button = new JButton("Edit Matrix...");
 
 	private double[][] matrix;
-	
-	private boolean isSquare = false;
 		
 	public MatrixValueCellEditor(ParameterTypeMatrix type) {
         this.type = type;
-        this.isSquare = type.getStatus();
 		button.setMargin(new java.awt.Insets(0, 0, 0, 0));
 		button.setToolTipText(type.getDescription());
 		setButtonText();
@@ -66,7 +63,7 @@ public class MatrixValueCellEditor extends AbstractCellEditor implements Propert
     public void setOperator(final Operator operator) {
         button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                MatrixPropertyDialog dialog = new MatrixPropertyDialog(type, matrix, operator, isSquare);
+                MatrixPropertyDialog dialog = new MatrixPropertyDialog(type, matrix, operator);
                 dialog.setVisible(true);
                 if (dialog.isOk()) {
                     matrix = dialog.getMatrix();

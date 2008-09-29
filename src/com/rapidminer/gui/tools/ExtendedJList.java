@@ -22,6 +22,7 @@
  */
 package com.rapidminer.gui.tools;
 
+import java.awt.Dimension;
 import java.awt.event.MouseEvent;
 
 import javax.swing.JList;
@@ -31,19 +32,41 @@ import javax.swing.JList;
  * Extended JList which provides tool tips in combination with
  * an {@link ExtendedListModel}.
  * 
- * @author Tobias Malbrecht
- * @version $Id: ExtendedJList.java,v 1.2 2008/05/09 19:22:58 ingomierswa Exp $
+ * @author Tobias Malbrecht, Ingo Mierswa
+ * @version $Id: ExtendedJList.java,v 1.4 2008/08/21 13:17:07 ingomierswa Exp $
  */
 public class ExtendedJList extends JList {
+	
 	public static final long serialVersionUID = 9032182018402L;
 	
+	private int preferredWidth = -1;
+	
 	public ExtendedJList(ExtendedListModel model) {
+		this(model, -1);
+	}
+
+	public ExtendedJList(ExtendedListModel model, int preferredWidth) {
 		super(model);
+		this.setCellRenderer(new ExtendedListCellRenderer(model));
+		this.preferredWidth = preferredWidth;
 	}
 	
 	/** Returns the tooltip of a list entry. */
 	public String getToolTipText(MouseEvent e) {
 		int index = locationToIndex(e.getPoint());
 		return ((ExtendedListModel)getModel()).getToolTip(index);
+	}
+	
+	public Dimension getPreferredSize() {
+		Dimension dim = super.getPreferredSize();
+		if (this.preferredWidth != -1) {
+			if (preferredWidth < dim.getWidth()) {
+				return new Dimension(preferredWidth, (int)dim.getHeight());
+			} else {
+				return dim;
+			}
+		} else {
+			return dim;
+		}
 	}
 }

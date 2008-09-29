@@ -32,28 +32,47 @@ import javax.swing.DefaultListModel;
  * Maintains a hash map which provides tooltips for list entries.
  * 
  * @author Tobias Malbrecht
- * @version $Id: ExtendedListModel.java,v 1.2 2008/05/09 19:22:58 ingomierswa Exp $
+ * @version $Id: ExtendedListModel.java,v 1.3 2008/08/07 09:03:26 tobiasmalbrecht Exp $
  */
 public class ExtendedListModel extends DefaultListModel {
 	public static final long serialVersionUID = 90320323118402L;
 	
 	private LinkedHashMap<Object, String> toolTipMap;
 	
+	private LinkedHashMap<Object, Boolean> enabledMap;
+	
 	public ExtendedListModel() {
 		super();
 		toolTipMap = new LinkedHashMap<Object, String>();
+		enabledMap = new LinkedHashMap<Object, Boolean>();
 	}
 	
 	/** Adds another list entry and the corresponding tooltip. */
 	public void addElement(Object object, String tooltip) {
 		super.addElement(object);
 		toolTipMap.put(object, tooltip);
+		enabledMap.put(object, true);
 	}
 	
 	/** Removes a list entry. */
 	public boolean removeElement(Object object) {
 		toolTipMap.remove(object);
+		enabledMap.remove(object);
 		return super.removeElement(object);
+	}
+
+	/** Enables or disables element. */
+	public void setEnabled(Object object, boolean enabled) {
+		enabledMap.put(object, enabled);
+	}
+	
+	/** Returns whether element is enabled or not. */
+	public boolean isEnabled(Object object) {
+		if (enabledMap.containsKey(object)) {
+			return enabledMap.get(object);
+		} else {
+			return false;
+		}
 	}
 	
 	/** Returns the tooltip corresponding to a list entry. */

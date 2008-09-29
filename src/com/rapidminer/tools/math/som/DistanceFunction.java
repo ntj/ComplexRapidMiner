@@ -22,6 +22,8 @@
  */
 package com.rapidminer.tools.math.som;
 
+import java.io.Serializable;
+
 /**
  * This interface defines the methods of an distance measure class. 
  * All three methods should return the same distance if equivalent inputs are
@@ -29,9 +31,9 @@ package com.rapidminer.tools.math.som;
  * instead point (0,0) should be neighbour of point (n,n)!
  * 
  * @author Sebastian Land
- * @version $Id: DistanceFunction.java,v 1.3 2008/05/09 19:23:19 ingomierswa Exp $
+ * @version $Id: DistanceFunction.java,v 1.4 2008/06/18 14:28:36 stiefelolm Exp $
  */
-public interface DistanceFunction {
+public interface DistanceFunction extends Serializable {
 	
 	 /**
 	  * This method returns the distance between point1 and point2. 

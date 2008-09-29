@@ -106,7 +106,7 @@ import com.rapidminer.tools.Tools;
  * </pre>
  * 
  * @author Slava Pestov, Ingo Mierswa
- * @version $Id: JEditTextArea.java,v 1.6 2008/05/09 19:22:56 ingomierswa Exp $
+ * @version $Id: JEditTextArea.java,v 1.7 2008/07/31 17:43:41 ingomierswa Exp $
  */
 public class JEditTextArea extends JComponent implements MouseWheelListener {
 
@@ -237,7 +237,6 @@ public class JEditTextArea extends JComponent implements MouseWheelListener {
 	/**
 	 * Returns if this component can be traversed by pressing the Tab key. This returns true.
 	 */
-	@SuppressWarnings("deprecation")
 	public final boolean isManagingFocus() {
 		return true;
 	}

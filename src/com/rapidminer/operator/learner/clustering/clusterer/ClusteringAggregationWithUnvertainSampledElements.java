@@ -1,12 +1,13 @@
 package com.rapidminer.operator.learner.clustering.clusterer;
 
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
-
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.IOContainer;
+import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -15,11 +16,9 @@ import com.rapidminer.operator.learner.clustering.DefaultCluster;
 import com.rapidminer.operator.learner.clustering.FlatClusterModel;
 import com.rapidminer.operator.learner.clustering.FlatCrispClusterModel;
 import com.rapidminer.operator.learner.clustering.IdUtils;
-import com.rapidminer.operator.learner.clustering.clusterer.uncertain.FDBScanClustering;
 import com.rapidminer.operator.uncertain.AbstractPDFSampler;
-import com.rapidminer.operator.uncertain.PDFSampler;
 import com.rapidminer.parameter.ParameterType;
-import com.rapidminer.parameter.Parameters;
+import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.tools.OperatorService;
 
 /**
@@ -34,21 +33,25 @@ import com.rapidminer.tools.OperatorService;
 public class ClusteringAggregationWithUnvertainSampledElements extends
 		AbstractFlatClusterer {
 
+	private Vector<FlatCrispClusterModel> clusteringModels;
+	private AbstractPDFSampler sampler;
+	private IOContainer results;
+	private AbstractClustering clust;
+	private static final String NUM_THREADS = "Numer of cuncurrent threads";
+
 	@Override
 	public List<ParameterType> getParameterTypes() {
-		if(clust==null || sampler==null){
+		if (sampler == null) {
 			loadInternalOperators();
 		}
 		List<ParameterType> params = super.getParameterTypes();
 		params.addAll(clust.getParameterTypes());
 		params.addAll(sampler.getParameterTypes());
-
+		ParameterType param = new ParameterTypeInt(NUM_THREADS,
+				"Specifies how many threads may run concurrently.", 1, 300, 1);
+		params.add(param);
 		return params;
 	}
-
-	private Vector<FlatCrispClusterModel> clusteringModels;
-	private AbstractClustering clust;
-	private AbstractPDFSampler sampler;
 
 	public ClusteringAggregationWithUnvertainSampledElements(
 			OperatorDescription description) {
@@ -58,32 +61,82 @@ public class ClusteringAggregationWithUnvertainSampledElements extends
 
 	private void loadInternalOperators() {
 		try {
-
-			clust = (AbstractClustering) OperatorService
-					.createOperator("DBScanClustering");
 			sampler = (AbstractPDFSampler) OperatorService
 					.createOperator("PDFSampling");
-
+			clust = (AbstractClustering) OperatorService
+				.createOperator("DBScanClustering");
+	
 		} catch (OperatorCreationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
 	public ClusterModel createClusterModel(ExampleSet es)
 			throws OperatorException {
-		clusteringModels = new Vector<FlatCrispClusterModel>();
-		IOContainer ioc = getInput();
-		while (ioc.contains(ClusterModel.class)) {
-			clusteringModels.add(ioc.get(FlatCrispClusterModel.class));
-			ioc.remove(FlatCrispClusterModel.class);
+		if (es == null) {
+			throw new OperatorException("Example set may not be null"
+					+ Thread.currentThread().getName());
 		}
+		// initialize all components
+		sampler.setParameters(getParameters());
+		System.err.println("Starting sampling");
+		IOContainer io = sampler.apply(new IOContainer(es));
+		System.err.println("Completed sampling");
+		results = new IOContainer();
+		LinkedList<ClusteringThread> ll = new LinkedList<ClusteringThread>();
+		IOObject[] obj =io.getIOObjects();
+		int numExampleSetsPerThread =obj.length/getParameterAsInt(NUM_THREADS); 
+		int j = 0;
+		System.err.println("Distributing "+obj.length+" of es to "+getParameterAsInt(NUM_THREADS)+" threads");
+		for (int i = 0; i < getParameterAsInt(NUM_THREADS); i++) {
+			// create the threads
+			AbstractClustering clusti;
+			
+				//create the workload for the threads
+				ExampleSet[] objNew = null;
+				if(i!=getParameterAsInt(NUM_THREADS)-1){
+					objNew = new ExampleSet[numExampleSetsPerThread];
+				}else{
+					objNew = new ExampleSet[obj.length-numExampleSetsPerThread*i];
+				}
+
+				for(int k=0;k<objNew.length;j++){
+					System.err.println("Thread "+i+" getting "+j);
+					objNew[k] = (ExampleSet)obj[j];
+					k++;
+				}
+				//create the threads
+				if(objNew.length>0){
+					clusti = new DBScanClustering(OperatorService.getOperatorDescriptions(DBScanClustering.class)[0]);
+					clusti.setParameters(getParameters());
+					ll.add(new ClusteringThread(objNew,(DBScanClustering) clusti));
+				}
+			 
+		}
+		System.err.println("Starting all threads");
+		for (ClusteringThread ct : ll) {
+			ct.start();
+		}
+		System.err.println("all Clusteringthreads started.");
+		// block until everyone is done
+		for (ClusteringThread ct : ll) {
+			try {
+				ct.join();
+				System.err.println("Joining");
+				results = results.append(ct.getResult().getIOObjects());
+			} catch (InterruptedException e) {
+				logError("Error: "+e.getMessage());
+			}
+		}
+		System.err.println("completed clustering");
+		clusteringModels = new Vector<FlatCrispClusterModel>();
+				
 
 		FlatCrispClusterModel result = new FlatCrispClusterModel();
 		double edge;
 		int uClusterId, vClusterId;
 		int clusterCount = 0;
-
+		int clustermodelSize =  clusteringModels.size();
 		// Durchlaufen aller Paar-Kombinationen der Objekte u,v
 		for (Example u : es) {
 			for (Example v : es) {
@@ -101,58 +154,48 @@ public class ClusteringAggregationWithUnvertainSampledElements extends
 						edge++;
 					}
 				}
-				edge = edge / clusteringModels.size();
+				edge = edge / clustermodelSize;
 				// logNote("(" + uid + ";" + vid + ") = " + edge);
+				boolean uidIsInCluster = containsId(uid, result);
+				boolean vidIsInCluster = containsId(vid, result);
 				if (edge > 0.5) {
-					if (!containsId(uid, result) && !containsId(vid, result)) {
+					if (!uidIsInCluster && !vidIsInCluster) {
 						// beide in neues Cluster einfügen
-						result.addCluster(new DefaultCluster(String
-								.valueOf(clusterCount)));
-						((DefaultCluster) result.getClusterAt(clusterCount))
-								.addObject(uid);
-						((DefaultCluster) result.getClusterAt(clusterCount))
-								.addObject(vid);
+						result.addCluster(new DefaultCluster(String	.valueOf(clusterCount)));
+						
+						((DefaultCluster) result.getClusterAt(clusterCount)).addObject(uid);
+						((DefaultCluster) result.getClusterAt(clusterCount)).addObject(vid);
 						clusterCount++;
-					} else if ((containsId(uid, result) && !containsId(vid,
-							result))
-							|| (!containsId(uid, result) && containsId(vid,
-									result))) {
+						
+					} else if ((uidIsInCluster && !vidIsInCluster)
+								|| (!uidIsInCluster && vidIsInCluster)) {
 						// ein Objekt ist bereits im ClusterModel result, das
 						// andere nicht
 						String a = uid;
 						String b = vid;
-						if (containsId(vid, result)) {
+						if (vidIsInCluster) {
 							a = vid;
 							b = uid;
 						}
 						// das nicht enthaltene Objekt zum Cluster des anderen
 						// hinzufügen
-						((DefaultCluster) result.getClusterAt(getClusterId(a,
-								result))).addObject(b);
-					} else if (containsId(uid, result)
-							&& containsId(vid, result)) {// also wenn beide
+						((DefaultCluster) result.getClusterAt(getClusterId(a,result))).addObject(b);
+					} else if (uidIsInCluster&& vidIsInCluster) {// also wenn beide
 						// bereits drin sind
 						// UND sie sich in
 						// verschiedenen
 						// Clustern befinden
-						if (getClusterId(uid, result) != getClusterId(vid,
-								result)) {
+						int clusterIdUID = getClusterId(uid, result);
+						int clusterIdVID = getClusterId(vid, result);
+						if (clusterIdUID != clusterIdVID) {
 							// beide Cluster mergen!
-							DefaultCluster uCluster = (DefaultCluster) result
-									.getClusterAt(getClusterId(uid, result));
-							DefaultCluster vCluster = (DefaultCluster) result
-									.getClusterAt(getClusterId(vid, result));
-							String tempId;
-							Iterator<String> it = vCluster.getObjects();
-							while (it.hasNext()) {
-								tempId = it.next();
-								// vCluster.removeObject(tempId);
-								uCluster.addObject(tempId);
-							}
+							DefaultCluster uCluster = (DefaultCluster) result.getClusterAt(clusterIdUID);
+							DefaultCluster vCluster = (DefaultCluster) result.getClusterAt(clusterIdVID);
+							uCluster.addAll(vCluster);
 							result.removeCluster(vCluster);
-							resetClusterIds(result);
+							//resetClusterIds(result);
 							clusterCount--; // weil es jetzt eines weniger
-							// gibt...
+							
 						}
 						// TODO: Bei Löschen eines Clusters Bezeichnungen
 						// erneuern
@@ -163,24 +206,28 @@ public class ClusteringAggregationWithUnvertainSampledElements extends
 		}
 		return result;
 	}
+	
+	
 
-	private void resetClusterIds(FlatClusterModel cm) {
-		for (int i = 0; i < cm.getNumberOfClusters(); i++) {
+	private void resetClusterIds(FlatCrispClusterModel cm) {
+		for (int i = 0; i < cm.getNumberOfClusters(); i++) 
+		{
 			// TODO: resetClusterIds(FlatClusterModel cm)
 			// Die Klasse Cluster bietet keine Möglichkeit im Nachhinein die
 			// Bezeichner zu ändern.
 		}
 	}
 
-	private int getClusterId(String id, FlatClusterModel cm) {
-		for (int i = 0; i < cm.getNumberOfClusters(); i++) {
-			if (cm.getClusterAt(i).contains(id))
-				return i;
+	private int getClusterId(String id, FlatCrispClusterModel cm) {
+		try{
+			return Integer.valueOf(cm.getClusterById(id).getId());
+		}catch(Exception e){
+			return 0;
 		}
-		return 0;
 	}
 
 	private boolean containsId(String id, FlatClusterModel cm) {
+		
 		for (int i = 0; i < cm.getNumberOfClusters(); i++) {
 			if (cm.getClusterAt(i).contains(id))
 				return true;

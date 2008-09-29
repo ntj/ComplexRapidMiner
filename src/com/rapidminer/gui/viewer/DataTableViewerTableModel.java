@@ -22,6 +22,8 @@
  */
 package com.rapidminer.gui.viewer;
 
+import java.util.Date;
+
 import javax.swing.table.AbstractTableModel;
 
 import com.rapidminer.datatable.DataTable;
@@ -31,7 +33,7 @@ import com.rapidminer.datatable.DataTableRow;
 /** The model for the {@link com.rapidminer.gui.viewer.DataTableViewerTable}. 
  * 
  *  @author Ingo Mierswa
- *  @version $Id: DataTableViewerTableModel.java,v 1.3 2008/05/09 19:23:01 ingomierswa Exp $
+ *  @version $Id: DataTableViewerTableModel.java,v 1.4 2008/05/25 12:08:44 ingomierswa Exp $
  */
 public class DataTableViewerTableModel extends AbstractTableModel {
     
@@ -44,10 +46,15 @@ public class DataTableViewerTableModel extends AbstractTableModel {
     }
     
     public Class<?> getColumnClass(int column) {
-        if (dataTable.isNominal(column))
-            return String.class;
-        else
-            return Double.class;
+    	Class<?> type = super.getColumnClass(column);   
+    	if ((dataTable.isDate(column)) || (dataTable.isTime(column)) || (dataTable.isDateTime(column))) {
+    		type = Date.class;
+    	} else if (dataTable.isNumerical(column)) {
+    		type = Double.class;
+    	} else {
+    		type = String.class;
+    	}
+        return type;
     }
     
     public int getRowCount() {
@@ -60,7 +67,11 @@ public class DataTableViewerTableModel extends AbstractTableModel {
 
     public Object getValueAt(int row, int col) {
         DataTableRow tableRow = dataTable.getRow(row);
-        if (dataTable.isNominal(col)) {
+        if (dataTable.isDate(col) || dataTable.isTime(col) || dataTable.isDateTime(col)) {
+    		double value = tableRow.getValue(col);
+    		long milliseconds = (long)value;
+    		return new Date(milliseconds);
+        } else if (dataTable.isNominal(col)) {
             return dataTable.getValueAsString(tableRow, col);
         } else {
             return tableRow.getValue(col);

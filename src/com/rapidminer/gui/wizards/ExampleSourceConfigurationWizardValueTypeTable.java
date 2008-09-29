@@ -26,6 +26,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.DefaultCellEditor;
@@ -50,7 +51,7 @@ import com.rapidminer.tools.att.AttributeDataSource;
  * This table shows only the attribute names and the attribute value types.
  * 
  * @author Ingo Mierswa
- * @version $Id: ExampleSourceConfigurationWizardValueTypeTable.java,v 1.8 2008/05/09 19:22:56 ingomierswa Exp $
+ * @version $Id: ExampleSourceConfigurationWizardValueTypeTable.java,v 1.10 2008/08/21 13:17:07 ingomierswa Exp $
  */
 public class ExampleSourceConfigurationWizardValueTypeTable extends ExtendedJTable {
     
@@ -169,15 +170,18 @@ public class ExampleSourceConfigurationWizardValueTypeTable extends ExtendedJTab
         }
     }
     
+    private ExampleSourceConfigurationWizardValueTypeTableModel model;
+    
     public ExampleSourceConfigurationWizardValueTypeTable(List<AttributeDataSource> sources) {
         super(false);
         setAutoResizeMode(AUTO_RESIZE_OFF);
-        setModel(new ExampleSourceConfigurationWizardValueTypeTableModel(sources));
+        this.model = new ExampleSourceConfigurationWizardValueTypeTableModel(sources); 
+        setModel(model);
         update();
     }
     
     public void guessValueTypes(File data, String commentString, String columnSeparators, char decimalPointCharacter, boolean useQuotes, boolean firstLineAsNames) {
-    	((ExampleSourceConfigurationWizardValueTypeTableModel)getModel()).guessValueTypes(data, commentString, columnSeparators, decimalPointCharacter, useQuotes, firstLineAsNames);	
+    	this.model.guessValueTypes(data, commentString, columnSeparators, decimalPointCharacter, useQuotes, firstLineAsNames);	
     }
     
     public void update() {
@@ -194,9 +198,17 @@ public class ExampleSourceConfigurationWizardValueTypeTable extends ExtendedJTab
 	}
 
 	public TableCellEditor getCellEditor(int row, int column) {
-        String[] allValueTypes = Ontology.ATTRIBUTE_VALUE_TYPE.getNames();
-		String[] valueTypes = new String[allValueTypes.length - 1];
-		System.arraycopy(allValueTypes, 1, valueTypes, 0, valueTypes.length);
+		List<String> usedTypes = new LinkedList<String>();
+		for (int i = 0; i < Ontology.VALUE_TYPE_NAMES.length; i++) {
+			if ((i != Ontology.ATTRIBUTE_VALUE) && (i != Ontology.FILE_PATH) && (!Ontology.ATTRIBUTE_VALUE_TYPE.isA(i, Ontology.DATE_TIME))) {
+				usedTypes.add(Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(i));
+			}
+		}
+		String[] valueTypes = new String[usedTypes.size()];
+		int vCounter = 0;
+		for (String type : usedTypes) {
+			valueTypes[vCounter++] = type;
+		}
 		JComboBox typeBox = new JComboBox(valueTypes);
 		typeBox.setBackground(javax.swing.UIManager.getColor("Table.cellBackground"));
 		return new DefaultCellEditor(typeBox);

@@ -31,7 +31,7 @@ import com.rapidminer.operator.ResultObject;
  * Some additional matrix functionality.
  * 
  * @author Michael Wurst
- * @version $Id: ExtendedMatrix.java,v 1.3 2008/05/09 19:23:23 ingomierswa Exp $
+ * @version $Id: ExtendedMatrix.java,v 1.5 2008/09/12 10:30:04 tobiasmalbrecht Exp $
  * 
  */
 public interface ExtendedMatrix<Ex, Ey> extends Matrix<Ex, Ey>, ResultObject {

@@ -31,7 +31,7 @@ import junit.framework.TestCase;
  * A test for the {@link ExtendedSparseMatrix}.
  * 
  * @author Michael Wurst
- * @version $Id: ExtendedSparseMatrixTest.java,v 1.3 2008/05/09 19:23:24 ingomierswa Exp $
+ * @version $Id: ExtendedSparseMatrixTest.java,v 1.5 2008/09/12 10:31:34 tobiasmalbrecht Exp $
  */
 public class ExtendedSparseMatrixTest extends TestCase {
 

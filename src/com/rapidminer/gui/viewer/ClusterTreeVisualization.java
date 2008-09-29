@@ -22,6 +22,7 @@
  */
 package com.rapidminer.gui.viewer;
 
+import java.awt.Graphics;
 import java.util.Iterator;
 
 import javax.swing.JTree;
@@ -37,6 +38,7 @@ import com.rapidminer.operator.learner.clustering.Cluster;
 import com.rapidminer.operator.learner.clustering.ClusterNode;
 import com.rapidminer.operator.learner.clustering.FlatClusterModel;
 import com.rapidminer.operator.learner.clustering.HierarchicalClusterModel;
+import com.rapidminer.report.Renderable;
 import com.rapidminer.tools.ObjectVisualizerService;
 
 
@@ -44,10 +46,10 @@ import com.rapidminer.tools.ObjectVisualizerService;
  * Visualizes clusters as a bookmark like tree.
  * 
  * @author Michael Wurst, Ingo Mierswa
- * @version $Id: ClusterTreeVisualization.java,v 1.3 2008/05/09 19:23:01 ingomierswa Exp $
+ * @version $Id: ClusterTreeVisualization.java,v 1.6 2008/07/19 16:31:17 ingomierswa Exp $
  * 
  */
-public class ClusterTreeVisualization extends JTree implements TreeSelectionListener {
+public class ClusterTreeVisualization extends JTree implements TreeSelectionListener, Renderable {
 
 	private static final long serialVersionUID = 3994390578811027103L;
 
@@ -148,5 +150,31 @@ public class ClusterTreeVisualization extends JTree implements TreeSelectionList
 				viz.startVisualization(leaf.getId());
 			}
 		}
+	}
+	
+	/** Expands the complete tree. */
+	public void expandAll() {
+		int row = 0;
+		while (row < getRowCount()) {
+			expandRow(row);
+			row++;
+		}
+	}
+	
+    public void prepareRendering() {
+    	expandAll();
+    }
+    
+	public int getRenderHeight(int preferredHeight) {
+		return Math.max(getPreferredSize().height, preferredHeight);
+	}
+
+	public int getRenderWidth(int preferredWidth) {
+		return Math.max(getPreferredSize().width, preferredWidth);
+	}
+
+	public void render(Graphics graphics, int width, int height) {
+		setSize(width, height);
+		paint(graphics);
 	}
 }

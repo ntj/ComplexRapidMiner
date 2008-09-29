@@ -33,6 +33,11 @@ import com.rapidminer.tools.Tools;
  */
 public abstract class ParameterTypeSingle extends ParameterType {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1144201124955949715L;
+
 	public ParameterTypeSingle(String key, String description) {
 		super(key, description);
 	}

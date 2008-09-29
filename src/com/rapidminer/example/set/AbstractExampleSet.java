@@ -89,6 +89,11 @@ import com.rapidminer.tools.Tools;
  */
 public abstract class AbstractExampleSet extends ResultObjectAdapter implements ExampleSet {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 8596141056047402798L;
+
 	private static final String RESULT_ICON_NAME = "data.png";
 	
 	private static Icon resultIcon = null;
@@ -103,11 +108,12 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 	/** Maps the id values on the line index in the example table. */
 	private Map<Double, Integer> idMap = new HashMap<Double, Integer>();
 	
+	
     /** This method overrides the implementation of ResultObjectAdapter and returns "ExampleSet". */
     public String getName() {
         return "ExampleSet";
     }
-	
+    
 	public Example getExampleFromId(double id) {
 		Integer indexObject = idMap.get(id);		
 		if (indexObject == null)
@@ -518,46 +524,51 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 	 * Here the Example Set is parsed only once, all the information is retained
 	 * for each example set.
 	 */
-	public void recalculateAttributeStatistics(List<Attribute> attributeList) {
-		// init statistics
-		for (Attribute attribute : attributeList) {
-			Iterator<Statistics> stats = attribute.getAllStatistics();
-			while (stats.hasNext()) {
-				Statistics statistics = stats.next();
-				statistics.startCounting(attribute);
-			}
-		}
-        
-        // calculate statistics
-		for (Example example : this) {
+	private void recalculateAttributeStatistics(List<Attribute> attributeList) {
+		// do nothing if not desired
+		if (attributeList.size() == 0) {
+			return;
+		} else {
+			// init statistics
 			for (Attribute attribute : attributeList) {
-				double value = example.getValue(attribute);
 				Iterator<Statistics> stats = attribute.getAllStatistics();
-                while (stats.hasNext()) {
-                    Statistics statistics = stats.next();
-                    statistics.count(value);
-                }
+				while (stats.hasNext()) {
+					Statistics statistics = stats.next();
+					statistics.startCounting(attribute);
+				}
+			}
+
+			// calculate statistics
+			for (Example example : this) {
+				for (Attribute attribute : attributeList) {
+					double value = example.getValue(attribute);
+					Iterator<Statistics> stats = attribute.getAllStatistics();
+					while (stats.hasNext()) {
+						Statistics statistics = stats.next();
+						statistics.count(value);
+					}
+				}
+			}
+
+			// store cloned statistics
+			for (Attribute attribute : attributeList) {
+				List<Statistics> statisticsList = statisticsMap.get(attribute.getName());
+				// no stats known for this attribute at all --> new list
+				if (statisticsList == null) {
+					statisticsList = new LinkedList<Statistics>();
+					statisticsMap.put(attribute.getName(), statisticsList);
+				}            
+
+				// in all cases: clear the list before adding new stats (clone of the calculations)
+				statisticsList.clear();
+
+				Iterator<Statistics> stats = attribute.getAllStatistics();
+				while (stats.hasNext()) {
+					Statistics statistics = (Statistics)stats.next().clone();
+					statisticsList.add(statistics);
+				}
 			}
 		}
-        
-        // store cloned statistics
-        for (Attribute attribute : attributeList) {
-            List<Statistics> statisticsList = statisticsMap.get(attribute.getName());
-            // no stats known for this attribute at all --> new list
-            if (statisticsList == null) {
-                statisticsList = new LinkedList<Statistics>();
-                statisticsMap.put(attribute.getName(), statisticsList);
-            }            
-            
-            // in all cases: clear the list before adding new stats (clone of the calculations)
-            statisticsList.clear();
-            
-            Iterator<Statistics> stats = attribute.getAllStatistics();
-            while (stats.hasNext()) {
-                Statistics statistics = (Statistics)stats.next().clone();
-                statisticsList.add(statistics);
-            }
-        }
 	}
     
     /** Returns the desired statistic for the given attribute. This method should be 

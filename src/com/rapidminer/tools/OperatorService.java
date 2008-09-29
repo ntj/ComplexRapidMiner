@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -75,10 +76,12 @@ import com.rapidminer.operator.performance.PerformanceCriterion;
  * operator factory.</p>
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: OperatorService.java,v 1.10 2008/05/09 19:22:55 ingomierswa Exp $
+ * @version $Id: OperatorService.java,v 1.12 2008/07/12 17:46:46 ingomierswa Exp $
  */
 public class OperatorService {
 
+	public static final String MAIN_OPERATORS_NAME = "core";
+	
 	/**
 	 * Maps operator names of form classname|subclassname to operator
 	 * descriptions.
@@ -91,6 +94,66 @@ public class OperatorService {
 	/** The Map for all IO objects (maps short names on classes). */
 	private static Map<String, Class<IOObject>> ioObjects = new TreeMap<String, Class<IOObject>>();
 
+    /** Returns the main operator description file (XML). */
+	public static URL getMainOperators() {
+		Enumeration<URL> allOperatorsXML = null;
+		try {
+			allOperatorsXML = OperatorService.class.getClassLoader().getResources(Tools.RESOURCE_PREFIX + "operators.xml");
+		} catch (IOException e) {
+			LogService.getGlobal().logWarning("Cannot find any operator description files (XML): " + e.getMessage());
+		}
+		
+		URL resultURL = null;
+		if (allOperatorsXML != null) {
+			while (allOperatorsXML.hasMoreElements()) {
+				URL candidateURL = allOperatorsXML.nextElement();
+
+				InputStream candidateIn = null;
+				try {
+					candidateIn = candidateURL.openStream();
+				} catch (IOException e1) {
+					// do nothing
+				}
+				
+				if (candidateIn != null) {
+					Document document = null;
+					try {
+						document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(candidateIn);
+					} catch (Exception e) {
+						LogService.getGlobal().log("Cannot read operator description file '" + candidateURL + "': no valid XML: " + e.getMessage(), LogService.WARNING);
+					}
+
+					if (document != null) {
+						if (!document.getDocumentElement().getTagName().toLowerCase().equals("operators")) {
+							LogService.getGlobal().log("Operator description file '" + candidateURL + "': outermost tag must be <operators>!", LogService.WARNING);
+							continue;
+						}
+					}
+
+					Attr nameAttr = document.getDocumentElement().getAttributeNode("name");
+					if (nameAttr != null) {
+						String candidateName = nameAttr.getValue();
+						if (candidateName != null) {
+							if (candidateName.equals(MAIN_OPERATORS_NAME)) {
+								resultURL = candidateURL;
+							}
+						}
+					}
+
+					try {
+						candidateIn.close();
+					} catch (IOException e) {
+						// do nothing
+					}
+
+					if (resultURL != null) {
+						break;
+					}
+				}
+			}
+		}
+		return resultURL;
+	}
 	
 	/** Registers all operators from a given XML input stream. */
 	public static void registerOperators(String name, InputStream operatorsXML, ClassLoader classLoader, boolean addWekaOperators) {
@@ -112,9 +175,10 @@ public class OperatorService {
                 LogService.getGlobal().log("Operator description file '" + name + "': outermost tag must be <operators>!", LogService.ERROR);
 				return;
 			}
-
+						
 			// operator factories
 			NodeList factoryTags = document.getDocumentElement().getElementsByTagName("factory");
+			//LogService.getGlobal().log("Registering operators from " + factoryTags.getLength() + " factories.", LogService.INIT);
 			for (int i = 0; i < factoryTags.getLength(); i++) {
 				Element factoryTag = (Element) factoryTags.item(i);
 				Attr classAttr = factoryTag.getAttributeNode("class");
@@ -146,15 +210,15 @@ public class OperatorService {
 					}
 				}
 			}
-
+			
 			// operators
 			NodeList operatorTags = document.getDocumentElement().getElementsByTagName("operator");
+			//LogService.getGlobal().log("Registering " + operatorTags.getLength() + " operators.", LogService.INIT);
 			for (int i = 0; i < operatorTags.getLength(); i++) {
 				Element currentElement = (Element) operatorTags.item(i);
 				try {
 					registerOperator(currentElement, classLoader, descriptionMap);
 				} catch (Throwable e) {
-					//e.printStackTrace();
 					Attr currentNameAttr = currentElement.getAttributeNode("name");
 					if (currentNameAttr != null)
                         LogService.getGlobal().log("Cannot register '" + currentNameAttr.getValue() + "': " + e, LogService.ERROR);
@@ -162,6 +226,8 @@ public class OperatorService {
                         LogService.getGlobal().log("Cannot register '" + currentElement + "': " + e, LogService.ERROR);
 				}
 			}
+		} else {
+			LogService.getGlobal().logWarning("Operator description '" + name + "' was empty.");
 		}
 	}
 

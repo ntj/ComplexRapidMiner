@@ -63,7 +63,7 @@ public abstract class BinaryNumericalGenerator extends FeatureGenerator {
 		Attribute a1 = getArgument(0);
 		Attribute a2 = getArgument(1);
 		Attribute ao = 
-			AttributeFactory.createAttribute(Ontology.NUMERICAL, 
+			AttributeFactory.createAttribute(Ontology.REAL, 
 											 Ontology.SINGLE_VALUE, 
 											 getFunction(), 
 											 new ConstructionDescription[] { a1.getConstruction(), a2.getConstruction() });

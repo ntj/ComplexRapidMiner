@@ -33,7 +33,8 @@ import javax.swing.event.TableColumnModelEvent;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableModel;
 
-import com.rapidminer.tools.Tableable;
+import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.report.Tableable;
 import com.rapidminer.tools.Tools;
 
 /**
@@ -48,19 +49,28 @@ import com.rapidminer.tools.Tools;
  * </p>
  *   
  * @author Ingo Mierswa
- * @version $Id: ExtendedJTable.java,v 1.11 2008/05/09 19:22:58 ingomierswa Exp $
+ * @version $Id: ExtendedJTable.java,v 1.16 2008/08/25 08:10:36 ingomierswa Exp $
  */
 public class ExtendedJTable extends JTable implements Tableable {
 
     private static final long serialVersionUID = 4840252601155251257L;
 
+    private static final int DEFAULT_MAX_ROWS_FOR_SORTING = 100000;
+    
+    public static final int NO_DATE_FORMAT = -1;
+    public static final int DATE_FORMAT = 0;
+    public static final int TIME_FORMAT = 1;
+    public static final int DATE_TIME_FORMAT = 2;
+    
     private boolean sortable = true;
+    
+    private CellColorProvider cellColorProvider = new CellColorProviderAlternating();
     
     private boolean useColoredCellRenderer = true;
         
     private transient ColoredTableCellRenderer renderer = new ColoredTableCellRenderer();
     
-    private TableSorter tableSorter = null;
+    private ExtendedTableSorterModel tableSorter = null;
     
     
     public ExtendedJTable() {
@@ -77,6 +87,10 @@ public class ExtendedJTable extends JTable implements Tableable {
 
     public ExtendedJTable(TableModel model, boolean sortable, boolean columnMovable) {
     	this(model, sortable, columnMovable, true);
+    }
+
+    public ExtendedJTable(boolean sortable, boolean columnMovable, boolean autoResize) {
+    	this(null, sortable, columnMovable, autoResize);
     }
     
     public ExtendedJTable(TableModel model, boolean sortable, boolean columnMovable, boolean autoResize) {
@@ -113,18 +127,31 @@ public class ExtendedJTable extends JTable implements Tableable {
     	return this;
     }
     
-    protected TableSorter getTableSorter() {
+    protected ExtendedTableSorterModel getTableSorter() {
     	return this.tableSorter;
     }
-    
-    /** Subclasses might overwrite this method. The returned color will be used for the cell renderer. 
+
+    /** Subclasses might overwrite this method which by default simply returns NO_DATE. 
+     *  The returned format should be one out of NO_DATE_FORMAT, DATE_FORMAT, TIME_FORMAT, 
+     *  or DATE_TIME_FORMAT. This information will be used for the cell renderer. */
+    public int getDateFormat(int row, int column) {
+    	return NO_DATE_FORMAT;
+    }
+
+    /** The given color provider will be used for the cell renderer. 
      *  The default method implementation returns {@link SwingTools#LIGHTEST_BLUE} and white for 
-     *  alternating rows. If no colors should be used at all, return null. */
-    public Color getCellColor(int row, int column) {
-        if (row % 2 == 0)
-            return Color.WHITE;
-        else
-            return SwingTools.LIGHTEST_BLUE;
+     *  alternating rows. If no colors should be used at all, set the cell color provider to
+     *  null or to the default white color provider {@link CellColorProviderWhite}. */
+    public void setCellColorProvider(CellColorProvider cellColorProvider) {
+    	this.cellColorProvider = cellColorProvider;
+    }
+    
+    /** The returned color provider will be used for the cell renderer. 
+     *  The default method implementation returns {@link SwingTools#LIGHTEST_BLUE} and white for 
+     *  alternating rows. If no colors should be used at all, set the cell color provider to
+     *  null or to the default white color provider {@link CellColorProviderWhite}. */
+    public CellColorProvider getCellColorProvider() {
+    	return this.cellColorProvider;
     }
     
     public void setSortable(boolean sortable) {
@@ -136,14 +163,34 @@ public class ExtendedJTable extends JTable implements Tableable {
     }
     
     public void setModel(TableModel model) {
-        if (sortable) {
-            this.tableSorter = new TableSorter(model);
+    	boolean shouldSort = this.sortable && checkIfSortable(model);
+    	
+        if (shouldSort) {
+            this.tableSorter = new ExtendedTableSorterModel(model);
             this.tableSorter.setTableHeader(getTableHeader());
             super.setModel(this.tableSorter);
         } else {
             super.setModel(model);
             this.tableSorter = null;
         }
+    }
+    
+    private boolean checkIfSortable(TableModel model) {
+    	int maxSortableRows = DEFAULT_MAX_ROWS_FOR_SORTING;
+    	String maxString = System.getProperty(RapidMinerGUI.PROPERTY_RAPIDMINER_GUI_MAX_SORTABLE_ROWS);
+    	if (maxString != null) {
+    		try {
+    			maxSortableRows = Integer.parseInt(maxString);
+    		} catch (NumberFormatException e) {
+    			// do nothing
+    		}
+    	}
+    	
+    	if (model.getRowCount() > maxSortableRows) {
+    		return false;
+    	} else {
+    		return true;
+    	}
     }
     
     /** Necessary to properly stopping the editing when a column is moved (dragged). */
@@ -162,11 +209,22 @@ public class ExtendedJTable extends JTable implements Tableable {
         super.columnMarginChanged(e);
     }
     
+    public boolean shouldUseColoredCellRenderer() {
+    	return this.useColoredCellRenderer;
+    }
+    
     public TableCellRenderer getCellRenderer(int row, int col) {
     	if (useColoredCellRenderer) {
-    		Color color = getCellColor(row, col);
+    		Color color = null;
+    		CellColorProvider usedColorProvider = getCellColorProvider();
+    		if (usedColorProvider != null) {
+    			color = usedColorProvider.getCellColor(row, col);	
+    		}
+    		
     		if (color != null)
     			renderer.setColor(color);
+    		
+    		renderer.setDateFormat(getDateFormat(row, col));
     		return renderer;
     	} else {
     		return super.getCellRenderer(row, col);

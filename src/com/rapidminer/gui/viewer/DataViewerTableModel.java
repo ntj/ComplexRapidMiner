@@ -22,6 +22,7 @@
  */
 package com.rapidminer.gui.viewer;
 
+import java.util.Date;
 import java.util.Iterator;
 
 import javax.swing.table.AbstractTableModel;
@@ -32,12 +33,13 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.NumericalAttribute;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.Ontology;
 
 
 /** The model for the {@link com.rapidminer.gui.viewer.MetaDataViewerTable}. 
  * 
  *  @author Ingo Mierswa
- *  @version $Id: DataViewerTableModel.java,v 1.4 2008/05/09 19:23:01 ingomierswa Exp $
+ *  @version $Id: DataViewerTableModel.java,v 1.6 2008/05/28 10:52:04 ingomierswa Exp $
  */
 public class DataViewerTableModel extends AbstractTableModel {
 
@@ -68,8 +70,9 @@ public class DataViewerTableModel extends AbstractTableModel {
     }
     
     public Class<?> getColumnClass(int column) {
+    	Class<?> type = super.getColumnClass(column);
         if (column == 0) {
-            return Integer.class;
+        	type = Integer.class;
         } else {
             int col = column - 1;
             Attribute attribute = null;
@@ -78,11 +81,15 @@ public class DataViewerTableModel extends AbstractTableModel {
             } else {
                 attribute = regularAttributes[col - specialAttributes.length];
             }
-            if (!attribute.isNominal())
-                return Double.class;
+            
+            if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(attribute.getValueType(), Ontology.DATE_TIME)) {
+            	type = Date.class;
+            } else if (!attribute.isNominal())
+                type = Double.class;
             else
-                return String.class;
+                type = String.class;
         }
+        return type;
     }
 
     public int getRowCount() {
@@ -115,10 +122,15 @@ public class DataViewerTableModel extends AbstractTableModel {
     
     private Object getValueWithCorrectClass(Example example, Attribute attribute) {
         try {
-            if (!attribute.isNominal())
+        	if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(attribute.getValueType(), Ontology.DATE_TIME)) {
+        		double value = example.getValue(attribute);
+        		long milliseconds = (long)value;
+        		return new Date(milliseconds);
+        	} else if (attribute.isNumerical()) {
                 return Double.valueOf(example.getValue(attribute));
-            else
+        	} else {
                 return example.getValueAsString(attribute, NumericalAttribute.DEFAULT_NUMBER_OF_DIGITS, false);
+        	}
         } catch (Throwable e) {
             LogService.getGlobal().logWarning("Cannot show correct value: " + e.getMessage());
             return "Error";

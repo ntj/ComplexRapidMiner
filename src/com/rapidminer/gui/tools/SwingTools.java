@@ -30,6 +30,8 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -47,6 +49,8 @@ import javax.swing.filechooser.FileSystemView;
 
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.look.fc.Bookmark;
+import com.rapidminer.gui.look.fc.BookmarkIO;
 import com.rapidminer.gui.tools.syntax.SyntaxStyle;
 import com.rapidminer.gui.tools.syntax.SyntaxUtilities;
 import com.rapidminer.gui.tools.syntax.TextAreaDefaults;
@@ -68,7 +72,7 @@ import com.rapidminer.tools.Tools;
  * </ul>
  * 
  * @author Ingo Mierswa
- * @version $Id: SwingTools.java,v 1.31 2008/05/09 19:22:58 ingomierswa Exp $
+ * @version $Id: SwingTools.java,v 1.34 2008/08/05 08:14:28 ingomierswa Exp $
  */
 public class SwingTools {
 	
@@ -164,6 +168,13 @@ public class SwingTools {
 			// ignore this and do not use frame icons
 			LogService.getGlobal().logWarning("Cannot load frame icons. Skipping...");
 		}		
+	}
+	
+	/**
+	 * Returns the list of all available program icon sizes.
+	 */
+	public static List<Image> getFrameIconList() {
+		return ALL_FRAME_ICONS;
 	}
 	
 	/** Returns the list of all possible frame icons. */
@@ -420,6 +431,25 @@ public class SwingTools {
 						selectedFile = new File(selectedFile.getAbsolutePath() + extension); 
 					}
 				}
+				
+				File parentFile = selectedFile.getParentFile();
+				if (parentFile != null) {
+					List<Bookmark> bookmarks = null;
+					File bookmarksFile = new File(ParameterService.getUserRapidMinerDir(), ".bookmarks");
+					if (bookmarksFile.exists()) {
+						bookmarks = BookmarkIO.readBookmarks(bookmarksFile);
+						Iterator<Bookmark> b = bookmarks.iterator();
+						while (b.hasNext()) {
+							Bookmark bookmark = b.next();
+							if (bookmark.getName().equals("--- Last Directory")) {
+								b.remove();
+							}
+						}
+						bookmarks.add(new Bookmark("--- Last Directory", parentFile.getAbsolutePath()));
+						Collections.sort(bookmarks);
+						BookmarkIO.writeBookmarks(bookmarks, bookmarksFile);
+					}
+				}
 				return selectedFile;
 			default:
 				return null;
@@ -481,6 +511,7 @@ public class SwingTools {
 			for (int i = 0; i < fileFilters.length; i++)
 				fileChooser.addChoosableFileFilter(fileFilters[i]);
 		}
+		
 		if (file != null)
 			fileChooser.setSelectedFile(file);
         

@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import com.rapidminer.operator.visualization.SymmetricalMatrix;
+import com.rapidminer.operator.visualization.dependencies.SymmetricalMatrix;
 
 
 /**
@@ -36,7 +36,7 @@ import com.rapidminer.operator.visualization.SymmetricalMatrix;
  * type of data tables.
  * 
  * @author Ingo Mierswa
- * @version $Id: DataTableSymmetricalMatrixAdapter.java,v 1.2 2008/05/09 19:23:16 ingomierswa Exp $
+ * @version $Id: DataTableSymmetricalMatrixAdapter.java,v 1.5 2008/08/25 08:10:35 ingomierswa Exp $
  */
 public class DataTableSymmetricalMatrixAdapter extends AbstractDataTable {
 
@@ -46,8 +46,8 @@ public class DataTableSymmetricalMatrixAdapter extends AbstractDataTable {
 	
     private Map<String,Integer> name2IndexMap = new HashMap<String,Integer>();
     
-	public DataTableSymmetricalMatrixAdapter(SymmetricalMatrix matrix, String[] columnNames) {
-        super("Correlation Matrix");
+	public DataTableSymmetricalMatrixAdapter(SymmetricalMatrix matrix, String name, String[] columnNames) {
+        super(name);
 		this.matrix = matrix;
 		this.index2NameMap = columnNames;
         for (int i = 0; i < this.index2NameMap.length; i++)
@@ -64,6 +64,22 @@ public class DataTableSymmetricalMatrixAdapter extends AbstractDataTable {
 	
 	public boolean isNominal(int index) {
 		return index == 0;
+	}
+	
+	public boolean isDate(int index) {
+		return false;
+	}
+	
+	public boolean isTime(int index) {
+		return false;
+	}
+	
+	public boolean isDateTime(int index) {
+		return false;
+	}
+	
+	public boolean isNumerical(int index) {
+		return index != 0;
 	}
 	
 	public String mapIndex(int column, int value) {

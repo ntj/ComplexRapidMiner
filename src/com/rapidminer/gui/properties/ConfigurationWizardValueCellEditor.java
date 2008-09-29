@@ -40,7 +40,7 @@ import com.rapidminer.parameter.ParameterTypeConfiguration;
  * the corresponding operator.
  * 
  * @author Ingo Mierswa
- * @version $Id: ConfigurationWizardValueCellEditor.java,v 1.3 2008/05/09 19:22:46 ingomierswa Exp $
+ * @version $Id: ConfigurationWizardValueCellEditor.java,v 1.4 2008/07/18 15:50:44 ingomierswa Exp $
  */
 public class ConfigurationWizardValueCellEditor extends AbstractCellEditor implements PropertyValueCellEditor {
 
@@ -52,7 +52,7 @@ public class ConfigurationWizardValueCellEditor extends AbstractCellEditor imple
     
     public ConfigurationWizardValueCellEditor(ParameterTypeConfiguration type) {
         this.type = type;
-        button = new JButton("Start Configuration Wizard...");
+        button = new JButton(type.getWizardCreator().getButtonText());
         button.setToolTipText(type.getDescription());
         button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {

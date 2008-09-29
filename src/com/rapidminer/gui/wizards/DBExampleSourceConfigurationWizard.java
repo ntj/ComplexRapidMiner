@@ -53,6 +53,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -67,6 +68,7 @@ import com.rapidminer.gui.tools.SQLEditor;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.io.DatabaseExampleSource;
 import com.rapidminer.parameter.Parameters;
+import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.jdbc.ColumnIdentifier;
@@ -81,12 +83,14 @@ import com.rapidminer.tools.jdbc.JDBCProperties;
  * {@link DatabaseExampleSource} operators.
  * 
  * @author Ingo Mierswa
- * @version $Id: DBExampleSourceConfigurationWizard.java,v 1.8 2008/05/09 19:22:56 ingomierswa Exp $
+ * @version $Id: DBExampleSourceConfigurationWizard.java,v 1.12 2008/08/21 17:48:16 ingomierswa Exp $
  */
 public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWizard {
     
     private static final long serialVersionUID = 5127262335077061590L;
 
+    private static final int DEFAULT_MAX_ROW_NUMBER = 100;
+    
 	private static final String USER_DEFINED_STRING = "User Defined URL (next step)";
     
     private static final int STEP_USER_DATA    = 2;
@@ -129,6 +133,12 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
     /** Indicates if the password was defined in the text field (and hence should be set as operator parameter). */
     private boolean passwordFromTextField = false;
     
+    /** Indicates if the system setup should be shown. */
+    private boolean showSystemSetup = true;
+    
+    /** Indicates if only a table name or a fully SQL query should be specified. */
+    private boolean showOnlyTableNames = false;
+    
     /** The list with all tables. */
     private JList tableList = new JList();
     
@@ -149,34 +159,70 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
 
     
     /** Creates a new wizard. */
-    public DBExampleSourceConfigurationWizard(ConfigurationListener listener) {
+    public DBExampleSourceConfigurationWizard(ConfigurationListener listener, boolean showDrivers, boolean showOnlyTables, boolean showSystemSetup, String selectedSystem, String server, String databaseName) {
         super("Database Example Source Wizard", listener);
+        this.showSystemSetup = showSystemSetup;
+        this.showOnlyTableNames = showOnlyTables;
         
         // add all steps
-        addTitleStep();
+        addTitleStep(showDrivers);
+        
+        String[] knownNames = DatabaseService.getDBSystemNames();
+        String[] names = new String[knownNames.length + 1];
+        System.arraycopy(knownNames, 0, names, 0, knownNames.length);
+        names[names.length - 1] = USER_DEFINED_STRING;
+        systemComboBox = new JComboBox(names);
+        
         addDBSystemSelectionStep();
+
+        systemComboBox.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                updateSystemSelection();
+            }
+        });
+        
         addUserDataStep();
-        addTableSelectionStep();
+        
+        if (this.showOnlyTableNames) {
+        	addTableSelectionStep();
+        } else {
+        	addSQLQueryStep();
+        }
+        
         addSpecialAttributesStep();
         
+        // update and init
         updateSystemSelection();
+        
+        initStartParameters(listener);
+        
+        if (!showSystemSetup) {
+        	if (selectedSystem != null)
+        		systemComboBox.setSelectedItem(selectedSystem);
+        	serverField.setText(server);
+        	databaseNameField.setText(databaseName);
+        }
     }
 
-    private void addTitleStep() {
+    private void addTitleStep(boolean showDrivers) {
         StringBuffer titleString = new StringBuffer();
-        titleString.append("This wizard will guide you through the process of data loading from databases. Using this wizard will involve the following steps:" + 
-                "<ul>" + 
-                "<li>Selection of a database</li>" +
-                "<li>Definition of the username and password</li>" + 
+        titleString.append("This wizard will guide you through the process of data loading from databases. Using this wizard will involve the following steps:<ul>");
+        if (showSystemSetup)
+        	titleString.append("<li>Selection of a database</li>");
+        titleString.append("<li>Definition of the username and password</li>" + 
                 "<li>Selection of tables and attributes (SQL query)</li>" + 
                 "<li>Definition of special attributes like labels or IDs</li>" +
                 "</ul>");
-        titleString.append("<br>The currently available JDBC drivers are listed below. Please make sure to copy missing drivers into the directory lib/jdbc and restart RapidMiner in order to make additional drivers available.");
+        
+        if (showDrivers)
+        	titleString.append("<br>The currently available JDBC drivers are listed below. Please make sure to copy missing drivers into the directory lib/jdbc and restart RapidMiner in order to make additional drivers available.");
         
         JPanel panel = SwingTools.createTextPanel("Welcome to the Database Example Source Wizard", titleString.toString());
-        DriverInfo[] drivers = DatabaseService.getAllDriverInfos();
-        JDBCDriverTable driverTable = new JDBCDriverTable(drivers);
-        panel.add(new JScrollPane(driverTable), BorderLayout.CENTER);
+        if (showDrivers) {
+        	DriverInfo[] drivers = DatabaseService.getAllDriverInfos();
+        	JDBCDriverTable driverTable = new JDBCDriverTable(drivers);
+        	panel.add(new JScrollPane(driverTable), BorderLayout.CENTER);
+        }
         addStep(panel);
     }
 
@@ -198,18 +244,10 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
         layout.setConstraints(label, c);
         content.add(label);
         
-        String[] knownNames = DatabaseService.getDBSystemNames();
-        String[] names = new String[knownNames.length + 1];
-        System.arraycopy(knownNames, 0, names, 0, knownNames.length);
-        names[names.length - 1] = USER_DEFINED_STRING;
-        systemComboBox = new JComboBox(names);
-        systemComboBox.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                updateSystemSelection();
-            }
-        });
         c.weightx = 1.0d;
         c.gridwidth = GridBagConstraints.REMAINDER;
+        if (!showSystemSetup)
+        	systemComboBox.setEnabled(false);
         layout.setConstraints(systemComboBox, c);
         content.add(systemComboBox);
 
@@ -222,6 +260,8 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
         
         c.weightx = 1.0d;
         c.gridwidth = GridBagConstraints.REMAINDER;
+        if (!showSystemSetup)
+        	serverField.setEnabled(false);
         layout.setConstraints(serverField, c);
         content.add(serverField);
 
@@ -234,6 +274,8 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
         
         c.weightx = 1.0d;
         c.gridwidth = GridBagConstraints.REMAINDER;
+        if (!showSystemSetup)
+        	databaseNameField.setEnabled(false);
         layout.setConstraints(databaseNameField, c);
         content.add(databaseNameField);
                 
@@ -313,11 +355,40 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
     }
 
     private void addTableSelectionStep() {
+        JPanel panel = SwingTools.createTextPanel("Please select a single table...", "Please specify the table which is the base for this data access.");
+        
+        // table and attribute lists
+        tableList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tableList.addListSelectionListener(new ListSelectionListener() {
+            public void valueChanged(ListSelectionEvent e) {
+                updateAttributeNames();
+            }
+        });
+        JScrollPane tablePane = new ExtendedJScrollPane(tableList);
+        tablePane.setBorder(BorderFactory.createTitledBorder("Tables"));
+        
+        GridBagLayout layout = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();
+        JPanel content = new JPanel(layout); 
+        c.fill = GridBagConstraints.BOTH;
+        c.weightx = 1;
+        c.weighty = 1;
+        c.insets = new Insets(7,7,7,7);
+        c.gridwidth = GridBagConstraints.REMAINDER;
+        layout.setConstraints(tablePane, c);
+        content.add(tablePane);
+                
+        panel.add(content, BorderLayout.CENTER);
+        addStep(panel);    	
+    }
+    
+    private void addSQLQueryStep() {
         JPanel panel = SwingTools.createTextPanel("Please select tables and attributes...", "Please specify the tables, the attributes and an optional where clause which will be used to create a query statement to retrieve the data. You can modify the statement in the text field below.");
 
             
         JPanel gridPanel = new JPanel(new GridLayout(1, 3));
         // table and attribute lists, where clause text area
+        tableList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         tableList.addListSelectionListener(new ListSelectionListener() {
             public void valueChanged(ListSelectionEvent e) {
                 updateAttributeNames();
@@ -415,16 +486,21 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
     }
     
     private void updateSystemSelection() {
-        if (systemComboBox.getSelectedIndex() >= DatabaseService.getJDBCProperties().size()) {
-            serverField.setEnabled(false);
-            databaseNameField.setEnabled(false);
-            JDBCProperties defaultProps = JDBCProperties.createDefaultJDBCProperties();
-            String defaultString = defaultProps.getUrlPrefix() + "server" + ":port" + defaultProps.getDbNameSeperator() + "database_name";
-            urlField.setText(defaultString);
-        } else {
-            serverField.setEnabled(true);
-            databaseNameField.setEnabled(true);
-        }
+    	if (!showSystemSetup) {
+			serverField.setEnabled(false);
+			databaseNameField.setEnabled(false);    		
+    	} else {
+    		if (systemComboBox.getSelectedIndex() >= DatabaseService.getJDBCProperties().size()) {
+    			serverField.setEnabled(false);
+    			databaseNameField.setEnabled(false);
+    			JDBCProperties defaultProps = JDBCProperties.createDefaultJDBCProperties();
+    			String defaultString = defaultProps.getUrlPrefix() + "server" + ":port" + defaultProps.getDbNameSeperator() + "database_name";
+    			urlField.setText(defaultString);
+    		} else {
+    			serverField.setEnabled(true);
+    			databaseNameField.setEnabled(true);
+    		}
+    	}
     }
     
     private String getDatabaseURL() {
@@ -561,7 +637,6 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
     }
     
     private void updateAttributeNames() {
-        //boolean singleTable = tableList.getSelectedValues().length == 1;
         List<ColumnIdentifier> allColumnIdentifiers = new LinkedList<ColumnIdentifier>();
         Object[] selection = tableList.getSelectedValues();
         for (Object o : selection) {
@@ -607,16 +682,19 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
         List<String[]> data = new LinkedList<String[]>();
         connect();
         if (this.handler != null) {
-        	Statement statement = this.handler.createStatement();
-            ResultSet resultSet = statement.executeQuery(getQueryString());
+        	Statement statement = this.handler.createStatement(false);
+        	statement.setMaxRows(DEFAULT_MAX_ROW_NUMBER);
+        	String query = getQueryString();
+            ResultSet resultSet = statement.executeQuery(query);
             int counter = 0;
-            while ((resultSet.next()) && (counter < 10)) {
+            while ((resultSet.next()) && (counter < DEFAULT_MAX_ROW_NUMBER)) {
                 String[] row = new String[usedAttributes.length];
                 for (int c = 0; c < row.length; c++)
                     row[c] = resultSet.getString(c+1);
                 data.add(row);
                 counter++;
             }
+            resultSet.close();
             statement.close();
         }
         disconnect();
@@ -688,8 +766,13 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
     }
     
     private String getQueryString() {
-        String result = sqlQueryTextArea.getText().trim();
-        result = result.replaceAll(Tools.getLineSeparator(), " ");
+    	String result = null;
+    	if (this.showOnlyTableNames) {
+    		result = "SELECT * FROM " + properties.getIdentifierQuoteOpen() + tableList.getSelectedValue() + properties.getIdentifierQuoteClose(); 
+    	} else {
+            result = sqlQueryTextArea.getText().trim();
+            result = result.replaceAll(Tools.getLineSeparator(), " ");    		
+    	}
         return result;
     }
     
@@ -699,6 +782,77 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
 
     private void showSQLError(String message, SQLException e) {
         JOptionPane.showMessageDialog(this, (message != null ? (message + ": ") : "") + e.getMessage(), "SQL Error", JOptionPane.ERROR_MESSAGE);        
+    }
+    
+    protected void initStartParameters(ConfigurationListener listener) {
+        Parameters parameters = listener.getParameters();
+        int dbIndex = -1;
+        
+        try {
+        	Object systemObject = parameters.getParameter(DatabaseExampleSource.PARAMETER_DATABASE_SYSTEM);
+        	if (systemObject != null) {
+        		dbIndex = (Integer)systemObject;
+        		systemComboBox.setSelectedIndex(dbIndex);
+        	}
+		} catch (UndefinedParameterError e) {
+			// do nothing
+		}
+		
+		try {
+			Object urlObject = parameters.getParameter(DatabaseExampleSource.PARAMETER_DATABASE_URL);
+			if (urlObject != null) {
+				String urlString = urlObject.toString();
+				urlField.setText(urlString);
+				
+				JDBCProperties props = DatabaseService.getJDBCProperties().get(dbIndex);
+				String urlPrefix = props.getUrlPrefix();
+				String dbNameSeparator = props.getDbNameSeperator();
+				
+				int serverStart = urlPrefix.length();
+				int serverEnd = -1;
+				if (urlString.indexOf(":") >= 0) {
+					serverEnd = urlString.indexOf(":", serverStart + 1);
+				} else {
+					if (urlString.indexOf(dbNameSeparator, serverStart + 1) >= 0) {
+						serverEnd = urlString.indexOf(dbNameSeparator);
+					}
+				}
+				
+				if ((serverEnd >= serverStart) && (serverStart < urlString.length())) {
+					String serverName = urlString.substring(serverStart, serverEnd);
+					serverField.setText(serverName);
+				}
+				
+				int dbStart = -1;
+				if (urlString.indexOf(dbNameSeparator, serverStart + 1) >= 0) {
+					dbStart = urlString.lastIndexOf(dbNameSeparator) + dbNameSeparator.length();
+				}
+				
+				if (dbStart >= 0) {
+					String dbName = urlString.substring(dbStart);
+					databaseNameField.setText(dbName);
+				}
+			}
+		} catch (UndefinedParameterError e) {
+			// do nothing
+		}
+		
+		try {
+			Object userNameObject = parameters.getParameter(DatabaseExampleSource.PARAMETER_USERNAME);
+			if (userNameObject != null)
+				userNameField.setText(userNameObject.toString());
+		} catch (UndefinedParameterError e) {
+			// do nothing
+		}
+		
+		try {
+			Object passwordObject = parameters.getParameter(DatabaseExampleSource.PARAMETER_PASSWORD);
+			if (passwordObject != null) {
+				passwordField.setText(passwordObject.toString());
+			}
+		} catch (UndefinedParameterError e) {
+			// do nothing
+		}
     }
     
     protected void finish(ConfigurationListener listener) {
@@ -711,29 +865,34 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
         String userName = userNameField.getText().trim();
         
         // sanity checks
-        if ((databaseURL.length() == 0) || (sqlQueryString.length() == 0) || (userName.length() == 0)) {
+        if ((databaseURL.length() == 0) || (!showOnlyTableNames && sqlQueryString.length() == 0) || (userName.length() == 0)) {
             SwingTools.showVerySimpleErrorMessage("You must specify a database connection and proper settings - the operator will not work without this." + Tools.getLineSeparator() + "Please select \"Cancel\" if you want to abort this wizard.");
         } else {
             // everything is OK --> database parameters
             Parameters parameters = listener.getParameters();
-            parameters.setParameter("work_on_database", "false");
-            parameters.setParameter("database_system", systemComboBox.getSelectedIndex() + "");
-            parameters.setParameter("database_url", databaseURL);
-            parameters.setParameter("username", userName);
-            parameters.setParameterWithoutCheck("password", null);
+            parameters.setParameter(DatabaseExampleSource.PARAMETER_WORK_ON_DATABASE, "false");
+            parameters.setParameter(DatabaseExampleSource.PARAMETER_DATABASE_SYSTEM, systemComboBox.getSelectedIndex() + "");
+            parameters.setParameter(DatabaseExampleSource.PARAMETER_DATABASE_URL, databaseURL);
+            parameters.setParameter(DatabaseExampleSource.PARAMETER_USERNAME, userName);
+            parameters.setParameterWithoutCheck(DatabaseExampleSource.PARAMETER_PASSWORD, null);
             if (passwordFromTextField) {
-                parameters.setParameterWithoutCheck("password", new String(passwordField.getPassword()));
+                parameters.setParameterWithoutCheck(DatabaseExampleSource.PARAMETER_PASSWORD, new String(passwordField.getPassword()));
             }
 
             // query string
-            parameters.setParameter("query", sqlQueryString);
-            parameters.setParameterWithoutCheck("query_file", null);
-            parameters.setParameterWithoutCheck("table_name", null);
+            if (showOnlyTableNames) {
+            	String tableName = tableList.getSelectedValue().toString();
+            	parameters.setParameter(DatabaseExampleSource.PARAMETER_TABLE_NAME, tableName);
+            } else {
+            	parameters.setParameter(DatabaseExampleSource.PARAMETER_QUERY, sqlQueryString);
+            	parameters.setParameterWithoutCheck(DatabaseExampleSource.PARAMETER_QUERY_FILE, null);
+            	parameters.setParameterWithoutCheck(DatabaseExampleSource.PARAMETER_TABLE_NAME, null);
+            }
             
             // special attributes
-            parameters.setParameterWithoutCheck("label_attribute", null);
-            parameters.setParameterWithoutCheck("id_attribute", null);
-            parameters.setParameterWithoutCheck("weight_attribute", null);
+            parameters.setParameterWithoutCheck(DatabaseExampleSource.PARAMETER_LABEL_ATTRIBUTE, null);
+            parameters.setParameterWithoutCheck(DatabaseExampleSource.PARAMETER_ID_ATTRIBUTE, null);
+            parameters.setParameterWithoutCheck(DatabaseExampleSource.PARAMETER_WEIGHT_ATTRIBUTE, null);
             for (int i = 1; i < Attributes.KNOWN_ATTRIBUTE_TYPES.length; i++)
                 ensureAttributeTypeIsUnique(Attributes.KNOWN_ATTRIBUTE_TYPES[i]);
 
@@ -745,11 +904,11 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
                 String maskedAttributeName = attributeIdentifier.getAliasName(properties, singleTable);
                 maskedAttributeName = maskedAttributeName.substring(1, maskedAttributeName.length() - 1);
                 if (attType.equals(Attributes.LABEL_NAME)) {
-                    parameters.setParameter("label_attribute", maskedAttributeName);        
+                    parameters.setParameter(DatabaseExampleSource.PARAMETER_LABEL_ATTRIBUTE, maskedAttributeName);        
                 } else if (attType.equals(Attributes.ID_NAME)) {
-                    parameters.setParameter("id_attribute", maskedAttributeName);  
+                    parameters.setParameter(DatabaseExampleSource.PARAMETER_ID_ATTRIBUTE, maskedAttributeName);  
                 } else if (attType.equals(Attributes.WEIGHT_NAME)) {
-                    parameters.setParameter("weight_attribute", maskedAttributeName);        
+                    parameters.setParameter(DatabaseExampleSource.PARAMETER_WEIGHT_ATTRIBUTE, maskedAttributeName);        
                 } 
             }
             
@@ -802,9 +961,5 @@ public class DBExampleSourceConfigurationWizard extends AbstractConfigurationWiz
             LogService.getGlobal().log("Problem during disconnecting: " + e.getMessage(), LogService.WARNING);
         }
         super.cancel();
-    }
-    
-    public void createConfigurationWizard(ConfigurationListener listener) {
-        (new DBExampleSourceConfigurationWizard(listener)).setVisible(true);
     }
 }

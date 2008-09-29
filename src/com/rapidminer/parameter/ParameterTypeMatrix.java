@@ -29,28 +29,61 @@ package com.rapidminer.parameter;
  * {@link com.rapidminer.operator.Operator#getParameterAsMatrix(String)}.
  * 
  * @author Helge Homburg, Ingo Mierswa
- * @version $Id: ParameterTypeMatrix.java,v 1.4 2008/05/09 19:22:37 ingomierswa Exp $
+ * @version $Id: ParameterTypeMatrix.java,v 1.5 2008/07/13 11:00:57 ingomierswa Exp $
  */
 public class ParameterTypeMatrix extends ParameterTypeString {
 
 	private static final long serialVersionUID = 0L;
 	
-	private boolean isSquare = false;
+	private boolean isSquared = false;
 	
-	public ParameterTypeMatrix(String key, String description, boolean isSquare) {
-		this(key, description, isSquare, true);
+	private String baseName;
+	
+	private String rowBaseName;
+	
+	private String columnBaseName;
+	
+	public ParameterTypeMatrix(String key, String description, String baseName, String rowBaseName, String columnBaseName, boolean isSquared) {
+		this(key, description, baseName, rowBaseName, columnBaseName, isSquared, true);
 	}
 	
-	public ParameterTypeMatrix(String key, String description, boolean isSquare, boolean isOptional) {
+	public ParameterTypeMatrix(String key, String description,  String baseName, String rowBaseName, String columnBaseName, boolean isSquared, boolean isOptional) {
 		super(key, description, isOptional);
-		this.isSquare = isSquare;
+		this.isSquared = isSquared;
+		this.baseName = baseName;
+		this.rowBaseName = rowBaseName;
+		this.columnBaseName = columnBaseName;
 	}
-	
-	public void setStatus(boolean isSquare) {
-		this.isSquare = isSquare;
+
+	public boolean isSquared() {
+		return isSquared;
 	}
-	
-	public boolean getStatus() {
-		return this.isSquare;
+
+	public void setSquared(boolean isSquared) {
+		this.isSquared = isSquared;
+	}
+
+	public String getBaseName() {
+		return baseName;
+	}
+
+	public void setBaseName(String baseName) {
+		this.baseName = baseName;
+	}
+
+	public String getRowBaseName() {
+		return rowBaseName;
+	}
+
+	public void setRowBaseName(String rowBaseName) {
+		this.rowBaseName = rowBaseName;
+	}
+
+	public String getColumnBaseName() {
+		return columnBaseName;
+	}
+
+	public void setColumnBaseName(String columnBaseName) {
+		this.columnBaseName = columnBaseName;
 	}
 }

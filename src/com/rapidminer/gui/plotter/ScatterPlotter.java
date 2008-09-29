@@ -39,6 +39,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -53,6 +54,7 @@ import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.DataTableRow;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.math.MathFunctions;
 
 
@@ -61,7 +63,7 @@ import com.rapidminer.tools.math.MathFunctions;
  * indicate the third dimension.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: ScatterPlotter.java,v 1.11 2008/05/09 19:22:51 ingomierswa Exp $
+ * @version $Id: ScatterPlotter.java,v 1.13 2008/07/12 23:50:38 ingomierswa Exp $
  */
 public class ScatterPlotter extends PlotterAdapter {
 
@@ -245,7 +247,7 @@ public class ScatterPlotter extends PlotterAdapter {
 		this.jitterAmount = jitter;
 		repaint();
 	}
-
+    
 	/** Disables all plotting but does not invoke repaint. */
 	protected void clearPlotColumns() {
 		for (int i = 0; i < columns.length; i++)
@@ -309,89 +311,91 @@ public class ScatterPlotter extends PlotterAdapter {
 		return counter;
 	}
 	
-	private void prepareData() {
-		plots.clear();
-		
-		maxX = maxY = maxColor = Double.NEGATIVE_INFINITY;
-		minX = minY = minColor = Double.POSITIVE_INFINITY;
-		
-		if (axis[X_AXIS] < 0)
-			return;
+	private synchronized void prepareData() {
+		synchronized (plots) {
+			plots.clear();
 
-		currentPlotterXAxis = axis[X_AXIS];
-		currentPlotterYAxis = -1;
-		for (int column = 0; column < columns.length; column++) {
-			if (columns[column]) {
-                String name = dataTable.getColumnName(column);
-				Plot points = new Plot(name, column);
-				synchronized (dataTable) {
-					Iterator<DataTableRow> i = dataTable.iterator();
-					// get min and max color
-					if ((axis[Y_AXIS] != -1) && (getNumberOfCurrentlySelectedPlots() == 1)) {
-			            colorColumn = column;
+			maxX = maxY = maxColor = Double.NEGATIVE_INFINITY;
+			minX = minY = minColor = Double.POSITIVE_INFINITY;
+
+			if (axis[X_AXIS] < 0)
+				return;
+
+			currentPlotterXAxis = axis[X_AXIS];
+			currentPlotterYAxis = -1;
+			for (int column = 0; column < columns.length; column++) {
+				if (columns[column]) {
+					String name = dataTable.getColumnName(column);
+					Plot points = new Plot(name, column);
+					synchronized (dataTable) {
+						Iterator<DataTableRow> i = dataTable.iterator();
+						// get min and max color
+						if ((axis[Y_AXIS] != -1) && (getNumberOfCurrentlySelectedPlots() == 1)) {
+							colorColumn = column;
+							while (i.hasNext()) {
+								DataTableRow row = i.next();
+								double color = row.getValue(colorColumn);
+								minColor = MathFunctions.robustMin(minColor, color);
+								maxColor = MathFunctions.robustMax(maxColor, color);
+							}
+							i = dataTable.iterator();
+						}
 						while (i.hasNext()) {
 							DataTableRow row = i.next();
-							double color = row.getValue(colorColumn);
-							minColor = MathFunctions.robustMin(minColor, color);
-							maxColor = MathFunctions.robustMax(maxColor, color);
+							try {
+								double x = row.getValue(currentPlotterXAxis);
+								double y = Double.NaN;
+								double color = Double.NaN;
+								Color borderColor = Color.BLACK;
+								if (axis[Y_AXIS] != -1) {
+									currentPlotterYAxis = axis[Y_AXIS];
+									y = row.getValue(currentPlotterYAxis);
+									if (getNumberOfCurrentlySelectedPlots() == 1) {
+										color = getPointColorValue(this.dataTable, row, colorColumn, minColor, maxColor);
+										borderColor = getPointBorderColor(this.dataTable, row, colorColumn);
+									}
+								} else {
+									currentPlotterYAxis = column;
+									y = row.getValue(column);
+								}
+
+								ColorPlotterPoint currentPoint = new ColorPlotterPoint(this, row.getId(), x, y, color, borderColor);
+								if (currentPoint.isIn(drawMinX, drawMaxX, drawMinY, drawMaxY)) {
+									points.add(currentPoint);
+									minX = Math.min(x, minX);
+									maxX = Math.max(x, maxX);
+									minY = Math.min(y, minY);
+									maxY = Math.max(y, maxY);
+								}
+							} catch (NumberFormatException e) {
+								throw new IllegalArgumentException("Not a numerical data column: " + column);
+							}
 						}
-						i = dataTable.iterator();
-					}
-					while (i.hasNext()) {
-						DataTableRow row = i.next();
-						try {
-						    double x = row.getValue(currentPlotterXAxis);
-						    double y = Double.NaN;
-						    double color = Double.NaN;
-                            Color borderColor = Color.BLACK;
-						    if (axis[Y_AXIS] != -1) {
-						        currentPlotterYAxis = axis[Y_AXIS];
-						        y = row.getValue(currentPlotterYAxis);
-						        if (getNumberOfCurrentlySelectedPlots() == 1) {
-						            color = getPointColorValue(this.dataTable, row, colorColumn, minColor, maxColor);
-                                    borderColor = getPointBorderColor(this.dataTable, row, colorColumn);
-						        }
-						    } else {
-						        currentPlotterYAxis = column;
-						        y = row.getValue(column);
-						    }
-                          
-						    ColorPlotterPoint currentPoint = new ColorPlotterPoint(this, row.getId(), x, y, color, borderColor);
-							if (currentPoint.isIn(drawMinX, drawMaxX, drawMinY, drawMaxY)) {
-						        points.add(currentPoint);
-						        minX = Math.min(x, minX);
-						        maxX = Math.max(x, maxX);
-						        minY = Math.min(y, minY);
-						        maxY = Math.max(y, maxY);
-						    }
-						} catch (NumberFormatException e) {
-						    throw new IllegalArgumentException("Not a numerical data column: " + column);
+						if (this.jitterAmount > 0) {
+							Random jitterRandom = new Random(2001);
+							double oldXRange = maxX - minX;
+							double oldYRange = maxY - minY;
+							Iterator<ColorPlotterPoint> p = points.iterator();
+							while (p.hasNext()) {
+								ColorPlotterPoint point = p.next();
+								if (Double.isInfinite(oldXRange) || Double.isNaN(oldXRange))
+									oldXRange = 0;
+								if (Double.isInfinite(oldYRange) || Double.isNaN(oldYRange))
+									oldYRange = 0;
+								double pertX = oldXRange * (jitterAmount / 200.0d) * jitterRandom.nextGaussian();
+								double pertY = oldYRange * (jitterAmount / 200.0d) * jitterRandom.nextGaussian();
+								double x = point.getX() + pertX;
+								double y = point.getY() + pertY;
+								minX = Math.min(x, minX);
+								maxX = Math.max(x, maxX);
+								minY = Math.min(y, minY);
+								maxY = Math.max(y, maxY);
+								point.setX(x);
+								point.setY(y);
+							}
 						}
+						plots.add(points);
 					}
-					if (this.jitterAmount > 0) {
-						Random jitterRandom = new Random(2001);
-						double oldXRange = maxX - minX;
-						double oldYRange = maxY - minY;
-						Iterator<ColorPlotterPoint> p = points.iterator();
-						while (p.hasNext()) {
-							ColorPlotterPoint point = p.next();
-							if (Double.isInfinite(oldXRange) || Double.isNaN(oldXRange))
-								oldXRange = 0;
-							if (Double.isInfinite(oldYRange) || Double.isNaN(oldYRange))
-								oldYRange = 0;
-							double pertX = oldXRange * (jitterAmount / 200.0d) * jitterRandom.nextGaussian();
-							double pertY = oldYRange * (jitterAmount / 200.0d) * jitterRandom.nextGaussian();
-							double x = point.getX() + pertX;
-							double y = point.getY() + pertY;
-							minX = Math.min(x, minX);
-							maxX = Math.max(x, maxX);
-							minY = Math.min(y, minY);
-							maxY = Math.max(y, maxY);
-							point.setX(x);
-							point.setY(y);
-						}
-					}
-					plots.add(points);
 				}
 			}
 		}
@@ -466,19 +470,21 @@ public class ScatterPlotter extends PlotterAdapter {
 		}
 	}
 
-	private ColorPlotterPoint getPlotterPointForPos(int x, int y) {
-		Iterator i = plots.iterator();
-		while (i.hasNext()) {
-			Collection plot = (Collection) i.next();
-			Iterator p = plot.iterator();
-			while (p.hasNext()) {
-				ColorPlotterPoint current = (ColorPlotterPoint) p.next();
-				try {
-					if (current.contains(x, y))
-						return current;
-				} catch (IllegalArgumentException e) {
-					// cannot apply axis transformation
-					return null;
+	private synchronized ColorPlotterPoint getPlotterPointForPos(int x, int y) {
+		synchronized (plots) {
+			Iterator i = plots.iterator();
+			while (i.hasNext()) {
+				Collection plot = (Collection) i.next();
+				Iterator p = plot.iterator();
+				while (p.hasNext()) {
+					ColorPlotterPoint current = (ColorPlotterPoint) p.next();
+					try {
+						if (current.contains(x, y))
+							return current;
+					} catch (IllegalArgumentException e) {
+						// cannot apply axis transformation
+						return null;
+					}
 				}
 			}
 		}
@@ -500,58 +506,60 @@ public class ScatterPlotter extends PlotterAdapter {
 		repaint();
 	}
 
-	protected void drawPoints(Graphics2D g, double dx, double dy, double sx, double sy) {
-		if (plots.size() == 0)
-			return;
+	protected synchronized void drawPoints(Graphics2D g, double dx, double dy, double sx, double sy) {
+		synchronized (plots) {
+			if (plots.size() == 0)
+				return;
 
-		int c = 0;
-		Iterator<Plot> p = plots.iterator();
-		while (p.hasNext()) {
-			Plot plot = p.next();
-			if (plot.size() > 0) {
-				// draw path
-				Iterator<ColorPlotterPoint> i = plot.iterator();
-				if ((pointType != POINTS) && (axis[Y_AXIS] < 0) && (draw2DLines)) {
-					GeneralPath path = new GeneralPath();
-					boolean first = true;
-					while (i.hasNext()) {
-						ColorPlotterPoint plotterPoint = i.next();
-						float gSpaceX = (float) ((xTransformation.transform(plotterPoint.getX()) + dx) * sx);
-						float gSpaceY = (float) ((yTransformation.transform(plotterPoint.getY()) + dy) * sy);
-						if (first) {
-							path.moveTo(gSpaceX, gSpaceY);
-						} else {
-							path.lineTo(gSpaceX, gSpaceY);
+			int c = 0;
+			Iterator<Plot> p = plots.iterator();
+			while (p.hasNext()) {
+				Plot plot = p.next();
+				if (plot.size() > 0) {
+					// draw path
+					Iterator<ColorPlotterPoint> i = plot.iterator();
+					if ((pointType != POINTS) && (axis[Y_AXIS] < 0) && (draw2DLines)) {
+						GeneralPath path = new GeneralPath();
+						boolean first = true;
+						while (i.hasNext()) {
+							ColorPlotterPoint plotterPoint = i.next();
+							float gSpaceX = (float) ((xTransformation.transform(plotterPoint.getX()) + dx) * sx);
+							float gSpaceY = (float) ((yTransformation.transform(plotterPoint.getY()) + dy) * sy);
+							if (first) {
+								path.moveTo(gSpaceX, gSpaceY);
+							} else {
+								path.lineTo(gSpaceX, gSpaceY);
+							}
+							first = false;
 						}
-						first = false;
+						plot.getLineStyle().set(g);
+						g.draw(path);
 					}
-					plot.getLineStyle().set(g);
-					g.draw(path);
+					if ((this.pointType == LINES_AND_POINTS) || (this.pointType == POINTS)) {
+						// draw points
+						g.setStroke(new BasicStroke());
+						i = plot.iterator();
+						while (i.hasNext()) {
+							ColorPlotterPoint plotterPoint = i.next();
+							Color pointColor = plot.getLineStyle().getColor();
+							PointStyle pointStyle = plot.getPointStyle();
+							if (axis[Y_AXIS] >= 0) {
+								pointColor = getPointColor(plotterPoint.getColor());
+								if (plots.size() <= 1)
+									pointStyle = ELLIPSOID_POINT_STYLE;
+							}
+							Color pointBorderColor = plotterPoint.getBorderColor();
+							try {
+								float gSpaceX = (float) ((xTransformation.transform(plotterPoint.getX()) + dx) * sx);
+								float gSpaceY = (float) ((yTransformation.transform(plotterPoint.getY()) + dy) * sy);
+								drawPoint(g, pointStyle, gSpaceX, gSpaceY, pointColor, pointBorderColor);
+							} catch (IllegalArgumentException e) {
+								LogService.getGlobal().log("Cannot apply axis scale transformation to point (" + plotterPoint.getX() + "," + plotterPoint.getY() + "), skipping...", LogService.WARNING);
+							}
+						}
+					}
+					c = (c + 1) % LINE_STYLES.length;
 				}
-                if ((this.pointType == LINES_AND_POINTS) || (this.pointType == POINTS)) {
-                    // draw points
-                	g.setStroke(new BasicStroke());
-                    i = plot.iterator();
-                    while (i.hasNext()) {
-                        ColorPlotterPoint plotterPoint = i.next();
-                        Color pointColor = plot.getLineStyle().getColor();
-                        PointStyle pointStyle = plot.getPointStyle();
-                        if (axis[Y_AXIS] >= 0) {
-                            pointColor = getPointColor(plotterPoint.getColor());
-                            if (plots.size() <= 1)
-                            	pointStyle = ELLIPSOID_POINT_STYLE;
-                        }
-                        Color pointBorderColor = plotterPoint.getBorderColor();
-                        try {
-                            float gSpaceX = (float) ((xTransformation.transform(plotterPoint.getX()) + dx) * sx);
-                            float gSpaceY = (float) ((yTransformation.transform(plotterPoint.getY()) + dy) * sy);
-                            drawPoint(g, pointStyle, gSpaceX, gSpaceY, pointColor, pointBorderColor);
-                        } catch (IllegalArgumentException e) {
-                            LogService.getGlobal().log("Cannot apply axis scale transformation to point (" + plotterPoint.getX() + "," + plotterPoint.getY() + "), skipping...", LogService.WARNING);
-                        }
-                    }
-                }
-				c = (c + 1) % LINE_STYLES.length;
 			}
 		}
 	}
@@ -596,6 +604,15 @@ public class ScatterPlotter extends PlotterAdapter {
 				int index = (int)Math.round(xValue);
 				if ((index >= 0) && (index < dataTable.getNumberOfValues(currentPlotterXAxis)))
 					label = dataTable.mapIndex(currentPlotterXAxis, index);
+			} else if ((getNumberOfPlots(dataTable) == 1) && (dataTable.isDate(currentPlotterXAxis))) {
+				long index = (long)Math.round(xValue);
+				label = Tools.formatDate(new Date(index));
+			} else if ((getNumberOfPlots(dataTable) == 1) && (dataTable.isTime(currentPlotterXAxis))) {
+				long index = (long)Math.round(xValue);
+				label = Tools.formatTime(new Date(index));
+			} else if ((getNumberOfPlots(dataTable) == 1) && (dataTable.isDateTime(currentPlotterXAxis))) {
+				long index = (long)Math.round(xValue);
+				label = Tools.formatDateTime(new Date(index));
 			} else {
 				label = xTransformation.format(xValue, ticNumber);
 			}
@@ -618,6 +635,15 @@ public class ScatterPlotter extends PlotterAdapter {
 				int index = (int)Math.round(yValue);
 				if ((index >= 0) && (index < dataTable.getNumberOfValues(currentPlotterYAxis)))
 					label = dataTable.mapIndex(currentPlotterYAxis, index);
+			} else if ((getNumberOfPlots(dataTable) == 1) && (dataTable.isDate(currentPlotterYAxis))) {
+				long index = (long)Math.round(yValue);
+				label = Tools.formatDate(new Date(index));
+			} else if ((getNumberOfPlots(dataTable) == 1) && (dataTable.isTime(currentPlotterYAxis))) {
+				long index = (long)Math.round(yValue);
+				label = Tools.formatTime(new Date(index));
+			} else if ((getNumberOfPlots(dataTable) == 1) && (dataTable.isDateTime(currentPlotterYAxis))) {
+				long index = (long)Math.round(yValue);
+				label = Tools.formatDateTime(new Date(index));
 			} else {
 				String formattedValue = yTransformation.format(yValue, ticNumber);
 				if (formattedValue != null)

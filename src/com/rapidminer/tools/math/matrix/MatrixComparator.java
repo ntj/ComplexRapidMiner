@@ -26,7 +26,7 @@ package com.rapidminer.tools.math.matrix;
  * Compare two matrices.
  * 
  * @author Michael Wurst
- * @version $Id: MatrixComparator.java,v 1.3 2008/05/09 19:23:23 ingomierswa Exp $
+ * @version $Id: MatrixComparator.java,v 1.5 2008/09/12 10:30:02 tobiasmalbrecht Exp $
  * 
  */
 public interface MatrixComparator<Ex, Ey> {

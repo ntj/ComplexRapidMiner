@@ -41,26 +41,30 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.Condition;
 import com.rapidminer.example.set.ConditionCreationException;
 import com.rapidminer.example.set.ConditionedExampleSet;
+import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
-import com.rapidminer.tools.Tableable;
+import com.rapidminer.report.Tableable;
 
 
 /**
  * Can be used to display (parts of) the data by means of a JTable.
  * 
  * @author Ingo Mierswa
- * @version $Id: DataViewer.java,v 1.6 2008/05/09 19:23:01 ingomierswa Exp $
+ * @version $Id: DataViewer.java,v 1.9 2008/07/19 16:31:17 ingomierswa Exp $
  */
 public class DataViewer extends JPanel implements Tableable {
 
     private static final long serialVersionUID = -8114228636932871865L;
 
+	private static final int DEFAULT_MAX_SIZE_FOR_FILTERING = 100000;
+	
     private JLabel generalInfo = new JLabel();
     
     private DataViewerTable dataTable = new DataViewerTable();
     
     /** Filter counter display. */
     private JLabel filterCounter = new JLabel();
+    
     
     private transient ExampleSet originalExampleSet;
     
@@ -115,6 +119,19 @@ public class DataViewer extends JPanel implements Tableable {
         			updateFilter((String)filterSelector.getSelectedItem());
         		}
         	});
+        	
+        	int maxNumberBeforeFiltering = DEFAULT_MAX_SIZE_FOR_FILTERING;
+        	String maxString = System.getProperty(RapidMinerGUI.PROPERTY_RAPIDMINER_GUI_MAX_STATISTICS_ROWS);
+        	if (maxString != null) {
+        		try {
+        			maxNumberBeforeFiltering = Integer.parseInt(maxString);
+        		} catch (NumberFormatException e) {
+        			// do nothing
+        		}
+        	}
+        	if (exampleSet.size() > maxNumberBeforeFiltering) {
+        		filterSelector.setEnabled(false);
+        	}
         	filterPanel.add(filterSelector);
 
         	c.weightx = 0.0;
@@ -152,6 +169,10 @@ public class DataViewer extends JPanel implements Tableable {
         filterCounter.setText("(" + filteredExampleSet.size() + " / " + originalExampleSet.size() + "): ");        
     }
 
+    public String getColumnName(int columnIndex) {
+    	return dataTable.getColumnName(columnIndex);
+    }
+    
 	public String getCell(int row, int column) {
 		return dataTable.getCell(row, column);
 	}

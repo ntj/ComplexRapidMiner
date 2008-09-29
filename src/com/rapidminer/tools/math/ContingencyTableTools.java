@@ -29,7 +29,7 @@ import com.rapidminer.tools.Tools;
  * contingency tables like chi-squared tests etc.
  * 
  * @author Ingo Mierswa
- * @version $Id: ContingencyTableTools.java,v 1.3 2008/05/09 19:23:03 ingomierswa Exp $
+ * @version $Id: ContingencyTableTools.java,v 1.4 2008/08/08 10:15:21 ingomierswa Exp $
  */
 public class ContingencyTableTools {
 
@@ -51,11 +51,11 @@ public class ContingencyTableTools {
 			}
 		}
 		
-		int df = (numberOfRows - 1) * (numberOfColumns - 1);
-		boolean yates = true;
-		if ((df > 1) || (!useYatesCorrection)) {
-			yates = false;
-		} else if (df <= 0) {
+		int degreesOfFreedom = (numberOfRows - 1) * (numberOfColumns - 1);
+		boolean useYates = true;
+		if ((degreesOfFreedom > 1) || (!useYatesCorrection)) {
+			useYates = false;
+		} else if (degreesOfFreedom <= 0) {
 			return 0;
 		}
 		
@@ -66,7 +66,7 @@ public class ContingencyTableTools {
 				for (int column = 0; column < numberOfColumns; column++) {
 					if (columnSums[column] > 0) {
 						expectedValue = (columnSums[column] * rowSums[row]) / totalSum;
-						chiSquaredValue += getChiSquaredForEntry(matrix[row][column], expectedValue, yates);
+						chiSquaredValue += getChiSquaredForEntry(matrix[row][column], expectedValue, useYates);
 					}
 				}
 			}

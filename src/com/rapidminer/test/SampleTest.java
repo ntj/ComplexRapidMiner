@@ -44,7 +44,7 @@ import junit.framework.TestSuite;
  * process.
  * 
  * @author Ingo Mierswa, Simon Fischer
- * @version $Id: SampleTest.java,v 1.23 2008/05/09 19:22:48 ingomierswa Exp $
+ * @version $Id: SampleTest.java,v 1.24 2008/08/22 09:02:32 ingomierswa Exp $
  */
 public abstract class SampleTest extends RapidMinerTestCase {
 
@@ -125,7 +125,7 @@ public abstract class SampleTest extends RapidMinerTestCase {
 		suite.addTest(new PerformanceSampleTest("04_Validation" + File.separator + "01_PerformanceEvaluator_Nominal.xml", new String[] { "accuracy" }, new double[] { 0.875000 }));
 		suite.addTest(new PerformanceSampleTest("04_Validation" + File.separator + "02_PerformanceEvaluator_Regression.xml", new String[] { "relative_error" }, new double[] { 5.960858 }));
 		suite.addTest(new PerformanceSampleTest("04_Validation" + File.separator + "03_XValidation_Numerical.xml", new String[] { "correlation" }, new double[] { 0.999077 }));		
-		suite.addTest(new PerformanceSampleTest("04_Validation" + File.separator + "04_XValidation_Nominal.xml", new String[] { "classification_error" }, new double[] { 0.075000 }));
+		suite.addTest(new PerformanceSampleTest("04_Validation" + File.separator + "04_XValidation_Nominal.xml", new String[] { "classification_error" }, new double[] { 0.100000 }));
 		suite.addTest(new PerformanceSampleTest("04_Validation" + File.separator + "07_AreaUnderCurve.xml", new String[] { "AUC" }, new double[] { 0.968523 }));
 		suite.addTest(new PerformanceSampleTest("04_Validation" + File.separator + "08_SimpleValidation.xml", new String[] { "accuracy" }, new double[] { 0.866666 }));
 

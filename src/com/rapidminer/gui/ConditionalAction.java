@@ -41,6 +41,11 @@ import javax.swing.Icon;
  */
 public abstract class ConditionalAction extends AbstractAction {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3581066203343247846L;
+
 	private static final List<ConditionalAction> ALL_ACTIONS = new LinkedList<ConditionalAction>();
 
 	/* The possible states. */

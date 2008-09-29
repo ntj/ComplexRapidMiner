@@ -31,16 +31,17 @@ import javax.swing.JPanel;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.learner.clustering.ClusterNode;
 import com.rapidminer.operator.learner.clustering.HierarchicalClusterModel;
+import com.rapidminer.report.Renderable;
 
 /**
  * Plots a dendrogram of a given cluster model. The nodes in the model must have different, non-NaN values for 
  * this operator to work.
  * 
  * @author Michael Wurst
- * @version $Id: DendrogramPlotter.java,v 1.3 2008/05/09 19:22:59 ingomierswa Exp $
+ * @version $Id: DendrogramPlotter.java,v 1.6 2008/07/19 16:31:17 ingomierswa Exp $
  *
  */
-public class DendrogramPlotter extends JPanel {
+public class DendrogramPlotter extends JPanel implements Renderable {
 
 	private static final long serialVersionUID = 2892192060246909733L;
 
@@ -163,5 +164,28 @@ public class DendrogramPlotter extends JPanel {
 		drawLine(leftPos, weightToYPos(cn.getWeight()) ,rightPos, weightToYPos(cn.getWeight()), g);
 		
 		return middlePos;
+	}
+	
+    public void prepareRendering() {}
+    
+	public int getRenderHeight(int preferredHeight) {
+		int height = getHeight();
+		if (height < 1) {
+			height = preferredHeight;
+		}
+		return height;
+	}
+
+	public int getRenderWidth(int preferredWidth) {
+		int width = getWidth();
+		if (width < 1) {
+			width = preferredWidth;
+		}
+		return width;
+	}
+
+	public void render(Graphics graphics, int width, int height) {
+		setSize(width, height);
+		paint(graphics);
 	}
 }

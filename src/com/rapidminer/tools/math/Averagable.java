@@ -32,18 +32,23 @@ import javax.swing.JTextPane;
 
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.ResultObjectAdapter;
-import com.rapidminer.tools.Reportable;
+import com.rapidminer.report.Readable;
+import com.rapidminer.report.Reportable;
 import com.rapidminer.tools.Tools;
-import com.rapidminer.tools.Readable;
 
 /**
  * Superclass for all objects which can be averaged. Averagable objects can be
  * stored in a average vector.
  * 
  * @author Ingo Mierswa
- * @version $Id: Averagable.java,v 1.6 2008/05/09 19:23:03 ingomierswa Exp $
+ * @version $Id: Averagable.java,v 1.8 2008/07/31 17:43:41 ingomierswa Exp $
  */
 public abstract class Averagable extends ResultObjectAdapter implements Cloneable, Reportable, Readable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3193522429555690641L;
 
 	/** The averages are summed up each time buildAverage is called. */
 	private double meanSum;

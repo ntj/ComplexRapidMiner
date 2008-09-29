@@ -56,7 +56,7 @@ import com.rapidminer.gui.tools.SwingTools;
  *  of other important initialization options.
  *   
  *  @author Ingo Mierswa
- *  @version $Id: InitialSettingsDialog.java,v 1.8 2008/05/09 19:23:20 ingomierswa Exp $
+ *  @version $Id: InitialSettingsDialog.java,v 1.10 2008/07/21 17:34:54 ingomierswa Exp $
  */
 public class InitialSettingsDialog extends JDialog {
 	
@@ -74,12 +74,17 @@ public class InitialSettingsDialog extends JDialog {
 	
 	private JComboBox lookAndFeelBox = new JComboBox(RapidMinerGUI.LOOK_AND_FEELS);
 	
-	public InitialSettingsDialog(Frame owner, File oldWorkspace, String defaultWorkspaceName, String workspaceText, int defaultLookAndFeel, boolean showLookAndFeelSelection) {
+	private File forbiddenDirectory;
+	
+	private boolean ok = false;
+	
+	public InitialSettingsDialog(Frame owner, File oldWorkspace, String defaultWorkspaceName, String workspaceText, File forbiddenDirectory, int defaultLookAndFeel, boolean showLookAndFeelSelection) {
 		super(owner);
+		this.forbiddenDirectory = forbiddenDirectory;
 		setTitle("Select Workspace");
 		SwingTools.setDialogIcon(this);
 		setModal(true);
-		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		
 		setLayout(new BorderLayout());
 		
@@ -221,15 +226,33 @@ public class InitialSettingsDialog extends JDialog {
 		return lookAndFeelBox.getSelectedIndex();
 	}
 	
+	public boolean isOk() {
+		return this.ok;
+	}
+	
 	private void ok() {
-		// write settings
-		/*
-		int dataManagementValue = DataRowFactory.TYPE_DOUBLE_ARRAY;
-		if (dataManagement.getSelectedIndex() == 1)
-			dataManagementValue = DataRowFactory.TYPE_FLOAT_ARRAY;
-		System.setProperty(RapidMiner.PROPERTY_RAPIDMINER_DEFAULT_DATA_REPRESENTATION, dataManagementValue + "");
-		ParameterService.writePropertyIntoMainUserConfigFile(RapidMiner.PROPERTY_RAPIDMINER_DEFAULT_DATA_REPRESENTATION, dataManagementValue + "");
-		*/
-		dispose();
+		// make sure that the new workspace is not the home directory of rapidminer or any subdirectory
+		boolean allFine = true;
+		if (forbiddenDirectory != null) {
+			String newPath = getWorkspacePath();
+			File checkDir = new File(newPath);
+			while (true) {
+				if (checkDir == null) {
+					break;
+				}
+				if (checkDir.equals(forbiddenDirectory)) {
+					allFine = false;
+					break;
+				}
+				
+				checkDir = checkDir.getParentFile();
+			}
+		}
+		if (!allFine) {
+			SwingTools.showVerySimpleErrorMessage("Cannot change workspace: location not possible.");
+		} else {
+			this.ok = true;
+			dispose();
+		}
 	}
 }

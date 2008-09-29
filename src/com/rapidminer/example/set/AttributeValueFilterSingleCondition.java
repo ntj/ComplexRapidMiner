@@ -32,7 +32,7 @@ import com.rapidminer.tools.Tools;
  * less than, ... a given value.
  * 
  * @author Ingo Mierswa
- * @version $Id: AttributeValueFilterSingleCondition.java,v 1.8 2008/05/09 19:22:49 ingomierswa Exp $
+ * @version $Id: AttributeValueFilterSingleCondition.java,v 1.9 2008/08/28 18:54:07 ingomierswa Exp $
  */
 public class AttributeValueFilterSingleCondition implements Condition {
     
@@ -143,9 +143,9 @@ public class AttributeValueFilterSingleCondition implements Condition {
             switch (comparisonType) {
                 case NEQ1:
                 case NEQ2:
-                    return !e.getNominalValue(attribute).equals(nominalValue);
+                    return !e.getNominalValue(attribute).matches(nominalValue);
                 case EQUALS:
-                    return e.getNominalValue(attribute).equals(nominalValue);
+                    return e.getNominalValue(attribute).matches(nominalValue);
                 default:
                     return false;
             }   

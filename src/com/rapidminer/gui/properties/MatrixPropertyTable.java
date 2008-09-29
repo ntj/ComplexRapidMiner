@@ -28,6 +28,7 @@ import java.util.Vector;
 
 import javax.swing.table.TableColumn;
 
+import com.rapidminer.gui.tools.CellColorProvider;
 import com.rapidminer.gui.tools.ExtendedJTable;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.Operator;
@@ -37,37 +38,48 @@ import com.rapidminer.operator.Operator;
  * For {@link com.rapidminer.parameter.ParameterTypeMatrix} 
  * 
  * @author Helge Homburg
- * @version $Id: MatrixPropertyTable.java,v 1.4 2008/05/09 19:22:45 ingomierswa Exp $
+ * @version $Id: MatrixPropertyTable.java,v 1.6 2008/08/25 08:10:41 ingomierswa Exp $
  */
 public class MatrixPropertyTable extends ExtendedJTable {
 
-	private static final long serialVersionUID = 0L;	
+	private static final long serialVersionUID = 2348648114479673318L;
 
 	private transient Operator operator;
 	
 	private MatrixPropertyTableModel model;
 
-	public MatrixPropertyTable(double[][] parameterMatrix, Operator operator) {
-		super(null, false, false);		
+	private String rowBaseName;
+	
+	
+	public MatrixPropertyTable(String baseName, String rowBaseName, String columnBaseName, double[][] parameterMatrix, Operator operator) {
+		super(null, false, false);	
+		this.rowBaseName = rowBaseName;
 		this.operator = operator;
-		//setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		
+		setCellColorProvider(new CellColorProvider() {
+		    public Color getCellColor(int row, int column) {
+		        if (column == 0) {
+		        	return SwingTools.LIGHTEST_BLUE;
+		        } else {        	
+		        	return Color.WHITE;
+		        }            
+		    }
+		});
 		// build the table model
 		if (parameterMatrix != null) {							
 			int numberOfRows = parameterMatrix[0].length;
 			int numberOfColumns = parameterMatrix.length;
 			
-			model = new MatrixPropertyTableModel(numberOfRows, numberOfColumns + 1);
+			model = new MatrixPropertyTableModel(baseName, columnBaseName, numberOfRows, numberOfColumns + 1);
 			setModel(model);
 			for (int i = 0; i < numberOfColumns; i++) {
-				getModel().setValueAt("Predicted Class " + (i + 1), i, 0);
+				getModel().setValueAt(rowBaseName + " " + (i + 1), i, 0);
 				for (int j = 0; j < numberOfRows; j++) {					
 					getModel().setValueAt(Double.toString(parameterMatrix[i][j]),i,j + 1);
 				}
 			}
-			//doLayout();
 		} else {
-			model = new MatrixPropertyTableModel(0, 0);
+			model = new MatrixPropertyTableModel(baseName, columnBaseName, 0, 0);
 			setModel(model);
 		}		
 	}
@@ -78,7 +90,7 @@ public class MatrixPropertyTable extends ExtendedJTable {
 		}
 		model.addRow(new Object[model.getColumnCount()]);
 		int currentRow = model.getRowCount() - 1;
-		model.setValueAt("Predicted Class " + currentRow, currentRow, 0);
+		model.setValueAt(rowBaseName + " " + (currentRow + 1), currentRow, 0);
 	}
 	
 	public void addColumn() {
@@ -166,14 +178,6 @@ public class MatrixPropertyTable extends ExtendedJTable {
             	currentColumn.setModelIndex(currentColumn.getModelIndex() - 1);            	
             }
         }        
-    }
-	
-    public Color getCellColor(int row, int column) {
-        if (column == 0) {
-        	return SwingTools.LIGHTEST_BLUE;
-        } else {        	
-        	return Color.WHITE;
-        }            
     }
     
     public boolean isCellEditable(int row, int col) { 

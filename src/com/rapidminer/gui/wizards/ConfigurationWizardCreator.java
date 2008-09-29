@@ -23,6 +23,7 @@
 package com.rapidminer.gui.wizards;
 
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * This interface must be implemented by all classes which are able to create a Wizard dialog for
@@ -32,10 +33,16 @@ import java.io.Serializable;
  * can than be created by the method defined in this interface. 
  *  
  * @author Ingo Mierswa
- * @version $Id: ConfigurationWizardCreator.java,v 1.3 2008/05/09 19:22:56 ingomierswa Exp $
+ * @version $Id: ConfigurationWizardCreator.java,v 1.5 2008/08/15 19:15:00 ingomierswa Exp $
  */
 public interface ConfigurationWizardCreator extends Serializable {
 
+	public String getButtonText();
+	
+	public void setParameters(Map<String, String> parameters);
+	
+	public Map<String, String> getParameters();
+	
     public void createConfigurationWizard(ConfigurationListener listener);
     
 }

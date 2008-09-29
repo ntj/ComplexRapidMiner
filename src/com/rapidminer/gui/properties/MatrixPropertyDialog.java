@@ -45,29 +45,30 @@ import com.rapidminer.parameter.ParameterTypeMatrix;
  * 
  * @see com.rapidminer.gui.properties.MatrixPropertyTable
  * @author Helge Homburg
- * @version $Id: MatrixPropertyDialog.java,v 1.3 2008/05/09 19:22:45 ingomierswa Exp $
+ * @version $Id: MatrixPropertyDialog.java,v 1.4 2008/07/13 11:00:56 ingomierswa Exp $
  */
 public class MatrixPropertyDialog extends JDialog {
 
-	private static final long serialVersionUID = 0L;
+	private static final long serialVersionUID = 5396725165122306231L;
 
 	private boolean ok = false;
 	
-	private boolean isSquare = false;
+	private boolean isSquared = false;
 
 	private MatrixPropertyTable matrixPropertyTable;	
 	
-	public MatrixPropertyDialog(final ParameterTypeMatrix type, double[][] matrix, Operator operator, Boolean isSquare) {
+	
+	public MatrixPropertyDialog(final ParameterTypeMatrix type, double[][] matrix, Operator operator) {
 		super(RapidMinerGUI.getMainFrame(), "Parameter Matrix: " + type.getKey(), true);
 							
-		this.isSquare = isSquare;
-		matrixPropertyTable = new MatrixPropertyTable(matrix, operator);
+		this.isSquared = type.isSquared();
+		matrixPropertyTable = new MatrixPropertyTable(type.getBaseName(), type.getRowBaseName(), type.getColumnBaseName(), matrix, operator);
 
 		getContentPane().setLayout(new BorderLayout());
 
 		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
-		if (!this.isSquare) {
+		if (!this.isSquared) {
 			JButton addRowButton = new JButton("Add row");
 			addRowButton.addActionListener(new ActionListener() {
 	

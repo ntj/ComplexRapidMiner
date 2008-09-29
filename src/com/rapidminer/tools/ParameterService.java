@@ -146,7 +146,7 @@ public class ParameterService {
 		// core operators
 		InputStream operatorDescriptionStream = operatorsXMLStream;
 		if (operatorDescriptionStream == null) {
-			URL operatorURL = Tools.getResource("operators.xml");
+			URL operatorURL = OperatorService.getMainOperators();
 			try {
 				if (operatorURL != null) {
 					operatorDescriptionStream = operatorURL.openStream();
@@ -161,6 +161,14 @@ public class ParameterService {
 		if (operatorDescriptionStream != null)
 			OperatorService.registerOperators("operators.xml", operatorDescriptionStream, null, addWekaOperators);
 
+		try {
+			// we opened the stream ourself --> close it
+			if ((operatorDescriptionStream != null) && (operatorsXMLStream == null))
+				operatorDescriptionStream.close();
+		} catch (IOException e1) {
+			// do nothing
+		}
+		
 		// additional operators from init method
 		if (additionalXMLStream != null) {
 			OperatorService.registerOperators("Additional Operators from Init", additionalXMLStream, null, addWekaOperators);			
@@ -230,7 +238,6 @@ public class ParameterService {
 	 *  it will be created. The absolute path is also written into the corresponding
 	 *  user config file. Additionally, the favorites for the file chooser 
 	 *  will be extended by the workspace and sample links if appropriate. */
-	@SuppressWarnings("unchecked")
 	public static final void setUserWorkspace(File workspace) {
 		if (!workspace.exists()) {
 			boolean result = workspace.mkdir();
@@ -410,7 +417,7 @@ public class ParameterService {
 	/** Returns the configuration file in the user dir .rapidminer and automatically adds 
 	 *  the current version number if it is a rc file. */
 	public static File getUserConfigFile(String name) {
-		return getVersionedUserConfigFile(new VersionNumber(Version.getVersion()), name);
+		return getVersionedUserConfigFile(new VersionNumber(Version.getLongVersion()), name);
 	}
 	
 	public static File getVersionedUserConfigFile(VersionNumber versionNumber, String name) {

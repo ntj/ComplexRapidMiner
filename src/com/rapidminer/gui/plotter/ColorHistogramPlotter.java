@@ -41,7 +41,7 @@ import com.rapidminer.tools.math.MathFunctions;
  *  another column.
  * 
  *  @author Ingo Mierswa
- *  @version $Id: ColorHistogramPlotter.java,v 1.6 2008/05/09 19:22:51 ingomierswa Exp $
+ *  @version $Id: ColorHistogramPlotter.java,v 1.7 2008/07/03 19:17:12 ingomierswa Exp $
  */
 public class ColorHistogramPlotter extends HistogramPlotter {
 	
@@ -99,7 +99,7 @@ public class ColorHistogramPlotter extends HistogramPlotter {
     public int getValuePlotSelectionType() {
         return SINGLE_SELECTION;
     }
-    
+	
 	public void prepareData() {		
 		minX = Double.POSITIVE_INFINITY;
 		maxX = Double.NEGATIVE_INFINITY;
@@ -169,6 +169,22 @@ public class ColorHistogramPlotter extends HistogramPlotter {
 			// no plots selected --> do nothing
 			this.maxY = 1;
 		}
+		
+		// rescale counters for logscale?
+		if (isLogScale()) {
+			this.maxY = 0.0d;
+			for (Bins bins : allPlots.values()) {
+				for (Bin bin : bins) {
+					double counter = bin.getCounter();
+					if (counter > 0.0d) {
+						double newValue = Math.log(counter); 
+						bin.setCounter(newValue);
+						this.maxY = Math.max(newValue, this.maxY);
+					}
+				}
+			}
+		}
+		
 		this.minY = 0;
 
 		if (dataTable.getNumberOfRows() == 0) {

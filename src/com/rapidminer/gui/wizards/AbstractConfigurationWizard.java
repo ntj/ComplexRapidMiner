@@ -46,11 +46,13 @@ import com.rapidminer.operator.io.ExampleSource;
  * {@link ExampleSource} operators.
  * 
  * @author Ingo Mierswa
- * @version $Id: AbstractConfigurationWizard.java,v 1.4 2008/05/09 19:22:56 ingomierswa Exp $
+ * @version $Id: AbstractConfigurationWizard.java,v 1.6 2008/08/15 19:15:00 ingomierswa Exp $
  */
 public abstract class AbstractConfigurationWizard extends JDialog {
     
-    private JButton next = new JButton("Next >");
+	private static final long serialVersionUID = -2633062859175838003L;
+
+	private JButton next = new JButton("Next >");
 
     private JButton previous = new JButton("< Previous");
 
