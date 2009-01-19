@@ -428,8 +428,7 @@
 
 	<!-- Supervised Learning -->
 	
-	<operator
-		name = "EnsembleRegression"
+	<operator name = "EnsembleRegression"
 		class = "de.tud.inf.operator.learner.regressionensemble.EnsembleRegression"
 		description = "Drift-Aware Ensemble Regression"
 		group = "Learner.Supervised.Functions.Ensemble"/>
@@ -1413,6 +1412,11 @@
 		description="This operator embeds a complete experiment previously written into a file."
 		deprecation="Please use the operator 'ProcessEmbedder' instead (and note the change of the parameter name!)"
 		group="Meta" />
+		
+	<operator name = "ExampleSetGrower"
+		class = "de.tud.inf.operator.meta.ExampleSetGrower"
+		description = "Executes the inner operator on a subset of the input example set that is expanded by one example per step."
+		group = "Meta" />
 
 	<operator name="SplitChain"
 		class="com.rapidminer.operator.meta.RatioSplitChain"
