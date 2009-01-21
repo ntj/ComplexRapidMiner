@@ -3,6 +3,8 @@ package de.tud.inf.operator.learner.regressionensemble;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
@@ -19,6 +21,8 @@ public class EnsembleRegressionModel extends PredictionModel implements Iterable
 	
 	private List<EnsembleMember> members;
 	
+	private Set<Integer> seenIds;
+
 	private ExampleSet exampleSet;
 	
 	protected EnsembleRegressionModel(ExampleSet exampleSet) {
@@ -34,6 +38,15 @@ public class EnsembleRegressionModel extends PredictionModel implements Iterable
 			}
 		}
 		this.exampleSet = exampleSet;
+		this.seenIds = new HashSet<Integer>();
+	}
+	
+	public Set<Integer> getSeenIds() {
+		return seenIds;
+	}
+
+	public void setSeenIds(Set<Integer> seenIds) {
+		this.seenIds = seenIds;
 	}
 	
 	public boolean addMember(EnsembleMember member) {

@@ -10,10 +10,13 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
+import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.Statistics;
 import com.rapidminer.example.set.AttributeValueFilter;
@@ -120,31 +123,19 @@ public class EnsembleRegression extends AbstractLearner {
 		return true;
 	}
 	
-	private List<Integer> newExampleIds(ExampleSet setOld, ExampleSet setNew) {		
-		List<Integer> newIds = null;
+	private List<Integer> newExampleIds(Set<Integer> seenIds, ExampleSet exampleSet) {		
+		List<Integer> newIds = new LinkedList<Integer>();
 		
-		setOld.recalculateAttributeStatistics(setOld.getAttributes().getId());
-		int maxIdOld = (int) setOld.getStatistics(setOld.getAttributes().getId(), Statistics.MAXIMUM);
-		setNew.recalculateAttributeStatistics(setNew.getAttributes().getId());
-		int maxIdNew = (int) setNew.getStatistics(setNew.getAttributes().getId(), Statistics.MAXIMUM);
-		
-		// if the sets are the same we are in the first run!
-		if(setOld == setNew) { 
-			int minIdOld = (int) setOld.getStatistics(setOld.getAttributes().getId(), Statistics.MINIMUM);
-			newIds = new ArrayList<Integer>(maxIdOld - minIdOld);
-			for(int i = (minIdOld); i <= maxIdOld; ++i) {
-				newIds.add(i);
-			}
-		} else {
-			if(maxIdOld == maxIdNew) {
-				return null;
-			} else {
-				newIds = new ArrayList<Integer>(maxIdNew - maxIdOld);
-				for(int i = (maxIdOld + 1); i <= maxIdNew; ++i) {
-					newIds.add(i);
-				}
+		// check whether the id was seen in the last example set
+		Iterator<Example> iter = exampleSet.iterator();
+		while (iter.hasNext()) {
+			int currId = (int) iter.next().getId();
+			
+			if(!seenIds.contains(currId)) {
+				newIds.add(currId);
 			}
 		}
+		
 		return newIds;
 	}
 	
@@ -240,7 +231,7 @@ public class EnsembleRegression extends AbstractLearner {
 		//
 		
 		// determine the parts of the example set that are new	
-		List<Integer> newIds = newExampleIds(ensemble.getExampleSet(), exampleSet);
+		List<Integer> newIds = newExampleIds(ensemble.getSeenIds(), exampleSet);
 		
 		if(newIds == null) {
 			// no new ids --> just return, since no updat is possible
@@ -269,6 +260,11 @@ public class EnsembleRegression extends AbstractLearner {
 		//
 		// ------------------------------------------------------------------------------------------
 		//
+		
+		// maintain the list of seen id's
+		Set<Integer> seenIds = ensemble.getSeenIds(); 
+		seenIds.addAll(newIds);
+		ensemble.setSeenIds(seenIds);
 		
 		// now we can assign the new example set as reference for the next iteration of apply
 		ensemble.setExampleSet(exampleSet);
