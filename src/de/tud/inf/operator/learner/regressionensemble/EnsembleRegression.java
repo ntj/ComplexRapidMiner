@@ -18,7 +18,6 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
-import com.rapidminer.example.Statistics;
 import com.rapidminer.example.set.AttributeValueFilter;
 import com.rapidminer.example.set.AttributeValueFilterSingleCondition;
 import com.rapidminer.example.set.Condition;
