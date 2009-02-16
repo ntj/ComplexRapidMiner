@@ -1365,6 +1365,11 @@
 		class="com.rapidminer.operator.preprocessing.outlier.DKNOutlierOperator"
 		description="Identifies n outliers in the given ExampleSet based on the distance to their k nearest neighbors."
 		group="Preprocessing.Data.Outlier" />
+		
+	<operator name="Distinct"
+		class="de.tud.inf.operator.preprocessing.filter.Distinct"
+		description="Creates an example set without duplicates"
+		group="Preprocessing.Data.Filter" />
 
 
 	<!-- Postprocessing Operators -->
@@ -1656,6 +1661,4 @@
 	<operator name="MultipleLabelGenerator"
 		class="com.rapidminer.operator.generator.MultipleLabelGenerator"
 		description="Generates an example set based on numerical attributes and with more than one label."
-		group="IO.Generator" />
-
-</operators>
+		group="IO.Generator" /></operators>
