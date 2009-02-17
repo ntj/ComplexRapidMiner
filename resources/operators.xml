@@ -651,6 +651,8 @@
 		class="com.rapidminer.operator.learner.meta.Tree2RuleConverter"
 		description="Determines a set of rules from a given decision tree model."
 		group="Learner.Supervised.Meta" />
+		
+	
 
 
 	<!-- Unsupervised Learning -->
@@ -1661,4 +1663,11 @@
 	<operator name="MultipleLabelGenerator"
 		class="com.rapidminer.operator.generator.MultipleLabelGenerator"
 		description="Generates an example set based on numerical attributes and with more than one label."
-		group="IO.Generator" /></operators>
+		group="IO.Generator" />
+		
+	<operator name="Gaussian Processes"
+		class="de.tud.inf.operator.learner.functions.weka.gaussianprocess.GaussianProcess"
+		description="Implements Gaussian Processes for regression without hyperparameter-tuning. 
+					 For more information see David J.C. Mackay (1998). Introduction to Gaussian Processes.
+					 Dept. of Physics, Cambridge University, UK."
+		group="Learner.Supervised.Functions" /></operators>
