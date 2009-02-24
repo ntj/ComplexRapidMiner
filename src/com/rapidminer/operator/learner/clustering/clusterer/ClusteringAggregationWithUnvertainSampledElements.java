@@ -32,7 +32,7 @@ import com.rapidminer.tools.OperatorService;
  */
 public class ClusteringAggregationWithUnvertainSampledElements extends
 		AbstractFlatClusterer {
-
+ 
 	private Vector<FlatCrispClusterModel> clusteringModels;
 	private AbstractPDFSampler sampler;
 	private IOContainer results;
