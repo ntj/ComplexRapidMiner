@@ -139,7 +139,6 @@ public class GaussianProcess extends AbstractLearner implements CapabilitiesHand
 		((RBFKernel) m_kernel).setGamma(1.0);
 	}
 
-	@Override
 	public Model learn(ExampleSet exampleSet) throws OperatorException {
 
 		/*The Model to return*/
@@ -304,7 +303,7 @@ public class GaussianProcess extends AbstractLearner implements CapabilitiesHand
 		return model;
 	}
 
-	@Override
+	
 	public boolean supportsCapability(LearnerCapability capability) {
 
 		//return WekaLearnerCapabilities.supportsCapability(gaussianProcesses,
