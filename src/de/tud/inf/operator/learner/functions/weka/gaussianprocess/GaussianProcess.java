@@ -2,61 +2,124 @@ package de.tud.inf.operator.learner.functions.weka.gaussianprocess;
 
 import java.util.List;
 
-import org.freehep.graphicsio.swf.DoInitAction;
-import org.math.plot.utils.Array;
-
-import weka.classifiers.Classifier;
-import weka.classifiers.UpdateableClassifier;
-import weka.classifiers.functions.GaussianProcesses;
-import weka.classifiers.functions.supportVector.Kernel;
-import weka.classifiers.functions.supportVector.PolyKernel;
-import weka.classifiers.functions.supportVector.RBFKernel;
-import weka.core.Capabilities;
-import weka.core.CapabilitiesHandler;
-import weka.core.Instance;
-import weka.core.Instances;
-import weka.core.WeightedInstancesHandler;
-import weka.core.Capabilities.Capability;
-import weka.filters.Filter;
-import weka.filters.unsupervised.attribute.NominalToBinary;
-import weka.filters.unsupervised.attribute.Normalize;
-import weka.filters.unsupervised.attribute.ReplaceMissingValues;
-import weka.filters.unsupervised.attribute.Standardize;
-
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+
+import com.rapidminer.example.set.ConditionedExampleSet;
+import com.rapidminer.example.set.NoMissingLabelsCondition;
+import com.rapidminer.example.set.ReplaceMissingExampleSet;
+
+import com.rapidminer.operator.IOContainer;
+import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Model;
+import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
-import com.rapidminer.operator.UserError;
+
 import com.rapidminer.operator.learner.AbstractLearner;
 import com.rapidminer.operator.learner.LearnerCapability;
+
+import com.rapidminer.operator.learner.functions.kernel.rvm.kernel.Kernel;
+import com.rapidminer.operator.learner.functions.kernel.rvm.kernel.KernelCauchy;
+import com.rapidminer.operator.learner.functions.kernel.rvm.kernel.KernelEpanechnikov;
+import com.rapidminer.operator.learner.functions.kernel.rvm.kernel.KernelGaussianCombination;
+import com.rapidminer.operator.learner.functions.kernel.rvm.kernel.KernelLaplace;
+import com.rapidminer.operator.learner.functions.kernel.rvm.kernel.KernelMultiquadric;
+import com.rapidminer.operator.learner.functions.kernel.rvm.kernel.KernelPoly;
+import com.rapidminer.operator.learner.functions.kernel.rvm.kernel.KernelRadial;
+import com.rapidminer.operator.learner.functions.kernel.rvm.kernel.KernelSigmoid;
+
+import com.rapidminer.operator.preprocessing.PreprocessingOperator;
+import com.rapidminer.operator.preprocessing.normalization.Normalization;
+
 import com.rapidminer.parameter.ParameterType;
-import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeDouble;
-import com.rapidminer.parameter.ParameterTypeString;
-import com.rapidminer.parameter.UndefinedParameterError;
-import com.rapidminer.tools.WekaInstancesAdaptor;
-import com.rapidminer.tools.WekaLearnerCapabilities;
-import com.rapidminer.tools.WekaTools;
 
-public class GaussianProcess extends AbstractLearner implements CapabilitiesHandler {
+import com.rapidminer.tools.OperatorService;
+
+
+public class GaussianProcess extends AbstractLearner {
 
 	/*
 	 * Parameter Constants
 	 */
 
-	/* indicates if classifier is run in debug mode */
+	/** indicates if classifier is run in debug mode */
 	public static final String PARAMETER_D = "Debug_Mode";
 
-	/* Level of Gaussian Noise */
+	/** Level of Gaussian Noise */
 	public static final String PARAMETER_L = "L";
 
-	/* indicates wether to normalize, standardize or none */
+	/** indicates wether to normalize, standardize or none */
 	public static final String PARAMETER_N = "N";
 
 	/* The Kernel to use */
 	public static final String PARAMETER_K = "Kernel";
+
+	/** The parameter name for &quot;The kind of kernel.&quot; */
+	public static final String PARAMETER_KERNEL_TYPE = "kernel_type";
+
+	/**
+	 * The parameter name for &quot;The lengthscale r for rbf kernel functions
+	 * (exp{-1.0 * r^-2 * ||x - bla||}).&quot;
+	 */
+	public static final String PARAMETER_KERNEL_LENGTHSCALE = "kernel_lengthscale";
+
+	/** The parameter name for &quot;The degree used in the poly kernel.&quot; */
+	public static final String PARAMETER_KERNEL_DEGREE = "kernel_degree";
+
+	/** The parameter name for &quot;The bias used in the poly kernel.&quot; */
+	public static final String PARAMETER_KERNEL_BIAS = "kernel_bias";
+
+	/**
+	 * The parameter name for &quot;The SVM kernel parameter sigma1
+	 * (Epanechnikov, Gaussian Combination, Multiquadric).&quot;
+	 */
+	public static final String PARAMETER_KERNEL_SIGMA1 = "kernel_sigma1";
+
+	/**
+	 * The parameter name for &quot;The SVM kernel parameter sigma2 (Gaussian
+	 * Combination).&quot;
+	 */
+	public static final String PARAMETER_KERNEL_SIGMA2 = "kernel_sigma2";
+
+	/**
+	 * The parameter name for &quot;The SVM kernel parameter sigma3 (Gaussian
+	 * Combination).&quot;
+	 */
+	public static final String PARAMETER_KERNEL_SIGMA3 = "kernel_sigma3";
+
+	/**
+	 * The parameter name for &quot;The SVM kernel parameter shift (polynomial,
+	 * Multiquadric).&quot;
+	 */
+	public static final String PARAMETER_KERNEL_SHIFT = "kernel_shift";
+
+	/** The parameter name for &quot;The SVM kernel parameter a (neural).&quot; */
+	public static final String PARAMETER_KERNEL_A = "kernel_a";
+
+	/** The parameter name for &quot;The SVM kernel parameter b (neural).&quot; */
+	public static final String PARAMETER_KERNEL_B = "kernel_b";
+
+	public static final String[] KERNEL_TYPES = { "rbf", "cauchy", "laplace",
+			"poly", "sigmoid", "Epanechnikov", "gaussian combination",
+			"multiquadric" };
+
+	/** The parameter name for nominal transformation */
+	public static final String PARAMETER_NOMINAL_TRANSFORMATION = "nominal transformation";
+
+	public static final String[] TRANSFORMATION_TYPES = { "Nominal to Binary",
+			"Nominal To Numeric" };
+
+	public static final int TRANSFORMATION_TO_BINARY = 0;
+
+	public static final int TRANSFORMATION_TO_NUMERIC = 1;
+
+	public static final String OPERATOR_NOMINAL2BINOMINAL = "Nominal2Binominal";
+
+	public static final String OPERATOR_NOMINAL2NUMERIC = "Nominal2Numeric";
 
 	/*
 	 * Filter Constants
@@ -68,263 +131,225 @@ public class GaussianProcess extends AbstractLearner implements CapabilitiesHand
 	/** no filter */
 	public static final int FILTER_NONE = 2;
 
-	/*
-	 * Private Fields
-	 */
-
-	/** The filter used to make attributes numeric. */
-	private NominalToBinary m_NominalToBinary;
-
-	/** The filter used to standardize/normalize all values. */
-	private Filter m_Filter = null;
-
 	/** Whether to normalize/standardize/neither */
-	private int m_filterType = FILTER_NORMALIZE;
-
-	/** The filter used to get rid of missing values. */
-	private ReplaceMissingValues m_Missing;
+	private int filterType = FILTER_NORMALIZE;
 
 	/**
 	 * Turn off all checks and conversions? Turning them off assumes that data
 	 * is purely numeric, doesn't contain any missing values, and has a numeric
 	 * class.
 	 */
-	private boolean m_checksTurnedOff = false;
+	private boolean checksTurnedOff = false;
 
 	/** Gaussian Noise Value. */
-	private double m_delta = 1.0;
+	private double delta = 1.0;
 
-	/** The class index from the training data */
-	private int m_classIndex = -1;
-
-	/**
-	 * The parameters of the linear transforamtion realized by the filter on the
-	 * class attribute
-	 */
-	private double m_Alin;
-	private double m_Blin;
-
-	/** Kernel to use **/
-	private Kernel m_kernel = null;
-
-	/** The number of training instances */
-	//private int m_NumTrain = 0;
+	/** The kernel to use */
+	private Kernel kernel;
 
 	/** The training data. */
-	private double m_avg_target;
+	private double avgTarget;
 
 	/** The covariance matrix. */
-	private weka.core.matrix.Matrix m_C;
+	private Jama.Matrix covarianceMatrix;
 
 	/** The vector of target values. */
-	private weka.core.matrix.Matrix m_t;
-
-	/** whether the kernel is a linear one */
-	private boolean m_KernelIsLinear = false;
-	
-	private GaussianProcessesModel model;
+	private Jama.Matrix targetVector;
 
 	/*
-	 * Reference to the weka Gaussian Processes classifier
+	 * private Class Attributes
 	 */
-	private Classifier gaussianProcesses = new GaussianProcesses();
+
+	private Normalization normalize;
 
 	public GaussianProcess(OperatorDescription description) {
 		super(description);
-		
-		// gaussianProcesses = new GaussianProcesses();
 
-		m_kernel = new RBFKernel();
-		//this.setKernel(new RBFKernel());
-		((RBFKernel) m_kernel).setGamma(1.0);
 	}
 
+	@Override
 	public Model learn(ExampleSet exampleSet) throws OperatorException {
 
-		/*The Model to return*/
-		model = new GaussianProcessesModel(exampleSet);
-		
+		double[][] inputVectors;
+
+		Model normalizationModel = null;
+
+		Model nominalTransformingModel = null;
+
 		setOptions();
-		
-		/*
-		 * transform example set to weka instances
-		 */
-		Instances insts = WekaTools.toWekaInstances(exampleSet, "LearningInstances", WekaInstancesAdaptor.LEARNING);
 
 		try {
-			
-		/* check the set of training instances */
-		if (!m_checksTurnedOff) {
-			// can classifier handle the data?
-				getCapabilities().testWithFail(insts);
-			
-			// remove instances with missing class
-			insts = new Instances(insts);
-			insts.deleteWithMissingClass();
-		}
 
-		if (!m_checksTurnedOff) {
-			//m_Missing = new ReplaceMissingValues();
-			this.setMissing(new ReplaceMissingValues());
-			
-			m_Missing.setInputFormat(insts);
-			insts = Filter.useFilter(insts, m_Missing);
-		} else {
-			//m_Missing = null;
-			this.setMissing(null);
-		}
+			/* check the set of training instances */
+			if (!checksTurnedOff) {
 
-		if (getCapabilities().handles(Capability.NUMERIC_ATTRIBUTES)) {
+				exampleSet = new ConditionedExampleSet(exampleSet,
+						new NoMissingLabelsCondition(exampleSet, null));
+			}
+
+			if (!checksTurnedOff) {
+				
+				/* replace missing values */
+				exampleSet = new ReplaceMissingExampleSet(exampleSet);
+			}
+
+			/* checks if nominal attributes exist */
+
 			boolean onlyNumeric = true;
-			if (!m_checksTurnedOff) {
-				for (int i = 0; i < insts.numAttributes(); i++) {
-					if (i != insts.classIndex()) {
-						if (!insts.attribute(i).isNumeric()) {
-							onlyNumeric = false;
-							break;
-						}
+
+			if (!checksTurnedOff) {
+
+				for (Attribute attr : exampleSet.getAttributes()) {
+
+					if (attr.isNominal()) {
+
+						onlyNumeric = false;
+
+						break;
 					}
 				}
 			}
 
 			if (!onlyNumeric) {
-				//m_NominalToBinary = new NominalToBinary();
-				this.setModelToBinary(new NominalToBinary());
-				m_NominalToBinary.setInputFormat(insts);
-				insts = Filter.useFilter(insts, m_NominalToBinary);
-			} else {
-				//m_NominalToBinary = null;
-				this.setModelToBinary(null);
+
+				/* Transforms all nominal attributes */
+				Operator nominalTransformation;
+
+				switch (getParameterAsInt(PARAMETER_NOMINAL_TRANSFORMATION)) {
+
+				case TRANSFORMATION_TO_BINARY:
+					nominalTransformation = OperatorService
+							.createOperator(OPERATOR_NOMINAL2BINOMINAL);
+
+					break;
+
+				case TRANSFORMATION_TO_NUMERIC:
+					nominalTransformation = OperatorService
+							.createOperator(OPERATOR_NOMINAL2NUMERIC);
+					break;
+
+				default:
+					nominalTransformation = OperatorService
+							.createOperator(OPERATOR_NOMINAL2BINOMINAL);
+				}
+
+				nominalTransformation.setParameter(
+						PreprocessingOperator.PARAMETER_CREATE_VIEW,
+						Boolean.FALSE.toString());
+				nominalTransformation
+						.setParameter(
+								PreprocessingOperator.PARAMETER_RETURN_PREPROCESSING_MODEL,
+								Boolean.TRUE.toString());
+
+				IOContainer result = nominalTransformation
+						.apply(new IOContainer(new IOObject[] { exampleSet }));
+
+				nominalTransformingModel = result.get(Model.class);
+
+				exampleSet = result.get(ExampleSet.class);
 			}
-		} else {
-			
-			this.setModelToBinary(null);
-		}
 
-		m_classIndex = insts.classIndex();
-		if (m_filterType == FILTER_STANDARDIZE) {
-			//m_Filter = new Standardize();
-			this.setFilter(new Standardize());
-			
-			// ((Standardize)m_Filter).setIgnoreClass(true);
-			m_Filter.setInputFormat(insts);
-			insts = Filter.useFilter(insts, m_Filter);
-		} else if (m_filterType == FILTER_NORMALIZE) {
-			//m_Filter = new Normalize();
-			this.setFilter(new Normalize());
-			// ((Normalize)m_Filter).setIgnoreClass(true);
-			m_Filter.setInputFormat(insts);
-			insts = Filter.useFilter(insts, m_Filter);
-		} else {
-			//m_Filter = null;
-			this.setFilter(null);
-		}
+			/*
+			 * normalize or standardize the examples in the exanple set
+			 */
+			if (!(filterType == FILTER_NONE)) {
 
-		//m_NumTrain = insts.numInstances();
-		model.setNumberOfInstances(insts.numInstances());
+				normalize = OperatorService.createOperator(Normalization.class);
+				normalize.setParameter(Normalization.PARAMETER_CREATE_VIEW,
+						Boolean.TRUE.toString());
+				normalize.setParameter(
+						Normalization.PARAMETER_RETURN_PREPROCESSING_MODEL,
+						Boolean.TRUE.toString());
 
-		// determine which linear transformation has been
-		// applied to the class by the filter
-		if (m_Filter != null) {
-			Instance witness = (Instance) insts.instance(0).copy();
-			witness.setValue(m_classIndex, 0);
-			m_Filter.input(witness);
-			m_Filter.batchFinished();
-			Instance res = m_Filter.output();
-			m_Blin = res.value(m_classIndex);
-			witness.setValue(m_classIndex, 1);
-			m_Filter.input(witness);
-			m_Filter.batchFinished();
-			res = m_Filter.output();
-			m_Alin = res.value(m_classIndex) - m_Blin;
-		} else {
-			m_Alin = 1.0;
-			m_Blin = 0.0;
-		}
+				if (filterType != FILTER_STANDARDIZE) {
 
-		// Initialize kernel
-		m_kernel.buildKernel(insts);
-		m_KernelIsLinear = (m_kernel instanceof PolyKernel)
-				&& (((PolyKernel) m_kernel).getExponent() == 1.0);
+					normalize.setParameter(Normalization.PARAMETER_Z_TRANSFORM,
+							"false");
+				}
 
-		// Build Inverted Covariance Matrix
+				IOContainer container = normalize.apply(new IOContainer(
+						new IOObject[] { exampleSet }));
 
-		m_C = new weka.core.matrix.Matrix(insts.numInstances(), insts
-				.numInstances());
-		
-		
-		double kv;
-		double sum = 0.0;
+				normalizationModel = container.get(Model.class);
 
-		for (int i = 0; i < insts.numInstances(); i++) {
-			sum += insts.instance(i).classValue();
-			for (int j = 0; j < i; j++) {
-				kv = m_kernel.eval(i, j, insts.instance(i));
-				m_C.set(i, j, kv);
-				m_C.set(j, i, kv);
+				exampleSet = normalizationModel.apply(exampleSet);
 			}
-			kv = m_kernel.eval(i, i, insts.instance(i));
-			m_C.set(i, i, kv + (m_delta * m_delta));
-		}
 
-		m_avg_target = sum / insts.numInstances();
-		model.setAverageTarget(m_avg_target);
+			// Build Inverted Covariance Matrix
 
-		// weka.core.matrix.CholeskyDecomposition cd = new
-		// weka.core.matrix.CholeskyDecomposition(m_C);
+			covarianceMatrix = new Jama.Matrix(exampleSet.size(), exampleSet
+					.size());
 
-		// if (!cd.isSPD())
-		// throw new Exception("No semi-positive-definite kernel?!?");
+			double sum = 0.0;
+			double kv;
 
-		weka.core.matrix.LUDecomposition lu = new weka.core.matrix.LUDecomposition(
-				m_C);
-		if (!lu.isNonsingular())
-			throw new Exception("Singular Matrix?!?");
+			inputVectors = buildInputVector(exampleSet);
 
-		weka.core.matrix.Matrix iMat = weka.core.matrix.Matrix.identity(insts
-				.numInstances(), insts.numInstances());
+			int k = 0;
+			for (Example ex : exampleSet) {
 
-		m_C = lu.solve(iMat);
+				sum += ex.getLabel();
 
-		m_t = new weka.core.matrix.Matrix(insts.numInstances(), 1);
+				for (int j = 0; j < k; j++) {
 
-		for (int i = 0; i < insts.numInstances(); i++)
-			m_t.set(i, 0, insts.instance(i).classValue() - m_avg_target);
+					kv = kernel.eval(inputVectors[k], inputVectors[j]);
 
-		m_t = m_C.times(m_t);
-		model.setVectorOfTargetValues(m_t);
-		
-		model.setCovarianceMatrix(m_C);
-		
+					covarianceMatrix.set(k, j, kv);
+
+					covarianceMatrix.set(j, k, kv);
+				}
+
+				kv = kernel.eval(inputVectors[k], inputVectors[k]);
+
+				covarianceMatrix.set(k, k, kv + (delta * delta));
+
+				k++;
+			}
+
+			avgTarget = sum / exampleSet.size();
+
+			Jama.LUDecomposition luRM = new Jama.LUDecomposition(
+					covarianceMatrix);
+
+			if (!luRM.isNonsingular())
+				throw new OperatorException("Singular Matrix?!?");
+
+			Jama.Matrix iMatRM = Jama.Matrix.identity(exampleSet.size(),
+					exampleSet.size());
+
+			covarianceMatrix = luRM.solve(iMatRM);
+
+			targetVector = new Jama.Matrix(exampleSet.size(), 1);
+
+			{
+				int i = 0;
+				for (Example ex : exampleSet) {
+
+					targetVector.set(i, 0, ex.getLabel() - avgTarget);
+					i++;
+				}
+			}
+
+			targetVector = covarianceMatrix.times(targetVector);
+
 		} catch (Exception e) {
-			throw new OperatorException(e.getMessage(),e.getCause());
+			throw new OperatorException(e.getMessage(), e.getCause());
 		}
 
-		return model;
+		return new GaussianProcessesModel(exampleSet, inputVectors, kernel,
+				normalizationModel, avgTarget, covarianceMatrix, targetVector,
+				nominalTransformingModel);
 	}
 
-	
+	@Override
 	public boolean supportsCapability(LearnerCapability capability) {
 
-		//return WekaLearnerCapabilities.supportsCapability(gaussianProcesses,
-			//	capability);
-		
-		Capabilities wekaCapabilities = this.getCapabilities();
-		
-		if (capability == LearnerCapability.POLYNOMINAL_ATTRIBUTES) {
-			return wekaCapabilities.handles(Capabilities.Capability.NOMINAL_ATTRIBUTES);
-		} else if (capability == LearnerCapability.BINOMINAL_ATTRIBUTES) {
-			return wekaCapabilities.handles(Capabilities.Capability.BINARY_ATTRIBUTES);
-		} else if (capability == LearnerCapability.NUMERICAL_ATTRIBUTES) {
-			return wekaCapabilities.handles(Capabilities.Capability.NUMERIC_ATTRIBUTES);
-		} else if (capability == LearnerCapability.POLYNOMINAL_CLASS) {
-			return wekaCapabilities.handles(Capabilities.Capability.NOMINAL_CLASS);
-		} else if (capability == LearnerCapability.BINOMINAL_CLASS) {
-			return wekaCapabilities.handles(Capabilities.Capability.BINARY_CLASS);
-		} else if (capability == LearnerCapability.NUMERICAL_CLASS) {
-			return wekaCapabilities.handles(Capabilities.Capability.NUMERIC_CLASS);
-		}
-		
+		if (capability == LearnerCapability.POLYNOMINAL_ATTRIBUTES
+				|| capability == LearnerCapability.BINOMINAL_ATTRIBUTES
+				|| capability == LearnerCapability.NUMERICAL_ATTRIBUTES
+				|| capability == LearnerCapability.NUMERICAL_CLASS)
+			return true;
+
 		return false;
 	}
 
@@ -333,131 +358,163 @@ public class GaussianProcess extends AbstractLearner implements CapabilitiesHand
 
 		List<ParameterType> types = super.getParameterTypes();
 
-		// add GP specific Options
-		types
-				.add(new ParameterTypeBoolean(
-						PARAMETER_D,
-						"If set, classifier is run in debug mode and may output additional info to the console",
-						false));
-		
+		ParameterType type;
+
+		type = new ParameterTypeCategory(PARAMETER_NOMINAL_TRANSFORMATION,
+				"The way nominal attributes should be transformed",
+				TRANSFORMATION_TYPES, 0);
+		type.setExpert(false);
+		types.add(type);
+
 		types.add(new ParameterTypeDouble(PARAMETER_L,
 				"Level of Gaussian Noise", Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY, 1.0));
-		
+
 		types.add(new ParameterTypeCategory(PARAMETER_N,
 				"Whether to normalize, standardize or none", new String[] {
 						"normalize", "standardize", "none" }, 0));
-		
-		types
-				.add(new ParameterTypeString(PARAMETER_K, "The Kernel to use",
-						"weka.classifiers.functions.supportVector.RBFKernel -C 250007 -G 1.0"));
+
+		type = new ParameterTypeCategory(PARAMETER_KERNEL_TYPE,
+				"The kind of kernel.", KERNEL_TYPES, 0);
+		type.setExpert(false);
+		types.add(type);
+
+		type = new ParameterTypeDouble(
+				PARAMETER_KERNEL_LENGTHSCALE,
+				"The lengthscale r for rbf kernel functions (exp{-1.0 * r^-2 * ||x - y||}).",
+				0, Double.POSITIVE_INFINITY, 1.0);
+		type.setExpert(false);
+		types.add(type);
+
+		type = new ParameterTypeDouble(PARAMETER_KERNEL_DEGREE,
+				"The degree used in the poly kernel.", 0.0d,
+				Double.POSITIVE_INFINITY, 2.0d);
+		type.setExpert(false);
+		types.add(type);
+
+		type = new ParameterTypeDouble(PARAMETER_KERNEL_BIAS,
+				"The bias used in the poly kernel.", 0,
+				Double.POSITIVE_INFINITY, 1.0);
+		type.setExpert(false);
+		types.add(type);
+
+		type = new ParameterTypeDouble(
+				PARAMETER_KERNEL_SIGMA1,
+				"The SVM kernel parameter sigma1 (Epanechnikov, Gaussian Combination, Multiquadric).",
+				0.0d, Double.POSITIVE_INFINITY, 1.0d);
+		type.setExpert(false);
+		types.add(type);
+
+		type = new ParameterTypeDouble(PARAMETER_KERNEL_SIGMA2,
+				"The SVM kernel parameter sigma2 (Gaussian Combination).",
+				0.0d, Double.POSITIVE_INFINITY, 0.0d);
+		type.setExpert(false);
+		types.add(type);
+
+		type = new ParameterTypeDouble(PARAMETER_KERNEL_SIGMA3,
+				"The SVM kernel parameter sigma3 (Gaussian Combination).",
+				0.0d, Double.POSITIVE_INFINITY, 2.0d);
+		type.setExpert(false);
+		types.add(type);
+
+		type = new ParameterTypeDouble(PARAMETER_KERNEL_SHIFT,
+				"The SVM kernel parameter shift (polynomial, Multiquadric).",
+				Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 1.0d);
+		type.setExpert(false);
+		types.add(type);
+
+		type = new ParameterTypeDouble(PARAMETER_KERNEL_A,
+				"The SVM kernel parameter a (neural).",
+				Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 1.0d);
+		type.setExpert(false);
+		types.add(type);
+
+		type = new ParameterTypeDouble(PARAMETER_KERNEL_B,
+				"The SVM kernel parameter b (neural).",
+				Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 0.0d);
+		type.setExpert(false);
+		types.add(type);
 
 		return types;
 	}
 
 	private void setOptions() throws OperatorException {
 
-		/*
-		 * Sets the options from the given parameters
-		 */
-
-		/* create the kernel */
-
-		String kernelParameter = getParameterAsString(PARAMETER_K);
-
-		if (kernelParameter.length() > 0) {
-
-			String[] kernel = kernelParameter.split(" ");
-
-			String[] options = null;
-
-			if (kernel.length > 1) {
-
-				options = new String[kernel.length - 1];
-
-				for (int i = 1; i < kernel.length; i++) {
-
-					options[i - 1] = kernel[i];
-				}
-			}
-
-			try {
-//				m_kernel = Kernel.forName(kernel[0], (options == null ? null
-//						: options));
-				
-				this.setKernel(Kernel.forName(kernel[0],
-						(options == null ? null : options)));
-				
-			} catch (Exception e) {
-				throw new UserError(this, 207, new Object[] { kernelParameter,
-						PARAMETER_K, "Please insert another kernel" });
-			}
-		}
-		/* set debug mode */
-		m_kernel.setDebug(getParameterAsBoolean(PARAMETER_D));
-
 		/* set filter type */
-		m_filterType = getParameterAsInt(PARAMETER_N);
+		filterType = getParameterAsInt(PARAMETER_N);
 
 		/* set gaussian noise value */
-		m_delta = getParameterAsDouble(PARAMETER_L);
-	}
-	
-	public Capabilities getCapabilities() {
-	    Capabilities result = getKernel().getCapabilities();
-	    result.setOwner(this);
+		delta = getParameterAsDouble(PARAMETER_L);
 
-	    // attribute
-	    result.enableAllAttributeDependencies();
-	    // with NominalToBinary we can also handle nominal attributes, but only
-	    // if the kernel can handle numeric attributes
-	    if (result.handles(Capability.NUMERIC_ATTRIBUTES))
-	      result.enable(Capability.NOMINAL_ATTRIBUTES);
-	    result.enable(Capability.MISSING_VALUES);
-	    
-	    // class
-	    result.disableAllClasses();
-	    result.disableAllClassDependencies();
-	    result.enable(Capability.NUMERIC_CLASS);
-	    result.enable(Capability.DATE_CLASS);
-	    result.enable(Capability.MISSING_CLASS_VALUES);
-	    
-	    return result;
-	  }
-	
-	public Kernel getKernel() {
-		
-		return m_kernel;
+		/** create the Kernel **/
+		this.kernel = createKernel();
 	}
-	
-	/*
-	 * Private set Methods 
-	 */
-	
-	private void setModelToBinary(NominalToBinary nominalToBinary) {
-		this.m_NominalToBinary = nominalToBinary;
-		
-		model.setNominalToBinary(nominalToBinary);
+
+	public com.rapidminer.operator.learner.functions.kernel.rvm.kernel.Kernel createKernel()
+			throws OperatorException {
+
+		Kernel kernel = null;
+
+		double lengthScale = getParameterAsDouble(PARAMETER_KERNEL_LENGTHSCALE);
+		double bias = getParameterAsDouble(PARAMETER_KERNEL_BIAS);
+		double degree = getParameterAsDouble(PARAMETER_KERNEL_DEGREE);
+		double a = getParameterAsDouble(PARAMETER_KERNEL_A);
+		double b = getParameterAsDouble(PARAMETER_KERNEL_B);
+		double sigma1 = getParameterAsDouble(PARAMETER_KERNEL_SIGMA1);
+		double sigma2 = getParameterAsDouble(PARAMETER_KERNEL_SIGMA2);
+		double sigma3 = getParameterAsDouble(PARAMETER_KERNEL_SIGMA3);
+		double shift = getParameterAsDouble(PARAMETER_KERNEL_SHIFT);
+
+		switch (getParameterAsInt(PARAMETER_KERNEL_TYPE)) {
+		case 0:
+			kernel = new KernelRadial(lengthScale);
+			break;
+		case 1:
+			kernel = new KernelCauchy(lengthScale);
+			break;
+		case 2:
+			kernel = new KernelLaplace(lengthScale);
+			break;
+		case 3:
+			kernel = new KernelPoly(lengthScale, bias, degree);
+			break;
+		case 4:
+			kernel = new KernelSigmoid(a, b);
+			break;
+		case 5:
+			kernel = new KernelEpanechnikov(sigma1, degree);
+			break;
+		case 6:
+			kernel = new KernelGaussianCombination(sigma1, sigma2, sigma3);
+			break;
+		case 7:
+			kernel = new KernelMultiquadric(sigma1, shift);
+			break;
+		default:
+			kernel = new KernelRadial(lengthScale);
+		}
+
+		return kernel;
 	}
-	
-	private void setFilter(Filter filter) {
-		
-		this.m_Filter = filter;
-		
-		model.setFilter(filter);
-	}
-	
-	private void setMissing(ReplaceMissingValues replaceMissing) {
-		
-		this.m_Missing = replaceMissing;
-		
-		model.setMissing(replaceMissing);
-	}
-	
-	private void setKernel(Kernel kernel) {
-		
-		this.m_kernel = kernel;
-		
-		model.setKernel(kernel);
+
+	private double[][] buildInputVector(ExampleSet e) {
+
+		double vector[][] = new double[e.size()][e.getAttributes().size()];
+
+		int i = 0;
+
+		for (Example ex : e) {
+
+			int j = 0;
+
+			for (Attribute att : e.getAttributes()) {
+
+				vector[i][j] = ex.getValue(att);
+				j++;
+			}
+
+			i++;
+		}
+		return vector;
 	}
 }
