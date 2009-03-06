@@ -163,7 +163,6 @@ public class FuzzyMembershipModel extends FlatCrispClusterModel implements Centr
 	}
 
 	public String[] getDimensionNames() {
-		// TODO Auto-generated method stub
-		return null;
+		return com.rapidminer.example.Tools.getRegularAttributeNames(es);
 	}
 }

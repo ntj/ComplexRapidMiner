@@ -60,6 +60,7 @@ public class FuzzyMembershipEvaluator extends AbstractFlatClusterer {
 		FlatCrispClusterModel fccm = this.getInput(FlatCrispClusterModel.class);
 		numClusters = fccm.getNumberOfClusters();
 		this.centroids = computeCentroids(es);
+		this.clustersizes = computeClusterSizes(fccm);
 		fmm = new FuzzyMembershipModel(fccm,centroids,clustersizes,es,m);
 		
 		if (getParameterAsBoolean(PARAMETER_ADD_LABEL)) {
@@ -133,7 +134,17 @@ public class FuzzyMembershipEvaluator extends AbstractFlatClusterer {
 		return types;
 	}
 	
-	
+	protected int[] computeClusterSizes(FlatCrispClusterModel fccm) {
+		
+		int[] ret = new int[numClusters];
+		
+		for(int i = 0; i < numClusters; i++) {
+			
+			ret[i] = fccm.getClusterAt(i).getNumberOfObjects();
+		}
+		
+		return ret;
+	}
 	
 }
 
