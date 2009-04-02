@@ -686,6 +686,11 @@
 		class="com.rapidminer.operator.learner.clustering.clusterer.FuzzyKMeans"
 		description="K-Means Clustering with additional fuzzy membership values"
 		group="Learner.Unsupervised.Clustering" />
+		
+	<operator name="FuzzyMembershipEvaluator"
+		class="com.rapidminer.operator.learner.clustering.clusterer.FuzzyMembershipEvaluator"
+		description="Evaluates the Membership of an Example in the clusters"
+		group="Learner.Unsupervised.Clustering" />
 
 	<operator name="MPCKMeans"
 		class="com.rapidminer.operator.learner.clustering.constrained.MPCKMeans"
@@ -800,6 +805,11 @@
 		class="com.rapidminer.operator.similarity.SimilarityComparator"
 		description="This operator compares two similarity measures using diverse metrics."
 		group="Learner.Unsupervised.Clustering.Similarity" />
+		
+	<operator name="SignificanceAwareMultiCaseClusteringAggregation"
+		class="de.tud.inf.operator.learner.clustering.clusterer.SignificanceAwareMultiCaseClustering"
+		description=" "
+		group="Learner.Unsupervised.Clustering"/>
 
 
 	<!-- Data preprocessing -->

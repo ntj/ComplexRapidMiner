@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="com/rapidminer/doc/|com/rapidminer/operator/learner/clustering/clusterer/FuzzyKMeansClusterModel.java|com/rapidminer/operator/learner/clustering/clusterer/FuzzyKMeans.java|com/rapidminer/operator/learner/clustering/clusterer/FuzzyMembershipModel.java|com/rapidminer/operator/learner/clustering/clusterer/FuzzyMembershipEvaluator.java" kind="src" path="src"/>
+	<classpathentry excluding="com/rapidminer/doc/" kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/kdb.jar"/>
 	<classpathentry kind="lib" path="lib/jmathplot.jar"/>
