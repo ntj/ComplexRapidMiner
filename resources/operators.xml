@@ -512,6 +512,11 @@
 		class="com.rapidminer.operator.learner.meta.AdaBoost"
 		description="Boosting operator allowing all learners (not restricted to Weka learners)."
 		group="Learner.Supervised.Meta" />
+		
+	<operator name="SlidingWindowLearner"
+		class="de.tud.inf.operator.learner.meta.SlidingWindowLearner"
+		description="Applying a Learner to only most recent examples determined by a sliding window"
+		group="Learner.Supervised.Meta" />
 
 	<operator name="BestRuleInduction"
 		class="com.rapidminer.operator.learner.rules.BestRuleInduction"
