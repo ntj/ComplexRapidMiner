@@ -85,6 +85,8 @@ public class SignificanceAwareMultiCaseClustering extends AbstractFlatClusterer{
 		setParameters();
 		
 		clusterModel = new FlatCrispClusterModel();
+		
+		DefaultCluster noiseCluster = null;
 
 		for (int i = 0; i < exampleSet.size(); i++) {
 			
@@ -94,16 +96,18 @@ public class SignificanceAwareMultiCaseClustering extends AbstractFlatClusterer{
 			
 			cluster = getClusterForId(viId);
 			
-			/* if it is not part of a cluster assign it to a new one */
-			
-			if(cluster == null) {
-				
-				cluster = new DefaultCluster(String.valueOf(++clusterID));
-				
-				cluster.addObject(viId);
-						
-				clusterModel.addCluster(cluster);
-			}
+			/* not needed because of noise cluster*/ 
+//			
+//			/* if it is not part of a cluster assign it to a new one */
+//			
+//			if(cluster == null) {
+//				
+//				cluster = new DefaultCluster(String.valueOf(++clusterID));
+//				
+//				cluster.addObject(viId);
+//						
+//				clusterModel.addCluster(cluster);
+//			}
 
 			for (int j = i + 1; j < exampleSet.size(); j++) {
 
@@ -145,26 +149,66 @@ public class SignificanceAwareMultiCaseClustering extends AbstractFlatClusterer{
 				 * 		or the global case is a? and it is mapped to a+
 				 * 		or the global vector is balanced and it is mapped to a+ 
 				 */
-				if(((balanced(globalAssignment) ||
-						(maxIndex(globalAssignment) == 1)) && undecidableCaseMapping == UNDECIDABLE_CASE_TO_PLUS) ||
-						maxIndex(globalAssignment) == 0) {
-					
+				if (((balanced(globalAssignment) || (maxIndex(globalAssignment) == 1)) && undecidableCaseMapping == UNDECIDABLE_CASE_TO_PLUS)
+						|| maxIndex(globalAssignment) == 0) {
+
 					/* Is the point part of a cluster */
 					DefaultCluster clusterNew = getClusterForId(vjId);
-					
-					if (clusterNew != null) {
-						
-						/* if example belongs to another cluster -> merge> */
-						
-						if(!clusterNew.getId().equals(cluster.getId())) {
-							
-							cluster.addAll(clusterNew);
-							clusterModel.removeCluster(clusterNew);
-						}
-					} else
 
+					/* both points are not part of the clustering */
+					if (clusterNew == null && cluster == null) {
+
+						/* create a new cluster */
+						cluster = new DefaultCluster(String
+								.valueOf(++clusterID));
+
+						/* assign both points to the cluster */
+						cluster.addObject(viId);
 						cluster.addObject(vjId);
-				}	
+						
+						clusterModel.addCluster(cluster);
+					} else {
+
+						if (cluster != null && clusterNew == null)
+							cluster.addObject(vjId);
+
+						else {
+
+							if (cluster == null && clusterNew != null) {
+
+								clusterNew.addObject(viId);
+								cluster = clusterNew;
+
+							} else {
+
+								/* both points are clustered */
+								/*
+								 * if example belongs to another cluster ->
+								 * merge>
+								 */
+
+								if (!clusterNew.getId().equals(cluster.getId())) {
+
+									cluster.addAll(clusterNew);
+									clusterModel.removeCluster(clusterNew);
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			/* if Example could not be inserted into a cluster -> add it to a noise cluster*/
+			if(cluster == null) {
+				
+				if(noiseCluster == null) {
+					
+					noiseCluster = new DefaultCluster(String.valueOf(++clusterID));
+					clusterModel.addCluster(noiseCluster);
+				}
+					
+				
+				noiseCluster.addObject(viId);
 			}
 		}
 
@@ -373,7 +417,7 @@ public class SignificanceAwareMultiCaseClustering extends AbstractFlatClusterer{
 			return (1.0 - (double)(1/numberOfCluster));
 			
 		case -1:
-			return ((4.0 / (numberOfCluster * numberOfCluster)) + (3.0 / numberOfCluster));
+			return ((-4.0 / (numberOfCluster * numberOfCluster)) + (3.0 / numberOfCluster));
 			
 		case 0:
 			return 1;

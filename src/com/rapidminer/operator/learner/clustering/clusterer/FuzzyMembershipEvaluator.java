@@ -149,7 +149,7 @@ public class FuzzyMembershipEvaluator extends AbstractFlatClusterer {
 	@Override
 	public Class<?>[] getOutputClasses() {
 	
-		return new Class[] {FuzzyMembershipModel.class};
+		return new Class[] {FuzzyMembershipModel.class,ExampleSet.class};
 	}
 }
 
