@@ -55,11 +55,13 @@ public class EnsembleRegression extends AbstractLearner {
 	private static final String ENSEMBLE_GRACE_PERIOD			= "grace period";
 	
 	// definition of the available base learners
+	private static final String ENSEMBLE_WGP_MARKER	= "com.weka.GaussianProcess";
 	private static final String[] ENSEMBLE_BASE_TYPES = {
 		"com.rapidminer.operator.learner.functions.LinearRegression",
 		"com.rapidminer.operator.learner.functions.kernel.GPLearner",
 		"com.rapidminer.operator.learner.functions.kernel.JMySVMLearner",
-		"com.rapidminer.operator.learner.lazy.KNNLearner"
+		"com.rapidminer.operator.learner.lazy.KNNLearner",
+		ENSEMBLE_WGP_MARKER
 	};
 	
 	private static final ClassNameMapper ENSEMBLE_BASE_TYPE_MAP = 
@@ -144,24 +146,29 @@ public class EnsembleRegression extends AbstractLearner {
 		
 		File state_file = getParameterAsFile(ENSEMBLE_STATE_FILE);
 		String learner_type = getParameterAsString(ENSEMBLE_BASE_TYPE);
-		@SuppressWarnings("unchecked")
-		Class<AbstractLearner> learnerClass = (Class<AbstractLearner>) ENSEMBLE_BASE_TYPE_MAP.getClassByShortName(learner_type);
-		try {
-			Constructor<AbstractLearner> learnerConstructor = 
-				learnerClass.getConstructor(new Class[] {OperatorDescription.class});
-			learner = learnerConstructor.newInstance(dummyDescription);
-		} catch (SecurityException e) {
-			throw new UserError(null, 904, learner_type, e.getMessage());
-		} catch (NoSuchMethodException e) {
-			throw new UserError(null, 904, learner_type, e.getMessage());
-		} catch (IllegalArgumentException e) {
-			throw new UserError(null, 904, learner_type, e.getMessage());
-		} catch (InstantiationException e) {
-			throw new UserError(null, 904, learner_type, e.getMessage());
-		} catch (IllegalAccessException e) {
-			throw new UserError(null, 904, learner_type, e.getMessage());
-		} catch (InvocationTargetException e) {
-			throw new UserError(null, 904, learner_type, e.getMessage());
+		if(learner_type.equals(ENSEMBLE_WGP_MARKER)) {
+			//OperatorDescription wgpDesc = new OperatorDescription();
+			// build operator descrition that contains the name of the learner!
+		} else {
+			@SuppressWarnings("unchecked")
+			Class<AbstractLearner> learnerClass = (Class<AbstractLearner>) ENSEMBLE_BASE_TYPE_MAP.getClassByShortName(learner_type);
+			try {
+				Constructor<AbstractLearner> learnerConstructor = 
+					learnerClass.getConstructor(new Class[] {OperatorDescription.class});
+				learner = learnerConstructor.newInstance(dummyDescription);
+			} catch (SecurityException e) {
+				throw new UserError(null, 904, learner_type, e.getMessage());
+			} catch (NoSuchMethodException e) {
+				throw new UserError(null, 904, learner_type, e.getMessage());
+			} catch (IllegalArgumentException e) {
+				throw new UserError(null, 904, learner_type, e.getMessage());
+			} catch (InstantiationException e) {
+				throw new UserError(null, 904, learner_type, e.getMessage());
+			} catch (IllegalAccessException e) {
+				throw new UserError(null, 904, learner_type, e.getMessage());
+			} catch (InvocationTargetException e) {
+				throw new UserError(null, 904, learner_type, e.getMessage());
+			}
 		}
 		
 		String similarity_measure_type = getParameterAsString(ENSEMBLE_SIMILARITY_MEASURE);
@@ -415,22 +422,27 @@ public class EnsembleRegression extends AbstractLearner {
 		
 		// delete the worst member
 		if(deletionCandidates.size() > 0) {
-			double minRatio = Double.MAX_VALUE;
-			int minMemberIndex = -1;
-			
-			for(int i = 0; i < deletionCandidates.size(); i++) {
-				EnsembleMember member = deletionCandidates.get(i);
-				double ratio = (double) member.getPositive() / (double) (member.getPositive() + member.getNegative());
+			// proceed only if there will be at least min_members be left after deletion
+			if(ensemble.getNumberOfMembers() > min_members) {
+				double minRatio = Double.MAX_VALUE;
+				int minMemberIndex = -1;
 				
-				if(ratio < minRatio) {
-					minRatio = ratio;
-					minMemberIndex = i;
+				for(int i = 0; i < deletionCandidates.size(); i++) {
+					EnsembleMember member = deletionCandidates.get(i);
+					double ratio = (double) member.getPositive() / (double) (member.getPositive() + member.getNegative());
+					
+					if(ratio < minRatio) {
+						minRatio = ratio;
+						minMemberIndex = i;
+					}
 				}
+				
+				// compensate totalPositive
+				totalPositve -= deletionCandidates.get(minMemberIndex).getPositive();
+				ensemble.deleteMember(deletionCandidates.get(minMemberIndex));
+			} else {
+				log("deletion delayed");
 			}
-			
-			// compensate totalPositive
-			totalPositve -= deletionCandidates.get(minMemberIndex).getPositive();
-			ensemble.deleteMember(deletionCandidates.get(minMemberIndex));
 		}
 		
 		
