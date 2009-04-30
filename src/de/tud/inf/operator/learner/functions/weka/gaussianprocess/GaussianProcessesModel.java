@@ -6,10 +6,13 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 
+import com.rapidminer.example.set.HeaderExampleSet;
 import com.rapidminer.example.set.ReplaceMissingExampleSet;
+import com.rapidminer.example.table.NominalMapping;
 
 import com.rapidminer.operator.Model;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.UserError;
 
 import com.rapidminer.operator.learner.PredictionModel;
 
@@ -41,6 +44,8 @@ public class GaussianProcessesModel extends PredictionModel{
 	
 	private Model nominalTransformationModel;
 	
+	private ExampleSet originalHeader;
+	
 	/**
 	 * Turn off all checks and conversions? Turning them off assumes that data
 	 * is purely numeric, doesn't contain any missing values, and has a numeric
@@ -54,6 +59,7 @@ public class GaussianProcessesModel extends PredictionModel{
 		super(trainingExampleSet);
 		
 		m_NumTrain = trainingExampleSet.size();
+		
 	}
 	
 	public GaussianProcessesModel(
@@ -62,7 +68,8 @@ public class GaussianProcessesModel extends PredictionModel{
 			Kernel kernel,
 			Model normalization, double avgTargetValues,
 			Jama.Matrix covarianceMatrix, Jama.Matrix targetVector,
-			Model nominalToBinominal) {
+			Model nominalToBinominal,
+			ExampleSet originalExampleSet) {
 
 		super(trainingExampleSet);
 
@@ -82,6 +89,8 @@ public class GaussianProcessesModel extends PredictionModel{
 		
 		this.nominalTransformationModel = nominalToBinominal;
 		
+		this.originalHeader = originalExampleSet;
+		
 	}
 	
 	@Override
@@ -89,6 +98,10 @@ public class GaussianProcessesModel extends PredictionModel{
 			Attribute predictedLabel) throws OperatorException {
 		
 		ExampleSet predictionExampleSet = (ExampleSet)exampleSet.clone();
+		
+		//checkCompatibility(predictionExampleSet);
+		
+		checkMapping(exampleSet);
 		
 		if(!m_checksTurnedOff)
 			exampleSet = new ReplaceMissingExampleSet(exampleSet);
@@ -98,6 +111,8 @@ public class GaussianProcessesModel extends PredictionModel{
 		
 		if(normalizationModel != null)
 			exampleSet = normalizationModel.apply(exampleSet);
+		
+		checkExampleSetCompatibility(exampleSet);
 		
 		Iterator<Example> r = exampleSet.iterator();
 		while (r.hasNext()) {
@@ -112,7 +127,38 @@ public class GaussianProcessesModel extends PredictionModel{
 			}
 		}
 		
-		return predictionExampleSet;
+		//return predictionExampleSet;
+		return exampleSet;
+	}
+
+	/*
+	 * adds a mapping from headerExampleSet if its not in the prediction example Set
+	 */
+	private void checkMapping(ExampleSet exampleSet) {
+		
+		//ExampleSet header = this.getTrainingHeader();
+		
+		for(Attribute h : originalHeader.getAttributes()) {
+			
+			if(h.isNominal()) {
+				
+				Attribute exampleAttr = exampleSet.getAttributes().get(h.getName());
+				
+				if(exampleAttr != null) {
+					
+					NominalMapping headerMapping = h.getMapping();
+					NominalMapping predictionMapping = exampleAttr.getMapping();
+					
+					for(String nominalValues : headerMapping.getValues()) {
+						
+						if(!predictionMapping.getValues().contains(nominalValues)) {
+							
+							predictionMapping.mapString(nominalValues);
+						}
+					}
+				}
+			}
+		}
 	}
 
 	public double classifyInstance(Example ex) throws Exception{
@@ -197,4 +243,55 @@ public class GaussianProcessesModel extends PredictionModel{
 		return text.toString();
 	  }
 
+	@Override
+	protected void checkCompatibility(ExampleSet exampleSet)
+			throws OperatorException {
+		
+		/*
+		 * has to be empty because PredictionModel checks the ExampleSet before! transformation
+		 */
+	}
+	
+	private void checkExampleSetCompatibility( ExampleSet exampleSet) throws OperatorException{
+		
+		ExampleSet header = this.getTrainingHeader();
+
+		if (header.getAttributes().size() != exampleSet.getAttributes().size()) {
+
+			logWarning("Training and prediction ExampleSet differ in size");
+
+			if (exampleSet.getAttributes().size() > header.getAttributes()
+					.size()) {
+
+				logNote("Try a projection to the attributes used in training");
+
+				Iterator<Attribute> predictionAttributes = exampleSet
+						.getAttributes().iterator();
+				
+				Attribute nextPrediction;
+				
+				while(predictionAttributes.hasNext()) {
+					
+					nextPrediction = predictionAttributes.next();
+					
+					if(!header.getAttributes().contains(nextPrediction))
+						predictionAttributes.remove();
+				}
+			}
+		}
+
+		/*
+		 * double check size to see if a possible projection has helped
+		 */
+
+		if (header.getAttributes().size() != exampleSet.getAttributes().size()) {
+
+			/*
+			 * stop prediction and throw an error
+			 */
+			throw new UserError(null, 925, "Different numbers of attributes");
+		}
+		
+		//TODO: check if the order of the attributes is messed up
+	}
 } 

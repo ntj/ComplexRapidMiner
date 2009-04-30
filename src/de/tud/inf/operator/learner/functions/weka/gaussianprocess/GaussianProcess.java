@@ -7,6 +7,7 @@ import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 
 import com.rapidminer.example.set.ConditionedExampleSet;
+import com.rapidminer.example.set.HeaderExampleSet;
 import com.rapidminer.example.set.NoMissingLabelsCondition;
 import com.rapidminer.example.set.ReplaceMissingExampleSet;
 
@@ -175,6 +176,8 @@ public class GaussianProcess extends AbstractLearner {
 		Model normalizationModel = null;
 
 		Model nominalTransformingModel = null;
+		
+		ExampleSet originalHeader = (HeaderExampleSet)new HeaderExampleSet(exampleSet).clone();
 
 		setOptions();
 
@@ -338,7 +341,7 @@ public class GaussianProcess extends AbstractLearner {
 
 		return new GaussianProcessesModel(exampleSet, inputVectors, kernel,
 				normalizationModel, avgTarget, covarianceMatrix, targetVector,
-				nominalTransformingModel);
+				nominalTransformingModel,originalHeader);
 	}
 
 	@Override
@@ -347,7 +350,8 @@ public class GaussianProcess extends AbstractLearner {
 		if (capability == LearnerCapability.POLYNOMINAL_ATTRIBUTES
 				|| capability == LearnerCapability.BINOMINAL_ATTRIBUTES
 				|| capability == LearnerCapability.NUMERICAL_ATTRIBUTES
-				|| capability == LearnerCapability.NUMERICAL_CLASS)
+				|| capability == LearnerCapability.NUMERICAL_CLASS
+				|| capability == LearnerCapability.BINOMINAL_CLASS)
 			return true;
 
 		return false;
