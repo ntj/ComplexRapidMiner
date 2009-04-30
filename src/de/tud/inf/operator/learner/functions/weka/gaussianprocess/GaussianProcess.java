@@ -350,8 +350,7 @@ public class GaussianProcess extends AbstractLearner {
 		if (capability == LearnerCapability.POLYNOMINAL_ATTRIBUTES
 				|| capability == LearnerCapability.BINOMINAL_ATTRIBUTES
 				|| capability == LearnerCapability.NUMERICAL_ATTRIBUTES
-				|| capability == LearnerCapability.NUMERICAL_CLASS
-				|| capability == LearnerCapability.BINOMINAL_CLASS)
+				|| capability == LearnerCapability.NUMERICAL_CLASS)
 			return true;
 
 		return false;
