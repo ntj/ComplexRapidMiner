@@ -432,6 +432,12 @@
 		class = "de.tud.inf.operator.learner.regressionensemble.EnsembleRegression"
 		description = "Drift-Aware Ensemble Regression"
 		group = "Learner.Supervised.Functions.Ensemble"/>
+		
+	<operator
+		name = "BatchEnsembleRegression"
+		class = "de.tud.inf.operator.learner.regressionensemble.BatchEnsembleRegression"
+		description = "Drift-Aware Ensemble Regression (Batch Mode)"
+		group = "Learner.Supervised.Functions.Ensemble"/>
 
 	<operator name="Binary2MultiClassLearner"
 		class="com.rapidminer.operator.learner.meta.Binary2MultiClassLearner"

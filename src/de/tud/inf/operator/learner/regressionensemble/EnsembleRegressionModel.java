@@ -23,7 +23,7 @@ public class EnsembleRegressionModel extends PredictionModel implements Iterable
 	
 	private Set<Integer> seenIds;
 
-	private ExampleSet exampleSet;
+	//private ExampleSet exampleSet;
 	
 	protected EnsembleRegressionModel(ExampleSet exampleSet) {
 		this(exampleSet, null);
@@ -37,7 +37,7 @@ public class EnsembleRegressionModel extends PredictionModel implements Iterable
 				members.add(member);
 			}
 		}
-		this.exampleSet = exampleSet;
+		//this.exampleSet = exampleSet;
 		this.seenIds = new HashSet<Integer>();
 	}
 	
@@ -68,15 +68,53 @@ public class EnsembleRegressionModel extends PredictionModel implements Iterable
 	public EnsembleMember getMember(int index) {
 		return members.get(index);
 	}
-	
-	public ExampleSet getExampleSet() {
-		return exampleSet;
-	}
-	
-	public void setExampleSet(ExampleSet exampleSet) {
-		this.exampleSet = exampleSet;
-	}
 
+//	/**
+//	 * assign labels to the examples in the passed example set
+//	 */
+//	@Override
+//	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabel) throws OperatorException {
+////		Attribute idAttribute = exampleSet.getAttributes().getId();
+////		if(idAttribute == null) {
+////			throw new OperatorException("id-Attribute missing!");
+////		}
+//		
+//		HashMap<Integer, Double> predictions = new HashMap<Integer, Double>(exampleSet.size());
+//		
+//		// initialize
+//		Iterator<Example> initIter = exampleSet.iterator();
+//		while(initIter.hasNext()) {
+//			Example currentExample = initIter.next();
+//			int currentId = (int) currentExample.getId();
+//			predictions.put(currentId, 0.0);
+//		}
+//		
+//		for(EnsembleMember member : members) {
+//			// skip unstable members
+//			if(member.getState() == MemberState.UNSTABLE) {
+//				continue;
+//			}
+//			
+//			// let the member model write it's prediction into the example set
+//			member.getModel().performPrediction(exampleSet, predictedLabel);
+//			
+//			// gather the predictions
+//			Iterator<Example> iter = exampleSet.iterator();
+//			while(iter.hasNext()) {
+//				Example currentExample = iter.next();
+//				int currentId = (int) currentExample.getId();
+//				double weight = member.getWeight();
+//				
+//				double memberprediction = currentExample.getNumericalValue(predictedLabel); 
+//				double predictionSoFar = predictions.get(currentExample);
+//				
+//				predictions.put(currentId, predictionSoFar + memberprediction * weight);
+//			}
+//		}
+//
+//		return exampleSet;
+//	}
+	
 	/**
 	 * assign labels to the examples in the passed example set
 	 */
@@ -118,7 +156,7 @@ public class EnsembleRegressionModel extends PredictionModel implements Iterable
 				predictionForExample += memberprediction * member.getWeight();				
 			}
 			
-			currentExampleSet.getExample(0).setValue(predictedLabel, predictionForExample);
+			//currentExampleSet.getExample(0).setValue(predictedLabel, predictionForExample);
 		}
 
 		return exampleSet;
@@ -131,7 +169,8 @@ public class EnsembleRegressionModel extends PredictionModel implements Iterable
 		for (EnsembleMember member : members) {
 			PredictionModel model = member.getModel();			
 			result.append(model.getName());
-			result.append(" " + model.toString());
+			result.append(Tools.getLineSeparator());
+			result.append(model.toString());
 			result.append(Tools.getLineSeparator());
 		}
 
@@ -141,4 +180,12 @@ public class EnsembleRegressionModel extends PredictionModel implements Iterable
 	public Iterator<EnsembleMember> iterator() {
 		return members.iterator();
 	}
+	
+//	public ExampleSet getExampleSet() {
+//	return exampleSet;
+//}
+//
+//public void setExampleSet(ExampleSet exampleSet) {
+//	this.exampleSet = exampleSet;
+//}
 }
