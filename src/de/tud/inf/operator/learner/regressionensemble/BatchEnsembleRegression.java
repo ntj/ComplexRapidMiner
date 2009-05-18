@@ -48,6 +48,7 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 	private static final String ENSEMBLE_STATE_FILE 		= "state file";
 	private static final String ENSEMBLE_FULL_MATERIALIZED	= "materialize full";
 	private static final String ENSEMBLE_PENALTY_WEIGHT		= "penalty weight";
+	private static final String ENSEMBLE_SAMPLING_INTERVAL	= "sampling interval";
 
 	public BatchEnsembleRegression(OperatorDescription description) {
 		super(description);
@@ -60,6 +61,7 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		File state_file = getParameterAsFile(ENSEMBLE_STATE_FILE);
 		
 		int max_members = getParameterAsInt(ENSEMBLE_MAX_MEMBERS);
+		int sampling_interval = getParameterAsInt(ENSEMBLE_SAMPLING_INTERVAL);
 		double local_threshold = getParameterAsDouble(ENSEMBLE_LOCAL_THRESHOLD);
 		double penalty_weight = getParameterAsDouble(ENSEMBLE_PENALTY_WEIGHT);
 		boolean sliding_test = getParameterAsBoolean(ENSEMBLE_SLIDING_TEST);
@@ -77,9 +79,9 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		}  
 
 		if(materialize_full == true) {
-			ensemble = createEnsembleTotalMaterialized(exampleSet, learner, distance, max_members, local_threshold, penalty_weight, sliding_test); 
+			ensemble = createEnsembleTotalMaterialized(exampleSet, learner, distance, max_members, local_threshold, penalty_weight, sliding_test, sampling_interval); 
 		} else {
-			ensemble = createEnsembleScanMaterialized(exampleSet, learner, distance, max_members, local_threshold, penalty_weight, sliding_test);
+			ensemble = createEnsembleScanMaterialized(exampleSet, learner, distance, max_members, local_threshold, penalty_weight, sliding_test, sampling_interval);
 		}
 		
 		log("Back in main");
@@ -112,10 +114,12 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 			int max_members,
 			double local_threshold,
 			double penalty_weight,
-			boolean sliding_test
+			boolean sliding_test,
+			int sampling_interval
 	) throws OperatorException {
-		EnsembleRegressionModel ensemble = new EnsembleRegressionModel(exampleSet);		
-		EnsembleMember[] candidates = new EnsembleMember[exampleSet.size()];
+		EnsembleRegressionModel ensemble = new EnsembleRegressionModel(exampleSet);	
+		HashMap<Integer, EnsembleMember> candidates = new HashMap<Integer, EnsembleMember>();
+		//EnsembleMember[] candidates = new EnsembleMember[exampleSet.size()];
 		TreeMultiMap<Double, Integer> ratios = new TreeMultiMap<Double, Integer>();
 
 		Attribute idAttribute = exampleSet.getAttributes().getId();
@@ -134,7 +138,7 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		ArrayList<Integer> ids = getAllIds(exampleSet);
 		int maxId = ids.get(ids.size() - 1);
 		
-		for(int round = last; round >= first; round--) {
+		for(int round = last; round >= first; round = round - sampling_interval) {
 			int currentId = ids.get(round - 1);
 			
 			//String windowConditionExpression = idAttribute.getName() + " >= " + round + " && " + idAttribute.getName() + " <= " + last;
@@ -184,7 +188,8 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 			member.setState(MemberState.STABLE);
 			member.setModel(model);
 			
-			candidates[round - 1] = member;
+			//candidates[round - 1] = member;
+			candidates.put(round-1, member);
 			double ratio = member.getRatio();
 			double size_penalty = ((double) ((size + 1) - round)) / ((double)size);   
 			double key = penalty_weight * size_penalty + (1 - penalty_weight) * ratio;
@@ -209,7 +214,8 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 				// the index of the member is also round number when added
 				memberIndex = currList.get(currIndex);
 				// retrieve the member
-				selected_member = candidates[memberIndex];
+				//selected_member = candidates[memberIndex];
+				selected_member = candidates.get(memberIndex);
 				// maintain number sum of positives in ensemble
 				ensemble_positives += selected_member.getPositive();
 				// add the member to the ensemble
@@ -221,10 +227,16 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 					currIndex++;
 				} else {
 					currEntry = ratios.lowerEntry(currKey);
-					currList = currEntry.getValue();
-					currKey = currEntry.getKey();
-					currIndex = 0;
+					if(currEntry != null) {
+						currList = currEntry.getValue();
+						currKey = currEntry.getKey();
+						currIndex = 0;
+					} else {
+						break;
+					}
 				}
+			} else {
+				break;
 			}
 		}
 		log(ratios.toString());
@@ -251,7 +263,8 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 			int max_members,
 			double local_threshold,
 			double penalty_weight,
-			boolean sliding_test
+			boolean sliding_test,
+			int sampling_interval
 	) throws OperatorException {
 		EnsembleRegressionModel ensemble = new EnsembleRegressionModel(exampleSet);
 		// candidate set; is maintained while iterating through the windows!
@@ -273,7 +286,7 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		ArrayList<Integer> ids = getAllIds(exampleSet);
 		int maxId = ids.get(ids.size() - 1);
 
-		for(int round = last; round >= first; round--) {
+		for(int round = last; round >= first; round = round - sampling_interval) {
 			int currentId = ids.get(round - 1);
 			
 			//String windowConditionExpression = idAttribute.getName() + " >= " + round + " && " + idAttribute.getName() + " <= " + last;
@@ -479,6 +492,16 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 				);
 		penalty_weight.setExpert(false);
 		types.add(penalty_weight);
+		
+		ParameterTypeInt sampling_interval = new ParameterTypeInt(
+				ENSEMBLE_SAMPLING_INTERVAL,
+				"interval between successively tested windows",
+				1,
+				Integer.MAX_VALUE,
+				1
+				);
+		sampling_interval.setExpert(true);
+		types.add(sampling_interval);
 		
 		return types;
 	}
