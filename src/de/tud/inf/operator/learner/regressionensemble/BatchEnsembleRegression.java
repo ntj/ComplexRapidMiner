@@ -45,6 +45,7 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 	private static final String ENSEMBLE_LOCAL_THRESHOLD 	= "local threshold";
 	private static final String ENSEMBLE_SIMILARITY_MEASURE = "similarity measure";
 	private static final String ENSEMBLE_SLIDING_TEST		= "test on training window";
+	private static final String ENSEMBLE_LEAF_OUT_SIZE		= "percentage of examples in leaf out";
 	private static final String ENSEMBLE_STATE_FILE 		= "state file";
 	private static final String ENSEMBLE_FULL_MATERIALIZED	= "materialize full";
 	private static final String ENSEMBLE_PENALTY_WEIGHT		= "penalty weight";
@@ -62,6 +63,7 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		
 		int max_members = getParameterAsInt(ENSEMBLE_MAX_MEMBERS);
 		int sampling_interval = getParameterAsInt(ENSEMBLE_SAMPLING_INTERVAL);
+		int leaf_out_size = getParameterAsInt(ENSEMBLE_LEAF_OUT_SIZE);
 		double local_threshold = getParameterAsDouble(ENSEMBLE_LOCAL_THRESHOLD);
 		double penalty_weight = getParameterAsDouble(ENSEMBLE_PENALTY_WEIGHT);
 		boolean sliding_test = getParameterAsBoolean(ENSEMBLE_SLIDING_TEST);
@@ -79,9 +81,9 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		}  
 
 		if(materialize_full == true) {
-			ensemble = createEnsembleTotalMaterialized(exampleSet, learner, distance, max_members, local_threshold, penalty_weight, sliding_test, sampling_interval); 
+			ensemble = createEnsembleTotalMaterialized(exampleSet, learner, distance, max_members, local_threshold, penalty_weight, sliding_test, leaf_out_size, sampling_interval); 
 		} else {
-			ensemble = createEnsembleScanMaterialized(exampleSet, learner, distance, max_members, local_threshold, penalty_weight, sliding_test, sampling_interval);
+			ensemble = createEnsembleScanMaterialized(exampleSet, learner, distance, max_members, local_threshold, penalty_weight, sliding_test, leaf_out_size, sampling_interval);
 		}
 		
 		log("Back in main");
@@ -115,34 +117,49 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 			double local_threshold,
 			double penalty_weight,
 			boolean sliding_test,
+			int leaf_out_size,
 			int sampling_interval
 	) throws OperatorException {
 		EnsembleRegressionModel ensemble = new EnsembleRegressionModel(exampleSet);	
+		// candidate set; is materialized fully
 		HashMap<Integer, EnsembleMember> candidates = new HashMap<Integer, EnsembleMember>();
-		//EnsembleMember[] candidates = new EnsembleMember[exampleSet.size()];
+		// EnsembleMember[] candidates = new EnsembleMember[exampleSet.size()];
 		TreeMultiMap<Double, Integer> ratios = new TreeMultiMap<Double, Integer>();
 
 		Attribute idAttribute = exampleSet.getAttributes().getId();
 		Attribute labelAttribute = exampleSet.getAttributes().getLabel();
 		Attribute predictedLabel = createPredictedLabel(exampleSet, labelAttribute);
 		
-		Learner learner = (Learner) learnerOperator;
-		int first = 1;
-		int last = exampleSet.size();
-		int size = last - first + 1;
-		
-		// iterate over all possible windows
-		// OPTION use a sampling schema to select only some windows
-		// FIXME extract collection of all values of the id attribute
-		
 		ArrayList<Integer> ids = getAllIds(exampleSet);
 		int maxId = ids.get(ids.size() - 1);
+		
+		Learner learner = (Learner) learnerOperator;
+		int first = 1;
+		int last;
+		int testBeginId;
+		int trainingEndId;
+		
+		if (sliding_test == true) {
+			last = exampleSet.size();
+			trainingEndId = last;
+			testBeginId = last; // does not matter
+		} else {
+			int leaf_out_count = exampleSet.size() * leaf_out_size / 100;
+			if(leaf_out_count == 0) {
+				throw new UserError(this, new ArithmeticException("Leaf out Percentage too small --> 0 exmaples would be left out"), 999);
+			}
+			//log(Integer.toString(leaf_out_count));
+			last = exampleSet.size() - leaf_out_count - 1;
+			trainingEndId = ids.get(last - 1);
+			testBeginId = ids.get(last);
+		}
+		int size = last - first + 1;
 		
 		for(int round = last; round >= first; round = round - sampling_interval) {
 			int currentId = ids.get(round - 1);
 			
 			//String windowConditionExpression = idAttribute.getName() + " >= " + round + " && " + idAttribute.getName() + " <= " + last;
-			String windowConditionExpression = idAttribute.getName() + " >= " + currentId + " && " + idAttribute.getName() + " <= " + maxId;
+			String windowConditionExpression = idAttribute.getName() + " >= " + currentId + " && " + idAttribute.getName() + " <= " + trainingEndId;
 			
 			Condition windowCondition = new AttributeValueFilter(exampleSet, windowConditionExpression);
 			//log(windowCondition.toString());
@@ -176,7 +193,25 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 					}
 				}
 			} else {
-				// test on test set...
+				String testSetConditionExpression = idAttribute.getName() + " >= " + testBeginId + " && " + idAttribute.getName() + " <= " + maxId;
+				Condition testSetCondition = new AttributeValueFilter(exampleSet, testSetConditionExpression);
+				ConditionedExampleSet testSet = new ConditionedExampleSet(exampleSet, testSetCondition);
+
+				model.performPrediction(testSet, predictedLabel);
+				
+				Iterator<Example> iter = testSet.iterator();
+				while (iter.hasNext()) {
+					Example example = iter.next();
+					double label = example.getLabel();
+					double prediction = example.getNumericalValue(predictedLabel);
+					double dist = distance.distance(label, prediction);
+					
+					if(dist < local_threshold) {
+						positives++;
+					} else {
+						negatives++;
+					}
+				}
 			}
 			
 			//log(Double.toString(dist));
@@ -255,7 +290,6 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		return ensemble;
 	}
 	
-	//TODO then exchange the test protocol!
 	private EnsembleRegressionModel createEnsembleScanMaterialized(
 			ExampleSet exampleSet, 
 			Operator learnerOperator, 
@@ -264,33 +298,49 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 			double local_threshold,
 			double penalty_weight,
 			boolean sliding_test,
+			int leaf_out_size,
 			int sampling_interval
 	) throws OperatorException {
 		EnsembleRegressionModel ensemble = new EnsembleRegressionModel(exampleSet);
 		// candidate set; is maintained while iterating through the windows!
 		HashMap<Integer, EnsembleMember> candidates = new HashMap<Integer, EnsembleMember>();
-		// the ratios for maintaing the candidates!
+		// the ratios for maintaining the candidates!
 		TreeMultiMap<Double, Integer> ratios = new TreeMultiMap<Double, Integer>();
 		
 		Attribute idAttribute = exampleSet.getAttributes().getId();
 		Attribute labelAttribute = exampleSet.getAttributes().getLabel();
 		Attribute predictedLabel = createPredictedLabel(exampleSet, labelAttribute);
 		
-		Learner learner = (Learner) learnerOperator;
-		int first = 1;
-		int last = exampleSet.size();
-		int size = last - first + 1;
-		
-		// iterate over all possible windows
-		// OPTION use a sampling schema to select only some windows
 		ArrayList<Integer> ids = getAllIds(exampleSet);
 		int maxId = ids.get(ids.size() - 1);
+		
+		Learner learner = (Learner) learnerOperator;
+		int first = 1;
+		int last;
+		int testBeginId;
+		int trainingEndId;
+		
+		if (sliding_test == true) {
+			last = exampleSet.size();
+			trainingEndId = last;
+			testBeginId = last; // does not matter
+		} else {
+			int leaf_out_count = exampleSet.size() * leaf_out_size / 100;
+			if(leaf_out_count == 0) {
+				throw new UserError(this, new ArithmeticException("Leaf out Percentage too small --> 0 exmaples would be left out"), 999);
+			}
+			//log(Integer.toString(leaf_out_count));
+			last = exampleSet.size() - leaf_out_count - 1;
+			trainingEndId = ids.get(last - 1);
+			testBeginId = ids.get(last);
+		}
+		int size = last - first + 1;
 
 		for(int round = last; round >= first; round = round - sampling_interval) {
 			int currentId = ids.get(round - 1);
 			
 			//String windowConditionExpression = idAttribute.getName() + " >= " + round + " && " + idAttribute.getName() + " <= " + last;
-			String windowConditionExpression = idAttribute.getName() + " >= " + currentId + " && " + idAttribute.getName() + " <= " + maxId;
+			String windowConditionExpression = idAttribute.getName() + " >= " + currentId + " && " + idAttribute.getName() + " <= " + trainingEndId;
 			
 			Condition windowCondition = new AttributeValueFilter(exampleSet, windowConditionExpression);
 			//log(windowCondition.toString());
@@ -324,7 +374,25 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 					}
 				}
 			} else {
-				// test on test set...
+				String testSetConditionExpression = idAttribute.getName() + " >= " + testBeginId + " && " + idAttribute.getName() + " <= " + maxId;
+				Condition testSetCondition = new AttributeValueFilter(exampleSet, testSetConditionExpression);
+				ConditionedExampleSet testSet = new ConditionedExampleSet(exampleSet, testSetCondition);
+
+				model.performPrediction(testSet, predictedLabel);
+				
+				Iterator<Example> iter = testSet.iterator();
+				while (iter.hasNext()) {
+					Example example = iter.next();
+					double label = example.getLabel();
+					double prediction = example.getNumericalValue(predictedLabel);
+					double dist = distance.distance(label, prediction);
+					
+					if(dist < local_threshold) {
+						positives++;
+					} else {
+						negatives++;
+					}
+				}
 			}
 			
 			//log(Double.toString(dist));
@@ -469,11 +537,21 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		
 		ParameterTypeBoolean sliding_test = new ParameterTypeBoolean(
 				ENSEMBLE_SLIDING_TEST,
-				"test member candidates on training set",
+				"test member candidates on training set (true) or on leaf out set (false)",
 				true
 				);
 		sliding_test.setExpert(false);
 		types.add(sliding_test);
+		
+		ParameterTypeInt leaf_out_size = new ParameterTypeInt(
+				ENSEMBLE_LEAF_OUT_SIZE,
+				"percentage of examples to leaf out of training for testing",
+				0,
+				100,
+				10
+				);
+		leaf_out_size.setExpert(false);
+		types.add(leaf_out_size);
 		
 		ParameterTypeBoolean materialize_full = new ParameterTypeBoolean(
 				ENSEMBLE_FULL_MATERIALIZED,
