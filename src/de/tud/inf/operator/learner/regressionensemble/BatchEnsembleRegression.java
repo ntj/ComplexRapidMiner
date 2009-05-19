@@ -50,6 +50,11 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 	private static final String ENSEMBLE_FULL_MATERIALIZED	= "materialize full";
 	private static final String ENSEMBLE_PENALTY_WEIGHT		= "penalty weight";
 	private static final String ENSEMBLE_SAMPLING_INTERVAL	= "sampling interval";
+	private static final String ENSEMBLE_USE_THREADS		= "use threads";
+	
+	private MemberGatherer gatherer = null; 
+	
+	private Object lock = new Object();
 
 	public BatchEnsembleRegression(OperatorDescription description) {
 		super(description);
@@ -68,6 +73,7 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		double penalty_weight = getParameterAsDouble(ENSEMBLE_PENALTY_WEIGHT);
 		boolean sliding_test = getParameterAsBoolean(ENSEMBLE_SLIDING_TEST);
 		boolean materialize_full = getParameterAsBoolean(ENSEMBLE_FULL_MATERIALIZED);
+		boolean use_threads = getParameterAsBoolean(ENSEMBLE_USE_THREADS);
 		
 		String similarity_measure_type = getParameterAsString(ENSEMBLE_SIMILARITY_MEASURE);
 		Distance distance = null;
@@ -79,11 +85,19 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 				logError("Unknown distance function");
 				break;
 		}  
-
-		if(materialize_full == true) {
-			ensemble = createEnsembleTotalMaterialized(exampleSet, learner, distance, max_members, local_threshold, penalty_weight, sliding_test, leaf_out_size, sampling_interval); 
+		
+		if(use_threads == true) {
+			try {
+				ensemble = createEnsembleThreaded(exampleSet, learner, distance, max_members, local_threshold, penalty_weight, sliding_test, leaf_out_size, sampling_interval);
+			} catch (InterruptedException ie) {
+				throw new OperatorException("Threading Problem", ie);
+			}
 		} else {
-			ensemble = createEnsembleScanMaterialized(exampleSet, learner, distance, max_members, local_threshold, penalty_weight, sliding_test, leaf_out_size, sampling_interval);
+			if(materialize_full == true) {
+				ensemble = createEnsembleTotalMaterialized(exampleSet, learner, distance, max_members, local_threshold, penalty_weight, sliding_test, leaf_out_size, sampling_interval); 
+			} else {
+				ensemble = createEnsembleScanMaterialized(exampleSet, learner, distance, max_members, local_threshold, penalty_weight, sliding_test, leaf_out_size, sampling_interval);
+			}
 		}
 		
 		log("Back in main");
@@ -109,7 +123,329 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		return ensemble;
 	}
 	
-	private EnsembleRegressionModel createEnsembleTotalMaterialized(
+	protected class MemberGatherer {
+		HashMap<Integer, EnsembleMember> candidates;
+		TreeMultiMap<Double, Integer> ratios;
+		boolean exceptionOccured;
+		
+		public MemberGatherer(HashMap<Integer, EnsembleMember> candidates, 	TreeMultiMap<Double, Integer> ratios) {
+			this.candidates = candidates;
+			this.ratios = ratios;
+			this.exceptionOccured = false;
+		}
+
+		public HashMap<Integer, EnsembleMember> getCandidates() {
+			return candidates;
+		}
+
+		public TreeMultiMap<Double, Integer> getRatios() {
+			return ratios;
+		}
+		
+		public void flagException() {		
+			exceptionOccured = true;
+		}
+		
+		public boolean getExceptionOccured() {
+			return exceptionOccured;
+		}
+	}
+	
+	protected class EstimateAndTest implements Runnable {
+		protected ExampleSet exampleSet;
+		protected Distance distance;
+		protected ArrayList<Integer> ids;
+		protected Learner learner;
+		protected Attribute idAttribute;
+		protected Attribute predictedLabel;
+		protected int round;
+		protected int trainingEndId;
+		protected boolean sliding_test;
+		protected int max_members;
+		protected double local_threshold;
+		protected double penalty_weight;
+		protected int leaf_out_size;
+		protected int sampling_interval;
+		protected int testBeginId;
+		protected int maxId;
+		protected int size;
+		protected BatchEnsembleRegression parent;
+
+		protected EstimateAndTest(
+				ExampleSet exampleSet, 
+				Distance distance,
+				ArrayList<Integer> ids, 
+				Learner learner, 
+				int round, 
+				int trainingEndId, 
+				int testBeginId,
+				int maxId,
+				Attribute idAttribute,
+				Attribute predictedLabel,
+				boolean sliding_test,
+				int max_members, 
+				double local_threshold, 
+				double penalty_weight,
+				int leaf_out_size, 
+				int sampling_interval,
+				int size,
+				BatchEnsembleRegression parent
+		) {
+			this.exampleSet = exampleSet;
+			this.ids = ids;
+			this.distance = distance;
+			this.round = round;
+			this.idAttribute = idAttribute;
+			this.trainingEndId = trainingEndId;
+			this.learner = learner;
+			this.sliding_test = sliding_test;
+			this.predictedLabel = predictedLabel;
+			this.max_members = max_members;
+			this.local_threshold = local_threshold;
+			this.penalty_weight = penalty_weight;
+			this.leaf_out_size = leaf_out_size;
+			this.sampling_interval = sampling_interval;
+			this.testBeginId = testBeginId; 
+			this.maxId = maxId;
+			this.size = size;
+			this.parent = parent;
+		}
+		
+		public void run() {
+			int currentId = ids.get(round - 1);
+			String windowConditionExpression = idAttribute.getName() + " >= " + currentId + " && " + idAttribute.getName() + " <= " + trainingEndId;
+			Condition windowCondition = new AttributeValueFilter(exampleSet, windowConditionExpression);
+			ConditionedExampleSet window = new ConditionedExampleSet(exampleSet, windowCondition);
+			
+			PredictionModel model = null;
+			
+			try {
+				model = (PredictionModel) learner.learn(window);
+			} catch(OperatorException oe) {
+				gatherer.flagException();
+				oe.printStackTrace();
+				return;
+			}
+			
+			EnsembleMember member = new EnsembleMember();
+			int positives = 0;
+			int negatives = 0;
+			
+			// testing
+			if (sliding_test == true) {
+				// sliding test -> test on all values used in training!
+				// iterate over all examples in the window and test [e.g. batch predict]; result will be written to predictedLabel
+				try {
+					model.performPrediction(window, predictedLabel);
+				} catch (OperatorException oe) {
+					gatherer.flagException();
+					oe.printStackTrace();
+					return;
+				}
+				
+				// test on window! --> iterate for classification
+				Iterator<Example> iter = window.iterator();
+				while (iter.hasNext()) {
+					Example example = iter.next();
+					double label = example.getLabel();
+					double prediction = example.getNumericalValue(predictedLabel);
+					double dist = distance.distance(label, prediction);
+					
+					if(dist < local_threshold) {
+						positives++;
+					} else {
+						negatives++;
+					}
+				}
+			} else {
+				String testSetConditionExpression = idAttribute.getName() + " >= " + testBeginId + " && " + idAttribute.getName() + " <= " + maxId;
+				Condition testSetCondition = new AttributeValueFilter(exampleSet, testSetConditionExpression);
+				ConditionedExampleSet testSet = new ConditionedExampleSet(exampleSet, testSetCondition);
+
+				try {
+					model.performPrediction(testSet, predictedLabel);
+				} catch (OperatorException oe) {
+					gatherer.flagException();
+					oe.printStackTrace();
+					return;
+				}
+				
+				Iterator<Example> iter = testSet.iterator();
+				while (iter.hasNext()) {
+					Example example = iter.next();
+					double label = example.getLabel();
+					double prediction = example.getNumericalValue(predictedLabel);
+					double dist = distance.distance(label, prediction);
+					
+					if(dist < local_threshold) {
+						positives++;
+					} else {
+						negatives++;
+					}
+				}
+			}
+			
+			//log(Double.toString(dist));
+			member.setPositive(positives);
+			member.setNegative(negatives);
+			member.setIntroducedAt(currentId);		
+
+			//OPTION correct state init
+			member.setState(MemberState.STABLE);
+			member.setModel(model);
+			
+			//candidates[round - 1] = member;
+			double ratio = member.getRatio();
+			double size_penalty = ((double) ((size + 1) - round)) / ((double)size);   
+			double currentPenalizedRatio = penalty_weight * size_penalty + (1 - penalty_weight) * ratio;
+			
+			synchronized(lock) {
+				if(parent.getGatherer().getCandidates().size() < max_members) {
+					// can safely use round as "index" here
+					parent.getGatherer().getCandidates().put(round, member);
+					parent.getGatherer().getRatios().put(currentPenalizedRatio, round);
+					//ensemble_positives += member.getPositive();
+				} else {
+					// check weather there is a lower ranking member to replace; always replace in the lowest Key
+					double leastKey = parent.getGatherer().getRatios().firstKey();
+					
+					if(leastKey < currentPenalizedRatio) {
+						// there is at least one entry
+						int leastMemberIndex = parent.getGatherer().getRatios().get(leastKey).get(0);
+						
+						// remove it
+						parent.getGatherer().getRatios().remove(leastKey, leastMemberIndex);
+						parent.getGatherer().getCandidates().remove(leastMemberIndex);
+						
+						// now put the new member
+						parent.getGatherer().getCandidates().put(round, member);
+						parent.getGatherer().getRatios().put(currentPenalizedRatio, round);
+						//ensemble_positives += member.getPositive();
+					}
+				}
+			}
+		}
+	}
+	
+	protected EnsembleRegressionModel createEnsembleThreaded(
+			ExampleSet exampleSet, 
+			Operator learnerOperator, 
+			Distance distance,
+			int max_members, 
+			double local_threshold, 
+			double penalty_weight,
+			boolean sliding_test, 
+			int leaf_out_size, 
+			int sampling_interval
+	) throws OperatorException, InterruptedException {
+		EnsembleRegressionModel ensemble = new EnsembleRegressionModel(exampleSet);
+		// candidate set; is maintained while iterating through the windows!
+		HashMap<Integer, EnsembleMember> candidates = new HashMap<Integer, EnsembleMember>();
+		// the ratios for maintaining the candidates!
+		TreeMultiMap<Double, Integer> ratios = new TreeMultiMap<Double, Integer>();
+		// all threads
+		ArrayList<Thread> threads = new ArrayList<Thread>();
+		// access object for the threads
+		gatherer = new MemberGatherer(candidates, ratios);
+		
+		Attribute idAttribute = exampleSet.getAttributes().getId();
+		Attribute labelAttribute = exampleSet.getAttributes().getLabel();
+		Attribute predictedLabel = createPredictedLabel(exampleSet, labelAttribute);
+		
+		ArrayList<Integer> ids = getAllIds(exampleSet);
+		int maxId = ids.get(ids.size() - 1);
+		
+		Learner learner = (Learner) learnerOperator;
+		int first = 1;
+		int last;
+		int testBeginId;
+		int trainingEndId;
+		
+		if (sliding_test == true) {
+			last = exampleSet.size();
+			trainingEndId = last;
+			testBeginId = last; // does not matter
+		} else {
+			int leaf_out_count = exampleSet.size() * leaf_out_size / 100;
+			if(leaf_out_count == 0) {
+				throw new UserError(this, new ArithmeticException("Leaf out Percentage too small --> 0 exmaples would be left out"), 999);
+			}
+			//log(Integer.toString(leaf_out_count));
+			last = exampleSet.size() - leaf_out_count - 1;
+			trainingEndId = ids.get(last - 1);
+			testBeginId = ids.get(last);
+		}
+		int size = last - first + 1;
+		
+		threads.ensureCapacity(size);
+		
+		// build the threads
+		for(int round = last; round >= first; round = round - sampling_interval) {
+			EstimateAndTest runnable = new EstimateAndTest(
+				exampleSet, 
+				distance,
+				ids, 
+				learner, 
+				round, 
+				trainingEndId, 
+				testBeginId,
+				maxId,
+				idAttribute,
+				predictedLabel,
+				sliding_test,
+				max_members, 
+				local_threshold, 
+				penalty_weight,
+				leaf_out_size, 
+				sampling_interval,
+				size,
+				this
+			);
+			threads.add(new Thread(runnable));
+		}
+		
+		// start threads
+		for(Thread t : threads) {
+			t.start();
+		}
+		
+		// wait for threads
+		for(Thread t : threads) {
+			t.join();
+		}
+		
+		candidates = gatherer.getCandidates();
+		ratios = gatherer.getRatios();
+		
+		if(gatherer.getExceptionOccured() == true) {
+			throw new OperatorException("Exception in one of the worker threads");
+		}
+		
+		int ensemble_positives = 0;
+		
+		for (Iterator<EnsembleMember> iterator = candidates.values().iterator(); iterator.hasNext();) {
+			EnsembleMember member = iterator.next();
+			ensemble_positives += member.getPositive();
+			ensemble.addMember(member);
+		}
+		
+		ensemble.setSeenIds(new HashSet<Integer>(ids));
+
+		for (EnsembleMember mem : ensemble) {
+			mem.setWeight(mem.getPositive() / ensemble_positives);
+			log(Double.toString(mem.getRatio()));
+			log(Double.toString(mem.getIntroducedAt()));
+		}
+
+		// clean up
+		removePredictedLabel(exampleSet, predictedLabel);
+	
+		gatherer = null;
+		
+		return ensemble;
+	}
+
+	protected EnsembleRegressionModel createEnsembleTotalMaterialized(
 			ExampleSet exampleSet, 
 			Operator learnerOperator, 
 			Distance distance,
@@ -290,7 +626,7 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		return ensemble;
 	}
 	
-	private EnsembleRegressionModel createEnsembleScanMaterialized(
+	protected EnsembleRegressionModel createEnsembleScanMaterialized(
 			ExampleSet exampleSet, 
 			Operator learnerOperator, 
 			Distance distance,
@@ -472,16 +808,6 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		return ids;
 	}
 	
-//	protected Set<Integer> buildSeenIds(List<Integer> ids, int firstIndex) {
-//		Set<Integer> seenIds = new HashSet<Integer>();
-//		
-//		for(int i = firstIndex; i < ids.size(); i++) {
-//			seenIds.add(ids.get(i));
-//		}
-//		
-//		return seenIds;
-//	}
-	
 	protected static Attribute createPredictedLabel(ExampleSet exampleSet, Attribute label) {
 		// create and add prediction attribute
 		Attribute predictedLabel = AttributeFactory.createAttribute(label, Attributes.PREDICTION_NAME);
@@ -581,6 +907,14 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		sampling_interval.setExpert(true);
 		types.add(sampling_interval);
 		
+		ParameterTypeBoolean use_threads = new ParameterTypeBoolean(
+				ENSEMBLE_USE_THREADS,
+				"use threads",
+				false
+				);
+		use_threads.setExpert(true);
+		types.add(use_threads);
+		
 		return types;
 	}
 	
@@ -623,5 +957,10 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 	
 	protected static String getDefaultMeasureNames() {
 		return ENSEMBLE_SIMILARITY_MEASURES.EuclideanDistance.toString();
+	}
+	
+
+	private MemberGatherer getGatherer() {
+		return gatherer;
 	}
 }
