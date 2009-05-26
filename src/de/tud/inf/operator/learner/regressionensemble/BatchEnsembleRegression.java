@@ -363,15 +363,17 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		
 		if (sliding_test == true) {
 			last = exampleSet.size();
-			trainingEndId = last;
-			testBeginId = last; // does not matter
+			trainingEndId = ids.get(last - 1);
+			testBeginId = 0; // does not matter
+			//testBeginId = ids.get(last); 
 		} else {
 			int leaf_out_count = exampleSet.size() * leaf_out_size / 100;
 			if(leaf_out_count == 0) {
-				throw new UserError(this, new ArithmeticException("Leaf out Percentage too small --> 0 exmaples would be left out"), 999);
+				//FIXME
+				leaf_out_count = 1;
 			}
 			//log(Integer.toString(leaf_out_count));
-			last = exampleSet.size() - leaf_out_count - 1;
+			last = exampleSet.size() - leaf_out_count;
 			trainingEndId = ids.get(last - 1);
 			testBeginId = ids.get(last);
 		}
@@ -431,10 +433,17 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		
 		ensemble.setSeenIds(new HashSet<Integer>(ids));
 
-		for (EnsembleMember mem : ensemble) {
-			mem.setWeight(mem.getPositive() / ensemble_positives);
-			log(Double.toString(mem.getRatio()));
-			log(Double.toString(mem.getIntroducedAt()));
+		if(ensemble_positives == 0) {
+			log("Looser Ensemble encountered");
+			for (EnsembleMember mem : ensemble) {
+				mem.setWeight(1/max_members);
+			}
+		} else { 
+			for (EnsembleMember mem : ensemble) {
+				mem.setWeight(mem.getPositive() / ensemble_positives);
+				log(Double.toString(mem.getRatio()));
+				log(Double.toString(mem.getIntroducedAt()));
+			}
 		}
 
 		// clean up
@@ -477,15 +486,17 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		
 		if (sliding_test == true) {
 			last = exampleSet.size();
-			trainingEndId = last;
-			testBeginId = last; // does not matter
+			trainingEndId = ids.get(last - 1);
+			testBeginId = 0; // does not matter
+			//testBeginId = ids.get(last); 
 		} else {
 			int leaf_out_count = exampleSet.size() * leaf_out_size / 100;
 			if(leaf_out_count == 0) {
-				throw new UserError(this, new ArithmeticException("Leaf out Percentage too small --> 0 exmaples would be left out"), 999);
+				//FIXME
+				leaf_out_count = 1;
 			}
 			//log(Integer.toString(leaf_out_count));
-			last = exampleSet.size() - leaf_out_count - 1;
+			last = exampleSet.size() - leaf_out_count;
 			trainingEndId = ids.get(last - 1);
 			testBeginId = ids.get(last);
 		}
@@ -614,10 +625,17 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		
 		ensemble.setSeenIds(new HashSet<Integer>(ids));
 		
-		for (EnsembleMember mem : ensemble) {
-			mem.setWeight(mem.getPositive() / ensemble_positives);
-			log(Double.toString(mem.getRatio()));
-			log(Double.toString(mem.getIntroducedAt()));
+		if(ensemble_positives == 0) {
+			log("Looser Ensemble encountered");
+			for (EnsembleMember mem : ensemble) {
+				mem.setWeight(1/max_members);
+			}
+		} else { 
+			for (EnsembleMember mem : ensemble) {
+				mem.setWeight(mem.getPositive() / ensemble_positives);
+				log(Double.toString(mem.getRatio()));
+				log(Double.toString(mem.getIntroducedAt()));
+			}
 		}
 
 		// clean up
@@ -658,15 +676,17 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		
 		if (sliding_test == true) {
 			last = exampleSet.size();
-			trainingEndId = last;
-			testBeginId = last; // does not matter
+			trainingEndId = ids.get(last - 1);
+			testBeginId = 0; // does not matter
+			//testBeginId = ids.get(last); 
 		} else {
 			int leaf_out_count = exampleSet.size() * leaf_out_size / 100;
 			if(leaf_out_count == 0) {
-				throw new UserError(this, new ArithmeticException("Leaf out Percentage too small --> 0 exmaples would be left out"), 999);
+				//FIXME
+				leaf_out_count = 1;
 			}
 			//log(Integer.toString(leaf_out_count));
-			last = exampleSet.size() - leaf_out_count - 1;
+			last = exampleSet.size() - leaf_out_count;
 			trainingEndId = ids.get(last - 1);
 			testBeginId = ids.get(last);
 		}
@@ -783,10 +803,17 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		
 		ensemble.setSeenIds(new HashSet<Integer>(ids));
 
-		for (EnsembleMember mem : ensemble) {
-			mem.setWeight(mem.getPositive() / ensemble_positives);
-			log(Double.toString(mem.getRatio()));
-			log(Double.toString(mem.getIntroducedAt()));
+		if(ensemble_positives == 0) {
+			log("Looser Ensemble encountered");
+			for (EnsembleMember mem : ensemble) {
+				mem.setWeight(1/max_members);
+			}
+		} else { 
+			for (EnsembleMember mem : ensemble) {
+				mem.setWeight(mem.getPositive() / ensemble_positives);
+				log(Double.toString(mem.getRatio()));
+				log(Double.toString(mem.getIntroducedAt()));
+			}
 		}
 
 		// clean up
