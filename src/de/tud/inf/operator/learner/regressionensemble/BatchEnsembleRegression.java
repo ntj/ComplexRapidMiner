@@ -986,7 +986,6 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		return ENSEMBLE_SIMILARITY_MEASURES.EuclideanDistance.toString();
 	}
 	
-
 	private MemberGatherer getGatherer() {
 		return gatherer;
 	}
