@@ -45,7 +45,7 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 	private static final String ENSEMBLE_LOCAL_THRESHOLD 	= "local threshold";
 	private static final String ENSEMBLE_SIMILARITY_MEASURE = "similarity measure";
 	private static final String ENSEMBLE_SLIDING_TEST		= "test on training window";
-	private static final String ENSEMBLE_LEAF_OUT_SIZE		= "percentage of examples in leaf out";
+	private static final String ENSEMBLE_LEAVE_OUT_SIZE		= "percentage of test examples";
 	private static final String ENSEMBLE_STATE_FILE 		= "state file";
 	private static final String ENSEMBLE_FULL_MATERIALIZED	= "materialize full";
 	private static final String ENSEMBLE_PENALTY_WEIGHT		= "penalty weight";
@@ -68,7 +68,7 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		
 		int max_members = getParameterAsInt(ENSEMBLE_MAX_MEMBERS);
 		int sampling_interval = getParameterAsInt(ENSEMBLE_SAMPLING_INTERVAL);
-		int leaf_out_size = getParameterAsInt(ENSEMBLE_LEAF_OUT_SIZE);
+		int leaf_out_size = getParameterAsInt(ENSEMBLE_LEAVE_OUT_SIZE);
 		double local_threshold = getParameterAsDouble(ENSEMBLE_LOCAL_THRESHOLD);
 		double penalty_weight = getParameterAsDouble(ENSEMBLE_PENALTY_WEIGHT);
 		boolean sliding_test = getParameterAsBoolean(ENSEMBLE_SLIDING_TEST);
@@ -445,6 +445,15 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 				log(Double.toString(mem.getIntroducedAt()));
 			}
 		}
+		
+		// retrain on all examples
+		for (EnsembleMember mem : ensemble) {
+			String windowConditionExpression = idAttribute.getName() + " >= " + mem.getIntroducedAt() + " && " + idAttribute.getName() + " <= " + maxId;	
+			Condition windowCondition = new AttributeValueFilter(exampleSet, windowConditionExpression);
+			ConditionedExampleSet window = new ConditionedExampleSet(exampleSet, windowCondition);
+			PredictionModel model = (PredictionModel) learner.learn(window);
+			mem.setModel(model);
+		}
 
 		// clean up
 		removePredictedLabel(exampleSet, predictedLabel);
@@ -637,6 +646,15 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 				log(Double.toString(mem.getIntroducedAt()));
 			}
 		}
+		
+		// retrain on all examples
+		for (EnsembleMember mem : ensemble) {
+			String windowConditionExpression = idAttribute.getName() + " >= " + mem.getIntroducedAt() + " && " + idAttribute.getName() + " <= " + maxId;	
+			Condition windowCondition = new AttributeValueFilter(exampleSet, windowConditionExpression);
+			ConditionedExampleSet window = new ConditionedExampleSet(exampleSet, windowCondition);
+			PredictionModel model = (PredictionModel) learner.learn(window);
+			mem.setModel(model);
+		}
 
 		// clean up
 		removePredictedLabel(exampleSet, predictedLabel);
@@ -815,6 +833,15 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 				log(Double.toString(mem.getIntroducedAt()));
 			}
 		}
+		
+		// retrain on all examples
+		for (EnsembleMember mem : ensemble) {
+			String windowConditionExpression = idAttribute.getName() + " >= " + mem.getIntroducedAt() + " && " + idAttribute.getName() + " <= " + maxId;	
+			Condition windowCondition = new AttributeValueFilter(exampleSet, windowConditionExpression);
+			ConditionedExampleSet window = new ConditionedExampleSet(exampleSet, windowCondition);
+			PredictionModel model = (PredictionModel) learner.learn(window);
+			mem.setModel(model);
+		}
 
 		// clean up
 		removePredictedLabel(exampleSet, predictedLabel);
@@ -897,7 +924,7 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		types.add(sliding_test);
 		
 		ParameterTypeInt leaf_out_size = new ParameterTypeInt(
-				ENSEMBLE_LEAF_OUT_SIZE,
+				ENSEMBLE_LEAVE_OUT_SIZE,
 				"percentage of examples to leaf out of training for testing",
 				0,
 				100,
@@ -986,6 +1013,7 @@ public class BatchEnsembleRegression extends AbstractMetaLearner {
 		return ENSEMBLE_SIMILARITY_MEASURES.EuclideanDistance.toString();
 	}
 	
+
 	private MemberGatherer getGatherer() {
 		return gatherer;
 	}
