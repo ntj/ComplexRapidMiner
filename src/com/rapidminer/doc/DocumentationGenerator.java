@@ -37,7 +37,6 @@ import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.Tools;
-import com.sun.javadoc.RootDoc;
 
 
 /**
