@@ -17,6 +17,9 @@ A simple operator chain which can have an arbitrary number of inner
  input for the first inner operator and the output of the last operator is
  used as the output of the operator chain.
 #####
+UCIvalidityIndex
+
+#####
 
 CommandLineOperator
 This operator executes a system command. The command and all its arguments
@@ -95,7 +98,8 @@ MacroDefinition
  <p>In addition to those the user might define arbitrary other macros which will be replaced
  by arbitrary string during the process run. Please note also that several other short macros
  exist, e.g. MACRO_STARTaMACRO_END for the number of times the current operator was applied.
- Please refer to the section about macros in the RapidMiner tutorial.</p>
+ Please refer to the section about macros in the RapidMiner tutorial. Please note also that
+ other operators like the <i>FeatureIterator</i> also adds specific macros.</p>
 #####
 MaterializeDataInMemory
 Creates a fresh and clean copy of the data in memory. 
@@ -323,6 +327,17 @@ Reads a single cluster model from a file.
 ClusterModelWriter
 Write a single cluster model to a file.
 #####
+ComplexArffExampleSource
+
+#####
+ComplexExampleSetGenerator
+java.lang.NullPointerException
+	at com.rapidminer.doc.ProgramHTMLOperatorDocGenerator.generateDoc(ProgramHTMLOperatorDocGenerator.java:49)
+	at com.rapidminer.doc.DocumentationGenerator.generateOperators(DocumentationGenerator.java:128)
+	at com.rapidminer.doc.DocumentationGenerator.generateGroup(DocumentationGenerator.java:117)
+	at com.rapidminer.doc.DocumentationGenerator.generateAll(DocumentationGenerator.java:100)
+	at com.rapidminer.doc.DocumentationGenerator.generateAll(DocumentationGenerator.java:83)
+	at com.rapidminer.doc.DocumentationGenerator.main(DocumentationGenerator.java:169)
 DBaseExampleSource
 This operator can read dbase files. It uses Stefan Haustein's kdb tools.
 #####
@@ -885,6 +900,14 @@ BasicRuleLearner
 This operator builds an unpruned rule set of classification rules. It is based on 
  the paper Cendrowska, 1987: PRISM: An algorithm for inducing modular rules.
 #####
+BatchEnsembleRegression
+java.lang.NullPointerException
+	at com.rapidminer.doc.ProgramHTMLOperatorDocGenerator.generateDoc(ProgramHTMLOperatorDocGenerator.java:49)
+	at com.rapidminer.doc.DocumentationGenerator.generateOperators(DocumentationGenerator.java:128)
+	at com.rapidminer.doc.DocumentationGenerator.generateGroup(DocumentationGenerator.java:117)
+	at com.rapidminer.doc.DocumentationGenerator.generateAll(DocumentationGenerator.java:100)
+	at com.rapidminer.doc.DocumentationGenerator.generateAll(DocumentationGenerator.java:83)
+	at com.rapidminer.doc.DocumentationGenerator.main(DocumentationGenerator.java:169)
 BayesianBoosting
 <p>This operator trains an ensemble of classifiers for boolean target
  attributes. In each iteration the training set is reweighted, so that
@@ -984,6 +1007,14 @@ Labels an example set with the cluster ids from a given cluster model.
 ClusterModel2Similarity
 This operator converts a (hierarchical) cluster model to a similarity measure.
 #####
+ClusteringAggregation
+Aggregates several clusterings into one. The strategy of this
+ operator is based on correlation clustering.
+#####
+ClusteringAggregationWithUnvertainSampledElements
+Aggregates several clusterings into one. The strategy of this operator is
+ based on correlation clustering.
+#####
 CostBasedThresholdLearner
 <p>This operator uses a set of class weights and also allows a weight for the fact
  that an example is not classified at all (marked as unknown). Based on the
@@ -1000,6 +1031,9 @@ CostBasedThresholdLearner
 #####
 DBScanClustering
 This operator represents a simple implementation of the DBSCAN algorithm. {@rapidminer.cite Ester/etal/96a}).
+#####
+DBScanEAClustering
+Implements the DBSCAN^EA algorithm.
 #####
 DecisionStump
 This operator learns decision stumps, i.e. a small decision tree with only
@@ -1021,6 +1055,14 @@ This learner creates a model, that will simply predict a default value for
  case of classification) or a fixed specified value. This learner can be used
  to compare the results of &quot;real&quot; learning schemes with guessing.
 #####
+EnsembleRegression
+java.lang.NullPointerException
+	at com.rapidminer.doc.ProgramHTMLOperatorDocGenerator.generateDoc(ProgramHTMLOperatorDocGenerator.java:49)
+	at com.rapidminer.doc.DocumentationGenerator.generateOperators(DocumentationGenerator.java:128)
+	at com.rapidminer.doc.DocumentationGenerator.generateGroup(DocumentationGenerator.java:117)
+	at com.rapidminer.doc.DocumentationGenerator.generateAll(DocumentationGenerator.java:100)
+	at com.rapidminer.doc.DocumentationGenerator.generateAll(DocumentationGenerator.java:83)
+	at com.rapidminer.doc.DocumentationGenerator.main(DocumentationGenerator.java:169)
 EvoSVM
 <p>This is a SVM implementation using an evolutionary algorithm (ES) to solve
  the dual optimization problem of a SVM. It turns out that on many datasets
@@ -1045,6 +1087,9 @@ Operator that clusters items along one given nominal attribute.
 ExampleSet2Similarity
 This class represents an operator that creates a similarity measure based on an ExampleSet.
 #####
+FDBScanClustering
+Implements the FDBSCAN algorithm.
+#####
 FPGrowth
 <p>This operator calculates all frequent items sets from a data set by building 
  a FPTree data structure on the transaction data base. This is a very compressed
@@ -1064,15 +1109,33 @@ FPGrowth
   If you use an attribute description file (.aml) for the <i>ExampleSource</i> operator
   this corresponds to the second value which is defined via the classes attribute or inner
   value tags.</p>
+  
+  <p>This operator has two basic working modes: finding at least the specified
+  number of item sets with highest support without taking the min_support into
+  account (default) or finding all item sets with a support large than min_support.</p>
 #####
 FlattenClusterModel
 Creates a flat cluster model from a hierarchical one by expanding nodes in the order of their weight until the desired number of clusters is
  reached.
 #####
+FuzzyKMeans
+This operator represents a simple implementation of fuzzy k-means.
+#####
+FuzzyMembershipEvaluator
+
+#####
 GPLearner
 Gaussian Process (GP) Learner. The GP is a probabilistic method 
  both for classification and regression.
 #####
+Gaussian Processes
+java.lang.NullPointerException
+	at com.rapidminer.doc.ProgramHTMLOperatorDocGenerator.generateDoc(ProgramHTMLOperatorDocGenerator.java:49)
+	at com.rapidminer.doc.DocumentationGenerator.generateOperators(DocumentationGenerator.java:128)
+	at com.rapidminer.doc.DocumentationGenerator.generateGroup(DocumentationGenerator.java:117)
+	at com.rapidminer.doc.DocumentationGenerator.generateAll(DocumentationGenerator.java:100)
+	at com.rapidminer.doc.DocumentationGenerator.generateAll(DocumentationGenerator.java:83)
+	at com.rapidminer.doc.DocumentationGenerator.main(DocumentationGenerator.java:169)
 HyperHyper
 This is a minimal SVM implementation. The model is built with only one positive
  and one negative example. Typically this operater is used in combination with a
@@ -1154,16 +1217,10 @@ This is the Java implementation of <em>myKLR</em> by Stefan R&uuml;ping.
  algorithm of Keerthi/etal/2003 and the code of mySVM.
 #####
 NaiveBayes
-NaiveBayes is a learner based on the Bayes theorem. If the attributes
- are fully independent, it is the theoretically best learner which 
- could be used. Although this assumption is often not fulfilled it
- delivers quite predictions. This operator uses normal distributions 
- in order to estimate real-valued distributions of data.
- Numerical missing values will be ignored, nominal missing values will
- be treated as nominal category
+Naive Bayes learner.
 #####
 NearestNeighbors
-A simple k nearest neighbor implementation.
+A k nearest neighbor implementation.
 #####
 NeuralNet
 <p>This operator learns a model by means of a feed-forward neural network. The learning is
@@ -1196,6 +1253,9 @@ OneR
 This operator concentrates on one single attribute and determines the best splitting terms
  for minimizing the training error. The result will be a single rule containing all these
  terms.
+#####
+PDFSampling
+
 #####
 Perceptron
 The perceptron is a type of artificial neural network invented in 1957 by Frank Rosenblatt. 
@@ -1255,9 +1315,25 @@ RuleLearner
  <p>In the prune phase, for each rule any final sequences of the antecedents is 
  pruned with the pruning metric p/(p+n).</p>
 #####
+SignificanceAwareMultiCaseClusteringAggregation
+java.lang.NullPointerException
+	at com.rapidminer.doc.ProgramHTMLOperatorDocGenerator.generateDoc(ProgramHTMLOperatorDocGenerator.java:49)
+	at com.rapidminer.doc.DocumentationGenerator.generateOperators(DocumentationGenerator.java:128)
+	at com.rapidminer.doc.DocumentationGenerator.generateGroup(DocumentationGenerator.java:117)
+	at com.rapidminer.doc.DocumentationGenerator.generateAll(DocumentationGenerator.java:100)
+	at com.rapidminer.doc.DocumentationGenerator.generateAll(DocumentationGenerator.java:83)
+	at com.rapidminer.doc.DocumentationGenerator.main(DocumentationGenerator.java:169)
 SimilarityComparator
 Operator that compares two similarity measures using diverse metrics.
 #####
+SlidingWindowLearner
+java.lang.NullPointerException
+	at com.rapidminer.doc.ProgramHTMLOperatorDocGenerator.generateDoc(ProgramHTMLOperatorDocGenerator.java:49)
+	at com.rapidminer.doc.DocumentationGenerator.generateOperators(DocumentationGenerator.java:128)
+	at com.rapidminer.doc.DocumentationGenerator.generateGroup(DocumentationGenerator.java:117)
+	at com.rapidminer.doc.DocumentationGenerator.generateAll(DocumentationGenerator.java:100)
+	at com.rapidminer.doc.DocumentationGenerator.generateAll(DocumentationGenerator.java:83)
+	at com.rapidminer.doc.DocumentationGenerator.main(DocumentationGenerator.java:169)
 Stacking
 This class uses n+1 inner learners and generates n different models
  by using the last n learners. The predictions of these n models are
@@ -1448,11 +1524,6 @@ Performs the Weka learning scheme with the same name. See the Weka javadoc
  for further classifier and parameter descriptions.<br/>
 #####
 W-FarthestFirst
-This operator performs the Weka clustering scheme with the same name. The operator expects an example set containing ids and returns a
- FlatClusterModel or directly annotates the examples with a cluster attribute. Please note: Currently only clusterers that produce a partition of
- items are supported.
-#####
-W-FilteredClusterer
 This operator performs the Weka clustering scheme with the same name. The operator expects an example set containing ids and returns a
  FlatClusterModel or directly annotates the examples with a cluster attribute. Please note: Currently only clusterers that produce a partition of
  items are supported.
@@ -1894,6 +1965,20 @@ This operator finds the optimal values for a set of parameters using an evolutio
  <i>Advanced Processes/Parameter and performance analysis</i>
  for an example application.
 #####
+ExampleSetClusteringIterator
+For each example set the ExampleSetIterator finds in its input, the inner
+ operators are applied as if it was an OperatorChain. This operator can be
+ used to conduct a process consecutively on a number of different data
+ sets.
+#####
+ExampleSetGrower
+java.lang.NullPointerException
+	at com.rapidminer.doc.ProgramHTMLOperatorDocGenerator.generateDoc(ProgramHTMLOperatorDocGenerator.java:49)
+	at com.rapidminer.doc.DocumentationGenerator.generateOperators(DocumentationGenerator.java:128)
+	at com.rapidminer.doc.DocumentationGenerator.generateGroup(DocumentationGenerator.java:117)
+	at com.rapidminer.doc.DocumentationGenerator.generateAll(DocumentationGenerator.java:100)
+	at com.rapidminer.doc.DocumentationGenerator.generateAll(DocumentationGenerator.java:83)
+	at com.rapidminer.doc.DocumentationGenerator.main(DocumentationGenerator.java:169)
 ExampleSetIterator
 For each example set the ExampleSetIterator finds in its input, the inner
  operators are applied as if it was an OperatorChain. This operator can be
@@ -2170,20 +2255,13 @@ Operator chain that splits an <i>ExampleSet</i> into a training and test
  (usually a model applier)
 #####
 
-ANOVAMatrix
-<p>This operator calculates the significance of difference for the values for 
- all numerical attributes depending on the groups defined by all nominal attributes.
- Please refer to the operator <i>GroupedANOVAOperator</i> for details of the
- calculation.</p>
-#####
 Aggregation
 <p>This operator creates a new example set from the input example set
- showing the result of the application of an arbitrary aggregation
- function (as SUM, COUNT etc. known from SQL). Before the values of 
- different rows are aggregated into a new row the rows might be
- grouped by the values of a single attribute (similar to the group-by
- clause known from SQL). In this case for each group a new line will
- be created.</p>
+ showing the results of arbitrary aggregation functions (as SUM, COUNT
+ etc. known from SQL). Before the values of different rows are aggregated
+ into a new row the rows might be grouped by the values of a multiple
+ attributes (similar to the group-by clause known from SQL). In this case
+ a new line will be created for each group.</p>
  
  <p>Please note that the known HAVING clause from SQL can be simulated
  by an additional <i>ExampleFilter</i> operator following this one.</p>
@@ -2316,18 +2394,30 @@ AttributeSubsetPreprocessing
  not be delivered.</p>
 #####
 AttributeValueMapper
-<p>This operator takes an <code>ExampleSet</code> as input and maps the values
- of certain attributes to other values. For example, it can replace all
- occurrences of the String "unknown" in a nominal Attribute by a default
- String, for all examples in the ExampleSet.</p>
+This operator takes an <code>ExampleSet</code> as input and maps the
+ values of certain attributes to other values. The operator can replace
+ nominal values (e.g. replace the value &quot;green&quot; by the value
+ &quot;green_color&quot;) as well as numerical values (e.g. replace the
+ all values &quot;3&quot; by &quot;-1&quot;). A single mapping can be
+ specified using the parameters <tt>replace_what</tt> and
+ <tt>replace_by</tt>. Multiple mappings can be specified in the parameter
+ list <tt>value_mappings</tt>.<br><br>
  
- <p>This operator can replace nominal values (e.g. replace the value &quot;green&quot; by 
- the value &quot;green_color&quot;) as well as numerical values (e.g. replace the all values
- &quot;3&quot; by &quot;-1&quot;).</p>
+ Additionally, the operator allows to define (and consider) a default
+ mapping. If <tt>add_default_mapping</tt> is set to true and <tt>default_value</tt>
+ is properly set, all values that occur in the example set but are not listed
+ in the value mappings list are replaced by the default value. This may be
+ helpful in cases where only some values should be mapped explicitly and
+ many unimportant values should be mapped to a default value (e.g. "other").<br><br>
  
- <p> This operator supports regular expressions for the attribute names, i.e. the value
- mapping is applied on all attributes for which the name fulfills the pattern defined
- by the name expression.</p>
+ <p> If the parameter <tt>consider_regular_expressions</tt> is enabled, the
+ values are replaced by the new values if the original values match the given
+ regular expressions. The value corresponding to the first matching regular
+ expression in the mappings list is taken as replacement.</p>
+ 
+ <p> This operator supports regular expressions for the attribute names,
+ i.e. the value mapping is applied on all attributes for which the name
+ fulfills the pattern defined by the name expression.</p>
 #####
 AttributeWeightSelection
 This operator selects all attributes which have a weight fulfilling a given
@@ -2470,7 +2560,7 @@ This operator uses a corpus of examples to characterize a single class by
  importance of this feature for an example (e.g. TFIDF or others). Therefore,
  this operator is mainly used on textual data based on TFIDF weighting
  schemes. To extract such feature values from text collections you can use the
- Word Vector Tool plugin.
+ Text plugin.
 #####
 DeObfuscator
 This operator takes an <code>ExampleSet</code> as input and maps all
@@ -2519,6 +2609,14 @@ DistanceBasedOutlierDetection
  and passes it on with an boolean top-n D^k outlier status in a new boolean-valued
  special outlier attribute indicating true (outlier) and false (no outlier).</p>
 #####
+Distinct
+java.lang.NullPointerException
+	at com.rapidminer.doc.ProgramHTMLOperatorDocGenerator.generateDoc(ProgramHTMLOperatorDocGenerator.java:49)
+	at com.rapidminer.doc.DocumentationGenerator.generateOperators(DocumentationGenerator.java:128)
+	at com.rapidminer.doc.DocumentationGenerator.generateGroup(DocumentationGenerator.java:117)
+	at com.rapidminer.doc.DocumentationGenerator.generateAll(DocumentationGenerator.java:100)
+	at com.rapidminer.doc.DocumentationGenerator.generateAll(DocumentationGenerator.java:83)
+	at com.rapidminer.doc.DocumentationGenerator.main(DocumentationGenerator.java:169)
 EvolutionaryFeatureAggregation
 Performs an evolutionary feature aggregation. Each base feature is only
  allowed to be used as base feature, in one merged feature, or it may not be
@@ -2530,25 +2628,34 @@ This operator performs the weighting of features with an evolutionary
  adapted by a 1/5-rule.
 #####
 ExampleFilter
-This operator takes an <i>ExampleSet</i> as input and returns a new
+<p>This operator takes an <i>ExampleSet</i> as input and returns a new
  <i>ExampleSet</i> including only the <i>Example</i>s that fulfill a
- condition. <br/> By specifying an implementation of
+ condition.</p>
+ 
+ <p>By specifying an implementation of
  <i>Condition</i> and a parameter string, arbitrary
  filters can be applied. Users can implement their own conditions by writing a
  subclass of the above class and implementing a two argument constructor
  taking an <i>ExampleSet</i> and a parameter string. This parameter string is
  specified by the parameter <code>parameter_string</code>. Instead of using
  one of the predefined conditions users can define their own implementation
- with the fully qualified class name. <br/> For
- &quot;attribute_value_condition&quot; the parameter string must have the form
+ with the fully qualified class name.</p>
+ 
+ <p>For &quot;attribute_value_condition&quot; the parameter string must have the form
  <code>attribute op value</code>, where attribute is a name of an
  attribute, value is a value the attribute can take and op is one of the
  binary logical operators similar to the ones known from Java, e.g. greater
- than or equals. <br/> For &quot;unknown_attributes&quot; the parameter string
+ than or equals. Please note your can define a logical OR of several conditions
+ with || and a logical AND of two conditions with &amp;&amp; - or 
+ simply by applying several ExampleFilter operators in a row. Please note also 
+ that for nominal attributes you can define a regular expression for value of the 
+ possible equal and not equal checks.</p>
+ 
+ <p>For &quot;unknown_attributes&quot; the parameter string
  must be empty. This filter removes all examples containing attributes that
  have missing or illegal values. For &quot;unknown_label&quot; the parameter
  string must also be empty. This filter removes all examples with an unknown
- label value.
+ label value.</p>
 #####
 ExampleRangeFilter
 This operator keeps only the examples of a given range (including the borders). 
@@ -2635,21 +2742,27 @@ This operator switches off all features whose block type matches the one
  attributes.
 #####
 FeatureGeneration
-This operator generates new user specified features. The new features are
+<p>This operator generates new user specified features. The new features are
  specified by their function names (prefix notation) and their arguments using
- the names of existing features.<br/> Legal function names include +, -, *, /,
+ the names of existing features.<br/> Legal function names include +, -, etc. and 
+ the functions
  norm, sin, cos, tan, atan, exp, log, min, max, floor, ceil, round, sqrt, abs,
  and pow. Constant values can be defined by &quot;const[value]()&quot; where
  value is the desired value. Do not forget the empty round brackets. Example:
- <code>+(a1, *(a2, a3))</code> will calculate the sum of the attribute
- <code>a1</code> and the product of the attributes <code>a2</code> and
- <code>a3</code>. <br/> Features are generated in the following order
+ <code>+(a1, -(a2, a3))</code> will calculate the sum of the attribute
+ <code>a1</code> and the difference of the attributes <code>a2</code> and
+ <code>a3</code>. <br/> Features are generated in the following order:</p>
  <ol>
- <li>Features specified by the file referenced by the parameter "filename"
+ <li>Features specified by the file referenced by the parameter &quot;filename&quot;
  are generated</li>
- <li>Features specified by the parameter list "functions" are generated</li>
- <li>If "keep_all" is false, all of the old attributes are removed now</li>
+ <li>Features specified by the parameter list &quot;functions&quot; are generated</li>
+ <li>If &quot;keep_all&quot; is false, all of the old attributes are removed now</li>
  </ol>
+ 
+ <p>
+ The list of supported functions include +, -, etc. and the functions
+ sin, cos, tan, atan, exp, log, min, max, floor, ceil, round, sqrt, abs, sgn, pow.
+ </p>
 #####
 FeatureNameFilter
 This operator switches off all features whose name matches the one given in
@@ -2756,17 +2869,6 @@ This operator takes all FrequentItemSet sets within IOObjects and
  creates attributes for every frequent item set. This attributes indicate
  if the examples contains all values of this frequent item set. The attributes
  will contain values 0 or 1 and are numerical.
-#####
-FunctionValueSeries
-Calculates for each sample a series of function values. Therefore, the weights
- of the given <code>JMySVMModel</code> are ordered descending by their absolute
- value. The x-th value of the series is the function valueof the example by
- taking the first x weights. The other weights are to zero. So the series
- attribute count values. Additionally the user can enter nr_attributes which
- are summerized to one value calculation. This can reduce the number of
- calculations dramatically. The result is an <code>ExampleSet</code>
- containing for each example a series of function values given by the
- attribute values.
 #####
 GHA
 Generalized Hebbian Algorithm (GHA) is an iterative method to compute
@@ -3182,11 +3284,11 @@ Relief
  weights are normalized into the interval between 0 and 1.</p>
 #####
 RemoveCorrelatedFeatures
-Removes (un-) correlated features due to the selected filter relation. The
+<p>Removes (un-) correlated features due to the selected filter relation. The
  procedure is quadratic in number of attributes. In order to get more stable 
- results, the original, random, and reverse order of attributes is available.
+ results, the original, random, and reverse order of attributes is available.</p>
  
- Please note that this operator might fail in some cases when the attributes
+ <p>Please note that this operator might fail in some cases when the attributes
  should be filtered out, e.g. it might not be able to remove for example all 
  negative correlated features. The reason for this behaviour seems to be that 
  for the complete m x m - matrix of correlations (for m attributes) the 
@@ -3194,7 +3296,11 @@ Removes (un-) correlated features due to the selected filter relation. The
  attributes of the current pair was already marked for removal. That means 
  for three attributes a1, a2, and a3 that it might be that a2 was already ruled 
  out by the negative correlation with a1 and is now not able to rule out a3 any 
- longer.
+ longer.</p>
+ 
+ <p>
+ The used correlation function is the Pearson correlation.
+ </p>
 #####
 RemoveUselessAttributes
 Removes useless attribute from the example set. Useless attributes are
@@ -3263,12 +3369,6 @@ Sorting
  set is sorted according to the natural order of the values of this attribute either
  in increasing or in decreasing direction.
  </p>
-#####
-SplitSVMModel
-Splits a <code>JMySVMModel</code> into an <code>ExampleSet</code> of the
- support vectors and <code>AttributeWeights</code> representing the normal
- of the hyperplane. Additionally the <code>ExampleSet</code> of the SVs
- contain a new attribute with the alpha-values.
 #####
 StandardDeviationWeighting
 <p>
@@ -3495,6 +3595,24 @@ BatchSlidingWindowValidation
  is in most cases a <i>Model</i>) and must produce
  a <i>PerformanceVector</i>.
  </p>
+ 
+ <p>This validation operator provides several values which can be logged 
+ by means of a <i>ProcessLogOperator</i>. All performance estimation operators
+ of RapidMiner provide access to the average values calculated during the estimation.
+ Since the operator cannot ensure the names of the delivered criteria, the 
+ ProcessLog operator can access the values via the generic value names:</p>
+ <ul>
+ <li>performance: the value for the main criterion calculated by this validation operator</li>
+ <li>performance1: the value of the first criterion of the performance vector calculated</li>
+ <li>performance2: the value of the second criterion of the performance vector calculated</li>
+ <li>performance3: the value of the third criterion of the performance vector calculated</li>
+ <li>for the main criterion, also the variance and the standard deviation can be 
+     accessed where applicable.</li>
+ </ul>
+ 
+ <p>In addition to these values, which should be logged after the validation was 
+ performed, one can also access the current iteration numbers as a value loggable
+ inside.</p>
 #####
 BatchXValidation
 <p>
@@ -3520,6 +3638,22 @@ BatchXValidation
  is in most cases a <i>Model</i>) and must produce
  a <i>PerformanceVector</i>.
  </p>
+ 
+ <p>The cross validation operator provides several values which can be logged 
+ by means of a <i>ProcessLogOperator</i>. Of course the number of the current
+ iteration can be logged which might be useful for ProcessLog operators wrapped
+ inside a cross validation. Beside that, all performance estimation operators
+ of RapidMiner provide access to the average values calculated during the estimation.
+ Since the operator cannot ensure the names of the delivered criteria, the 
+ ProcessLog operator can access the values via the generic value names:</p>
+ <ul>
+ <li>performance: the value for the main criterion calculated by this validation operator</li>
+ <li>performance1: the value of the first criterion of the performance vector calculated</li>
+ <li>performance2: the value of the second criterion of the performance vector calculated</li>
+ <li>performance3: the value of the third criterion of the performance vector calculated</li>
+ <li>for the main criterion, also the variance and the standard deviation can be 
+     accessed where applicable.</li>
+ </ul>
 #####
 BinominalClassificationPerformance
 <p>This performance evaluator operator should be used for classification tasks, 
@@ -3558,7 +3692,21 @@ BootstrappingValidation
  
  <p>The basic setup is the same as for the usual cross validation operator. The first inner 
  operator must provide a model and the second a performance vector. Please note that this operator
- does not regard example weights, i.e. weights specified in a weight column.</p>
+ does not regard example weights, i.e. weights specified in a weight column.</p> 
+ 
+ <p>This validation operator provides several values which can be logged 
+ by means of a <i>ProcessLogOperator</i>. All performance estimation operators
+ of RapidMiner provide access to the average values calculated during the estimation.
+ Since the operator cannot ensure the names of the delivered criteria, the 
+ ProcessLog operator can access the values via the generic value names:</p>
+ <ul>
+ <li>performance: the value for the main criterion calculated by this validation operator</li>
+ <li>performance1: the value of the first criterion of the performance vector calculated</li>
+ <li>performance2: the value of the second criterion of the performance vector calculated</li>
+ <li>performance3: the value of the third criterion of the performance vector calculated</li>
+ <li>for the main criterion, also the variance and the standard deviation can be 
+     accessed where applicable.</li>
+ </ul>
 #####
 CFSFeatureSetEvaluator
 <p>
@@ -3656,21 +3804,41 @@ This operator provides the ability to evaluate classification costs.
  Costs will be minimized during optimization.
 #####
 FixedSplitValidation
-A FixedSplitValidationChain splits up the example set at a fixed point into a
+<p>
+ A FixedSplitValidationChain splits up the example set at a fixed point into a
  training and test set and evaluates the model (linear sampling). For
  non-linear sampling methods, i.e. the data is shuffled, the specified amounts
  of data are used as training and test set. The sum of both must be smaller
- than the input example set size. <br/>
+ than the input example set size.
+ </p>
  
+ <p>
  At least either the training set size must be specified (rest is used for
  testing) or the test set size must be specified (rest is used for training).
  If both are specified, the rest is not used at all.
+ </p>
  
+ <p>
  The first inner operator must accept an
  <i>ExampleSet</i> while the second must accept an
  <i>ExampleSet</i> and the output of the first (which
  in most cases is a <i>Model</i>) and must produce
  a <i>PerformanceVector</i>.
+ </p>
+ 
+ <p>This validation operator provides several values which can be logged 
+ by means of a <i>ProcessLogOperator</i>. All performance estimation operators
+ of RapidMiner provide access to the average values calculated during the estimation.
+ Since the operator cannot ensure the names of the delivered criteria, the 
+ ProcessLog operator can access the values via the generic value names:</p>
+ <ul>
+ <li>performance: the value for the main criterion calculated by this validation operator</li>
+ <li>performance1: the value of the first criterion of the performance vector calculated</li>
+ <li>performance2: the value of the second criterion of the performance vector calculated</li>
+ <li>performance3: the value of the third criterion of the performance vector calculated</li>
+ <li>for the main criterion, also the variance and the standard deviation can be 
+     accessed where applicable.</li>
+ </ul>
 #####
 ItemDistributionEvaluator
 Evaluates flat cluster models on how well the items are distributed over the clusters.
@@ -3768,12 +3936,28 @@ RegressionPerformance
  used instead of simply replacing the performance comparator.</p>
 #####
 SimpleValidation
-A <code>RandomSplitValidationChain</code> splits up the example set into a
+<p>
+ A <code>RandomSplitValidationChain</code> splits up the example set into a
  training and test set and evaluates the model. The first inner operator must
  accept an <i>ExampleSet</i> while the second must
  accept an <i>ExampleSet</i> and the output of the
  first (which is in most cases a <i>Model</i>) and
  must produce a <i>PerformanceVector</i>.
+ </p>
+ 
+ <p>This validation operator provides several values which can be logged 
+ by means of a <i>ProcessLogOperator</i>. All performance estimation operators
+ of RapidMiner provide access to the average values calculated during the estimation.
+ Since the operator cannot ensure the names of the delivered criteria, the 
+ ProcessLog operator can access the values via the generic value names:</p>
+ <ul>
+ <li>performance: the value for the main criterion calculated by this validation operator</li>
+ <li>performance1: the value of the first criterion of the performance vector calculated</li>
+ <li>performance2: the value of the second criterion of the performance vector calculated</li>
+ <li>performance3: the value of the third criterion of the performance vector calculated</li>
+ <li>for the main criterion, also the variance and the standard deviation can be 
+     accessed where applicable.</li>
+ </ul>
 #####
 SimpleWrapperValidation
 This operator evaluates the performance of feature weighting algorithms
@@ -3787,12 +3971,28 @@ This operator evaluates the performance of feature weighting algorithms
  This implementation is described for the <i>RandomSplitValidationChain</i>.
 #####
 SlidingWindowValidation
-This is a special validation chain which can only be used for series predictions where 
+<p>
+ This is a special validation chain which can only be used for series predictions where 
  the time points are encoded as examples. It uses a certain window of examples for
  training and uses another window (after horizon examples, i.e. time points) for testing.
  The window is moved across the example set and all performance measurements are 
  averaged afterwards. The parameter &quot;cumulative_training&quot; indicates if all
  former examples should be used for training (instead of only the current window).
+ </p>
+ 
+ <p>This validation operator provides several values which can be logged 
+ by means of a <i>ProcessLogOperator</i>. All performance estimation operators
+ of RapidMiner provide access to the average values calculated during the estimation.
+ Since the operator cannot ensure the names of the delivered criteria, the 
+ ProcessLog operator can access the values via the generic value names:</p>
+ <ul>
+ <li>performance: the value for the main criterion calculated by this validation operator</li>
+ <li>performance1: the value of the first criterion of the performance vector calculated</li>
+ <li>performance2: the value of the second criterion of the performance vector calculated</li>
+ <li>performance3: the value of the third criterion of the performance vector calculated</li>
+ <li>for the main criterion, also the variance and the standard deviation can be 
+     accessed where applicable.</li>
+ </ul>
 #####
 T-Test
 Determines if the null hypothesis (all actual mean values are the same) holds
@@ -3844,7 +4044,21 @@ WeightedBootstrappingValidation
  
  <p>The basic setup is the same as for the usual cross validation operator. The first inner 
  operator must provide a model and the second a performance vector. Please note that this operator
- does not regard example weights, i.e. weights specified in a weight column.</p>
+ does not regard example weights, i.e. weights specified in a weight column.</p> 
+ 
+ <p>This validation operator provides several values which can be logged 
+ by means of a <i>ProcessLogOperator</i>. All performance estimation operators
+ of RapidMiner provide access to the average values calculated during the estimation.
+ Since the operator cannot ensure the names of the delivered criteria, the 
+ ProcessLog operator can access the values via the generic value names:</p>
+ <ul>
+ <li>performance: the value for the main criterion calculated by this validation operator</li>
+ <li>performance1: the value of the first criterion of the performance vector calculated</li>
+ <li>performance2: the value of the second criterion of the performance vector calculated</li>
+ <li>performance3: the value of the third criterion of the performance vector calculated</li>
+ <li>for the main criterion, also the variance and the standard deviation can be 
+     accessed where applicable.</li>
+ </ul>
 #####
 WeightedPerformanceCreator
 Returns a performance vector containing the weighted fitness value of the
@@ -3886,27 +4100,24 @@ XValidation
  builds random subsets and ensures that the class distribution in the subsets
  is the same as in the whole example set.
  </p>
+ 
+ <p>The cross validation operator provides several values which can be logged 
+ by means of a <i>ProcessLogOperator</i>. Of course the number of the current
+ iteration can be logged which might be useful for ProcessLog operators wrapped
+ inside a cross validation. Beside that, all performance estimation operators
+ of RapidMiner provide access to the average values calculated during the estimation.
+ Since the operator cannot ensure the names of the delivered criteria, the 
+ ProcessLog operator can access the values via the generic value names:</p>
+ <ul>
+ <li>performance: the value for the main criterion calculated by this validation operator</li>
+ <li>performance1: the value of the first criterion of the performance vector calculated</li>
+ <li>performance2: the value of the second criterion of the performance vector calculated</li>
+ <li>performance3: the value of the third criterion of the performance vector calculated</li>
+ <li>for the main criterion, also the variance and the standard deviation can be 
+     accessed where applicable.</li>
+ </ul>
 #####
 
-CorrelationMatrix
-<p>This operator calculates the correlation matrix between all attributes of the
- input example set. Furthermore, attribute weights based on the correlations
- can be returned. This allows the deselection of highly correlated attributes
- with the help of an
- <i>AttributeWeightSelection</i>
- operator. If no weights should be created, this operator produces simply a
- correlation matrix which up to now cannot be used by other operators but can
- be displayed to the user in the result tab.</p> 
- 
- <p>Please note that this simple implementation
- performs a data scan for each attribute combination and might therefore take
- some time for non-memory example tables.</p>
-#####
-CovarianceMatrix
-This operator calculates the covariances between all attributes
-  of the input example set and returns a covariance matrix object
-  which can be visualized.
-#####
 DataStatistics
 This operators calculates some very simple statistics about the given example
  set. These are the ranges of the attributes and the average or mode values

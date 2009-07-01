@@ -1691,4 +1691,30 @@
 		description="Implements Gaussian Processes for regression without hyperparameter-tuning. 
 					 For more information see David J.C. Mackay (1998). Introduction to Gaussian Processes.
 					 Dept. of Physics, Cambridge University, UK."
-		group="Learner.Supervised.Functions" /></operators>
+		group="Learner.Supervised.Functions" />
+
+        <operator name="ComplexArffExampleSource"
+                class="de.tud.inf.operator.io.ComplexArffExampleSource"
+                description="This operator can read c-arff files." group="IO.Examples" />
+
+         <operator name="ComplexExampleSetGenerator"
+                class="de.tud.inf.operator.generator.ComplexExampleSetGenerator"
+                description="Generates an complex example set based on numerical attributes."
+                group="IO.Generator" />
+
+        <operator name="UCIvalidityIndex"
+                class="de.tud.inf.operator.UCIvalidityIndex"
+                description="computes the UCI validity index for cluster models of uncertain clustering algorithms."
+                group=""/>
+
+        <operator name="PossibleWorldGenerator"
+                class="de.tud.inf.operator.generator.PossibleWorldGenerator"
+                description="Generates a Possible World ExampleSet with certain instances from a ComplexExampleSet with uncertainty regions."
+                group=""/>
+                
+         <operator name="DBScanEAClusteringWithPdf"
+                class="de.tud.inf.operator.learner.clustering.clusterer"
+                description="extends DBSCAN^EA, works with uncertain attributes"
+                group=""/>
+
+</operators>
