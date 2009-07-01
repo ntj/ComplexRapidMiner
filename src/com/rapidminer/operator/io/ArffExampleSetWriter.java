@@ -41,6 +41,8 @@ import com.rapidminer.operator.UserError;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeFile;
 
+import de.tud.inf.example.table.RelationalAttribute;
+
 
 /**
  * Writes values of all examples into an ARFF file which can be used
@@ -58,9 +60,9 @@ public class ArffExampleSetWriter extends Operator {
 	/** The parameter name for &quot;File to save the example set to.&quot; */
 	public static final String PARAMETER_EXAMPLE_SET_FILE = "example_set_file";
 	
-	private static final Class[] INPUT_CLASSES = { ExampleSet.class };
+	protected static final Class[] INPUT_CLASSES = { ExampleSet.class };
 
-	private static final Class[] OUTPUT_CLASSES = { ExampleSet.class };
+	protected static final Class[] OUTPUT_CLASSES = { ExampleSet.class };
 
 	public ArffExampleSetWriter(OperatorDescription description) {
 		super(description);
@@ -69,44 +71,13 @@ public class ArffExampleSetWriter extends Operator {
 	public IOObject[] apply() throws OperatorException {
 		ExampleSet exampleSet = getInput(ExampleSet.class);
 		try {
-			File arffFile = getParameterAsFile(PARAMETER_EXAMPLE_SET_FILE);
+			File temp = getParameterAsFile(PARAMETER_EXAMPLE_SET_FILE);
+			String test = temp.getPath();
+			File arffFile = new File(test);
 			PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(arffFile), getEncoding()));
 			
-            // relation
-            out.println("@RELATION RapidMinerData");
-            out.println();
-            
-            // attribute meta data
-            Iterator<Attribute> a = exampleSet.getAttributes().allAttributes();
-            while (a.hasNext()) {
-                printAttributeData(a.next(), out);
-            }
-            
-            // data
-            out.println();
-            out.println("@DATA");
-            
-            for (Example example : exampleSet) {
-                boolean first = true;
-                a = exampleSet.getAttributes().allAttributes();
-                while (a.hasNext()) {
-                    Attribute current = a.next();
-                    if (!first) 
-                        out.print(",");
-                    
-                    if (current.isNominal()) {
-                    	double value = example.getValue(current);
-                    	if (Double.isNaN(value))
-                    		out.print("?");
-                    	else
-                    		out.print("'" + example.getValueAsString(current) + "'");
-                    } else {
-                        out.print(example.getValueAsString(current));
-                    }
-                    first = false;
-                }                
-                out.println();
-            }  
+			printExampleSet(exampleSet,out);
+           
 			out.close();
 		} catch (IOException e) {
 			throw new UserError(this, e, 303, new Object[] { getParameterAsString(PARAMETER_EXAMPLE_SET_FILE), e.getMessage() });
@@ -114,7 +85,49 @@ public class ArffExampleSetWriter extends Operator {
 		return new IOObject[] { exampleSet };
 	}
 
-    private void printAttributeData(Attribute attribute, PrintWriter out) {
+	protected void printExampleSet(ExampleSet exampleSet,PrintWriter out) throws OperatorException{
+		 // relation
+        out.println("@RELATION RapidMinerData");
+        out.println();
+        
+        // attribute meta data
+        Iterator<Attribute> a = exampleSet.getAttributes().allAttributes();
+        while (a.hasNext()) {
+            printAttributeData(a.next(), out);
+        }
+        
+        // data
+        out.println();
+        out.println("@DATA");
+        
+        for (Example example : exampleSet) {
+            boolean first = true;
+            a = exampleSet.getAttributes().allAttributes();
+            while (a.hasNext()) {
+                Attribute current = a.next();
+                if (!first) 
+                    out.print(", ");
+                
+                if (current.isNominal()) {
+                	double value = example.getValue(current);
+                	if (Double.isNaN(value))
+                		out.print("?");
+                	else
+                		out.print("'" + example.getValueAsString(current) + "'");
+                }
+                else if (current.isRelational()){
+                	printRelationalData((RelationalAttribute)current,example,out);
+                }
+                else {
+                    out.print(example.getValueAsString(current));
+                }
+                first = false;
+            }                
+            out.println();
+        }  
+	}
+	
+    protected void printAttributeData(Attribute attribute, PrintWriter out) throws OperatorException {
         out.print("@ATTRIBUTE '" + attribute.getName() + "' ");
         if (attribute.isNominal()) {
             StringBuffer nominalValues = new StringBuffer("{");
@@ -127,10 +140,21 @@ public class ArffExampleSetWriter extends Operator {
             }
             nominalValues.append("}");
             out.print(nominalValues.toString());
-        } else {
+        }
+        else if(attribute.isRelational())
+        	printRelationalAttribute((RelationalAttribute)attribute, out);
+        else {
             out.print("real");
         }
         out.println();
+    }
+    
+    protected void printRelationalAttribute(RelationalAttribute attribute, PrintWriter out) throws OperatorException{
+    	throw new OperatorException("relational attributes are not supported in simple arff files");
+    }
+    
+    protected void printRelationalData(RelationalAttribute current,Example exampleSet,PrintWriter out) throws OperatorException{
+    	throw new OperatorException("relational attributes are not supported in simple arff files");
     }
     
 	public Class<?>[] getInputClasses() {

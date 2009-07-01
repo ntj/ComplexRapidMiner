@@ -1,18 +1,23 @@
 package com.rapidminer.operator.similarity.attributebased.uncertain;
 
+import com.rapidminer.tools.Ontology;
+
+
+
 /**
  * Abstract class of an object encapsulating a Probability Density Function (pdf).
  * 
  * @author Michael Huber
  */
-public abstract class AbstractProbabilityDensityFunction {
-	
-	
-	
-	
-	
+public abstract class AbstractProbabilityDensityFunction implements ProbabilityDensityFunction{
+	/**
+	 * represents a data point in multidimensional space
+	 */
 	protected double[] value;
 	protected double uncertainty;
+	/**
+	 * determines if uncertainty is absolut or relative
+	 */
 	protected boolean absoluteError;
 	
 	
@@ -27,16 +32,7 @@ public abstract class AbstractProbabilityDensityFunction {
 		this.uncertainty = uncertainty;
 		this.absoluteError = absoluteError;
 	}
-	
-	
-	public abstract double getProbabilityAt(int x);
-	public abstract double getProbabilityFor(double[] position);
-	
-	public abstract double getMinValue(int dimension);
-	
-	public abstract double getMaxValue(int dimension);
 
-	public abstract boolean isPointInPDF(Double[] tempVal) ;
 	
 	public void setUncertainty(double uncertainty) {
 		this.uncertainty = uncertainty;
@@ -57,13 +53,28 @@ public abstract class AbstractProbabilityDensityFunction {
 	public void setValue(double value[]) {
 		this.value = value;
 	}
-
+	
+	
 	/**
 	 * Returns the uncertainty parameters for the PDF
 	 * @return
 	 */
 	public double getUncertainty() {
 		return uncertainty;
+	}
+	
+	
+	public int getValueType() {
+		return Ontology.UNCERTAIN;
+	}
+
+	
+	public double getDoubleValue(){
+		double sum =0;
+		for(int i=0;i<value.length;i++){
+			sum += value[i];
+		}
+		return sum/value.length;
 	}
 	
 }

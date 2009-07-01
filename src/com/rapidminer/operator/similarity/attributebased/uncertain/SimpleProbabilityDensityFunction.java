@@ -1,7 +1,15 @@
 package com.rapidminer.operator.similarity.attributebased.uncertain;
 
 
+import java.util.Random;
+
+import org.freehep.graphicsio.swf.SWFAction.RandomNumber;
+
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
+import com.rapidminer.tools.Ontology;
+
+import de.tud.inf.example.set.attributevalues.ComplexValue;
 
 /**
  * A simple Implementation of a Probability Density Function (pdf) that
@@ -11,13 +19,15 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
  * @see com.rapidminer.operator.learner.clustering.clusterer.uncertain.DBScanEAClustering
  * @see com.rapidminer.operator.learner.clustering.clusterer.uncertain.FDBScanClustering
  */
-public class SimpleProbabilityDensityFunction extends
-		AbstractProbabilityDensityFunction {
+public class SimpleProbabilityDensityFunction extends AbstractProbabilityDensityFunction {
+	
+	public SimpleProbabilityDensityFunction(){
+		super(0,true);
+	}
 	
 	public SimpleProbabilityDensityFunction(double uncertainty,
 			boolean absoluteError) {
 		super(uncertainty, absoluteError);
-
 	}
 
 	public SimpleProbabilityDensityFunction(double[] value, double uncertainty,
@@ -42,12 +52,12 @@ public class SimpleProbabilityDensityFunction extends
 		return value[dimension] + uncertainty*value[dimension];
 	}
 
-	@Override
+	
 	public double getProbabilityAt(int x) {
 		throw new NotImplementedException();
 	}
 
-	@Override
+	
 	public boolean isPointInPDF(Double[] value) {
 		//check all dimensions to see if it violates the extrema values
 		for(int i = 0;i<value.length ;i++){
@@ -58,7 +68,7 @@ public class SimpleProbabilityDensityFunction extends
 		return true;
 	}
 
-	@Override
+
 	public double getProbabilityFor(double[] position) {
 		//calc complete volume of the object
 		double volume = 1.0;
@@ -67,4 +77,25 @@ public class SimpleProbabilityDensityFunction extends
 		}
 		return 1.0/volume;
 	}
+	
+	public int getValueType() {
+		return Ontology.UNIFORM;
+	}
+
+
+	public double[] getRandomValue() {
+		double[] randomValue = new double[value.length];
+		//TODO: RandomNumberGenerator??
+		Random r = new Random();
+		double min,max;
+		for(int i=0;i<value.length;i++){
+			min = getMinValue(i);
+			max = getMaxValue(i);
+			double val = r.nextDouble();
+			randomValue[i] = min + (max - min)*val;
+		}
+		return randomValue;
+	}
+
+
 }

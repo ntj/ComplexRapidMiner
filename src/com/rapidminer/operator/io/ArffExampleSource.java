@@ -23,25 +23,23 @@
 package com.rapidminer.operator.io;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StreamTokenizer;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
-import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.DataRowFactory;
-import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
@@ -53,9 +51,9 @@ import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeFile;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.ParameterTypeString;
-import com.rapidminer.tools.Ontology;
-import com.rapidminer.tools.RandomGenerator;
+import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.Tools;
+
 
 
 /**
@@ -118,7 +116,6 @@ import com.rapidminer.tools.Tools;
  */
 public class ArffExampleSource extends Operator {
 
-
 	/** The parameter name for &quot;The path to the data file.&quot; */
 	public static final String PARAMETER_DATA_FILE = "data_file";
 
@@ -149,240 +146,71 @@ public class ArffExampleSource extends Operator {
     public ArffExampleSource(OperatorDescription description) {
         super(description);
     }
-    
+      
     public IOObject[] apply() throws OperatorException {
         try {
+        	ArffReader reader;
             File file = getParameterAsFile(PARAMETER_DATA_FILE);
             BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file), getEncoding()));
             
             // init
-            List<Attribute> attributes = new ArrayList<Attribute>();
             Attribute label = null;
             Attribute weight = null;
             Attribute id = null;
             
             // read file
             StreamTokenizer tokenizer = createTokenizer(in);
+            
             Tools.getFirstToken(tokenizer);
             if (tokenizer.ttype == StreamTokenizer.TT_EOF) {
                 throw new UserError(this, 302, getParameterAsString(PARAMETER_DATA_FILE), "file is empty");
-            }
-                        
+            }    
             if ("@relation".equalsIgnoreCase(tokenizer.sval)) {
                 Tools.getNextToken(tokenizer);
                 Tools.getLastToken(tokenizer, false);
+                reader = new ArffReader(tokenizer,
+                						this,
+                						PARAMETER_SAMPLE_SIZE,
+										PARAMETER_SAMPLE_RATIO,
+										PARAMETER_DATAMANAGEMENT,
+										PARAMETER_LOCAL_RANDOM_SEED,
+										PARAMETER_DECIMAL_POINT_CHARACTER);
+                
             } else {
                 throw new IOException("expected the keyword @relation in line " + tokenizer.lineno());
             }
-
-            // attributes
-            Tools.getFirstToken(tokenizer);
-            if (tokenizer.ttype == StreamTokenizer.TT_EOF) {
-                throw new IOException("unexpected end of file in line " + tokenizer.lineno() + ", attribute description expected...");
-            }
-
-            while ("@attribute".equalsIgnoreCase(tokenizer.sval)) {
-                Attribute attribute = createAttribute(tokenizer);
-                attributes.add(attribute);
-                
-                if (attribute.getName().equals(getParameterAsString(PARAMETER_LABEL_ATTRIBUTE))) {
-                    label = attribute;
-                } else if (attribute.getName().equals(getParameterAsString(PARAMETER_ID_ATTRIBUTE))) {
-                    id = attribute;
-                } else if (attribute.getName().equals(getParameterAsString(PARAMETER_WEIGHT_ATTRIBUTE))) {
-                    weight = attribute;
-                }
-            }
-
-            // expect data declaration
-            if (!"@data".equalsIgnoreCase(tokenizer.sval)) {
-                throw new IOException("expected keyword '@data' in line " + tokenizer.lineno());
-            }
-              
-            // check attribute number
-            if (attributes.size() == 0) {
-                throw new IOException("no attributes were declared in the ARFF file, please declare attributes with the '@attribute' keyword.");
-            }
-           
-            // fill data table
-            MemoryExampleTable table = new MemoryExampleTable(attributes);
-            Attribute[] attributeArray = table.getAttributes();
-            DataRowFactory factory = new DataRowFactory(getParameterAsInt(PARAMETER_DATAMANAGEMENT), getParameterAsString(PARAMETER_DECIMAL_POINT_CHARACTER).charAt(0));
-            int maxRows = getParameterAsInt(PARAMETER_SAMPLE_SIZE);
-            double sampleProb = getParameterAsDouble(PARAMETER_SAMPLE_RATIO);
-            Random random = RandomGenerator.getRandomGenerator(getParameterAsInt(PARAMETER_LOCAL_RANDOM_SEED));
             
-            DataRow dataRow = null;
-            int counter = 0;
-            while ((dataRow = createDataRow(tokenizer, true, factory, attributeArray)) != null) {
-                if ((maxRows > -1) && (counter >= maxRows))
-                    break;
+            ExampleTable table = reader.read();
 
-                counter++;
-                
-                if (maxRows == -1) {
-                    if (random.nextDouble() > sampleProb)
-                        continue;
-                }
-                
-                table.addDataRow(dataRow);
+            for(Attribute attribute: table.getAttributes()){
+            	if(attribute != null){
+	            	   if (attribute.getName().equals(getParameterAsString(PARAMETER_LABEL_ATTRIBUTE))) {
+	   	                label = attribute;
+	   	            } else if (attribute.getName().equals(getParameterAsString(PARAMETER_ID_ATTRIBUTE))) {
+	   	                id = attribute;
+	   	            } else if (attribute.getName().equals(getParameterAsString(PARAMETER_WEIGHT_ATTRIBUTE))) {
+	   	                weight = attribute;
+	   	            }
+            	}
             }
-                           
+            
             in.close();
             
             Map<Attribute, String> specialMap = new HashMap<Attribute, String>();
             specialMap.put(label, Attributes.LABEL_NAME);
             specialMap.put(weight, Attributes.WEIGHT_NAME);
             specialMap.put(id, Attributes.ID_NAME);
-            return new IOObject[] { table.createExampleSet(specialMap) };
+            ExampleSet es = table.createExampleSet(specialMap);
+            return new IOObject[] { es };
             
         } catch (IOException e) {
             throw new UserError(this, 302, getParameterAsString(PARAMETER_DATA_FILE), e.getMessage());
         }
+           
     }
-
-    private Attribute createAttribute(StreamTokenizer tokenizer) throws IOException {
-        Attribute attribute = null; 
-        
-        // name
-        Tools.getNextToken(tokenizer);
-        String attributeName = tokenizer.sval;
-        
-        // determine value type
-        Tools.getNextToken(tokenizer);
-        if (tokenizer.ttype == StreamTokenizer.TT_WORD) {
-            // numerical or string value type
-            if (tokenizer.sval.equalsIgnoreCase("real")) {
-                attribute = AttributeFactory.createAttribute(attributeName, Ontology.REAL);
-            } else if (tokenizer.sval.equalsIgnoreCase("integer")) {
-                attribute = AttributeFactory.createAttribute(attributeName, Ontology.INTEGER);
-            } else if (tokenizer.sval.equalsIgnoreCase("numeric")) {
-                attribute = AttributeFactory.createAttribute(attributeName, Ontology.NUMERICAL);
-            } else if (tokenizer.sval.equalsIgnoreCase("string")) {
-                attribute = AttributeFactory.createAttribute(attributeName, Ontology.STRING);
-            } else if (tokenizer.sval.equalsIgnoreCase("date")) {
-                attribute = AttributeFactory.createAttribute(attributeName, Ontology.DATE);
-            }
-            Tools.waitForEOL(tokenizer);
-        } else {
-            // nominal attribute
-            attribute = AttributeFactory.createAttribute(attributeName, Ontology.NOMINAL);
-            
-            tokenizer.pushBack();
-
-            // check if nominal value definition starts
-            if (tokenizer.nextToken() != '{') {
-                throw new IOException("{ expected at beginning of nominal values definition in line " + tokenizer.lineno());
-            }
-            
-            // read all nominal values until the end of the definition
-            while (tokenizer.nextToken() != '}') {
-                if (tokenizer.ttype == StreamTokenizer.TT_EOL) {
-                    throw new IOException("} expected at end of the nominal values definition in line " + tokenizer.lineno());
-                } else {
-                    attribute.getMapping().mapString(tokenizer.sval);
-                }
-            }
-            
-            if (attribute.getMapping().size() == 0) {
-                throw new IOException("empty definition of nominal values is not suggested in line " + tokenizer.lineno());
-            }
-        }
-        
-        Tools.getLastToken(tokenizer, false);
-        Tools.getFirstToken(tokenizer);
-        
-        if (tokenizer.ttype == StreamTokenizer.TT_EOF)
-            throw new IOException("unexpected end of file before data section in line " + tokenizer.lineno());
-                
-        return attribute;
-    }
-    
-    private DataRow createDataRow(StreamTokenizer tokenizer, boolean checkForCarriageReturn, DataRowFactory factory, Attribute[] allAttributes) throws IOException {
-        // return null at the end of file
-        Tools.getFirstToken(tokenizer);
-        if (tokenizer.ttype == StreamTokenizer.TT_EOF) {
-            return null;
-        }
-
-        // create datarow from either dense or sparse format 
-        if (tokenizer.ttype == '{') {
-            return createDataRowFromSparse(tokenizer, checkForCarriageReturn, factory, allAttributes);
-        } else {
-            return createDataRowFromDense(tokenizer, checkForCarriageReturn, factory, allAttributes);
-        }
-    }
- 
-    private DataRow createDataRowFromDense(StreamTokenizer tokenizer, boolean checkForCarriageReturn, DataRowFactory factory, Attribute[] allAttributes) throws IOException {
-        String[] tokens = new String[allAttributes.length];
-
-        // fetch all values
-        for (int i = 0; i < allAttributes.length; i++) {
-            if (i > 0) {
-                Tools.getNextToken(tokenizer);
-            }
-            // check for missing value
-            if (tokenizer.ttype == '?') {
-                tokens[i] = "?";
-            } else {
-                if (tokenizer.ttype != StreamTokenizer.TT_WORD) {
-                    throw new IOException("not a valid value '" + tokenizer.sval + "' in line " + tokenizer.lineno());
-                }
-                tokens[i] = tokenizer.sval;
-            }
-        }
-        if (checkForCarriageReturn) {
-            Tools.getLastToken(tokenizer, true);
-        }
-        // Add instance to dataset
-        return factory.create(tokens, allAttributes);
-    }     
-    
- 
-    private DataRow createDataRowFromSparse(StreamTokenizer tokenizer, boolean checkForCarriageReturn, DataRowFactory factory, Attribute[] allAttributes) throws IOException {
-        String[] tokens = new String[allAttributes.length];
-        for (int t = 0; t < tokens.length; t++)
-            tokens[t] = "0";
-        
-        // Get values
-        do {
-            if (tokenizer.nextToken() == StreamTokenizer.TT_EOL) {
-                throw new IOException("unexpedted end of line " + tokenizer.lineno());
-            }
-            if (tokenizer.ttype == StreamTokenizer.TT_EOF) {
-                throw new IOException("unexpedted end of file in line " + tokenizer.lineno());
-            } 
-            if (tokenizer.ttype == '}') {
-                break;
-            }
-
-            // determine index
-            int index = Integer.valueOf(tokenizer.sval);
-
-            // determine value
-            Tools.getNextToken(tokenizer);
-
-            // Check if value is missing.
-            if  (tokenizer.ttype == '?') {
-                tokens[index] = "?";
-            } else {
-                if (tokenizer.ttype != StreamTokenizer.TT_WORD) {
-                    throw new IOException("not a valid value '" + tokenizer.sval + "' in line " + tokenizer.lineno());
-                }
-                tokens[index] = tokenizer.sval;
-            }
-        } while (true);
-
-        if (checkForCarriageReturn) {
-            Tools.getLastToken(tokenizer, true);
-        }
-        // Add instance to dataset
-        return factory.create(tokens, allAttributes);
-    }
-
     
     /** Creates a StreamTokenizer for reading ARFF files. */
-    private StreamTokenizer createTokenizer(Reader in){
+    protected StreamTokenizer createTokenizer(Reader in){
         StreamTokenizer tokenizer = new StreamTokenizer(in);
         tokenizer.resetSyntax();         
         tokenizer.whitespaceChars(0, ' ');    

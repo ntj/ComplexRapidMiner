@@ -117,4 +117,14 @@ public class NumericalAttribute extends AbstractAttribute {
 			}
 		}
 	}
+
+	
+	public boolean isComplex() {
+		return false;
+	}
+
+	public boolean isRelational() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

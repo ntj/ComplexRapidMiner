@@ -23,6 +23,7 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
+import com.rapidminer.parameter.ParameterTypeString;
 
 /**
  * Implements the DBSCAN^EA algorithm.
@@ -34,7 +35,7 @@ import com.rapidminer.parameter.ParameterTypeInt;
  */
 public class DBScanEAClustering extends AbstractDensityBasedClusterer {
 
-	private ExampleSet es;
+	protected ExampleSet es;
 
 	private double maxDistance = 0.2;
 
@@ -56,15 +57,16 @@ public class DBScanEAClustering extends AbstractDensityBasedClusterer {
 	
 	private static final String ABSOLUTE_ERROR = "Absolute error";
 	
-	private AbstractSampleStrategy sampleStrategy;
+	protected AbstractSampleStrategy sampleStrategy;
 	
-	private Map<String, Double[][]> sampleCache;
+	protected Map<String, Double[][]> sampleCache;
 	
 	
 	public DBScanEAClustering(OperatorDescription description) {
 		super(description);
 	}
 
+	
 	/** 
      * Creates a <code>ClusterModel</code> using <code>doClustering</code>.
      * 
@@ -74,9 +76,12 @@ public class DBScanEAClustering extends AbstractDensityBasedClusterer {
 	public ClusterModel createClusterModel(ExampleSet es) throws OperatorException {
 		this.es = es;
 		lambda = getParameterAsDouble(LAMBDA);
+		//System.out.println("[Performance Antje] lambda: " + lambda);
 		globalFuzziness = getParameterAsDouble(GLOBAL_UNCERTAINTY);
 		maxDistance = getParameterAsDouble(MAX_DISTANCE_NAME);
 		sampleStrategy = new SimpleSampling();
+		
+		sampleStrategy.setSampleRate(this.sampleRate);
 		sampleCache = new HashMap<String, Double[][]>();
 		FlatClusterModel result = doClustering(es);
 		return result;
@@ -112,7 +117,7 @@ public class DBScanEAClustering extends AbstractDensityBasedClusterer {
 		double dist = Double.MAX_VALUE;
 		Double [][] e1 = getSamples(id1);
 		Double [][] e2 = getSamples(id2);
-		int max_dimensions = e1.length;
+		int max_dimensions = e1[0].length;
 		double[] a = new double[max_dimensions];
 		double[] b = new double[max_dimensions];
 		
@@ -134,7 +139,7 @@ public class DBScanEAClustering extends AbstractDensityBasedClusterer {
 		double dist = Double.MIN_VALUE;
 		Double [][] e1 = getSamples(id1);
 		Double [][] e2 = getSamples(id2);
-		int max_dimensions = e1.length;
+		int max_dimensions = e1[0].length;
 		double[] a = new double[max_dimensions];
 		double[] b = new double[max_dimensions];
 		
@@ -222,7 +227,9 @@ public class DBScanEAClustering extends AbstractDensityBasedClusterer {
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 		ParameterType p1;
-		p1 = new ParameterTypeDouble(MAX_DISTANCE_NAME, "maximal distance", 0.0, Double.POSITIVE_INFINITY, 0.8);
+		//@ANTJE p1 = new ParameterTypeDouble(MAX_DISTANCE_NAME, "maximal distance", 0.0, Double.POSITIVE_INFINITY, 0.8);
+		p1 = new ParameterTypeString(MAX_DISTANCE_NAME, "maximal distance","0.8");
+		//@END ANTJE
 		p1.setExpert(false);
 		types.add(p1);
 		ParameterType p2;
@@ -241,7 +248,11 @@ public class DBScanEAClustering extends AbstractDensityBasedClusterer {
 		p2.setExpert(false);
 		types.add(p2);
 		
-		p4 = new ParameterTypeDouble(LAMBDA, "lambda", 0, 1, 0.5);
+		//@ANTJE performanceTestOnly:
+		p4 = new ParameterTypeString(LAMBDA, "lambda","0.5");
+		//p4 = new ParameterTypeDouble(LAMBDA, "lambda", 0, 1, 0.5);
+		//end @ANTJE
+		
 		p4.setDescription("The range of this parameter spans from an extremly optimistic (1) " +
 				"to an extemly pessimistic (0) cluster strategy.");
 		p4.setExpert(false);

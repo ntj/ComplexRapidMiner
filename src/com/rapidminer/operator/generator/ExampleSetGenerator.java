@@ -31,6 +31,7 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.DataRowFactory;
+import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.example.table.ListDataRowReader;
 import com.rapidminer.example.table.MemoryExampleTable;
 import com.rapidminer.operator.IOObject;
@@ -42,7 +43,9 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
+import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.ParameterTypeStringCategory;
+import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.Tools;
@@ -73,6 +76,9 @@ public class ExampleSetGenerator extends Operator {
 
 	/** The parameter name for &quot;The number of attributes.&quot; */
 	public static final String PARAMETER_NUMBER_OF_ATTRIBUTES = "number_of_attributes";
+	
+	/** The parameter name for &quot;The number of attributes.&quot; */
+	//public static final String PARAMETER_MAX_NUMBER_OF_ATTRIBUTES = "max number_of_attributes";
 
 	/** The parameter name for &quot;The minimum value for the attributes.&quot; */
 	public static final String PARAMETER_ATTRIBUTES_LOWER_BOUND = "attributes_lower_bound";
@@ -86,7 +92,7 @@ public class ExampleSetGenerator extends Operator {
 	/** The parameter name for &quot;Determines, how the data is represented internally.&quot; */
 	public static final String PARAMETER_DATAMANAGEMENT = "datamanagement";
 	
-	private static final String[] KNOWN_FUNCTION_NAMES = new String[] { 
+	protected static final String[] KNOWN_FUNCTION_NAMES = new String[] { 
 		"random", // regression
 	    "sum", 
 	    "polynomial", 
@@ -168,19 +174,34 @@ public class ExampleSetGenerator extends Operator {
 	private static final Class[] INPUT_CLASSES = new Class[0];
 
 	private static final Class[] OUTPUT_CLASSES = { ExampleSet.class };
+	
+	protected Attribute label = null;
 
-	public ExampleSetGenerator(OperatorDescription description) {
+
+	public ExampleSetGenerator(OperatorDescription description) throws UndefinedParameterError {
 		super(description);
 	}
 
 	public IOObject[] apply() throws OperatorException {
+		//create default table
+		ExampleTable table = createDefaultExampleTable(getParameterAsInt(PARAMETER_NUMBER_OF_ATTRIBUTES));
+		return new IOObject[] { createExampleSet(table,label)};
+	}
 
-		// init
-		int numberOfExamples = getParameterAsInt(PARAMETER_NUMBER_EXAMPLES);
-		int numberOfAttributes = getParameterAsInt(PARAMETER_NUMBER_OF_ATTRIBUTES);
+	protected ExampleTable createDefaultExampleTable(int nrAttributes) throws UserError{
+		// init variables
+		int nrExamples = getParameterAsInt(PARAMETER_NUMBER_EXAMPLES);
 		double lower = getParameterAsDouble(PARAMETER_ATTRIBUTES_LOWER_BOUND);
 		double upper = getParameterAsDouble(PARAMETER_ATTRIBUTES_UPPER_BOUND);
 		String functionName = getParameterAsString(PARAMETER_TARGET_FUNCTION);
+		
+		//initialize function
+		TargetFunction function = initializeFunction(lower,upper,functionName,nrExamples,nrAttributes);
+		//create table
+		return createExampleTable(nrAttributes,nrExamples,function,getParameterAsInt(PARAMETER_LOCAL_RANDOM_SEED),true,"");
+	}
+	
+	protected TargetFunction initializeFunction(double lower, double upper, String functionName, int numberOfExamples, int nrAttributes) throws UserError{
 		if (functionName == null)
 			throw new UserError(this, 205, "target_function");
 
@@ -193,19 +214,23 @@ public class ExampleSetGenerator extends Operator {
 		function.setLowerArgumentBound(lower);
 		function.setUpperArgumentBound(upper);
 		function.setTotalNumberOfExamples(numberOfExamples);
-		function.setTotalNumberOfAttributes(numberOfAttributes);
-
-		// create table
+		return function;
+	}
+	
+	protected ExampleTable createExampleTable(int numberOfAttributes, int numberOfExamples, TargetFunction function, int seed, boolean addLabel, String attName) throws UserError{
+		//create attributes
+		if(attName.equals("")) attName = "att";
 		List<Attribute> attributes = new ArrayList<Attribute>();
 		for (int m = 0; m < numberOfAttributes; m++)
-			attributes.add(AttributeFactory.createAttribute("att" + (m + 1), Ontology.REAL));
-		Attribute label = function.getLabel();
+			attributes.add(AttributeFactory.createAttribute(attName + (m + 1), Ontology.REAL));
+		label = function.getLabel();
+		if(!addLabel) label = null;
 		if (label != null)
 			attributes.add(label);
 		MemoryExampleTable table = new MemoryExampleTable(attributes);
 
 		// create data
-        RandomGenerator random = RandomGenerator.getRandomGenerator(getParameterAsInt(PARAMETER_LOCAL_RANDOM_SEED));
+		RandomGenerator random = RandomGenerator.getRandomGenerator(seed);
 		List<DataRow> data = new LinkedList<DataRow>();
         DataRowFactory factory = new DataRowFactory(getParameterAsInt(PARAMETER_DATAMANAGEMENT), '.');
 		try {
@@ -230,15 +255,17 @@ public class ExampleSetGenerator extends Operator {
 
 		// fill table with data
 		table.readExamples(new ListDataRowReader(data.iterator()));
-
-		// create example set and return it
-		ExampleSet result = table.createExampleSet(label);
-
-		return new IOObject[] { result };
+		
+		return table;
 	}
-
+	
+	
+	protected ExampleSet createExampleSet(ExampleTable table, Attribute label) throws OperatorException{
+		return table.createExampleSet(label);
+	}
 	// ================================================================================
 
+	
 	public static TargetFunction getFunctionForName(String functionName) 
 	    throws IllegalAccessException, InstantiationException, ClassNotFoundException {
 		for (int i = 0; i < KNOWN_FUNCTION_NAMES.length; i++) {
@@ -267,13 +294,14 @@ public class ExampleSetGenerator extends Operator {
 		type = new ParameterTypeInt(PARAMETER_NUMBER_EXAMPLES, "The number of generated examples.", 1, Integer.MAX_VALUE, 100);
 		type.setExpert(false);
 		types.add(type);
+		
 		type = new ParameterTypeInt(PARAMETER_NUMBER_OF_ATTRIBUTES, "The number of attributes.", 1, Integer.MAX_VALUE, 5);
 		type.setExpert(false);
 		types.add(type);
-
+		
 		types.add(new ParameterTypeDouble(PARAMETER_ATTRIBUTES_LOWER_BOUND, "The minimum value for the attributes.", Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, -10));
 		types.add(new ParameterTypeDouble(PARAMETER_ATTRIBUTES_UPPER_BOUND, "The maximum value for the attributes.", Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 10));
-        types.add(new ParameterTypeInt(PARAMETER_LOCAL_RANDOM_SEED, "Use the given random seed instead of global random numbers (-1: use global).", -1, Integer.MAX_VALUE, -1));
+        types.add(new ParameterTypeString(PARAMETER_LOCAL_RANDOM_SEED, "Use the given random seed instead of global random numbers (-1: use global).", "-1"));
         types.add(new ParameterTypeCategory(PARAMETER_DATAMANAGEMENT, "Determines, how the data is represented internally.", DataRowFactory.TYPE_NAMES, DataRowFactory.TYPE_DOUBLE_ARRAY));
 		return types;
 	}

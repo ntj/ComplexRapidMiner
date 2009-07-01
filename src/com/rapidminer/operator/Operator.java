@@ -41,6 +41,11 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+/* imports for math expression parameter macro
+import com.graphbuilder.math.Expression;
+import com.graphbuilder.math.ExpressionTree;
+import com.graphbuilder.math.VarMap;
+*/
 import com.rapidminer.BreakpointListener;
 import com.rapidminer.Process;
 import com.rapidminer.RapidMiner;
@@ -981,12 +986,37 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 
 	/** Returns a single named parameter and casts it to int. */
 	public int getParameterAsInt(String key) throws UndefinedParameterError {
-		return ((Integer) getParameter(key)).intValue();
+		try{
+			return ((Integer) getParameter(key)).intValue();
+		}
+		catch(ClassCastException e){
+			try{
+				String param = getParameterAsString(key);
+				String[] myInt = param.split("\\.");
+				return Integer.parseInt(  myInt[0] );
+			}
+			catch (NumberFormatException e1){
+				throw new UndefinedParameterError(e1.getMessage());
+			}
+		}
 	}
 
 	/** Returns a single named parameter and casts it to double. */
 	public double getParameterAsDouble(String key) throws UndefinedParameterError {
-		return ((Double) getParameter(key)).doubleValue();
+		try{
+			return ((Double) getParameter(key)).doubleValue();
+		}
+		catch(ClassCastException e){
+			try{
+				return Double.parseDouble(getParameterAsString(key));
+			}
+			catch (NumberFormatException e1){
+				throw new UndefinedParameterError(e1.getMessage());
+			}
+		}
+		
+		
+		
 	}
 
 	/**
@@ -1075,6 +1105,9 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 		while ((start = str.indexOf("%{", totalStart)) >= 0) {
 			result.append(str.substring(totalStart, start));
 			int end = str.indexOf('}', start);
+			//new!
+			end = findExpressionEnd(start+1,str);
+			//endNew!
 			if (end >= start) {
 				String command = str.substring(start, end + 1);
 				switch (command.charAt(2)) {
@@ -1100,9 +1133,13 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 					if (closeNumberIndex <= openNumberIndex + 1)
 						throw new RuntimeException("A number in [] must follow $p, for example $p[10].");
 					String numberString = command.substring(openNumberIndex + 1, closeNumberIndex);
-					int number = Integer.parseInt(numberString);
-					result.append(applyCount + number);
-					break;
+					try{
+						int number = Integer.parseInt(numberString);
+						result.append(applyCount + number);
+					} catch(NumberFormatException e){
+						result.append(applyCount + Integer.parseInt(this.expandString(numberString)));
+					}
+					finally { break;}
 				case 't':
 					// Please note that Date and DateFormat cannot be used since Windows does not support the resulting file names
 					Calendar calendar = new GregorianCalendar();
@@ -1177,6 +1214,34 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 				case '%':
 					result.append('%');
 					break;
+				case 'm':{
+					result.append(System.currentTimeMillis() % Integer.MAX_VALUE);
+					break;
+				}
+				case 'e':{
+					/*
+					//expression with one 'running variable' (in general %{a}) which is evaluated by recursively calling expandString
+					openNumberIndex = command.indexOf('[', 3);
+					if (openNumberIndex < 0)
+						throw new RuntimeException("An expression in [] must follow $e, for example $p[3+1].");
+					closeNumberIndex = command.indexOf(']', openNumberIndex);
+					if (closeNumberIndex < 0)
+						throw new RuntimeException("An expression in [] must follow $e, for example $p[3+1].");
+					if (closeNumberIndex <= openNumberIndex + 1)
+						throw new RuntimeException("An expression in [] must follow $e, for example $p[3+1].");
+					numberString = command.substring(openNumberIndex + 1, closeNumberIndex);
+					Expression x = ExpressionTree.parse(numberString);
+					//search for macro in numberString
+					int subStart = numberString.indexOf("%{");
+					int subEnd = findExpressionEnd(subStart + 1, numberString);
+					String subMacro = numberString.substring(subStart, subEnd+1);
+					String subMacroValue = expandString(subMacro);
+					VarMap vm = new VarMap(false);
+			        vm.setValue(subMacro, Integer.parseInt(subMacroValue));
+			        result.append(x.eval(vm, null));
+					break;
+					*/
+				}
 				default:
 				    result.append(command);
 				    break;
@@ -1230,6 +1295,29 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 			return value;
 		}
 	}
+	
+	/**
+	 * return index of corresponding '}' 
+	 * @param start index of starting '{'
+	 * @param str string
+	 * @return index of end '}'
+	 */
+	private int findExpressionEnd(int start, String str){
+		char[] c = new char[str.length()];
+		str.getChars(start,str.length(),c,0); //start at '{'
+		int end = -1;
+		int count = 0;
+		for(int i=0;i<c.length;i++){
+			if(c[i] == '{') count++;
+			if(c[i] == '}') count--;
+				if(count ==0){
+					end = start + i;
+					break;
+				}
+		}
+		return end;
+	}
+	
 	
 	/**
 	 * Returns a list of <tt>ParameterTypes</tt> describing the parameters of

@@ -69,4 +69,13 @@ public class BinominalAttribute extends NominalAttribute {
 	public void setMapping(NominalMapping newMapping) {
 		this.nominalMapping = newMapping;
 	}
+
+	
+	public boolean isComplex() {
+		return false;
+	}
+
+	public boolean isRelational() {
+		return false;
+	}
 }

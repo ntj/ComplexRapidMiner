@@ -177,10 +177,11 @@ public class MemoryExampleTable extends AbstractExampleTable {
 	
 	/**
 	 * Adds a new attribute to this example table by invoking the super method.
-	 * If the number of attribues reaches a threshold, the number of attributes
+	 * If the number of attributes reaches a threshold, the number of attributes
 	 * is increased by INCREMENT attributes. This avoids a large number of array
 	 * copies in cases like automatic feature construction etc.
 	 */
+	@Override
 	public synchronized int addAttribute(Attribute attribute) {
 		int index = super.addAttribute(attribute);
 		if (dataList == null)

@@ -23,12 +23,21 @@
 package com.rapidminer.example.table;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ConstructionDescription;
 import com.rapidminer.tools.Ontology;
+
+import de.tud.inf.example.table.ComplexCompositeAttribute;
+import de.tud.inf.example.table.GaussAttribute;
+import de.tud.inf.example.table.HistogramAttribute;
+import de.tud.inf.example.table.MatrixAttribute;
+import de.tud.inf.example.table.RelationalAttribute;
+import de.tud.inf.example.table.TensorAttribute;
+import de.tud.inf.example.table.UniformAttribute;
 
 
 /**
@@ -67,10 +76,49 @@ public class AttributeFactory {
 			return new PolynominalAttribute(attributeName, valueType);
 		} else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.NUMERICAL)) {
 			return new NumericalAttribute(attributeName, valueType);
-		} else {
+		} else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.RELATIONAL)) {
+			return new RelationalAttribute(attributeName, valueType);
+		}
+		else {
 			throw new RuntimeException("AttributeFactory: cannot create attribute with value type '" + Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(valueType) + "' (" + valueType + ")!");
 		}
 	}
+
+	
+	public static Attribute createCompositeAttribute(String name, int valueType, List<Attribute> innerAttributes, List<Attribute> parameters, String symbol, String hint){
+		String attributeName = (name != null) ? name : createName();
+		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.UNIFORM))
+			return new UniformAttribute(attributeName,valueType,innerAttributes,parameters,symbol,hint);
+		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.GAUSS))
+			return new GaussAttribute(attributeName,valueType,innerAttributes,parameters,symbol,hint);
+		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.HISTOGRAM))
+			return new HistogramAttribute(attributeName,valueType,innerAttributes,parameters,symbol,hint);
+		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.COMPLEX_VALUE))
+			return new ComplexCompositeAttribute(attributeName,valueType,innerAttributes,parameters,symbol,hint);
+		else {
+			throw new RuntimeException("AttributeFactory: cannot create attribute with value type '" + Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(valueType) + "' (" + valueType + ")!");
+		}
+	}
+	/**
+	 * those attribute types just have one inner relational attribute, and cannot be parameterized for each row, but for the complete dataset
+	 * @param name
+	 * @param valueType
+	 * @param innerAttribute
+	 * @param symbol
+	 * @param hint
+	 * @return
+	 */
+	public static Attribute createProxyAttribute(String name, int valueType, RelationalAttribute innerAttribute, String symbol,String hint){
+		String attributeName = (name != null) ? name : createName();
+		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.MATRIX))
+			return new MatrixAttribute(attributeName,valueType,innerAttribute,symbol,hint);
+		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.TENSOR))
+			return new TensorAttribute(attributeName,valueType,innerAttribute,symbol,hint);
+		else {
+			throw new RuntimeException("AttributeFactory: cannot create attribute with value type '" + Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(valueType) + "' (" + valueType + ")!");
+		}
+	}
+	
 
 	/**
 	 * Creates a simple single attribute depending on the given value type. The

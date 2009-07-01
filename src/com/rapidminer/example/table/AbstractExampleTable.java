@@ -64,7 +64,7 @@ public abstract class AbstractExampleTable implements ExampleTable {
 	 * this index is added to {@link AbstractExampleTable#unusedColumnList} as an
 	 * Integer.
 	 */
-	private List<Attribute> attributes = new ArrayList<Attribute>();
+	protected List<Attribute> attributes = new ArrayList<Attribute>();
 
 	/**
 	 * List of Integers referencing indices of columns that were removed, e.g.
@@ -72,7 +72,7 @@ public abstract class AbstractExampleTable implements ExampleTable {
 	 * needed any longer. Any of the columns in this list may be used when a new
 	 * attribute is created. The list is used as a queue.
 	 */
-	private List<Integer> unusedColumnList = new LinkedList<Integer>();
+	protected List<Integer> unusedColumnList = new LinkedList<Integer>();
 
 	/**
 	 * Creates a new ExampleTable.
@@ -129,10 +129,11 @@ public abstract class AbstractExampleTable implements ExampleTable {
 
 	/**
 	 * Adds the attribute to the list of attributes assigning it a free column
-	 * index. If the name is allready in use, the attribute will be renamed.
+	 * index. If the name is already in use, the attribute will be renamed.
 	 */
 	public int addAttribute(Attribute a) {
 		int index = -1;
+		
 		if (unusedColumnList.size() > 0) {
 			index = unusedColumnList.remove(0);
 			attributes.set(index, a);

@@ -44,7 +44,7 @@ public class SlidingWindowLearner extends AbstractMetaLearner {
 	
 	private boolean firstRun = true;
 
-	@Override
+	
 	public Model learn(ExampleSet exampleSet) throws OperatorException {
 		
 		boolean override = this.getParameterAsBoolean(ENSABMLE_OVERRIDE);

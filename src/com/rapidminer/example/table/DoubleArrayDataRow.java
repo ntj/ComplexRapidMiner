@@ -48,6 +48,9 @@ public class DoubleArrayDataRow extends DataRow {
 
 	/** Sets the given data for the given index. */
 	protected void set(int index, double value, double defaultValue) {
+		//@ANTJE verhindert arrayIndexOutOfBounds in complexexampleGenerator	 *  
+		//ensureNumberOfColumns(index+1);
+		//@END ANTJE
 		data[index] = value;
 	}
 

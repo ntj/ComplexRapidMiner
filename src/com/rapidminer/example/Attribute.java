@@ -170,6 +170,10 @@ public interface Attribute extends Cloneable, Serializable {
 	/** Returns true if the attribute is nominal. */
 	public boolean isNumerical();
 	
+	public boolean isComplex();
+	
+	public boolean isRelational();
+	
 	/** Returns a formatted string of the given value according to the attribute type. */
 	public String getAsString(double value, int digits, boolean quoteWhitespace);
 

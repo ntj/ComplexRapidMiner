@@ -168,7 +168,7 @@ public class GaussianProcess extends AbstractLearner {
 
 	}
 
-	@Override
+	
 	public Model learn(ExampleSet exampleSet) throws OperatorException {
 
 		double[][] inputVectors;
@@ -344,7 +344,7 @@ public class GaussianProcess extends AbstractLearner {
 				nominalTransformingModel,originalHeader);
 	}
 
-	@Override
+	//@Override
 	public boolean supportsCapability(LearnerCapability capability) {
 
 		if (capability == LearnerCapability.POLYNOMINAL_ATTRIBUTES

@@ -22,8 +22,13 @@
  */
 package com.rapidminer.example.table;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.tools.LogService;
+
+import de.tud.inf.example.table.RelationalAttribute;
 
 
 /**
@@ -78,7 +83,9 @@ public class DataRowFactory {
 	
 	public static final int TYPE_SPARSE_MAP = 14;
 	
-	public static final int LAST_TYPE_INDEX = 14;
+	public static final int TYPE_RELATIONAL_EXTENDED = 15;
+	
+	public static final int LAST_TYPE_INDEX = 15;
 	
 
 	/**
@@ -91,6 +98,10 @@ public class DataRowFactory {
 
 	/** The decimal point character. */
 	private char decimalPointCharacter = '.';
+	
+	/** relational attribute instance seperators */
+	private final String valueSep = ",";
+	private final String tupleSep = "\n";
 	
 	
 	/**
@@ -184,23 +195,58 @@ public class DataRowFactory {
 	 */
 	public DataRow create(String[] strings, Attribute[] attributes) {
 		DataRow dataRow = create(strings.length);
+		//if null, attribute set contains no relational attributes
+		Map<Integer,double [][]> rlValues = null;
 		for (int i = 0; i < strings.length; i++) {
 			if (strings[i] != null)
 				strings[i] = strings[i].trim();
 			if ((strings[i] != null) && (strings[i].length() > 0) && (!strings[i].equals("?"))) {
 				if (attributes[i].isNominal()) {
 					dataRow.set(attributes[i], attributes[i].getMapping().mapString(strings[i]));
-				} else {
+				}
+				else if(attributes[i].isRelational()){
+					if(rlValues == null) rlValues = new HashMap<Integer, double[][]>();
+					//then string[i] contains arbitrary tuples of innerAttributs.size() - number of attributes
+					//saves them as double.. get attribute information from ComplexAttribute.getInnerAttributes.type
+					RelationalAttribute ca = (RelationalAttribute)attributes[i];
+					
+					//in overall dataRow set index "pointer" on entry in Map rlValue at position i (later table index)
+					
+					//separate tuples of relational attribute
+					String[] tuples = strings[i].split(tupleSep);
+					//separate instances of innerAttributes
+					double[][] rlValue = new double[tuples.length][];
+					for(int tpl = 0;tpl<rlValue.length;tpl++)
+						rlValue[tpl] = new double[ca.getInnerAttributes().size()];
+					//now relValues is well instantiated
+					Attribute iAtt = null;
+					for(int ia =0;ia < ca.getInnerAttributes().size();ia++){
+							iAtt = ca.getInnerAttributes().get(ia);
+							if(iAtt.isNominal())
+								for(int t=0;t<tuples.length;t++)
+								  rlValue[t][ia] = iAtt.getMapping().mapString(tuples[t].split(valueSep)[ia]);
+							else
+								for(int t=0;t<tuples.length;t++)
+								  rlValue[t][ia] = string2Double(tuples[t].split(valueSep)[ia],this.decimalPointCharacter);
+					}
+					// i == tableIndex??
+					rlValues.put(i,rlValue);
+				}else {
 					dataRow.set(attributes[i], string2Double(strings[i], this.decimalPointCharacter));
 				}
 			} else {
-				dataRow.set(attributes[i], Double.NaN);
+				if(attributes[i].isNominal())
+						dataRow.set(attributes[i], attributes[i].getMapping().mapString(""));
+				else dataRow.set(attributes[i], Double.NaN);
 			}
 		}
 		dataRow.trim();
+		if(rlValues != null){
+			dataRow.setRelationalValues(rlValues);
+		}
 		return dataRow;
 	}
-
+	
 	/**
 	 * Creates a data row from an Object array. The classes of the object must
 	 * match the value type of the corresponding {@link Attribute}. If the

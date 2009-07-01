@@ -30,7 +30,14 @@ import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.example.table.NumericalAttribute;
 import com.rapidminer.example.table.SparseFormatDataRowReader;
+import com.rapidminer.operator.similarity.attributebased.uncertain.ProbabilityDensityFunction;
 import com.rapidminer.tools.Ontology;
+
+import de.tud.inf.example.set.attributevalues.AbstractMatrixValue;
+import de.tud.inf.example.set.attributevalues.ComplexValue;
+import de.tud.inf.example.table.ComplexAttribute;
+import de.tud.inf.example.table.MatrixAttribute;
+import de.tud.inf.example.table.UncertainAttribute;
 
 
 /**
@@ -127,7 +134,60 @@ public class Example implements Serializable {
         }
         return new Date((long)getValue(a));
     }
+    
+    
+    
+    /**
+     * get complex value as complex value object
+     * @param a
+     * @return
+     */
+    public ComplexValue getComplexValue(Attribute a){
+   	 if (!Ontology.ATTRIBUTE_VALUE_TYPE.isA(a.getValueType(), Ontology.COMPLEX_VALUE)) {
+   		  throw new AttributeTypeException("Extraction of complex example value for non-uncertain attribute '" + a.getName() + "' is not possible.");
+   	 }
+   	 return ((ComplexAttribute)a).getComplexValue(this.getDataRow());
+   }
+    
+    /**
+     * get complex value as array of inner attribute values
+     * @param a
+     * @return
+     */
+    public double[] getComplexValueAsArray(Attribute a){
+      	 if (!Ontology.ATTRIBUTE_VALUE_TYPE.isA(a.getValueType(), Ontology.COMPLEX_VALUE)) {
+      		  throw new AttributeTypeException("Extraction of complex example value for non-uncertain attribute '" + a.getName() + "' is not possible.");
+      	 }
+      	 return ((ComplexAttribute)a).getComplexValueAsArray(this.getDataRow());
+      }
+    
 
+    /**
+     * 
+     * @param Attribute a
+     * @return Abstract pdf
+     */
+    public ProbabilityDensityFunction getUncertainValue(Attribute a){
+    	 if (!Ontology.ATTRIBUTE_VALUE_TYPE.isA(a.getValueType(), Ontology.UNCERTAIN)) {
+    		  throw new AttributeTypeException("Extraction of uncertain example value for non-uncertain attribute '" + a.getName() + "' is not possible.");
+    	 }
+    	 return ((UncertainAttribute)a).getComplexValue(this.getDataRow());
+    }
+    
+    public AbstractMatrixValue getMatrixValue(Attribute a){
+   	 if (!Ontology.ATTRIBUTE_VALUE_TYPE.isA(a.getValueType(), Ontology.MATRIX)) {
+   		  throw new AttributeTypeException("Extraction of matrix example value for non-uncertain attribute '" + a.getName() + "' is not possible.");
+   	 }
+   	 return ((MatrixAttribute)a).getComplexValue(this.getDataRow());
+   }
+    
+   
+   public double[][] getRelativeValue(Attribute a){
+	   if(a.isRelational())
+		   return data.getRelativeValuesFor(a.getTableIndex());
+	   else throw new AttributeTypeException("Extraction of relational example value for non-relational attribute '" + a.getName() + "' is not possible.");
+   }
+   
 	/**
 	 * Sets the value of attribute a. The attribute a need not necessarily be
 	 * part of the example set the example is taken from, although this is no

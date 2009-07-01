@@ -41,7 +41,7 @@ public class TreeMultiMap<K, V> {
 		if(currentKey != null) {
 			do {
 				size += data.get(currentKey).size();
-				currentKey = data.higherKey(currentKey);
+				//currentKey = data.higherKey(currentKey);
 			} while(currentKey != null);
 		}
 		
@@ -49,7 +49,8 @@ public class TreeMultiMap<K, V> {
 	}
 	
 	public Entry<K, ArrayList<V>> lastEntry() {
-		return data.lastEntry();
+		//return data.lastEntry();
+		return null;
 	}
 	
 	public K lastKey() {
@@ -57,7 +58,8 @@ public class TreeMultiMap<K, V> {
 	}
 	
 	public Entry<K, ArrayList<V>> firstEntry() {
-		return data.firstEntry();
+		///return data.firstEntry();
+		return null;
 	}
 	
 	public K firstKey() {
@@ -65,19 +67,23 @@ public class TreeMultiMap<K, V> {
 	}
 	
 	public Entry<K, ArrayList<V>> higherEntry(K key){
-		return data.higherEntry(key);
+		//return data.higherEntry(key);
+		return null;
 	}
 	
 	public K higherKey(K key) {
-		return data.higherKey(key);
+		//return data.higherKey(key);
+		return null;
 	}
 	
 	public Entry<K, ArrayList<V>> lowerEntry(K key){
-		return data.lowerEntry(key);
+		//return data.lowerEntry(key);
+		return null;
 	}
 	
 	public K lowerKey(K key) {
-		return data.lowerKey(key);
+		//return data.lowerKey(key);
+		return null;
 	}
 	
 	public boolean remove(K key, V value) {
@@ -99,7 +105,7 @@ public class TreeMultiMap<K, V> {
 			sb.append(":");
 			sb.append(currentList);
 			sb.append("\n");
-			currentKey = data.lowerKey(currentKey);
+			//currentKey = data.lowerKey(currentKey);
 		} while (currentKey != null);
 		
 		return sb.toString();

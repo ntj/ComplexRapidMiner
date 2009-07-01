@@ -30,6 +30,10 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import jxl.Cell;
+import jxl.Sheet;
+import jxl.Workbook;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
@@ -50,10 +54,6 @@ import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.att.AttributeDataSourceCreator;
-
-import jxl.Cell;
-import jxl.Sheet;
-import jxl.Workbook;
 
 /**
  * <p>This operator can be used to load data from Microsoft Excel spreadsheets. 

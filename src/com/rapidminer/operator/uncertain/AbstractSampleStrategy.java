@@ -1,12 +1,12 @@
 package com.rapidminer.operator.uncertain;
 
-import com.rapidminer.operator.similarity.attributebased.uncertain.AbstractProbabilityDensityFunction;
+import com.rapidminer.operator.similarity.attributebased.uncertain.ProbabilityDensityFunction;
 
 
 
 public abstract class AbstractSampleStrategy {
 
-	protected AbstractProbabilityDensityFunction pdf;
+	protected ProbabilityDensityFunction pdf;
 	protected double[] element;
 	protected int sampleRate;
 
@@ -25,11 +25,11 @@ public abstract class AbstractSampleStrategy {
 		return sampleRate;
 	}
 	
-	public AbstractProbabilityDensityFunction getPdf() {
+	public ProbabilityDensityFunction getPdf() {
 		return pdf;
 	}
 
-	public void setPdf(AbstractProbabilityDensityFunction pdf) {
+	public void setPdf(ProbabilityDensityFunction pdf) {
 		this.pdf = pdf;
 	}
 

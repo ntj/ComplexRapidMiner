@@ -84,5 +84,5 @@ public interface TargetFunction {
 	 * functions in order to create proper arguments.
 	 */
 	public void setTotalNumberOfAttributes(int number);
-
+	
 }

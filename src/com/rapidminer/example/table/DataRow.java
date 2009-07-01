@@ -23,8 +23,13 @@
 package com.rapidminer.example.table;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.rapidminer.example.Attribute;
+
+import de.tud.inf.example.set.attributevalues.ComplexValue;
+import de.tud.inf.example.table.ComplexAttribute;
 
 
 /**
@@ -41,10 +46,14 @@ public abstract class DataRow implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = -3482048832637144523L;
+	
+	private Map<Integer,double[][]> relValueMap = new HashMap<Integer,double[][]>();
+	
 
 	/** Returns the value for the given index. */
 	protected abstract double get(int index, double defaultValue);
-
+	
+	
 	/** Sets the given data for the given index. */
 	protected abstract void set(int index, double value, double defaultValue);
 
@@ -67,6 +76,7 @@ public abstract class DataRow implements Serializable {
 			return Double.NaN;
 		} else {
 			try {
+				
 				return attribute.getValue(this);
 			} catch (ArrayIndexOutOfBoundsException e) {
 				throw new ArrayIndexOutOfBoundsException("DataRow: table index " + attribute.getTableIndex() + " of Attribute " + attribute.getName() + " is out of bounds.");
@@ -74,8 +84,80 @@ public abstract class DataRow implements Serializable {
 		}
 	}
 	
+	
 	/** Sets the value of the {@link Attribute} to <code>value</code>. */
 	public void set(Attribute attribute, double value) {
 		attribute.setValue(this, value);
 	}
+	
+	/**
+	 * 
+	 * @param attribute
+	 * @return
+	 */
+	public ComplexValue getComplexValue(ComplexAttribute attribute)
+	{
+		if (attribute == null) {
+			return null;
+		} else {
+			try {
+				return attribute.getComplexValue(this);
+			} catch (ArrayIndexOutOfBoundsException e) {
+				throw new ArrayIndexOutOfBoundsException("DataRow: table index " + attribute.getTableIndex() + " of Attribute " + attribute.getName() + " is out of bounds.");
+			}
+		}
+	}
+	
+	/**
+	 * get tuple instances for relational attribute identified with tableIndex (it is not the id of complexAttributes)
+	 * @param tableIndex
+	 * @return
+	 */
+	public double[][] getRelativeValuesFor(Integer tableIndex) {
+		return relValueMap.get(tableIndex);
+	}
+	
+	
+	/**
+	 * 
+	 * @param valueMap key: tableIndex of relational attribute, values: tuple instances of relational attribute
+	 */
+	public void setRelationalValues(Map<Integer,double[][]>valueMap){
+		int tupleDim = -1;
+		for(Integer key:valueMap.keySet()){
+			double[][] values = valueMap.get(key);
+			//get dimension of first tuple in list
+			if(values.length>0)
+				tupleDim = values[0].length;
+			for(int i =0;i<values.length;i++)
+				if(values[i].length != tupleDim) throw new RuntimeException("varying tuple dimensions are not allowed within relational attribute");
+		}
+		this.relValueMap = valueMap;
+		
+	}
+	
+	/**
+	 * 
+	 * @param valueMap key: tableIndex of relational attribute, values: tuple instances of relational attribute
+	 */
+	public void setRelationalValuesFor(int tableIndex, double[][] values){
+		this.relValueMap.put(tableIndex, values);
+	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

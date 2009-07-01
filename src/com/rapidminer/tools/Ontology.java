@@ -74,6 +74,31 @@ public class Ontology {
     
     public static final int TIME = 11;
     
+    public static final int COMPLEX_VALUE = 12;
+    
+    public static final int UNCERTAIN = 13;
+    
+    public static final int FILE = 14;
+    
+    public static final int RELATIONAL = 15;
+    
+    public static final int MATRIX = 16;
+    
+    public static final int UNIFORM = 17;
+    
+    public static final int GAUSS = 18;
+    
+    public static final int HISTOGRAM = 19;
+    
+    public static final int TENSOR = 20;
+    
+    public static final int SIMPLE_MATRIX = 21;
+    
+    public static final int SPARSE_MATRIX = 22;
+    
+    public static final int SPARSE_BINARY_MATRIX = 23;
+    
+    public static final int GEOMETRY = 24;
     
 	public static final String[] VALUE_TYPE_NAMES = { 
         "attribute_value", 
@@ -87,24 +112,51 @@ public class Ontology {
         "file_path",
         "date_time",        
         "date",
-        "time"
+        "time",
+        "complex_value",
+        "uncertain",
+        "file",
+        "relational",
+        "matrix",
+        "uniform",
+        "gauss",
+        "histogram",
+        "tensor",
+        "simple_matrix",
+        "sparse_matrix",
+        "sparse_binary_matrix",
+        "geometry"
 	};
 
 	/** An ontology for value types (nominal, numerical...) */
 	public static final Ontology ATTRIBUTE_VALUE_TYPE = 
         new Ontology(new int[] { 
-                NO_PARENT,       // attribute_value (parent type) 
-                ATTRIBUTE_VALUE, // nominal
-                ATTRIBUTE_VALUE, // numeric
-                NUMERICAL,       // integer
-                NUMERICAL,       // real
-                NOMINAL,         // string 
-                NOMINAL,         // binominal (boolean)
-                NOMINAL,         // polynominal
-                NOMINAL,         // file_path
-                ATTRIBUTE_VALUE, // date_time
-                DATE_TIME,       // date
-                DATE_TIME        // time
+                NO_PARENT,       	// attribute_value (parent type) 
+                ATTRIBUTE_VALUE, 	// nominal
+                ATTRIBUTE_VALUE, 	// numeric
+                NUMERICAL,       	// integer
+                NUMERICAL,       	// real
+                NOMINAL,         	// string 
+                NOMINAL,         	// binominal (boolean)
+                NOMINAL,         	// polynominal
+                NOMINAL,         	// file_path
+                ATTRIBUTE_VALUE, 	// date_time
+                DATE_TIME,       	// date
+                DATE_TIME,       	// time
+                ATTRIBUTE_VALUE, 	// complex value
+                COMPLEX_VALUE,		// uncertain value
+                STRING,				// file
+                ATTRIBUTE_VALUE,	// relational
+                GEOMETRY,			// matrix
+                UNCERTAIN,			// uniform
+                UNCERTAIN,			// gauss
+                UNCERTAIN,			// histogram
+                GEOMETRY,			// tensor
+                MATRIX,				// simple_matrix
+                MATRIX,				// sparse_matrix
+                MATRIX,				// sparse_binary_matrix
+                COMPLEX_VALUE		// geometry
+                
         }, VALUE_TYPE_NAMES);
 
 	// -------------------- BLOCK TYPE --------------------
@@ -151,9 +203,10 @@ public class Ontology {
                 VALUE_MATRIX,     // value matrix start
                 VALUE_MATRIX,     // value matrix end
                 VALUE_MATRIX      // value matrix row start
-        }, BLOCK_TYPE_NAMES);
-
-    
+        }, BLOCK_TYPE_NAMES);	
+	
+	
+	
 	/** Constructs a new ontology where each of the entries points to its parent. */
 	private Ontology(int[] parents, String[] names) {
 		this.parentId = parents;

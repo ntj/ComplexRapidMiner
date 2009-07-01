@@ -48,6 +48,7 @@ public class IntArrayDataRow extends DataRow {
 
 	/** Sets the given data for the given index. */
 	protected void set(int index, double value, double defaultValue) {
+		ensureNumberOfColumns(index+1);
 		data[index] = (int)value;
 	}
 

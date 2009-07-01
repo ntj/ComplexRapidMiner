@@ -22,6 +22,11 @@
  */
 package com.rapidminer.operator.io;
 
+import static com.rapidminer.operator.io.OutputTypes.OUTPUT_TYPES;
+import static com.rapidminer.operator.io.OutputTypes.OUTPUT_TYPE_BINARY;
+import static com.rapidminer.operator.io.OutputTypes.OUTPUT_TYPE_XML;
+import static com.rapidminer.operator.io.OutputTypes.OUTPUT_TYPE_XML_ZIPPED;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -40,8 +45,6 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeFile;
-
-import static com.rapidminer.operator.io.OutputTypes.*;
 
 /**
  * <p>Writes the input model in the file specified by the corresponding parameter.
