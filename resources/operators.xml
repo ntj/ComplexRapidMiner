@@ -1716,5 +1716,60 @@
                 class="de.tud.inf.operator.learner.clustering.clusterer"
                 description="extends DBSCAN^EA, works with uncertain attributes"
                 group=""/>
+                
+                <operator 
+		     name        = "ClusterEnsembleCreator"       
+		     class       = "de.tud.inf.operator.mm.ClusterEnsembleCreator"
+		     description = "Clustering with k-means"
+		     group       = "AMTC.AVIA"/>   
+		     
+		  <operator 
+		     name        = "MutualInformationCalculator"       
+		     class       = "de.tud.inf.operator.mm.MutualInformationCalculator"
+		     description = "freezes hell"
+		     group       = "AMTC.AVIA"/>   
+		     
+		  <operator 
+		     name        = "QualitySelector"       
+		     class       = "de.tud.inf.operator.mm.QualitySelector"
+		     description = "selects your devil by quality"
+		     group       = "AMTC.AVIA"/> 
+		
+		  <operator 
+		     name        = "DiversitySelector"       
+		     class       = "de.tud.inf.operator.mm.DiversitySelector"
+		     description = "selects your devil by diversity"
+		     group       = "AMTC.AVIA"/> 
+		     
+		  <operator 
+		     name        = "JointCriterionSelector"       
+		     class       = "de.tud.inf.operator.mm.JointCriterionSelector"
+		     description = "selects your devil by a joint criterion"
+		     group       = "AMTC.AVIA"/> 
+		     
+		  <operator 
+		     name        = "CASSelector"       
+		     class       = "de.tud.inf.operator.mm.CASSelector"
+		     description = "selects your devil by first cluster all devils and then select one"
+		     group       = "AMTC.AVIA"/> 
+		     
+		  <operator 
+		     name        = "ConvexHullSelector"       
+		     class       = "de.tud.inf.operator.mm.ConvexHullSelector"
+		     description = "selects your devil by a convex hull"
+		     group       = "AMTC.AVIA"/> 
+		 
+		  <operator 
+		     name        = "ConvexHullCalculator"       
+		     class       = "de.tud.inf.operator.mm.ConvexHullCalculator"
+		     description = "calculates the convex hull of the hell"
+		     group       = "AMTC.AVIA"/>    
+		     
+		  <operator 
+		     name        = "ClusteringAggregation"       
+		     class       = "de.tud.inf.operator.mm.ClusteringAggregation"
+		     description = "aggregates hell"
+		     group       = "AMTC.AVIA"/>  
+		     
 
 </operators>
