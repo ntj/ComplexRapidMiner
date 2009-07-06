@@ -185,9 +185,16 @@ public class ComplexExampleSetGenerator extends ExampleSetGenerator{
 
 	public void setParameters() throws OperatorException{
 		int nrAttributes = getParameterAsInt(PARAMETER_NUMBER_OF_ATTRIBUTES);
-		//uniform
-		if(getParameterAsInt(PARAMETER_COMPLEX_ATTRIBUTE_TYPE) == 1)
-			paramCount = 0; //linear korrelation
+	
+		switch(getParameterAsInt(PARAMETER_COMPLEX_ATTRIBUTE_TYPE)){
+			case 0: // uniform
+				paramCount = 1;
+				break;
+			case 1: //default complex value 
+				paramCount = 0;
+				break;
+		}
+		
 		switch(getParameterAsInt(PARAMETER_PERFORMANCE_TYPE)){
 			case 0: // one complex attribute with all attributes (except label) as inner attributes
 				dim = nrAttributes;
