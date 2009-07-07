@@ -3,13 +3,10 @@ package com.rapidminer.operator.similarity.attributebased.uncertain;
 
 import java.util.Random;
 
-import org.freehep.graphicsio.swf.SWFAction.RandomNumber;
-
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import com.rapidminer.tools.Ontology;
-
-import de.tud.inf.example.set.attributevalues.ComplexValue;
+import com.rapidminer.tools.Tools;
 
 /**
  * A simple Implementation of a Probability Density Function (pdf) that
@@ -97,5 +94,17 @@ public class SimpleProbabilityDensityFunction extends AbstractProbabilityDensity
 		return randomValue;
 	}
 
+
+	public String getStringRepresentation(int numberOfDigits, boolean quoteWhitespace) {
+		double[] values = this.getValue();
+		//first value
+		String s =  Tools.formatIntegerIfPossible(value[0], numberOfDigits);
+		//next values
+		for (int i =1;i<values.length;i++)
+			s += ", " +  Tools.formatIntegerIfPossible(value[0], numberOfDigits);
+		//uncertainty:
+		    s += "  +\\-" + Tools.formatIntegerIfPossible(this.getUncertainty(),numberOfDigits);
+		return s;
+	}
 
 }

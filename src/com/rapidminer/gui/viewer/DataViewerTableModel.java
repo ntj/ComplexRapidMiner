@@ -128,7 +128,11 @@ public class DataViewerTableModel extends AbstractTableModel {
         		return new Date(milliseconds);
         	} else if (attribute.isNumerical()) {
                 return Double.valueOf(example.getValue(attribute));
-        	} else {
+        	}
+              else if(attribute.isComplex()){
+                return example.getComplexValueAsString(attribute, NumericalAttribute.DEFAULT_NUMBER_OF_DIGITS, false);
+        	}
+              else {
                 return example.getValueAsString(attribute, NumericalAttribute.DEFAULT_NUMBER_OF_DIGITS, false);
         	}
         } catch (Throwable e) {

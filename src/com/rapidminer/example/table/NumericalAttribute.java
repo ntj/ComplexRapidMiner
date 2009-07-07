@@ -124,7 +124,6 @@ public class NumericalAttribute extends AbstractAttribute {
 	}
 
 	public boolean isRelational() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 }

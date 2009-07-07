@@ -75,4 +75,11 @@ public class GaussProbabilityDensityFunction extends AbstractProbabilityDensityF
 	public double[] getRandomValue() {
 		throw new UnsupportedOperationException();
 	}
+
+	public String getStringRepresentation(int digits, boolean quoteWhitespace) {
+		return "NA";
+	}
+	
+	
+	
 }

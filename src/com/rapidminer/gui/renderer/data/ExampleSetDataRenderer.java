@@ -52,7 +52,7 @@ public class ExampleSetDataRenderer extends AbstractDataTableTableRenderer {
 		ExampleSet exampleSet = (ExampleSet)renderable;
 		return new DataViewer(exampleSet, true);
 	}
-
+	
     /** This method is used to create a {@link DataTable} from this example set. The default implementation
      *  returns an instance of {@link DataTableExampleSetAdapter}. The given IOContainer is used to check if 
      *  there are compatible attribute weights which would used as column weights of the returned table. 

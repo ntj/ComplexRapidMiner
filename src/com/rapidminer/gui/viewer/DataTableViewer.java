@@ -145,7 +145,7 @@ public class DataTableViewer extends JPanel implements Tableable {
 
         setDataTable(dataTable);
     }
-
+    
     public PlotterPanel getPlotterPanel() {
     	return plotterPanel;
     }

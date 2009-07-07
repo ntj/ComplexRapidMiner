@@ -304,6 +304,11 @@ public class Example implements Serializable {
 		return attribute.getAsString(value, fractionDigits, quoteWhitespace);
 	}
 	
+	public String getComplexValueAsString(Attribute attribute, int fractionDigits, boolean quoteWhitespace) {
+		ComplexValue value = getComplexValue(attribute);
+		return ((ComplexAttribute)attribute).getAsString(value, fractionDigits, quoteWhitespace);
+	}
+	
     /** Returns a dense string representation with all possible fraction digits.
      *  Nominal values containing whitespaces will be quoted with double 
      *  quotes.
