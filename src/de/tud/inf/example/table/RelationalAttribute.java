@@ -32,7 +32,7 @@ public class RelationalAttribute extends AbstractAttribute{
 	}
 
 	public String getAsString(double value, int digits, boolean quoteWhitespace) {
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	public NominalMapping getMapping() {

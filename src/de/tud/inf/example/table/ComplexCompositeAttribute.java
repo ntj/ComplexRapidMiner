@@ -7,7 +7,6 @@ import java.util.List;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.ExampleTable;
-import com.rapidminer.example.table.IComplexCompositeAttribute;
 
 import de.tud.inf.example.set.attributevalues.ComplexValue;
 import de.tud.inf.example.set.attributevalues.ComplexValueFactory;
@@ -19,7 +18,7 @@ import de.tud.inf.example.set.attributevalues.LinearKorrelation;
  * @author Antje Gruner
  *
  */
-public class ComplexCompositeAttribute extends ComplexAttribute implements IComplexCompositeAttribute {
+public class ComplexCompositeAttribute extends ComplexAttribute {
 	
 	private static final long serialVersionUID = 1L;
 	protected List<Attribute> innerAttributes = null;
@@ -124,6 +123,13 @@ public class ComplexCompositeAttribute extends ComplexAttribute implements IComp
 			values[i] = innerAttributes.get(i).getValue(row);
 		}
 		return values;
+	}
+
+
+	@Override
+	public String getAsString(ComplexValue value, int digits,
+			boolean quoteWhitespace) {
+		return value.getStringRepresentation(digits,quoteWhitespace);
 	}
 
 

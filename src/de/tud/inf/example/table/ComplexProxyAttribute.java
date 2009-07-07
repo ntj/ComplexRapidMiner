@@ -7,6 +7,8 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.ExampleTable;
 
+import de.tud.inf.example.set.attributevalues.ComplexValue;
+
 
 
 
@@ -80,5 +82,11 @@ public abstract class ComplexProxyAttribute extends ComplexAttribute {
 		return innerAttribute.getValue(row);
 	}
 	
+	@Override
+	public String getAsString(ComplexValue value, int digits,
+			boolean quoteWhitespace) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 }

@@ -50,7 +50,10 @@ public abstract class ComplexAttribute extends AbstractAttribute{
 	public String getAsString(double value, int digits, boolean quoteWhitespace) {
 		throw new UnsupportedOperationException();
 	}
+	
 
+	public abstract String getAsString(ComplexValue value, int digits, boolean quoteWhitespace);
+	
 	
 	public NominalMapping getMapping() {
 		throw new UnsupportedOperationException();

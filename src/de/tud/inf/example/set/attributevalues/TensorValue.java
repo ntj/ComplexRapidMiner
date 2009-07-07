@@ -83,4 +83,10 @@ public class TensorValue implements ComplexValue{
 		}
 	}
 
+	public String getStringRepresentation(int digits, boolean quoteWhitespace) {
+		return "NA";
+	}
+
+
+
 }

@@ -14,5 +14,7 @@ public interface ComplexValue {
 	 */
 	public int getValueType();
 	public double getDoubleValue();
+	
+	public String getStringRepresentation(int digits, boolean quoteWhitespace);
 
 }

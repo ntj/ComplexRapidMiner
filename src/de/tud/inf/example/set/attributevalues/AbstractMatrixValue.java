@@ -37,4 +37,11 @@ public abstract class AbstractMatrixValue implements ComplexValue, MatrixValue{
 	public void print(int cWidth, int nrDig){
 		m.print(cWidth, nrDig);
 	}
+	
+	public String getStringRepresentation(int digits, boolean quoteWhitespace) {
+		return "NA";
+	}
+	
+
+	
 }

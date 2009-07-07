@@ -37,5 +37,6 @@ public class SimpleMatrixValue extends AbstractMatrixValue{
 			setValues(mValues);
 		}
 	}
+
 	
 }

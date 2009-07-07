@@ -2,6 +2,7 @@ package de.tud.inf.example.table;
 
 import com.rapidminer.example.table.DataRow;
 
+import de.tud.inf.example.set.attributevalues.ComplexValue;
 import de.tud.inf.example.set.attributevalues.ComplexValueFactory;
 import de.tud.inf.example.set.attributevalues.TensorValue;
 

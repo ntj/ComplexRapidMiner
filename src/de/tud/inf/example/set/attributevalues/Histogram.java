@@ -72,5 +72,11 @@ public class Histogram extends AbstractProbabilityDensityFunction{
 	}
 
 
+	public String getStringRepresentation(int digits, boolean quoteWhitespace) {
+		return "NA";
+	}
+
+
+
 
 }
