@@ -13,8 +13,8 @@ import com.rapidminer.tools.Tools;
  * takes just the value and the global fuzziness as parameters.
  * 
  * @author Michael Huber
- * @see com.rapidminer.operator.learner.clustering.clusterer.uncertain.DBScanEAClustering
- * @see com.rapidminer.operator.learner.clustering.clusterer.uncertain.FDBScanClustering
+ * @see de.tud.inf.operator.learner.clustering.clusterer.uncertain.DBScanEAClustering
+ * @see de.tud.inf.operator.learner.clustering.clusterer.uncertain.FDBScanClustering
  */
 public class SimpleProbabilityDensityFunction extends AbstractProbabilityDensityFunction {
 	

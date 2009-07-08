@@ -5,7 +5,7 @@ package com.rapidminer.operator.similarity.attributebased;
  * Simple implementation of a matrix.
  * 
  * @author 
- * @see com.rapidminer.operator.learner.clustering.clusterer.uncertain.FDBScanClustering
+ * @see de.tud.inf.operator.learner.clustering.clusterer.uncertain.FDBScanClustering
  */
 public class Matrix {
 
