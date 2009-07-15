@@ -1,6 +1,5 @@
 package de.tud.inf.example.set.attributevalues;
 
-import de.tud.inf.example.ComplexAttributeInstantiationException;
 
 /**
  * creates a matrix from key/value pairs, i.e. entries which are not set remain zero 

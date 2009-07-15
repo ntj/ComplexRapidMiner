@@ -1,6 +1,5 @@
 package de.tud.inf.example.set.attributevalues;
 
-import de.tud.inf.example.ComplexAttributeInstantiationException;
 
 public class SparseBinaryMatrixValue extends SparseMatrixValue{
 

@@ -7,8 +7,6 @@ import com.rapidminer.operator.similarity.attributebased.uncertain.GaussProbabil
 import com.rapidminer.operator.similarity.attributebased.uncertain.SimpleProbabilityDensityFunction;
 import com.rapidminer.tools.Ontology;
 
-import de.tud.inf.example.table.ComplexAttributeDescription;
-
 
 /***
  * creates and manages a list of instantiated ComplexValues
@@ -36,48 +34,45 @@ public class ComplexValueFactory {
 	
 	//other symbols (not implemented)
 	private static final String symbol_image = "image";
+	private static final String symbol_map = Ontology.VALUE_TYPE_NAMES[Ontology.MAP];
 
 	
 	private static Map<String, ComplexValue> flyweightList = new HashMap<String, ComplexValue>();
 	
    
     public static ComplexValue getComplexValueFunction(String symbol,String hint) throws RuntimeException{
-    	return getComplexValueFunction(new ComplexAttributeDescription(null,null,symbol, "", hint));
+    	return getComplexValueFunction(0,symbol,hint);
     }
     
     public static ComplexValue getComplexValueFunction(int nrAttributes,String symbol,String hint) throws RuntimeException{
-    	return getComplexValueFunction(new ComplexAttributeDescription(new int[nrAttributes],null,symbol, "", hint));  
-    }
-    
-    public static ComplexValue getComplexValueFunction(ComplexAttributeDescription cad) throws RuntimeException{
     	//first of all, check if symbol is already instantiated (appears in flyweightList)
-    	String key = cad.getSymbol()+cad.getHint();
+    	String key = symbol+hint;
     	if(flyweightList.containsKey(key))
     		return flyweightList.get(key);
     	
     	ComplexValue cFunc = null;
-		if(cad.getSymbol().equals(symbol_sparseMatrix) 
-								|| cad.getSymbol().equals(symbol_matrix) 
-				 				|| cad.getSymbol().equals(symbol_sparseBinaryMatrix )
-				 				|| cad.getSymbol().equals(symbol_tensor)
-				 				|| cad.getSymbol().equals(symbol_histogram)){
+		if(symbol.equals(symbol_sparseMatrix) 
+								|| symbol.equals(symbol_matrix) 
+				 				|| symbol.equals(symbol_sparseBinaryMatrix )
+				 				|| symbol.equals(symbol_tensor)
+				 				|| symbol.equals(symbol_histogram)){
 			//hint stores integer values to instantiate geometries
 			try{
-				String[] pList = cad.getHint().split(getParameterSep());
+				String[] pList = hint.split(getParameterSep());
 				int x = Integer.parseInt(pList[0]);
-				if (cad.getSymbol().equalsIgnoreCase(symbol_histogram))
-					if(cad.getAttributeIndexes() != null)
-						cFunc = new Histogram(cad.getAttributeIndexes().length,x,false);
+				if (symbol.equalsIgnoreCase(symbol_histogram))
+					if(nrAttributes != 0)
+						cFunc = new Histogram(nrAttributes,x,false);
 					else throw new RuntimeException("Histogram instantiation not valid");
 				else{
 					int y = Integer.parseInt(pList[1]);
-					if(cad.getSymbol().equals(symbol_sparseMatrix))
+					if(symbol.equals(symbol_sparseMatrix))
 						cFunc = new SparseMatrixValue(x,y);
-					else if(cad.getSymbol().equals(symbol_sparseBinaryMatrix))
+					else if(symbol.equals(symbol_sparseBinaryMatrix))
 						cFunc = new SparseBinaryMatrixValue(x,y);
-					else if (cad.getSymbol().equals(symbol_matrix))
+					else if (symbol.equals(symbol_matrix))
 						cFunc = new SimpleMatrixValue(x,y);
-					else if (cad.getSymbol().equals(symbol_tensor))
+					else if (symbol.equals(symbol_tensor))
 						cFunc = new TensorValue(x,y,false); //TODO: how to check whether simple or sparse tensor????
 					if(cFunc != null){
 						flyweightList.put(key, cFunc);
@@ -86,28 +81,33 @@ public class ComplexValueFactory {
 				}
 			}
 			catch(Exception e){
-				throw new RuntimeException("Could not instantiated attribute "+ cad.getName()+" with parameter string "+cad.getHint()+". expected: 'x_y'");
+				throw new RuntimeException("Could not instantiated attribute "+ " with parameter string "+hint+". expected: 'x_y'");
 			}
 		}
-		else if(cad.getSymbol().equalsIgnoreCase(symbol_uPdf))
+		else if(symbol.equalsIgnoreCase(symbol_uPdf))
 			cFunc = new SimpleProbabilityDensityFunction();
-		else if(cad.getSymbol().equalsIgnoreCase(symbol_gaussPdf)){
-			if(cad.getAttributeIndexes() != null)
-				cFunc = new GaussProbabilityDensityFunction(new SimpleMatrixValue(cad.getAttributeIndexes().length,cad.getAttributeIndexes().length));
+		else if(symbol.equalsIgnoreCase(symbol_gaussPdf)){
+			if(nrAttributes != 0)
+				cFunc = new GaussProbabilityDensityFunction(new SimpleMatrixValue(nrAttributes,nrAttributes));
 			//TOTEST: else cFunc = new GaussProbablitityDensityFunction(new SimpleMatrixValue(0,0));
 			//else cFunc = new GaussProbablitityDensityFunction(new SimpleMatrixValue(1,1));
 			else throw new RuntimeException("Gauss pdf instantiation not valid");
 		}
-		else if(cad.getSymbol().equalsIgnoreCase(symbol_image))
+		else if(symbol.equalsIgnoreCase(symbol_image))
 			cFunc = null;
-		else if (cad.getSymbol().equals(symbol_complex_value))
+		else if (symbol.equals(symbol_map))
+			cFunc = new MapValue();
+		else if (symbol.equals(symbol_complex_value))
 			cFunc = new LinearKorrelation();
 		if(cFunc != null){
 			flyweightList.put(key, cFunc);
 			return cFunc;
 		}
-		return null;
+		return null;  
     }
+    
+   
+  
     
     /**
      * separates parameter from each other
@@ -116,33 +116,5 @@ public class ComplexValueFactory {
     public static String getParameterSep(){
     	return "_";
     }
-    
-    
-    public static int getType(String symbol){
-    	//uncertain types
-    	if(symbol.equals(symbol_uPdf))
-    		return Ontology.UNIFORM;  	
-    	if(symbol.equals(symbol_gaussPdf))
-    		return Ontology.GAUSS;
-    	if(symbol.equals(symbol_histogram))
-    		return Ontology.HISTOGRAM;
-    	
-    	//matrix types
-      	if(symbol.equals(symbol_matrix))
-      		return Ontology.SIMPLE_MATRIX;
-      	if(symbol.equals(symbol_sparseMatrix))
-      		return Ontology.SPARSE_MATRIX;
-      	if(symbol.equals(symbol_sparseBinaryMatrix))
-      		return Ontology.SPARSE_BINARY_MATRIX;
-      	
-      	//other types
-    	if(symbol.equals(symbol_tensor))
-      		return Ontology.TENSOR;
-    	
-    	if(symbol.equals(symbol_complex_value))
-      		return Ontology.COMPLEX_VALUE;
-    	
-    	//TODO: think whether ComplexValue better
-      	else return Ontology.ATTRIBUTE_VALUE;
-    }
+       
 }

@@ -82,13 +82,14 @@ public class ComplexExampleSet extends AbstractExampleSet{
 			}
 			if(innerAttributes.size() == dep.getAttributeIndexes().length){
 				//build complex Attribute
-				int type = ComplexValueFactory.getType(dep.getSymbol());
+				int type = Ontology.ATTRIBUTE_VALUE_TYPE.mapName(dep.getSymbol());
 				Attribute a = null;
-				//test whether proxy attribute (just Matrix)
+				//test whether proxy attribute
 				if(Ontology.ATTRIBUTE_VALUE_TYPE.isA(type, Ontology.GEOMETRY))
-					if((innerAttributes.size() == 1) && (innerAttributes.get(0).isRelational()))
+					if((innerAttributes.size() == 1) && (innerAttributes.get(0).isRelational())){
 						a = AttributeFactory.createProxyAttribute(dep.getName(),type,
-											(RelationalAttribute)innerAttributes.get(0),dep.getSymbol(),dep.getHint());
+											(RelationalAttribute)innerAttributes.get(0),parameters,dep.getSymbol(),dep.getHint());
+					}
 					else throw new ComplexAttributeInstantiationException("geometry attribute '" + dep.getName() +"' can only be instantiated with one relational inner attribute");
 				else if(Ontology.ATTRIBUTE_VALUE_TYPE.isA(type, Ontology.COMPLEX_VALUE)){
 					a =  AttributeFactory.createCompositeAttribute(dep.getName(),type,innerAttributes,parameters,dep.getSymbol(),dep.getHint());

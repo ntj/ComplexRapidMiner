@@ -25,7 +25,7 @@ public class ComplexAttributeConstraintChecker {
 		
 		//test each description
 		for(ComplexAttributeDescription cad: etDep){
-			int valueType = ComplexValueFactory.getType(cad.getSymbol());
+			int valueType = Ontology.ATTRIBUTE_VALUE_TYPE.mapName(cad.getSymbol());
 			if(Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.COMPLEX_VALUE)){
 				if(Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.UNIFORM) && (cad.getParamIndexes().length >1) )
 					messg += "uncertain value with uniform pdf expects exactly one parameter (uncertainty)" + lineSep;
@@ -96,12 +96,16 @@ public class ComplexAttributeConstraintChecker {
 								else if(!Ontology.ATTRIBUTE_VALUE_TYPE.isA(relA.getInnerAttributeAt(0).getValueType(),Ontology.NUMERICAL)) 
 									messg += "sparse matrix attribute " +cad.getName() + " must wrap a relational attribute which inner attribute serves as key and therefore must be numerical" + lineSep;
 							}
+							else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.MAP)){
+								if (relA.getInnerAttributeCount() != 1)
+									messg += "map attribute " +cad.getName() + " must wrap relational attribute with exactly one inner attribute";
+							}
 						}
 					}
 					else messg+= "complex attribute " + cad.getName() + " must wrap one attribute which is relational";
 				}
 			}
-			else { messg += "symbol "+cad.getSymbol()+" is not known";}
+			else { messg += "symbol "+cad.getSymbol()+" is unknown";}
 		}
 		if(messg != ""){
 			throw new RuntimeException(messg);
