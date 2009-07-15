@@ -2,11 +2,10 @@ package com.rapidminer.operator.learner.clustering.clusterer;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.IOContainer;
-import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.MissingIOObjectException;
 import com.rapidminer.operator.OperatorException;
 
-class ClusteringThread extends Thread {
+public class ClusteringThread extends Thread {
 
 	private ExampleSet[] conti;
 	private IOContainer results;

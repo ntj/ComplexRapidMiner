@@ -101,9 +101,9 @@ public class SimpleProbabilityDensityFunction extends AbstractProbabilityDensity
 		String s =  Tools.formatIntegerIfPossible(value[0], numberOfDigits);
 		//next values
 		for (int i =1;i<values.length;i++)
-			s += ", " +  Tools.formatIntegerIfPossible(value[0], numberOfDigits);
+			s += ", " +  Tools.formatIntegerIfPossible(value[i], numberOfDigits);
 		//uncertainty:
-		    s += "  +\\-" + Tools.formatIntegerIfPossible(this.getUncertainty(),numberOfDigits);
+		    s += "  +- " + Tools.formatIntegerIfPossible(this.getUncertainty(),numberOfDigits);
 		return s;
 	}
 
