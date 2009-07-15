@@ -100,6 +100,8 @@ public class Ontology {
     
     public static final int GEOMETRY = 24;
     
+    public static final int MAP = 25;
+    
 	public static final String[] VALUE_TYPE_NAMES = { 
         "attribute_value", 
         "nominal", 
@@ -125,7 +127,8 @@ public class Ontology {
         "simple_matrix",
         "sparse_matrix",
         "sparse_binary_matrix",
-        "geometry"
+        "geometry",
+        "map"
 	};
 
 	/** An ontology for value types (nominal, numerical...) */
@@ -155,7 +158,8 @@ public class Ontology {
                 MATRIX,				// simple_matrix
                 MATRIX,				// sparse_matrix
                 MATRIX,				// sparse_binary_matrix
-                COMPLEX_VALUE		// geometry
+                COMPLEX_VALUE,		// geometry
+                GEOMETRY     		// map
                 
         }, VALUE_TYPE_NAMES);
 

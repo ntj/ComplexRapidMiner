@@ -34,6 +34,7 @@ import com.rapidminer.tools.Ontology;
 import de.tud.inf.example.table.ComplexCompositeAttribute;
 import de.tud.inf.example.table.GaussAttribute;
 import de.tud.inf.example.table.HistogramAttribute;
+import de.tud.inf.example.table.MapAttribute;
 import de.tud.inf.example.table.MatrixAttribute;
 import de.tud.inf.example.table.RelationalAttribute;
 import de.tud.inf.example.table.TensorAttribute;
@@ -99,6 +100,8 @@ public class AttributeFactory {
 			throw new RuntimeException("AttributeFactory: cannot create attribute with value type '" + Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(valueType) + "' (" + valueType + ")!");
 		}
 	}
+	
+	
 	/**
 	 * those attribute types just have one inner relational attribute, and cannot be parameterized for each row, but for the complete dataset
 	 * @param name
@@ -117,6 +120,14 @@ public class AttributeFactory {
 		else {
 			throw new RuntimeException("AttributeFactory: cannot create attribute with value type '" + Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(valueType) + "' (" + valueType + ")!");
 		}
+	}
+	
+	
+	public static Attribute createProxyAttribute(String name, int valueType, RelationalAttribute innerAttribute, List<Attribute> parameters, String symbol,String hint){
+		String attributeName = (name != null) ? name : createName();
+		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.MAP))
+			return new MapAttribute(attributeName,valueType,innerAttribute,parameters,symbol,hint);
+		else return createProxyAttribute(name,valueType,innerAttribute,symbol,hint);
 	}
 	
 
