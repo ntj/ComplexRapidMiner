@@ -1,0 +1,56 @@
+%this file contains complex objects, to test map attribute, point clouds attribute
+@DATATABLE RapidMinerComplexData
+
+@DESCRIPTION dependency
+
+@ATTRIBUTE name STRING
+@ATTRIBUTE className {uniform, matrix}
+@ATTRIBUTE attributes RELATIONAL
+   @ATTRIBUTE a  {att1, o_x, o_y, s_x, s_y, d_x, d_y, att2, att3}
+@END attributes
+@ATTRIBUTE parameters RELATIONAL 
+   @ATTRIBUTE p  {att1, o_x, o_y, s_x, s_y, d_x, d_y, att2, att3}
+@END parameters
+@ATTRIBUTE hints STRING
+
+@DATA
+"first map", map, 'att1','o_x\no_y\ns_x\ns_y\nd_x\nd_y',?
+"first point list", point_list, 'att2', ?, ?
+"uniform attribute", uniform, 'u1\nu2', 'p1',?
+
+
+
+@RELATION RapidMinerData
+
+@ATTRIBUTE 'att1' relational
+   @ATTRIBUTE 'z' real
+@end 'att1'
+
+@ATTRIBUTE 'o_x' real
+@ATTRIBUTE 'o_y' real
+@ATTRIBUTE 's_x' real
+@ATTRIBUTE 's_y' real
+@ATTRIBUTE 'd_x' real
+@ATTRIBUTE 'd_y' real
+@ATTRIBUTE 'att2' relational
+   @ATTRIBUTE 'x' real
+   @ATTRIBUTE 'y' real
+   @ATTRIBUTE 'z' real
+@end 'att2'
+
+@ATTRIBUTE 'att3' relational
+   @ATTRIBUTE 'values' real
+@end 'att3'
+
+@ATTRIBUTE u1 real
+@ATTRIBUTE u2 real
+@ATTRIBUTE p1 real
+
+
+
+@DATA
+'1.0\n2.0\n3.0', 0.0, 0.0, 1.0, 1.0, 3.0, 2.0, '1.0,1.0,1.0\n2,5,4', '1.0\n2.0\n3.0', 1,2,3
+'1.0\n2.0\n3.0', 0.0, 0.0, 1.0, 1.0, 3.0, 3.0, '1.0,0,0', '1.0\n2.0\n3.0', 4,5,6
+'1.0\n2.0\n3.0', 0.0, 0.0, 1.0, 1.0, 2.0, 3.0, '1.0,0,1', '1.0\n2.0\n3.0', 7,8,9
+'1.0\n2.0\n3.0', 0.0, 0.0, 1, 1, 1, 1, '1.0,0,1', '1.0\n2.0\n3.0', 10,11,12
+
