@@ -1,10 +1,8 @@
 package de.tud.inf.operator.io;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StreamTokenizer;
@@ -14,7 +12,6 @@ import java.util.Map;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
-import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
@@ -22,7 +19,6 @@ import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.io.ArffExampleSource;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
-import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.Tools;
 
 import de.tud.inf.example.set.ComplexExampleSet;

@@ -81,11 +81,7 @@ public class ComplexCompositeAttribute extends ComplexAttribute {
 		return null;
 	}
 	
-	@Override
-	public ComplexClassType getComplexClassType() {
-		return ComplexClassType.Composite;
-	}
-	
+
 	/**
 	 * dummy function
 	 */
@@ -124,15 +120,4 @@ public class ComplexCompositeAttribute extends ComplexAttribute {
 		}
 		return values;
 	}
-
-
-	@Override
-	public String getAsString(ComplexValue value, int digits,
-			boolean quoteWhitespace) {
-		return value.getStringRepresentation(digits,quoteWhitespace);
-	}
-
-
-	
-
 }

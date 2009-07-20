@@ -1,13 +1,13 @@
 package de.tud.inf.example;
 
 import java.util.List;
+
 import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.tools.Ontology;
 
 import de.tud.inf.example.set.attributevalues.ComplexValueFactory;
 import de.tud.inf.example.table.ComplexAttributeDescription;
 import de.tud.inf.example.table.RelationalAttribute;
-import de.tud.inf.example.table.ComplexAttribute.ComplexClassType;
 
 /**
  * 
@@ -26,13 +26,12 @@ public class ComplexAttributeConstraintChecker {
 		//test each description
 		for(ComplexAttributeDescription cad: etDep){
 			int valueType = Ontology.ATTRIBUTE_VALUE_TYPE.mapName(cad.getSymbol());
-			if(Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.COMPLEX_VALUE)){
+			if(valueType == -1){
+				messg = "attribute value type " + cad.getSymbol() + " is unknown";
+			}
+			else if(Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.COMPLEX_VALUE)){
 				if(Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.UNIFORM) && (cad.getParamIndexes().length >1) )
 					messg += "uncertain value with uniform pdf expects exactly one parameter (uncertainty)" + lineSep;
-				ComplexClassType ct = ComplexClassType.Undefined;
-				if(Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.MATRIX))
-					ct = ComplexClassType.Proxy;
-				
 				//do some checks on inner attributes
 				if(cad.getAttributeIndexes() == null || cad.getAttributeIndexes().length == 0)
 					messg +=  "attribute " +cad.getName()+ " must contain at least one inner attribute";
@@ -56,7 +55,8 @@ public class ComplexAttributeConstraintChecker {
 										messg += "gauss attribute " +cad.getName() + "'s parameter attribute first inner attribute serves as key for matrix entries and therefore must be numerical" + lineSep;
 								}
 					}
-				else if (ct == ComplexClassType.Proxy){
+				//do some checks on proxy attribute values (geometries), e.g. matrix, map, point list etc.
+				else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.GEOMETRY)){
 					//1. just one attribute should be wrapped
 					if(cad.getAttributeIndexes().length != 1) messg += "attribute " +cad.getName() + " must have exactly one inner attribute " + lineSep;
 					//2. this attribute must be relational
@@ -66,8 +66,16 @@ public class ComplexAttributeConstraintChecker {
 							if(!et.getAttribute(i).isRelational()) messg += "attribute " +cad.getName() + "'s inner attribute must be relational " + lineSep;
 							else relA = (RelationalAttribute)et.getAttribute(i);
 					if(relA != null){
+						if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.MAP)){
+							if (relA.getInnerAttributeCount() != 1)
+								messg += "map attribute " +cad.getName() + " must wrap relational attribute with exactly one inner attribute";
+						}
+						else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.POINT_LIST)){
+							if (relA.getInnerAttributeCount() != 3)
+								messg += "point list attribute " +cad.getName() + " must wrap relational attribute with exactly three inner attributes";
+						}
 						//constraints concerning matrix attributes
-						if(Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.MATRIX)){
+						else if(Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.MATRIX)){
 							String[] pList = cad.getHint().split(ComplexValueFactory.getParameterSep());
 							if(pList.length != 2)
 								messg += "Hint of matrix attribute "+ cad.getName() +" is not valid, must be 'rows_columns' ";
@@ -96,16 +104,11 @@ public class ComplexAttributeConstraintChecker {
 								else if(!Ontology.ATTRIBUTE_VALUE_TYPE.isA(relA.getInnerAttributeAt(0).getValueType(),Ontology.NUMERICAL)) 
 									messg += "sparse matrix attribute " +cad.getName() + " must wrap a relational attribute which inner attribute serves as key and therefore must be numerical" + lineSep;
 							}
-							else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.MAP)){
-								if (relA.getInnerAttributeCount() != 1)
-									messg += "map attribute " +cad.getName() + " must wrap relational attribute with exactly one inner attribute";
-							}
 						}
 					}
 					else messg+= "complex attribute " + cad.getName() + " must wrap one attribute which is relational";
 				}
 			}
-			else { messg += "symbol "+cad.getSymbol()+" is unknown";}
 		}
 		if(messg != ""){
 			throw new RuntimeException(messg);

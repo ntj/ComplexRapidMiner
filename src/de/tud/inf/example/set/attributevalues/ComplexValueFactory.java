@@ -18,23 +18,23 @@ public class ComplexValueFactory {
 	//symbols which represents complex value functions
 	//TODO: remove those strings, they already appear when calling Ontology.VALUE_TYPE_NAMES[Ontology.UNIFORM] etc.
 	//uncertain symbols
-	private static final String symbol_uPdf = "uniform";
-	private static final String symbol_gaussPdf = "gauss";
-	private static final String symbol_histogram = "hist";
+	private static final String symbol_uPdf = Ontology.VALUE_TYPE_NAMES[Ontology.UNIFORM];
+	private static final String symbol_gaussPdf = Ontology.VALUE_TYPE_NAMES[Ontology.GAUSS];
+	private static final String symbol_histogram = Ontology.VALUE_TYPE_NAMES[Ontology.HISTOGRAM];
 	//matrix symbols
-	private static final String symbol_matrix = "matrix";
-	private static final String symbol_sparseMatrix = "spMatrix";
-	private static final String symbol_sparseBinaryMatrix = "spBinMatrix";
+	private static final String symbol_matrix = Ontology.VALUE_TYPE_NAMES[Ontology.MATRIX];
+	private static final String symbol_sparseMatrix = Ontology.VALUE_TYPE_NAMES[Ontology.SPARSE_MATRIX];
+	private static final String symbol_sparseBinaryMatrix = Ontology.VALUE_TYPE_NAMES[Ontology.SPARSE_BINARY_MATRIX];
 	
 	//other symbols
 	private static final String symbol_tensor = "tensor";
 	
 	//other symbols
-	private static final String symbol_complex_value = "complex_value";
+	private static final String symbol_complex_value = Ontology.VALUE_TYPE_NAMES[Ontology.COMPLEX_VALUE];
 	
 	//other symbols (not implemented)
-	private static final String symbol_image = "image";
 	private static final String symbol_map = Ontology.VALUE_TYPE_NAMES[Ontology.MAP];
+	private static final String symbol_pointlist = Ontology.VALUE_TYPE_NAMES[Ontology.POINT_LIST];
 
 	
 	private static Map<String, ComplexValue> flyweightList = new HashMap<String, ComplexValue>();
@@ -93,10 +93,10 @@ public class ComplexValueFactory {
 			//else cFunc = new GaussProbablitityDensityFunction(new SimpleMatrixValue(1,1));
 			else throw new RuntimeException("Gauss pdf instantiation not valid");
 		}
-		else if(symbol.equalsIgnoreCase(symbol_image))
-			cFunc = null;
 		else if (symbol.equals(symbol_map))
 			cFunc = new MapValue();
+		else if (symbol.equals(symbol_pointlist))
+			cFunc = new PointListValue();
 		else if (symbol.equals(symbol_complex_value))
 			cFunc = new LinearKorrelation();
 		if(cFunc != null){

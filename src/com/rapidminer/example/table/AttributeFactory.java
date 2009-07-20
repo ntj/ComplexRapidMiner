@@ -36,6 +36,7 @@ import de.tud.inf.example.table.GaussAttribute;
 import de.tud.inf.example.table.HistogramAttribute;
 import de.tud.inf.example.table.MapAttribute;
 import de.tud.inf.example.table.MatrixAttribute;
+import de.tud.inf.example.table.PointListAttribute;
 import de.tud.inf.example.table.RelationalAttribute;
 import de.tud.inf.example.table.TensorAttribute;
 import de.tud.inf.example.table.UniformAttribute;
@@ -117,12 +118,16 @@ public class AttributeFactory {
 			return new MatrixAttribute(attributeName,valueType,innerAttribute,symbol,hint);
 		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.TENSOR))
 			return new TensorAttribute(attributeName,valueType,innerAttribute,symbol,hint);
+		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.POINT_LIST))
+			return new PointListAttribute(attributeName,valueType,innerAttribute,symbol,hint);
 		else {
 			throw new RuntimeException("AttributeFactory: cannot create attribute with value type '" + Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(valueType) + "' (" + valueType + ")!");
 		}
 	}
 	
-	
+	/**
+	 * create complex proxy attribute, which has additional parameter attributes (e.g. map)
+	 */
 	public static Attribute createProxyAttribute(String name, int valueType, RelationalAttribute innerAttribute, List<Attribute> parameters, String symbol,String hint){
 		String attributeName = (name != null) ? name : createName();
 		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.MAP))

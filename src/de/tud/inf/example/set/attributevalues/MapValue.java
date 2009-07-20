@@ -2,6 +2,11 @@ package de.tud.inf.example.set.attributevalues;
 
 import com.rapidminer.tools.Ontology;
 
+/**
+ * this complex value encapsulates a map z = f(x,y), x and y are discrete and equidistant point coordinates, z can be arbitrary 
+ * @author Antje Gruner
+ *
+ */
 public class MapValue implements ComplexValue{
 
 	private double[] spacing = new double[2];
@@ -9,7 +14,7 @@ public class MapValue implements ComplexValue{
 	/**
 	 * nr of entries within dimension
 	 */
-	private int[] extent  = new int[2];
+	private int[] dimension  = new int[2];
 	private double[] zValues; 
 	
 	public MapValue(){}
@@ -19,7 +24,26 @@ public class MapValue implements ComplexValue{
 		return 0;
 	}
 	public String getStringRepresentation(int digits, boolean quoteWhitespace) {
-		return "NA";
+		String str = "[";
+		//first row and first entry of row
+		str += "{" + zValues[0];
+		//iterate through columns
+		for(int i=1;i<dimension[0];i++){
+			str += ", " + zValues[i];
+		}
+		str += "}";
+		//iterate through rows of map
+		for(int j=1;j<dimension[1];j++){
+			//first entry of each row
+			str += ", {" + zValues[j*dimension[0]];
+			//iterate through columns
+			for(int i=1;i<dimension[0];i++){
+				str += ", " + zValues[j*dimension[0] + i];
+			}
+			str += "}";
+		}
+		str += "]";
+		return str;
 	}
 
 	public int getValueType() {
@@ -30,7 +54,7 @@ public class MapValue implements ComplexValue{
 		//TODO test
 		int ix =  (int) ((x - origin[0])/spacing[0]);
 		int iy =  (int) ((y - origin[1])/spacing[1]);
-		return zValues[iy*extent[0] +  ix];
+		return zValues[iy*dimension[0] +  ix];
 	}
 	/**
 	 * 
@@ -44,10 +68,10 @@ public class MapValue implements ComplexValue{
 		spacing[1] = s[1];
 		origin[0]  = o[0];
 		origin[1]  = o[1];
-		extent[0]  = e[0];
-		extent[1]  = e[1];
+		dimension[0]  = e[0];
+		dimension[1]  = e[1];
 		//create new map array
-		zValues = new double[extent[0]*extent[1]];
+		zValues = new double[dimension[0]*dimension[1]];
 		
 		int min = Math.min(z.length, zValues.length);
 		//set values

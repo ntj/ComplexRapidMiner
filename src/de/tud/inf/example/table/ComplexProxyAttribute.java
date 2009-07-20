@@ -30,11 +30,7 @@ public abstract class ComplexProxyAttribute extends ComplexAttribute {
 		this.innerAttribute = innerAttribute;
 	}
 	
-	@Override
-	public ComplexClassType getComplexClassType() {
-		return ComplexClassType.Proxy;
-	}
-	
+
 	@Override
 	public void setValue(DataRow row, double value) {
 		throw new UnsupportedOperationException();
@@ -63,12 +59,15 @@ public abstract class ComplexProxyAttribute extends ComplexAttribute {
 	public List<Attribute> getParameterAttributes() {
 		return null;
 	}
+
+	public Attribute getInnerAttribute() {
+		return innerAttribute;
+	}
 	
-	@Override
 	public List<Attribute> getInnerAttributes() {
-		ArrayList<Attribute> aList = new ArrayList<Attribute>();
-		aList.add(innerAttribute);
-		return aList;
+		List<Attribute> list = new ArrayList<Attribute>();
+		list.add(innerAttribute);
+		return list;
 	}
 	
 	@Override
@@ -82,11 +81,5 @@ public abstract class ComplexProxyAttribute extends ComplexAttribute {
 		return innerAttribute.getValue(row);
 	}
 	
-	@Override
-	public String getAsString(ComplexValue value, int digits,
-			boolean quoteWhitespace) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 	
 }

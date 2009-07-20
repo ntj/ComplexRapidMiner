@@ -2,7 +2,6 @@ package de.tud.inf.example.table;
 
 import java.util.LinkedList;
 import java.util.List;
-
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.table.AbstractAttribute;
 import com.rapidminer.example.table.DataRow;
@@ -32,7 +31,7 @@ public class RelationalAttribute extends AbstractAttribute{
 	}
 
 	public String getAsString(double value, int digits, boolean quoteWhitespace) {
-		throw new UnsupportedOperationException();
+		return "NA";
 	}
 
 	public NominalMapping getMapping() {

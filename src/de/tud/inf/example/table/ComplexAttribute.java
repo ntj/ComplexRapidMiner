@@ -16,13 +16,6 @@ import de.tud.inf.example.set.attributevalues.ComplexValue;
  */
 public abstract class ComplexAttribute extends AbstractAttribute{
 
-	/**
-	 * if Composite, ComplexAttribute manages a list of inner attributes, if Proxy, ComplexAttribute has just one relational
-	 * inner attribute
-	 * @author Antje Gruner
-	 *
-	 */
-	public enum ComplexClassType{Composite,Proxy,Undefined};
 	private static final long serialVersionUID = -8546639471664353338L;
 	protected final String symbol;
 	protected final String hint;
@@ -52,7 +45,11 @@ public abstract class ComplexAttribute extends AbstractAttribute{
 	}
 	
 
-	public abstract String getAsString(ComplexValue value, int digits, boolean quoteWhitespace);
+
+	public String getAsString(ComplexValue value, int digits,
+			boolean quoteWhitespace) {
+		return value.getStringRepresentation(digits,quoteWhitespace);
+	}
 	
 	
 	public NominalMapping getMapping() {
@@ -97,8 +94,6 @@ public abstract class ComplexAttribute extends AbstractAttribute{
 	public String getHint() {
 		return hint;
 	}
-	
-	public abstract ComplexClassType getComplexClassType();
 	
 	public abstract int getParameterCount();
 	public abstract int getInnerAttributeCount();
