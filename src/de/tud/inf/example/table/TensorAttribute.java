@@ -13,8 +13,8 @@ import de.tud.inf.example.set.attributevalues.TensorValue;
 public class TensorAttribute extends ComplexProxyAttribute{
 
 	public TensorAttribute(String name, int valueType,
-			RelationalAttribute innerAttribute, String symbol, String hint) {
-		super(name, valueType, innerAttribute, symbol, hint);
+			RelationalAttribute innerAttribute, String hint) {
+		super(name, valueType, innerAttribute, hint);
 	}
 
 	/**
@@ -27,7 +27,7 @@ public class TensorAttribute extends ComplexProxyAttribute{
 		//all matrices are instantiated with one relational attribute, which can have different number of inner attributes,
 		//but checking in complexArffChecker
 		double[][]  values    = row.getRelativeValuesFor(this.innerAttribute.getTableIndex());
-		TensorValue t = (TensorValue)ComplexValueFactory.getComplexValueFunction(this.symbol,this.hint);
+		TensorValue t = (TensorValue)ComplexValueFactory.getComplexValueFunction(getValueType(),this.hint);
 		if(t != null)
 			t.setValues(values);
 		return t;

@@ -23,13 +23,13 @@ public class GaussAttribute extends UncertainAttribute {
 	
 	public GaussAttribute(String name, int valueType,
 			List<Attribute> innerAttributes, List<Attribute> parameters,
-			String symbol, String hint) {
-		super(name, valueType, innerAttributes, parameters, symbol, hint);
+			String hint) {
+		super(name, valueType, innerAttributes, parameters, hint);
 	}
 
 	@Override
 	public GaussProbabilityDensityFunction getComplexValue(DataRow row){
-		GaussProbabilityDensityFunction pdf = (GaussProbabilityDensityFunction)ComplexValueFactory.getComplexValueFunction(innerAttributes.size(), symbol,hint);
+		GaussProbabilityDensityFunction pdf = (GaussProbabilityDensityFunction)ComplexValueFactory.getComplexValueFunction(innerAttributes.size(), this.getValueType(),hint);
 		pdf.setCovarianceMatrix(row.getRelativeValuesFor(this.parameters.get(0).getTableIndex()));
 		setValues(pdf,row);
 		return pdf;

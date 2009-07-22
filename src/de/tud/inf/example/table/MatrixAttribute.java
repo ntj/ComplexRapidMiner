@@ -12,8 +12,8 @@ public class MatrixAttribute extends ComplexProxyAttribute{
 	private static final long serialVersionUID = 493080292487472506L;
 
 	public MatrixAttribute(String name, int valueType,
-			RelationalAttribute innerAttribute, String symbol, String hint) {
-		super(name, valueType, innerAttribute, symbol,hint);
+			RelationalAttribute innerAttribute, String hint) {
+		super(name, valueType, innerAttribute, hint);
 	}
 
 	@Override
@@ -21,7 +21,7 @@ public class MatrixAttribute extends ComplexProxyAttribute{
 		//all matrices are instantiated with one relational attribute, which can have different number of inner attributes,
 		//but checking in complexArffChecker
 		double[][]  values = row.getRelativeValuesFor(this.innerAttribute.getTableIndex());
-		AbstractMatrixValue m = (AbstractMatrixValue)ComplexValueFactory.getComplexValueFunction(this.symbol,this.hint);
+		AbstractMatrixValue m = (AbstractMatrixValue)ComplexValueFactory.getComplexValueFunction(getValueType(),this.hint);
 		if(m != null)
 			m.setValues(values);
 		return m;

@@ -31,7 +31,9 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ConstructionDescription;
 import com.rapidminer.tools.Ontology;
 
+import de.tud.inf.example.table.ArrayAttribute;
 import de.tud.inf.example.table.ComplexCompositeAttribute;
+import de.tud.inf.example.table.DataMapAttribute;
 import de.tud.inf.example.table.GaussAttribute;
 import de.tud.inf.example.table.HistogramAttribute;
 import de.tud.inf.example.table.MapAttribute;
@@ -81,22 +83,24 @@ public class AttributeFactory {
 		} else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.RELATIONAL)) {
 			return new RelationalAttribute(attributeName, valueType);
 		}
+		//TODO: here creation of complexAttribute (i.e. AttributeFactory knows parameters etc. )
+		
 		else {
 			throw new RuntimeException("AttributeFactory: cannot create attribute with value type '" + Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(valueType) + "' (" + valueType + ")!");
 		}
 	}
 
 	
-	public static Attribute createCompositeAttribute(String name, int valueType, List<Attribute> innerAttributes, List<Attribute> parameters, String symbol, String hint){
+	public static Attribute createCompositeAttribute(String name, int valueType, List<Attribute> innerAttributes, List<Attribute> parameters, String hint){
 		String attributeName = (name != null) ? name : createName();
 		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.UNIFORM))
-			return new UniformAttribute(attributeName,valueType,innerAttributes,parameters,symbol,hint);
+			return new UniformAttribute(attributeName,valueType,innerAttributes,parameters,hint);
 		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.GAUSS))
-			return new GaussAttribute(attributeName,valueType,innerAttributes,parameters,symbol,hint);
+			return new GaussAttribute(attributeName,valueType,innerAttributes,parameters,hint);
 		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.HISTOGRAM))
-			return new HistogramAttribute(attributeName,valueType,innerAttributes,parameters,symbol,hint);
+			return new HistogramAttribute(attributeName,valueType,innerAttributes,parameters,hint);
 		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.COMPLEX_VALUE))
-			return new ComplexCompositeAttribute(attributeName,valueType,innerAttributes,parameters,symbol,hint);
+			return new ComplexCompositeAttribute(attributeName,valueType,innerAttributes,parameters,hint);
 		else {
 			throw new RuntimeException("AttributeFactory: cannot create attribute with value type '" + Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(valueType) + "' (" + valueType + ")!");
 		}
@@ -108,18 +112,22 @@ public class AttributeFactory {
 	 * @param name
 	 * @param valueType
 	 * @param innerAttribute
-	 * @param symbol
 	 * @param hint
 	 * @return
 	 */
-	public static Attribute createProxyAttribute(String name, int valueType, RelationalAttribute innerAttribute, String symbol,String hint){
+	public static Attribute createProxyAttribute(String name, int valueType, RelationalAttribute innerAttribute, String hint){
 		String attributeName = (name != null) ? name : createName();
 		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.MATRIX))
-			return new MatrixAttribute(attributeName,valueType,innerAttribute,symbol,hint);
+			return new MatrixAttribute(attributeName,valueType,innerAttribute,hint);
 		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.TENSOR))
-			return new TensorAttribute(attributeName,valueType,innerAttribute,symbol,hint);
+			return new TensorAttribute(attributeName,valueType,innerAttribute,hint);
 		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.POINT_LIST))
-			return new PointListAttribute(attributeName,valueType,innerAttribute,symbol,hint);
+			return new PointListAttribute(attributeName,valueType,innerAttribute,hint);
+		//TODO: Array Attribute should be parameterized
+		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.ARRAY))
+			return new ArrayAttribute(attributeName,valueType,innerAttribute,hint);
+		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.DATA_MAP))
+			return new DataMapAttribute(attributeName,valueType,innerAttribute,hint);
 		else {
 			throw new RuntimeException("AttributeFactory: cannot create attribute with value type '" + Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(valueType) + "' (" + valueType + ")!");
 		}
@@ -131,8 +139,8 @@ public class AttributeFactory {
 	public static Attribute createProxyAttribute(String name, int valueType, RelationalAttribute innerAttribute, List<Attribute> parameters, String symbol,String hint){
 		String attributeName = (name != null) ? name : createName();
 		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.MAP))
-			return new MapAttribute(attributeName,valueType,innerAttribute,parameters,symbol,hint);
-		else return createProxyAttribute(name,valueType,innerAttribute,symbol,hint);
+			return new MapAttribute(attributeName,valueType,innerAttribute,parameters,hint);
+		else return createProxyAttribute(name,valueType,innerAttribute,hint);
 	}
 	
 

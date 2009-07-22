@@ -12,8 +12,8 @@ public class HistogramAttribute extends UncertainAttribute{
 
 	public HistogramAttribute(String name, int valueType,
 			List<Attribute> innerAttributes, List<Attribute> parameters,
-			String symbol, String hint) {
-		super(name, valueType, innerAttributes, parameters, symbol, hint);
+			String hint) {
+		super(name, valueType, innerAttributes, parameters, hint);
 	}
 
 	/**
@@ -23,7 +23,7 @@ public class HistogramAttribute extends UncertainAttribute{
 
 	@Override
 	public Histogram getComplexValue(DataRow row) {
-		Histogram h = (Histogram)ComplexValueFactory.getComplexValueFunction(innerAttributes.size(), symbol,hint);
+		Histogram h = (Histogram)ComplexValueFactory.getComplexValueFunction(innerAttributes.size(), this.getValueType(),hint);
 		
 		h.setMinMax(row.getRelativeValuesFor(this.parameters.get(0).getTableIndex()));
 		h.setProbabilityValues(row.getRelativeValuesFor(this.parameters.get(0).getTableIndex()));

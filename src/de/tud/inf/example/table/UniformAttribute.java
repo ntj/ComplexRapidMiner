@@ -13,8 +13,8 @@ public class UniformAttribute extends UncertainAttribute {
 
 	public UniformAttribute(String name, int valueType,
 			List<Attribute> innerAttributes, List<Attribute> parameters,
-			String symbol, String hint) {
-		super(name, valueType, innerAttributes, parameters, symbol, hint);
+			String hint) {
+		super(name, valueType, innerAttributes, parameters, hint);
 	}
 
 	/**
@@ -24,7 +24,7 @@ public class UniformAttribute extends UncertainAttribute {
 
 	@Override
 	public SimpleProbabilityDensityFunction getComplexValue(DataRow row) {
-		SimpleProbabilityDensityFunction pdf = (SimpleProbabilityDensityFunction)ComplexValueFactory.getComplexValueFunction(symbol,hint);
+		SimpleProbabilityDensityFunction pdf = (SimpleProbabilityDensityFunction)ComplexValueFactory.getComplexValueFunction(getValueType(),hint);
 		pdf.setUncertainty(parameters.get(0).getValue(row));
 		setValues(pdf,row);
 		return pdf;

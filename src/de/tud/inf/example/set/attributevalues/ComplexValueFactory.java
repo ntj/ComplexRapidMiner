@@ -15,64 +15,42 @@ import com.rapidminer.tools.Ontology;
  */
 public class ComplexValueFactory {
 
-	//symbols which represents complex value functions
-	//TODO: remove those strings, they already appear when calling Ontology.VALUE_TYPE_NAMES[Ontology.UNIFORM] etc.
-	//uncertain symbols
-	private static final String symbol_uPdf = Ontology.VALUE_TYPE_NAMES[Ontology.UNIFORM];
-	private static final String symbol_gaussPdf = Ontology.VALUE_TYPE_NAMES[Ontology.GAUSS];
-	private static final String symbol_histogram = Ontology.VALUE_TYPE_NAMES[Ontology.HISTOGRAM];
-	//matrix symbols
-	private static final String symbol_matrix = Ontology.VALUE_TYPE_NAMES[Ontology.MATRIX];
-	private static final String symbol_sparseMatrix = Ontology.VALUE_TYPE_NAMES[Ontology.SPARSE_MATRIX];
-	private static final String symbol_sparseBinaryMatrix = Ontology.VALUE_TYPE_NAMES[Ontology.SPARSE_BINARY_MATRIX];
-	
-	//other symbols
-	private static final String symbol_tensor = "tensor";
-	
-	//other symbols
-	private static final String symbol_complex_value = Ontology.VALUE_TYPE_NAMES[Ontology.COMPLEX_VALUE];
-	
-	//other symbols (not implemented)
-	private static final String symbol_map = Ontology.VALUE_TYPE_NAMES[Ontology.MAP];
-	private static final String symbol_pointlist = Ontology.VALUE_TYPE_NAMES[Ontology.POINT_LIST];
-
-	
 	private static Map<String, ComplexValue> flyweightList = new HashMap<String, ComplexValue>();
 	
    
-    public static ComplexValue getComplexValueFunction(String symbol,String hint) throws RuntimeException{
-    	return getComplexValueFunction(0,symbol,hint);
+    public static ComplexValue getComplexValueFunction(int valueType,String hint) throws RuntimeException{
+    	return getComplexValueFunction(0,valueType,hint);
     }
     
-    public static ComplexValue getComplexValueFunction(int nrAttributes,String symbol,String hint) throws RuntimeException{
+    public static ComplexValue getComplexValueFunction(int nrAttributes,int valueType,String hint) throws RuntimeException{
     	//first of all, check if symbol is already instantiated (appears in flyweightList)
-    	String key = symbol+hint;
+    	String key = valueType+hint;
     	if(flyweightList.containsKey(key))
     		return flyweightList.get(key);
     	
     	ComplexValue cFunc = null;
-		if(symbol.equals(symbol_sparseMatrix) 
-								|| symbol.equals(symbol_matrix) 
-				 				|| symbol.equals(symbol_sparseBinaryMatrix )
-				 				|| symbol.equals(symbol_tensor)
-				 				|| symbol.equals(symbol_histogram)){
+		if((valueType == Ontology.ATTRIBUTE_VALUE_TYPE.SPARSE_MATRIX) 
+								|| (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.MATRIX) 
+				 				|| (valueType == Ontology.SPARSE_BINARY_MATRIX)
+				 				|| (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.TENSOR)
+				 				|| (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.HISTOGRAM)){
 			//hint stores integer values to instantiate geometries
 			try{
 				String[] pList = hint.split(getParameterSep());
 				int x = Integer.parseInt(pList[0]);
-				if (symbol.equalsIgnoreCase(symbol_histogram))
+				if ((valueType == Ontology.ATTRIBUTE_VALUE_TYPE.HISTOGRAM))
 					if(nrAttributes != 0)
 						cFunc = new Histogram(nrAttributes,x,false);
 					else throw new RuntimeException("Histogram instantiation not valid");
 				else{
 					int y = Integer.parseInt(pList[1]);
-					if(symbol.equals(symbol_sparseMatrix))
+					if(valueType == Ontology.ATTRIBUTE_VALUE_TYPE.SPARSE_MATRIX)
 						cFunc = new SparseMatrixValue(x,y);
-					else if(symbol.equals(symbol_sparseBinaryMatrix))
+					else if (valueType == Ontology.SPARSE_BINARY_MATRIX)
 						cFunc = new SparseBinaryMatrixValue(x,y);
-					else if (symbol.equals(symbol_matrix))
+					else if (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.MATRIX)
 						cFunc = new SimpleMatrixValue(x,y);
-					else if (symbol.equals(symbol_tensor))
+					else if (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.TENSOR)
 						cFunc = new TensorValue(x,y,false); //TODO: how to check whether simple or sparse tensor????
 					if(cFunc != null){
 						flyweightList.put(key, cFunc);
@@ -84,20 +62,27 @@ public class ComplexValueFactory {
 				throw new RuntimeException("Could not instantiated attribute "+ " with parameter string "+hint+". expected: 'x_y'");
 			}
 		}
-		else if(symbol.equalsIgnoreCase(symbol_uPdf))
+		else if(valueType == Ontology.ATTRIBUTE_VALUE_TYPE.UNIFORM)
 			cFunc = new SimpleProbabilityDensityFunction();
-		else if(symbol.equalsIgnoreCase(symbol_gaussPdf)){
+		else if(valueType == Ontology.ATTRIBUTE_VALUE_TYPE.GAUSS){
 			if(nrAttributes != 0)
 				cFunc = new GaussProbabilityDensityFunction(new SimpleMatrixValue(nrAttributes,nrAttributes));
 			//TOTEST: else cFunc = new GaussProbablitityDensityFunction(new SimpleMatrixValue(0,0));
 			//else cFunc = new GaussProbablitityDensityFunction(new SimpleMatrixValue(1,1));
 			else throw new RuntimeException("Gauss pdf instantiation not valid");
 		}
-		else if (symbol.equals(symbol_map))
+		
+		
+		else if (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.MAP)
 			cFunc = new MapValue();
-		else if (symbol.equals(symbol_pointlist))
+		else if (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.POINT_LIST)
 			cFunc = new PointListValue();
-		else if (symbol.equals(symbol_complex_value))
+		else if (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.ARRAY)
+			cFunc = new ArrayValue();
+		else if (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.DATA_MAP)
+			cFunc = new DataMapValue();
+		
+		else if (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.COMPLEX_VALUE)
 			cFunc = new LinearKorrelation();
 		if(cFunc != null){
 			flyweightList.put(key, cFunc);

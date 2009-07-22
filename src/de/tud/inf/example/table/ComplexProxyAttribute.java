@@ -7,8 +7,6 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.ExampleTable;
 
-import de.tud.inf.example.set.attributevalues.ComplexValue;
-
 
 
 
@@ -25,8 +23,8 @@ public abstract class ComplexProxyAttribute extends ComplexAttribute {
 
 	protected RelationalAttribute innerAttribute;
 	
-	ComplexProxyAttribute(String name, int valueType,RelationalAttribute innerAttribute, String symbol,String hint) {
-		super(name, valueType,symbol,hint);
+	ComplexProxyAttribute(String name, int valueType,RelationalAttribute innerAttribute, String hint) {
+		super(name, valueType,hint);
 		this.innerAttribute = innerAttribute;
 	}
 	
@@ -77,9 +75,14 @@ public abstract class ComplexProxyAttribute extends ComplexAttribute {
 		
 	}
 	
+	/**
+	 * returns a default value (e.g. average of matrix entries)
+	 */
 	public double getValue(DataRow row){
 		return innerAttribute.getValue(row);
 	}
 	
+
 	
+
 }

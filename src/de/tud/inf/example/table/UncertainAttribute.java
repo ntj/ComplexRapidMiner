@@ -17,8 +17,8 @@ public abstract class UncertainAttribute extends ComplexCompositeAttribute {
 	}
 
 	public UncertainAttribute(String name, int valueType, List<Attribute> innerAttributes, List<Attribute> parameters,
-			String symbol,String hint) {
-		super(name, valueType, innerAttributes, parameters, symbol,hint);
+			String hint) {
+		super(name, valueType, innerAttributes, parameters, hint);
 	}
 
 	@Override

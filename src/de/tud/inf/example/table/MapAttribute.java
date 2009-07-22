@@ -16,11 +16,13 @@ public class MapAttribute extends ComplexProxyAttribute{
 
 	List<Attribute> parameters;
 	public MapAttribute(String name, int valueType,
-			RelationalAttribute innerAttribute, List<Attribute> parameters, String symbol, String hint) {
-		super(name, valueType, innerAttribute, symbol, hint);
+			RelationalAttribute innerAttribute, List<Attribute> parameters, String hint) {
+		super(name, valueType, innerAttribute, hint);
 		this.parameters = parameters;
 	}
 
+	
+	
 	/**
 	 * 
 	 */
@@ -28,7 +30,7 @@ public class MapAttribute extends ComplexProxyAttribute{
 
 	@Override
 	public MapValue getComplexValue(DataRow row) {
-		MapValue mv = (MapValue)ComplexValueFactory.getComplexValueFunction(1, this.getSymbol(), this.getHint());
+		MapValue mv = (MapValue)ComplexValueFactory.getComplexValueFunction(1, getValueType(), this.getHint());
 		double[] origin  = {parameters.get(0).getValue(row), parameters.get(1).getValue(row)};
 		double[] spacing = {parameters.get(2).getValue(row), parameters.get(3).getValue(row)}; 
 		int[]    extent  = {(int)parameters.get(4).getValue(row), (int)parameters.get(5).getValue(row)}; 

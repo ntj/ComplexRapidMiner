@@ -72,7 +72,11 @@ public class ComplexAttributeConstraintChecker {
 						}
 						else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.POINT_LIST)){
 							if (relA.getInnerAttributeCount() != 3)
-								messg += "point list attribute " +cad.getName() + " must wrap relational attribute with exactly three inner attributes";
+								messg += "point list attribute " +cad.getName() + " must wrap relational attribute with exactly three inner attributes (x, y, z)";
+						}
+						else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.DATA_MAP)){
+							if (relA.getInnerAttributeCount() != 2)
+								messg += "data map attribute " +cad.getName() + " must wrap relational attribute with exactly two inner attributes (key, value)";
 						}
 						//constraints concerning matrix attributes
 						else if(Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.MATRIX)){

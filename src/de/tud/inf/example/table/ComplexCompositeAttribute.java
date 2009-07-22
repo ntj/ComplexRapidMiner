@@ -31,13 +31,12 @@ public class ComplexCompositeAttribute extends ComplexAttribute {
 			 attribute.getValueType(),
 			 attribute.innerAttributes,
 			 attribute.parameters,
-			 attribute.symbol,
 			 attribute.hint);
 	}
 	
 
-	public ComplexCompositeAttribute(String name, int valueType, List<Attribute> innerAtts, List<Attribute>params,String symbol,String hint) {
-		super(name, valueType,symbol,hint);
+	public ComplexCompositeAttribute(String name, int valueType, List<Attribute> innerAtts, List<Attribute>params, String hint) {
+		super(name, valueType,hint);
 		if(innerAtts !=null){
 			innerAttributes = new ArrayList<Attribute>();
 			for(int i =0;i<innerAtts.size();i++)
@@ -58,7 +57,7 @@ public class ComplexCompositeAttribute extends ComplexAttribute {
 	
 	
 	public  ComplexValue getComplexValue(DataRow row){
-		LinearKorrelation lk = (LinearKorrelation)ComplexValueFactory.getComplexValueFunction(symbol,hint);
+		LinearKorrelation lk = (LinearKorrelation)ComplexValueFactory.getComplexValueFunction(this.getValueType(),hint);
 		double[] values = new double[innerAttributes.size()];
 		for(int i = 0; i< innerAttributes.size();i++)
 			values[i] = innerAttributes.get(i).getValue(row);

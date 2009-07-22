@@ -17,19 +17,16 @@ import de.tud.inf.example.set.attributevalues.ComplexValue;
 public abstract class ComplexAttribute extends AbstractAttribute{
 
 	private static final long serialVersionUID = -8546639471664353338L;
-	protected final String symbol;
 	protected final String hint;
 	
 	
 	ComplexAttribute(ComplexAttribute attribute) {
 		super(attribute);
-		this.symbol = attribute.symbol;
 		this.hint = attribute.hint;
 	}
 	
-	ComplexAttribute(String name, int valueType,String symbol,String hint) {
+	ComplexAttribute(String name, int valueType,String hint) {
 		super(name,valueType);
-		this.symbol = symbol;
 		this.hint = hint;
 	}
 
@@ -86,10 +83,6 @@ public abstract class ComplexAttribute extends AbstractAttribute{
 	public abstract double[] getComplexValueAsArray(DataRow row);
 	
 	public abstract double getValue(DataRow row);
-
-	public String getSymbol() {
-		return symbol;
-	}
 
 	public String getHint() {
 		return hint;

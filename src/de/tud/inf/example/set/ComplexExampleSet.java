@@ -17,7 +17,6 @@ import com.rapidminer.example.table.DataRow;
 import com.rapidminer.tools.Ontology;
 
 import de.tud.inf.example.ComplexAttributeInstantiationException;
-import de.tud.inf.example.set.attributevalues.ComplexValueFactory;
 import de.tud.inf.example.table.ComplexAttributeDescription;
 import de.tud.inf.example.table.ComplexExampleTable;
 import de.tud.inf.example.table.RelationalAttribute;
@@ -92,7 +91,7 @@ public class ComplexExampleSet extends AbstractExampleSet{
 					}
 					else throw new ComplexAttributeInstantiationException("geometry attribute '" + dep.getName() +"' can only be instantiated with one relational inner attribute");
 				else if(Ontology.ATTRIBUTE_VALUE_TYPE.isA(type, Ontology.COMPLEX_VALUE)){
-					a =  AttributeFactory.createCompositeAttribute(dep.getName(),type,innerAttributes,parameters,dep.getSymbol(),dep.getHint());
+					a =  AttributeFactory.createCompositeAttribute(dep.getName(),type,innerAttributes,parameters,dep.getHint());
 				}
 				if(a != null)
 					regularList.add(a);
