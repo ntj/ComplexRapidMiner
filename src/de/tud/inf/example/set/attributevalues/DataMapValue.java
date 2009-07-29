@@ -34,7 +34,7 @@ public class DataMapValue implements ComplexValue{
 		return Ontology.ATTRIBUTE_VALUE_TYPE.DATA_MAP;
 	}
 	
-	public double get(double key){
+	public double get(String key){
 		return map.get(key).doubleValue();
 	}
 	
@@ -42,7 +42,7 @@ public class DataMapValue implements ComplexValue{
 	
 	
 	public void setValues(double[][] values){
-		map = new HashMap<Double, Double>();
+		map = new HashMap<Double,Double>();
 		for (int i =0;i<values.length;i++)
 			map.put(values[i][0], values[i][1]);
 	}

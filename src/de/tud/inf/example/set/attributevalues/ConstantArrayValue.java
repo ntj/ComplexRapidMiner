@@ -1,22 +1,27 @@
 package de.tud.inf.example.set.attributevalues;
 
 import com.rapidminer.tools.Ontology;
+
 /**
- * 
+ * arrayValue, where dimensions are defined once
  * @author Antje Gruner
  *
  */
-public class ArrayValue implements ComplexValue{
+public class ConstantArrayValue implements ComplexValue{
 
 	//dimension of array
-	private int[] dim;
+	private int[] dim = new int[2];
 	private double[][] values;
 	
-	public ArrayValue(){}
 	
 	
+	public ConstantArrayValue(int d1, int d2) {
+		dim[0] = d1;
+		dim[1] = d2;
+		values = new double[dim[0]][dim[1]];
+	}
+
 	public double getDoubleValue() {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
@@ -44,17 +49,13 @@ public class ArrayValue implements ComplexValue{
 		return Ontology.ATTRIBUTE_VALUE_TYPE.ARRAY;
 	}
 	
-	public void setValues(int d1, int d2, double[][] val){
-		this.dim[0] = d1;
-		this.dim[1] = d2;
-		values = new double[dim[0]][dim[1]];
-		for(int i=0;i<values.length;i++)
-			for(int j=0;j<values[i].length;j++)
-				values[i][j] = val[i*dim[1]+j][0];
+	public void setValues(double[][] val) {
+		for(int i=0;i<values.length;i++){
+			
+		}
+		this.values = val;
 	}
 	
-
-}
 	
-
-
+	
+}

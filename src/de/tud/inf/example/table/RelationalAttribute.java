@@ -54,10 +54,6 @@ public class RelationalAttribute extends AbstractAttribute{
 		return true;
 	}
 
-	public void setMapping(NominalMapping nominalMapping) {
-			
-	}
-
 	public void setInnerAttributes(List<Attribute> innerAttributes){
 		this.innerAttributes = innerAttributes;
 	}
@@ -81,6 +77,31 @@ public class RelationalAttribute extends AbstractAttribute{
 		double[][] values = new double[1][this.innerAttributes.size()];
 		for(int i =0;i<values.length;i++)
 			values[0][i] = value;
-		row.setRelationalValuesFor(this.getTableIndex(), values);
+		row.setRelationalValues(getTableIndex(), values);
 	}
+	
+	/**
+	 * this method is never used at the moment
+	 * @param row
+	 * @return
+	 */
+	public double[][] getRelationalValue(DataRow row){
+		return row.getRelativeValuesFor(this.getTableIndex());
+	}
+	
+	/**
+	 * 
+	 * @param row
+	 * @return
+	 */
+	public void setRelationalValue(DataRow row, double[][] values){
+		row.setRelationalValues(getTableIndex(),values);
+	}
+
+	
+	public void setMapping(NominalMapping nominalMapping) {
+		throw new UnsupportedOperationException();	
+	}
+	
+	
 }

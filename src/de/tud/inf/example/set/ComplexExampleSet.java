@@ -17,6 +17,7 @@ import com.rapidminer.example.table.DataRow;
 import com.rapidminer.tools.Ontology;
 
 import de.tud.inf.example.ComplexAttributeInstantiationException;
+import de.tud.inf.example.table.ComplexAttribute;
 import de.tud.inf.example.table.ComplexAttributeDescription;
 import de.tud.inf.example.table.ComplexExampleTable;
 import de.tud.inf.example.table.RelationalAttribute;
@@ -168,4 +169,24 @@ public class ComplexExampleSet extends AbstractExampleSet{
 	public int getNrAtomarAttributes(){
 		return nrAtomarAttributes;
 	}
+	
+	
+	public void addComplexAttribute(ComplexAttribute ca){
+		//add it to regular attributes
+		this.getAttributes().addRegular(ca);
+		
+		//add atomar attributes and parameter attributes to underlying example table and save their tableIds
+		List<Attribute> innerAtts = ca.getInnerAttributes();
+		int[] innerIds = new int[ca.getInnerAttributeCount()];
+		for(int i=0; i<innerAtts.size(); i++)
+			innerIds[i] = exampleTable.addAttribute(innerAtts.get(i));	
+		List<Attribute> paramAtts = ca.getParameterAttributes();
+		int[] paramIds = new int[ca.getParameterCount()];
+		for(int i=0; i<paramAtts.size(); i++)
+			paramIds[i] = exampleTable.addAttribute(paramAtts.get(i));
+		
+		//create new complex attribute description and add it to table
+		exampleTable.addComplexAttributeDescription(new ComplexAttributeDescription(innerIds,paramIds,ca.getSymbol(),ca.getName(),ca.getHint()));	
+	}
 }
+

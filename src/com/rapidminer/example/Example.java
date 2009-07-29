@@ -196,6 +196,16 @@ public class Example implements Serializable {
 	public void setValue(Attribute a, double value) {
 		data.set(a, value);
 	}
+	
+	/**
+	 * adds a complex value to an exampleSet
+	 * @param a
+	 * @param cv
+	 */
+	public void setComplexValue(ComplexAttribute a, ComplexValue cv){
+		data.set(a, cv);
+	}
+	
 
 	/**
 	 * Sets the value of attribute a which must be a nominal attribute. The

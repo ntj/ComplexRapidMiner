@@ -47,6 +47,9 @@ public abstract class DataRow implements Serializable {
 	 */
 	private static final long serialVersionUID = -3482048832637144523L;
 	
+	/**
+	 * this map stores value lists for each relational attribute (identified with table index)
+	 */
 	private Map<Integer,double[][]> relValueMap = new HashMap<Integer,double[][]>();
 	
 
@@ -88,6 +91,11 @@ public abstract class DataRow implements Serializable {
 	/** Sets the value of the {@link Attribute} to <code>value</code>. */
 	public void set(Attribute attribute, double value) {
 		attribute.setValue(this, value);
+	}
+	
+	/** Sets the value of the {@link Attribute} to <code>value</code>. */
+	public void set(ComplexAttribute attribute, ComplexValue value) {
+		attribute.setComplexValue(this, value);
 	}
 	
 	/**
@@ -140,7 +148,7 @@ public abstract class DataRow implements Serializable {
 	 * 
 	 * @param valueMap key: tableIndex of relational attribute, values: tuple instances of relational attribute
 	 */
-	public void setRelationalValuesFor(int tableIndex, double[][] values){
+	public void setRelationalValues(int tableIndex, double[][] values){
 		this.relValueMap.put(tableIndex, values);
 	}
 }

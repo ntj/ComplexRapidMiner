@@ -26,8 +26,12 @@ public class DataMapAttribute extends ComplexProxyAttribute{
 
 	@Override
 	public ComplexValue getComplexValue(DataRow row) {
-		DataMapValue dMapVal = (DataMapValue)ComplexValueFactory.getComplexValueFunction(getValueType(),this.hint);
+		DataMapValue dMapVal = null;
+		if(innerAttribute.getInnerAttributeAt(0).isNominal())
+			 dMapVal = (DataMapValue)ComplexValueFactory.getComplexValueFunction(getValueType(),this.hint);
 		double[][]  values = row.getRelativeValuesFor(this.innerAttribute.getTableIndex());
+		//build map
+		
 		dMapVal.setValues(values);
 		return dMapVal;
 	}

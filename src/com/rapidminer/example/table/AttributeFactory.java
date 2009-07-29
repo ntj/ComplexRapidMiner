@@ -33,6 +33,7 @@ import com.rapidminer.tools.Ontology;
 
 import de.tud.inf.example.table.ArrayAttribute;
 import de.tud.inf.example.table.ComplexCompositeAttribute;
+import de.tud.inf.example.table.ConstantArrayAttribute;
 import de.tud.inf.example.table.DataMapAttribute;
 import de.tud.inf.example.table.GaussAttribute;
 import de.tud.inf.example.table.HistogramAttribute;
@@ -84,7 +85,8 @@ public class AttributeFactory {
 			return new RelationalAttribute(attributeName, valueType);
 		}
 		//TODO: here creation of complexAttribute (i.e. AttributeFactory knows parameters etc. )
-		
+		else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.MAP))
+			return new MapAttribute(attributeName, valueType,"");
 		else {
 			throw new RuntimeException("AttributeFactory: cannot create attribute with value type '" + Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(valueType) + "' (" + valueType + ")!");
 		}
@@ -123,9 +125,9 @@ public class AttributeFactory {
 			return new TensorAttribute(attributeName,valueType,innerAttribute,hint);
 		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.POINT_LIST))
 			return new PointListAttribute(attributeName,valueType,innerAttribute,hint);
-		//TODO: Array Attribute should be parameterized
+		//since there are no parameter attributes, ArrayAttribute must be a constant one
 		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.ARRAY))
-			return new ArrayAttribute(attributeName,valueType,innerAttribute,hint);
+			return new ConstantArrayAttribute(attributeName,valueType,innerAttribute,hint);
 		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.DATA_MAP))
 			return new DataMapAttribute(attributeName,valueType,innerAttribute,hint);
 		else {
@@ -140,6 +142,8 @@ public class AttributeFactory {
 		String attributeName = (name != null) ? name : createName();
 		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.MAP))
 			return new MapAttribute(attributeName,valueType,innerAttribute,parameters,hint);
+		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.ARRAY) && parameters.size() > 0)
+			return new ArrayAttribute(attributeName,valueType,innerAttribute,hint,parameters.get(0),parameters.get(1));
 		else return createProxyAttribute(name,valueType,innerAttribute,hint);
 	}
 	

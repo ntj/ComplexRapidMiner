@@ -24,7 +24,7 @@ public class ComplexValueFactory {
     
     public static ComplexValue getComplexValueFunction(int nrAttributes,int valueType,String hint) throws RuntimeException{
     	//first of all, check if symbol is already instantiated (appears in flyweightList)
-    	String key = valueType+hint;
+    	String key = valueType+ getParameterSep()+hint;
     	if(flyweightList.containsKey(key))
     		return flyweightList.get(key);
     	
@@ -77,8 +77,18 @@ public class ComplexValueFactory {
 			cFunc = new MapValue();
 		else if (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.POINT_LIST)
 			cFunc = new PointListValue();
-		else if (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.ARRAY)
-			cFunc = new ArrayValue();
+		else if (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.ARRAY){
+			//check if ConstantArrayValue (hint contains information about dimensions of array) or if parameterized array value)
+			try{
+				String[] pList = hint.split(getParameterSep());
+				int x = Integer.parseInt(pList[0]);
+				int y = Integer.parseInt(pList[1]);
+				cFunc = new ConstantArrayValue(x,y);
+			}
+			catch(Exception e){
+				cFunc = new ArrayValue();
+			}
+		}
 		else if (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.DATA_MAP)
 			cFunc = new DataMapValue();
 		
@@ -91,8 +101,9 @@ public class ComplexValueFactory {
 		return null;  
     }
     
-   
+ 
   
+    
     
     /**
      * separates parameter from each other

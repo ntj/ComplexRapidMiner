@@ -119,4 +119,11 @@ public class ComplexCompositeAttribute extends ComplexAttribute {
 		}
 		return values;
 	}
+
+
+	@Override
+	public void setComplexValue(DataRow row, ComplexValue value) {
+		throw new UnsupportedOperationException();
+	}
+	
 }

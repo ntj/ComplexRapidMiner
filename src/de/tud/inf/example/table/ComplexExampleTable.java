@@ -111,7 +111,7 @@ public class ComplexExampleTable implements ExampleTable{
 	}
 
 	public int addAttribute(Attribute a) {
-		return parent.addAttribute(a);
+			return parent.addAttribute(a);
 	}
 
 	public void addAttributes(Collection<Attribute> newAttributes) {
@@ -158,6 +158,10 @@ public class ComplexExampleTable implements ExampleTable{
 
 	public ExampleTable getParentTable(){
 		return parent;
+	}
+	
+	public void addComplexAttributeDescription(ComplexAttributeDescription cad){
+		dependencies.add(cad);
 	}
 	
 	

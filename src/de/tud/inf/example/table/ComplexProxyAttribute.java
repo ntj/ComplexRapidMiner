@@ -7,6 +7,8 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.ExampleTable;
 
+import de.tud.inf.example.set.attributevalues.ComplexValue;
+
 
 
 
@@ -27,6 +29,13 @@ public abstract class ComplexProxyAttribute extends ComplexAttribute {
 		super(name, valueType,hint);
 		this.innerAttribute = innerAttribute;
 	}
+	
+	ComplexProxyAttribute(String name, int valueType, String hint) {
+		super(name, valueType,hint);
+		this.innerAttribute = null;
+	}
+	
+	
 	
 
 	@Override
@@ -82,7 +91,10 @@ public abstract class ComplexProxyAttribute extends ComplexAttribute {
 		return innerAttribute.getValue(row);
 	}
 	
-
+	@Override
+	public void setComplexValue(DataRow row, ComplexValue value) {
+		throw new UnsupportedOperationException();
+	}
 	
 
 }

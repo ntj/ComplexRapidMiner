@@ -20,6 +20,11 @@ public class LinearKorrelation implements ComplexValue{
 		this.values = values;
 	}
 
+	public double[] getValues(){
+		return values;	
+	}
+	
+	
 	public String getStringRepresentation() {
 		String s =  Double.toString(values[0]);
 		for (int i =0;i<values.length;i++)

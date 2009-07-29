@@ -271,4 +271,5 @@ public abstract class AbstractAttribute implements Attribute {
 		result.append(")");
 		return result.toString();
 	}
+
 }
