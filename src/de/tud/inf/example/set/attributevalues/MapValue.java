@@ -50,17 +50,17 @@ public class MapValue implements ComplexValue {
 			// first row and first entry of row
 			str += "{" + zValues[0];
 			// iterate through columns
-			for (int i = 1; i < dimension[0]; i++) {
+			for (int i = 1; i < dimension[1]; i++) {
 				str += ", " + zValues[i];
 			}
 			str += "}";
 			// iterate through rows of map
-			for (int j = 1; j < dimension[1]; j++) {
+			for (int j = 1; j < dimension[0]; j++) {
 				// first entry of each row
-				str += ", {" + zValues[j * dimension[0]];
+				str += ", {" + zValues[j * dimension[1]];
 				// iterate through columns
-				for (int i = 1; i < dimension[0]; i++) {
-					str += ", " + zValues[j * dimension[0] + i];
+				for (int i = 1; i < dimension[1]; i++) {
+					str += ", " + zValues[j * dimension[1] + i];
 				}
 				str += "}";
 			}
@@ -70,18 +70,18 @@ public class MapValue implements ComplexValue {
 			// first row and first entry of row
 			str += "{" + nm.mapIndex((int) zValues[0]);
 			// iterate through columns
-			for (int i = 1; i < dimension[0]; i++) {
+			for (int i = 1; i < dimension[1]; i++) {
 				str += ", " + nm.mapIndex((int) zValues[i]);
 			}
 			str += "}";
 			// iterate through rows of map
-			for (int j = 1; j < dimension[1]; j++) {
+			for (int j = 1; j < dimension[0]; j++) {
 				// first entry of each row
-				str += ", {" + nm.mapIndex((int) zValues[j * dimension[0]]);
+				str += ", {" + nm.mapIndex((int) zValues[j * dimension[1]]);
 				// iterate through columns
 				for (int i = 1; i < dimension[0]; i++) {
 					str += ", "
-							+ nm.mapIndex((int) zValues[j * dimension[0] + i]);
+							+ nm.mapIndex((int) zValues[j * dimension[1] + i]);
 				}
 				str += "}";
 			}
@@ -98,14 +98,15 @@ public class MapValue implements ComplexValue {
 		// TODO test
 		int ix = (int) ((x - origin[0]) / spacing[0]);
 		int iy = (int) ((y - origin[1]) / spacing[1]);
-		return zValues[iy * dimension[0] + ix];
+		return zValues[ix * dimension[1] + iy];
 	}
+	
 
 	public String getStringValueAt(double x, double y) {
 		// TODO test
 		int ix = (int) ((x - origin[0]) / spacing[0]);
 		int iy = (int) ((y - origin[1]) / spacing[1]);
-		return nm.mapIndex((int) zValues[iy * dimension[0] + ix]);
+		return nm.mapIndex((int) zValues[ix * dimension[1] + iy]);
 	}
 
 	/**
