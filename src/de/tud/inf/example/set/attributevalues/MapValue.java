@@ -1,5 +1,7 @@
 package de.tud.inf.example.set.attributevalues;
 
+import java.io.BufferedReader;
+
 import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.tools.Ontology;
 
@@ -12,25 +14,38 @@ import com.rapidminer.tools.Ontology;
  */
 public class MapValue implements ComplexValue {
 
-	private double[] spacing = new double[2];
-	private double[] origin = new double[2];
-	private NominalMapping nm;
 	/**
-	 * nr of entries within dimension
+	 * step size in x and y direction
+	 */
+	private double[] spacing = new double[2];
+	
+	private String str = "";
+	
+	
+	/**
+	 * minimal value of x and y
+	 */
+	private double[] origin = new double[2];
+	
+	/**
+	 * number of entries within dimension
 	 */
 	private int[] dimension = new int[2];
+	
+	/**
+	 * features z = f(x,y) of this map
+	 */
 	private double[] zValues;
 
 	
 	public MapValue() {
 	}
 	
-	public MapValue(double[] spacing, double[] origin, int[] dimension,
-			double[] values) {
+	public MapValue(double[] spacing, double[] origin, int[] dimension, double[] values) {
 		this.spacing = spacing;
 		this.origin = origin;
 		this.dimension = dimension;
-		zValues = new double[dimension[0] * dimension[1]];
+		zValues =  new double[dimension[0] * dimension[1]];
 		int min = Math.min(values.length, zValues.length);
 		// set values
 		for (int i = 0; i < min; i++)
@@ -44,49 +59,45 @@ public class MapValue implements ComplexValue {
 	}
 
 	public String getStringRepresentation(int digits, boolean quoteWhitespace) {
-		String str = "";
-		if (nm == null) {
-			str += "[";
+		/*if (str.equals("")){
+			StringBuffer buf = new StringBuffer();
+			buf.append("[");
 			// first row and first entry of row
-			str += "{" + zValues[0];
+			buf.append("{");
+			buf.append(zValues[0]);
 			// iterate through columns
 			for (int i = 1; i < dimension[1]; i++) {
-				str += ", " + zValues[i];
+				buf.append(", ");
+				buf.append(zValues[i]);
 			}
-			str += "}";
+			buf.append("}");
 			// iterate through rows of map
-			for (int j = 1; j < dimension[0]; j++) {
+			for (int x = 1; x < dimension[0]; x++) {
 				// first entry of each row
-				str += ", {" + zValues[j * dimension[1]];
+				buf.append(", {");
+				buf.append(zValues[x * dimension[1]]);
+
 				// iterate through columns
-				for (int i = 1; i < dimension[1]; i++) {
-					str += ", " + zValues[j * dimension[1] + i];
+				for (int y = 1; y < dimension[1]; y++) {
+					buf.append(", ");
+					buf.append(zValues[x * dimension[1] + y]);
 				}
-				str += "}";
+				buf.append("}");
 			}
-			str += "]";
-		} else {
-			str += "[";
-			// first row and first entry of row
-			str += "{" + nm.mapIndex((int) zValues[0]);
-			// iterate through columns
-			for (int i = 1; i < dimension[1]; i++) {
-				str += ", " + nm.mapIndex((int) zValues[i]);
-			}
-			str += "}";
-			// iterate through rows of map
-			for (int j = 1; j < dimension[0]; j++) {
-				// first entry of each row
-				str += ", {" + nm.mapIndex((int) zValues[j * dimension[1]]);
-				// iterate through columns
-				for (int i = 1; i < dimension[0]; i++) {
-					str += ", "
-							+ nm.mapIndex((int) zValues[j * dimension[1] + i]);
-				}
-				str += "}";
-			}
-			str += "]";
+			buf.append("]");
+			str = buf.toString();
 		}
+		return str;
+		*/
+		//if (str.equals("")){
+		StringBuffer buf = new StringBuffer();
+		for (int i=0; i< zValues.length;i++){
+			buf.append(zValues[i]);
+			buf.append(" ");
+			if(i % this.dimension[1] == (dimension[1])-1)
+				buf.append("| ");
+		}
+		str = buf.toString();		
 		return str;
 	}
 
@@ -104,9 +115,10 @@ public class MapValue implements ComplexValue {
 
 	public String getStringValueAt(double x, double y) {
 		// TODO test
-		int ix = (int) ((x - origin[0]) / spacing[0]);
-		int iy = (int) ((y - origin[1]) / spacing[1]);
-		return nm.mapIndex((int) zValues[ix * dimension[1] + iy]);
+		//int ix = (int) ((x - origin[0]) / spacing[0]);
+		//int iy = (int) ((y - origin[1]) / spacing[1]);
+		//return nm.mapIndex((int) zValues[ix * dimension[1] + iy]);
+		return "";
 	}
 
 	/**
@@ -117,11 +129,9 @@ public class MapValue implements ComplexValue {
 	 *            origin
 	 * @param s
 	 *            spacing
-	 * @param e
-	 *            extent
+	 * @param e   dimension vector (nr entries)
 	 */
-	public void setValues(double[] z, double[] o, double[] s, int[] e,
-			NominalMapping nm) {
+	public void setValues(double[] z, double[] o, double[] s, int[] e) {
 		spacing[0] = s[0];
 		spacing[1] = s[1];
 		origin[0] = o[0];
@@ -130,14 +140,11 @@ public class MapValue implements ComplexValue {
 		dimension[1] = e[1];
 		// create new map array
 		zValues = new double[dimension[0] * dimension[1]];
-		for (int i = 0; i < zValues.length; i++) {
-			zValues[i] = 0;
-		}
+		
 		int min = Math.min(z.length, zValues.length);
 		// set values
 		for (int i = 0; i < min; i++)
 			zValues[i] = z[i];
-		this.nm = nm;
 	}
 
 	public double[] getSpacing() {
@@ -154,6 +161,10 @@ public class MapValue implements ComplexValue {
 
 	public double[] getZValues() {
 		return zValues;
+	}
+	
+	public int getMapSize(){
+		return zValues.length;
 	}
 
 }
