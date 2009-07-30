@@ -1,7 +1,5 @@
 package de.tud.inf.example.set.attributevalues;
 
-import java.io.BufferedReader;
-
 import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.tools.Ontology;
 
@@ -19,7 +17,6 @@ public class MapValue implements ComplexValue {
 	 */
 	private double[] spacing = new double[2];
 	
-	private String str = "";
 	
 	
 	/**
@@ -37,11 +34,12 @@ public class MapValue implements ComplexValue {
 	 */
 	private double[] zValues;
 
+	private NominalMapping nm; 
 	
 	public MapValue() {
 	}
 	
-	public MapValue(double[] spacing, double[] origin, int[] dimension, double[] values) {
+	public MapValue(double[] spacing, double[] origin, int[] dimension, double[] values, NominalMapping nm) {
 		this.spacing = spacing;
 		this.origin = origin;
 		this.dimension = dimension;
@@ -50,55 +48,34 @@ public class MapValue implements ComplexValue {
 		// set values
 		for (int i = 0; i < min; i++)
 			zValues[i] = values[i];
+		this.nm = nm;
 	}
+	
 
 
 	public double getDoubleValue() {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	public String getStringRepresentation(int digits, boolean quoteWhitespace) {
-		/*if (str.equals("")){
-			StringBuffer buf = new StringBuffer();
-			buf.append("[");
-			// first row and first entry of row
-			buf.append("{");
-			buf.append(zValues[0]);
-			// iterate through columns
-			for (int i = 1; i < dimension[1]; i++) {
-				buf.append(", ");
-				buf.append(zValues[i]);
-			}
-			buf.append("}");
-			// iterate through rows of map
-			for (int x = 1; x < dimension[0]; x++) {
-				// first entry of each row
-				buf.append(", {");
-				buf.append(zValues[x * dimension[1]]);
-
-				// iterate through columns
-				for (int y = 1; y < dimension[1]; y++) {
-					buf.append(", ");
-					buf.append(zValues[x * dimension[1] + y]);
-				}
-				buf.append("}");
-			}
-			buf.append("]");
-			str = buf.toString();
-		}
-		return str;
-		*/
-		//if (str.equals("")){
 		StringBuffer buf = new StringBuffer();
-		for (int i=0; i< zValues.length;i++){
-			buf.append(zValues[i]);
-			buf.append(" ");
-			if(i % this.dimension[1] == (dimension[1])-1)
-				buf.append("| ");
+		if(nm == null){
+			for (int i=0; i< zValues.length;i++){
+				buf.append(zValues[i]);
+				buf.append(" ");
+				if(i % dimension[1] == (dimension[1])-1)
+					buf.append("| ");
+			}
 		}
-		str = buf.toString();		
-		return str;
+		else{
+			for (int i=0; i< zValues.length;i++){
+				buf.append(nm.mapIndex((int)zValues[i]));
+				buf.append(" ");
+				if(i % dimension[1] == (dimension[1])-1)
+					buf.append("| ");
+			}
+		}
+		return buf.toString();		
 	}
 
 	public int getValueType() {
@@ -106,19 +83,22 @@ public class MapValue implements ComplexValue {
 	}
 
 	public double getValueAt(double x, double y) {
-		// TODO test
 		int ix = (int) ((x - origin[0]) / spacing[0]);
 		int iy = (int) ((y - origin[1]) / spacing[1]);
 		return zValues[ix * dimension[1] + iy];
 	}
 	
 
+	/**
+	 * maps internal double values to String, call this method iff there is definitely an nominal mapping in map value
+	 * @param x
+	 * @param y
+	 * @return
+	 */
 	public String getStringValueAt(double x, double y) {
-		// TODO test
-		//int ix = (int) ((x - origin[0]) / spacing[0]);
-		//int iy = (int) ((y - origin[1]) / spacing[1]);
-		//return nm.mapIndex((int) zValues[ix * dimension[1] + iy]);
-		return "";
+		int ix = (int) ((x - origin[0]) / spacing[0]);
+		int iy = (int) ((y - origin[1]) / spacing[1]);
+		return nm.mapIndex((int) zValues[ix * dimension[1] + iy]);
 	}
 
 	/**
@@ -131,7 +111,7 @@ public class MapValue implements ComplexValue {
 	 *            spacing
 	 * @param e   dimension vector (nr entries)
 	 */
-	public void setValues(double[] z, double[] o, double[] s, int[] e) {
+	public void setValues(double[] z, double[] o, double[] s, int[] e, NominalMapping nm) {
 		spacing[0] = s[0];
 		spacing[1] = s[1];
 		origin[0] = o[0];
@@ -145,6 +125,7 @@ public class MapValue implements ComplexValue {
 		// set values
 		for (int i = 0; i < min; i++)
 			zValues[i] = z[i];
+		this.nm = nm;
 	}
 
 	public double[] getSpacing() {

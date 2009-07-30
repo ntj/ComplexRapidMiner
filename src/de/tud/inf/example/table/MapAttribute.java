@@ -63,9 +63,12 @@ public class MapAttribute extends ComplexProxyAttribute{
 		int[]    extent  = {(int)parameters.get(4).getValue(row), (int)parameters.get(5).getValue(row)}; 
 		double[][] values = row.getRelativeValuesFor(getInnerAttribute().getTableIndex());
 		double[] zValues = new double[values.length];
+		NominalMapping nm = null;
+		if( innerAttribute.getInnerAttributeAt(0).isNominal())
+			nm = innerAttribute.getInnerAttributeAt(0).getMapping();
 		for(int i =0;i<values.length;i++)
-			zValues[i] = values[i][0];
-		mv.setValues(zValues,origin,spacing,extent);
+				zValues[i] = values[i][0];
+		mv.setValues(zValues,origin,spacing,extent,nm);
 		return mv;
 	}
 
