@@ -77,7 +77,7 @@ public class PrincipalComponentsTransformation extends Operator {
 
 		ExampleSet result = null;
 		try {
-			Instances transformed = transformation.transformedData();
+			Instances transformed = transformation.transformedData(instances);
 			result = WekaTools.toRapidMinerExampleSet(transformed, "pc");
 		} catch (Exception e) {
 			throw new UserError(this, 905, "Principal Components Transformation", "Cannot convert to principal components (" + e.getMessage() + ")");

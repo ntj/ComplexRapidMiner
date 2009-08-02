@@ -164,8 +164,19 @@ public class ComplexExampleTable implements ExampleTable{
 		dependencies.add(cad);
 	}
 	
-	
-	
-	
+	public void addComplexAttribute(ComplexAttribute ca) {
+		//add atomar attributes and parameter attributes 
+		List<Attribute> innerAtts = ca.getInnerAttributes();
+		int[] innerIds = new int[ca.getInnerAttributeCount()];
+		for(int i=0; i<innerAtts.size(); i++)
+			innerIds[i] = this.addAttribute(innerAtts.get(i));	
+		List<Attribute> paramAtts = ca.getParameterAttributes();
+		int[] paramIds = new int[ca.getParameterCount()];
+		for(int i=0; i<paramAtts.size(); i++)
+			paramIds[i] = this.addAttribute(paramAtts.get(i));
+		
+		//create new complex attribute description and add it to table
+		this.addComplexAttributeDescription(new ComplexAttributeDescription(innerIds,paramIds,ca.getSymbol(),ca.getName(),ca.getHint()));	
+	}
 	
 }	

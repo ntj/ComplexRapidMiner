@@ -40,5 +40,4 @@ public interface ConfigurationListener {
     public void setParameters(Parameters parameters);
     
     public Process getProcess();
-    
 }

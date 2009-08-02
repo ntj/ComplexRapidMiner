@@ -1,4 +1,5 @@
 /*
+
  *  RapidMiner
  *
  *  Copyright (C) 2001-2008 by Rapid-I and the contributors
@@ -59,6 +60,9 @@ import com.rapidminer.parameter.ParameterTypeText;
 import com.rapidminer.parameter.ParameterTypeValue;
 import com.rapidminer.tools.LogService;
 
+import de.tud.inf.gui.properties.SimpleFilesCellEditor;
+import de.tud.inf.parameters.ParameterTypeFiles;
+
 
 /**
  * A property table is a table for editing parameters of operators or other
@@ -104,6 +108,7 @@ public abstract class PropertyTable extends ExtendedJTable {
         registerPropertyValueCellEditor(ParameterTypeList.class, ListValueCellEditor.class);
         registerPropertyValueCellEditor(ParameterTypeMatrix.class, MatrixValueCellEditor.class);
         registerPropertyValueCellEditor(ParameterTypeText.class, TextValueCellEditor.class);
+        registerPropertyValueCellEditor(ParameterTypeFiles.class, SimpleFilesCellEditor.class);
         
         // register known key editors
         registerPropertyKeyCellEditor(ParameterTypeParameterValue.class, ParameterValueKeyCellEditor.class);

@@ -28,6 +28,7 @@ import com.rapidminer.tools.Ontology;
 
 import de.tud.inf.example.set.ComplexExampleSet;
 import de.tud.inf.example.table.ComplexAttributeDescription;
+import de.tud.inf.example.table.ComplexAttributeFactory;
 import de.tud.inf.example.table.ComplexExampleTable;
 
 /**
@@ -171,10 +172,16 @@ public class ComplexExampleSetGenerator extends ExampleSetGenerator{
 			for(int k=0;k<paramCount;k++)
 				paramIds[k]  	= table.getAttribute(i*paramCount + k).getTableIndex(); //offset + factor
 			
-			ComplexAttributeDescription cad = new ComplexAttributeDescription(	attIds,
-																			 	paramIds,
-																			 	complexTypes[getParameterAsInt(PARAMETER_COMPLEX_ATTRIBUTE_TYPE)],
-																			 	"complAtt_"+i,"");
+//			ComplexAttributeDescription cad = new ComplexAttributeDescription(	attIds,
+//																			 	paramIds,
+//																			 	complexTypes[getParameterAsInt(PARAMETER_COMPLEX_ATTRIBUTE_TYPE)],
+//																			 	"complAtt_"+i,"");
+			ComplexAttributeDescription cad = ComplexAttributeFactory
+					.createAttributeDescription(
+							attIds,
+							paramIds,
+							complexTypes[getParameterAsInt(PARAMETER_COMPLEX_ATTRIBUTE_TYPE)],
+							"complAtt_" + i, "");
 			cadList.add(cad);
 		}
 		ComplexExampleTable cet = new ComplexExampleTable(table,cadList);

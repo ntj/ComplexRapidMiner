@@ -99,9 +99,9 @@ public class MapAttribute extends ComplexProxyAttribute{
 		double[] values = mv.getZValues();
 		//create 2d-double array
 		double[][] rValues = new double[values.length][1];
-		for(int i=0;i<rValues.length;i++){}
-			//rValues[i][0] = values[i];
-		
+		for(int i=0;i<rValues.length;i++){
+			rValues[i][0] = values[i];
+		}
 		row.setRelationalValues(innerAttribute.getTableIndex(), rValues);
 	}
 	

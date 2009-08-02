@@ -22,12 +22,16 @@
  */
 package com.rapidminer.example.table;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.tools.LogService;
 
+import de.tud.inf.example.set.attributevalues.ComplexValue;
+import de.tud.inf.example.table.ComplexAttribute;
 import de.tud.inf.example.table.RelationalAttribute;
 
 
@@ -258,7 +262,33 @@ public class DataRowFactory {
 	 * @see DatabaseDataRowReader
 	 */
 	public DataRow create(Object[] data, Attribute[] attributes) {
-		DataRow dataRow = create(data.length);
+		
+		/*
+		 * changed, because data and attributes can contain ComplexValue and ComplexAttributes
+		 */
+		/** split the attributes in Complex and SimpleAttributes **/
+		List<Attribute> complexAttributes = new ArrayList<Attribute>();
+		List<Attribute> simpleAttributes = new ArrayList<Attribute>();
+		List complexObjects = new ArrayList();
+		List simpleObjects = new ArrayList();
+		int dataRowSize = 0;
+		for(int i = 0;i<attributes.length;i++) {
+			Attribute a = attributes[i];
+			if(a.isComplex()) {
+				ComplexAttribute ca = (ComplexAttribute)a;
+				complexAttributes.add(a);
+				complexObjects.add(data[i]);
+				dataRowSize += ca.getInnerAttributeCount() + ca.getParameterCount();
+			} else {
+				simpleAttributes.add(a);
+				simpleObjects.add(data[i]);
+				dataRowSize++;
+			}
+		}
+		Attribute[] attr = new Attribute[attributes.length];
+		attributes = simpleAttributes.toArray(attr);
+		data = simpleObjects.toArray();
+		DataRow dataRow = create(dataRowSize);
 		for (int i = 0; i < data.length; i++) {
 			if (data[i] != null) {
 				if (attributes[i].isNominal()) {
@@ -269,6 +299,10 @@ public class DataRowFactory {
 			} else {
 				dataRow.set(attributes[i], Double.NaN);
 			}
+		}
+		// set the Complex Attributes
+		for(int i =0;i<complexAttributes.size();i++) {
+			dataRow.set((ComplexAttribute)complexAttributes.get(i), (ComplexValue)complexObjects.get(i));
 		}
 		dataRow.trim();
 		return dataRow;

@@ -1,5 +1,7 @@
 package de.tud.inf.example.table;
 
+import com.rapidminer.example.table.ExampleTable;
+
 
 
 /**
@@ -48,5 +50,11 @@ public class ComplexAttributeDescription {
 	
 	public String getHint(){
 		return hint;
+	}
+	
+	public void checkConstraints(ExampleTable et) {
+		
+		if(this.attIds == null || this.attIds.length == 0)
+			throw new IllegalArgumentException("attribute " +name+ " must contain at least one inner attribute");
 	}
 }

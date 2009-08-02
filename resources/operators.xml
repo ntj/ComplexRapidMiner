@@ -1771,5 +1771,12 @@
 		     description = "aggregates hell"
 		     group       = "AMTC.AVIA"/>  
 		     
+		  <operator
+		  	name = "MapLoader"
+		  	class = "de.tud.inf.operator.meta.MapLoader"
+		  	description = "Merges ExampleSets coming from the inner Operator"
+		  	group = "Meta"/>
+		  	
+		     
 
 </operators>

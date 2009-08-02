@@ -175,18 +175,7 @@ public class ComplexExampleSet extends AbstractExampleSet{
 		//add it to regular attributes
 		this.getAttributes().addRegular(ca);
 		
-		//add atomar attributes and parameter attributes to underlying example table and save their tableIds
-		List<Attribute> innerAtts = ca.getInnerAttributes();
-		int[] innerIds = new int[ca.getInnerAttributeCount()];
-		for(int i=0; i<innerAtts.size(); i++)
-			innerIds[i] = exampleTable.addAttribute(innerAtts.get(i));	
-		List<Attribute> paramAtts = ca.getParameterAttributes();
-		int[] paramIds = new int[ca.getParameterCount()];
-		for(int i=0; i<paramAtts.size(); i++)
-			paramIds[i] = exampleTable.addAttribute(paramAtts.get(i));
-		
-		//create new complex attribute description and add it to table
-		exampleTable.addComplexAttributeDescription(new ComplexAttributeDescription(innerIds,paramIds,ca.getSymbol(),ca.getName(),ca.getHint()));	
+		exampleTable.addComplexAttribute(ca);
 	}
 }
 

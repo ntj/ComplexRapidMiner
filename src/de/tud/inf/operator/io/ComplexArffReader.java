@@ -24,6 +24,7 @@ import com.rapidminer.tools.Tools;
 
 import de.tud.inf.example.ComplexAttributeConstraintChecker;
 import de.tud.inf.example.table.ComplexAttributeDescription;
+import de.tud.inf.example.table.ComplexAttributeFactory;
 import de.tud.inf.example.table.ComplexExampleTable;
 import de.tud.inf.example.table.RelationalAttribute;
 
@@ -120,7 +121,9 @@ public class ComplexArffReader extends ArffReader{
 
 		List<ComplexAttributeDescription> depList = createValidDependencyList(depEt,et);
 		try{
-			ComplexAttributeConstraintChecker.checkConstraints(et, depList);
+			//ComplexAttributeConstraintChecker.checkConstraints(et, depList);
+			for(ComplexAttributeDescription desc : depList)
+				desc.checkConstraints(et);
 		}catch(RuntimeException e){
 			throw new IOException(e.getMessage());
 		}
@@ -283,7 +286,8 @@ public class ComplexArffReader extends ArffReader{
 			}
 			//there should be at least information about correlating attributes
 			if(attributes != null)
-				etDependencies.add(new ComplexAttributeDescription(attributes,params,symbol,attName,hint));	
+				//etDependencies.add(new ComplexAttributeDescription(attributes,params,symbol,attName,hint));
+				etDependencies.add(ComplexAttributeFactory.createAttributeDescription(attributes, params, symbol, attName, hint));
 			else throw new IOException("no correlating attributes defined for complex attribute "+ attName);
 		}
     	return etDependencies;
