@@ -52,7 +52,7 @@ public class ClusteringAggregation extends Operator {
    /** Name of the column containing the aggregation information. */
    public static final String PARAMETER_AGGREGATION_COLUMN_NAME = "aggregation_column";
 
-   /** Must be the same like {@link SimpleExampleSource.PARAMETER_FILENAME} */
+   /** Must be the same like {@link SimpleXMLExampleSource.PARAMETER_FILENAME} */
    public static final String PARAMETER_FILENAME = "filename";
 
    /************************************************************************************************
