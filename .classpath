@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="com/rapidminer/doc/" kind="src" path="src"/>
+	<classpathentry excluding="com/rapidminer/doc/|com/rapidminer/doc/" kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.6.0_05"/>
 	<classpathentry kind="lib" path="lib/kdb.jar"/>
 	<classpathentry kind="lib" path="lib/jmathplot.jar"/>

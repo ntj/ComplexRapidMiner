@@ -7,27 +7,154 @@
     valuetype    = "real"/>
 
   <attribute
-    name         = "JH_MASKFEATURE"
+    name         = "JH_LAYERNAME"
     sourcecol    = "2"
     valuetype    = "nominal">
-       <value>L</value>
-       <value>C</value>
+       <value>M0</value>
+       <value>V0</value>
+       <value>DS</value>
+       <value>30</value>
+       <value>50</value>
+       <value>60</value>
+       <value>68</value>
+       <value>M2</value>
+       <value>73</value>
+       <value>15</value>
+       <value>M3</value>
+       <value>M4</value>
+       <value>ML</value>
+       <value>C2</value>
+       <value>46</value>
+       <value>10</value>
+       <value>20</value>
+       <value>03</value>
+       <value>04</value>
+       <value>16</value>
+       <value>_9</value>
+       <value>_8</value>
+       <value>_2</value>
+       <value>_1</value>
+       <value>_4</value>
+       <value>_7</value>
+       <value>_5</value>
+       <value>0W</value>
+       <value>0U</value>
+       <value>0N</value>
+       <value>0P</value>
+       <value>0A</value>
+       <value>FG</value>
+       <value>0B</value>
+       <value>0X</value>
+       <value>0L</value>
+       <value>0Z</value>
+       <value>0K</value>
+       <value>0Q</value>
+       <value>0T</value>
+       <value>PP</value>
+       <value>WP</value>
+       <value>WN</value>
+       <value>V5</value>
+       <value>M6</value>
+       <value>PL</value>
+       <value>GB</value>
+       <value>0D</value>
+       <value>YP</value>
+       <value>YN</value>
+       <value>SO</value>
+       <value>NP</value>
+       <value>74</value>
+       <value>TP</value>
+       <value>CP</value>
+       <value>R1</value>
+       <value>Y7</value>
+       <value>MI</value>
+       <value>AR</value>
+       <value>0M</value>
+       <value>CL</value>
+       <value>CB</value>
+       <value>CA</value>
+       <value>V1</value>
+       <value>M1</value>
+       <value>RC</value>
+       <value>GC</value>
+       <value>PC</value>
+       <value>RX</value>
+       <value>40</value>
+       <value>V3</value>
+       <value>0C</value>
+       <value>Y9</value>
+       <value>V2</value>
+       <value>14</value>
+       <value>55</value>
+       <value>65</value>
+       <value>71</value>
+       <value>SC</value>
+       <value>DT</value>
+       <value>V4</value>
+       <value>CS</value>
+       <value>AA</value>
+       <value>GS</value>
+       <value>27</value>
+       <value>FD</value>
+       <value>DM</value>
+       <value>0R</value>
+       <value>C1</value>
+       <value>AS</value>
+       <value>0V</value>
+       <value>CC</value>
+       <value>N0</value>
+       <value>Y8</value>
+       <value>MX</value>
+       <value>3P</value>
+       <value>3N</value>
+       <value>BW</value>
+       <value>LS</value>
+       <value>Z9</value>
+       <value>Re</value>
+       <value>BC</value>
+       <value>HE</value>
+       <value>GW</value>
+       <value>BB</value>
+       <value>SB</value>
+       <value>SW</value>
+       <value>DX</value>
+       <value>02</value>
+       <value>Y6</value>
+       <value>3Z</value>
+       <value>26</value>
+       <value>80</value>
+       <value>45</value>
+       <value>JD</value>
+       <value>Z7</value>
+       <value>A3</value>
+       <value>Z8</value>
+       <value>3R</value>
+       <value>CF</value>
+       <value>9</value>
+  </attribute>
+
+  <attribute
+    name         = "JH_MASKFEATURE"
+    sourcecol    = "3"
+    valuetype    = "nominal">
+       <value>4C</value>
+       <value>43</value>
        <value>d</value>
   </attribute>
 
   <attribute
     name         = "JH_ACTIVEPERCENTCLEAR"
-    sourcecol    = "3"
-    valuetype    = "real"/>
-
-  <attribute
-    name         = "JH_TOTALPERCENTCLEAR"
     sourcecol    = "4"
     valuetype    = "real"/>
 
   <attribute
-    name         = "JH_TECHNOLOGY"
+    name         = "JH_TOTALPERCENTCLEAR"
     sourcecol    = "5"
+    valuetype    = "real"/>
+
+  <attribute
+    name         = "JH_TECHNOLOGY"
+    sourcecol    = "6"
     valuetype    = "nominal">
        <value>UG8</value>
        <value>ALLGEMEIN</value>
@@ -40,7 +167,7 @@
        <value>C11RF</value>
        <value>C070D</value>
        <value>UG7</value>
-       <value></value>
+       <value>NULL</value>
        <value>C11FL</value>
        <value>C060D</value>
        <value>C120FL</value>
@@ -58,12 +185,26 @@
        <value>UG9</value>
        <value>UG5</value>
        <value>C065T</value>
+       <value>UG12</value>
+       <value>C048D</value>
+       <value>S8DI-5R</value>
+       <value>C046D</value>
        <value>d</value>
   </attribute>
 
   <attribute
+    name         = "MINSPECPUSH"
+    sourcecol    = "7"
+    valuetype    = "real"/>
+
+  <attribute
+    name         = "MAXSPECPUSH"
+    sourcecol    = "8"
+    valuetype    = "real"/>
+
+  <attribute
     name         = "jh_customer"
-    sourcecol    = "6"
+    sourcecol    = "9"
     valuetype    = "nominal">
        <value>AMD</value>
        <value>QIMONDA</value>
@@ -76,12 +217,15 @@
        <value>ASML BV</value>
        <value>ZEISS JENA</value>
        <value>TPN-ASAKA</value>
+       <value>LETI</value>
+       <value>NUMONYX</value>
+       <value>CYPRESS</value>
        <value>d</value>
   </attribute>
 
   <attribute
     name         = "LOT_NUMBER"
-    sourcecol    = "7"
+    sourcecol    = "10"
     valuetype    = "nominal">
        <value>6525</value>
        <value>6425</value>
@@ -122,7 +266,7 @@
        <value>7406</value>
        <value>7508</value>
        <value>7601</value>
-       <value></value>
+       <value>NULL</value>
        <value>7404</value>
        <value>7507</value>
        <value>A750</value>
@@ -137,13 +281,14 @@
        <value>7615</value>
        <value>7424</value>
        <value>7720</value>
+       <value>7612</value>
        <value>7629</value>
        <value>7308</value>
        <value>7806</value>
        <value>7619</value>
-       <value>7612</value>
        <value>7430</value>
        <value>7823</value>
+       <value>7403</value>
        <value>7710</value>
        <value>7819</value>
        <value>7803</value>
@@ -155,7 +300,6 @@
        <value>7625</value>
        <value>7828</value>
        <value>7513</value>
-       <value>7403</value>
        <value>7708</value>
        <value>7810</value>
        <value>7607</value>
@@ -189,8 +333,8 @@
        <value>7909</value>
        <value>7Y09</value>
        <value>7Y13</value>
-       <value>7530</value>
        <value>7Z01</value>
+       <value>7530</value>
        <value>7Z15</value>
        <value>7Z12</value>
        <value>7928</value>
@@ -206,49 +350,132 @@
        <value>7Y29</value>
        <value>7Z23</value>
        <value>8206</value>
+       <value>7Y20</value>
        <value>8123</value>
+       <value>8812</value>
        <value>8214</value>
        <value>5904</value>
        <value>8210</value>
        <value>8212</value>
-       <value>8223</value>
-       <value>8209</value>
        <value>8219</value>
+       <value>8112</value>
        <value>8220</value>
+       <value>8209</value>
        <value>8221</value>
        <value>7Z09</value>
-       <value>8302</value>
-       <value>8309</value>
-       <value>8323</value>
        <value>7Y24</value>
        <value>8225</value>
-       <value>8213</value>
        <value>8305</value>
        <value>8215</value>
-       <value>8401</value>
        <value>8316</value>
+       <value>8318</value>
+       <value>8321</value>
+       <value>8319</value>
+       <value>8420</value>
+       <value>8427</value>
+       <value>8511</value>
+       <value>8515</value>
+       <value>7Y28</value>
+       <value>8614</value>
+       <value>8616</value>
+       <value>8524</value>
+       <value>8507</value>
+       <value>8513</value>
+       <value>8623</value>
+       <value>8612</value>
+       <value>8312</value>
+       <value>8510</value>
+       <value>7Z16</value>
+       <value>8618</value>
+       <value>8520</value>
+       <value>8620</value>
+       <value>8301</value>
+       <value>8720</value>
+       <value>8218</value>
+       <value>8619</value>
+       <value>8417</value>
+       <value>8725</value>
+       <value>8723</value>
+       <value>8807</value>
+       <value>8822</value>
+       <value>8628</value>
+       <value>8823</value>
+       <value>8322</value>
+       <value>8805</value>
+       <value>8829</value>
+       <value>8826</value>
+       <value>8722</value>
+       <value>8310</value>
+       <value>8913</value>
+       <value>8803</value>
+       <value>8808</value>
+       <value>8712</value>
+       <value>8903</value>
+       <value>8908</value>
+       <value>8821</value>
+       <value>8920</value>
+       <value>8917</value>
+       <value>7X23</value>
+       <value>8X20</value>
+       <value>8415</value>
+       <value>8509</value>
+       <value>8X17</value>
+       <value>7407</value>
+       <value>8X10</value>
+       <value>8909</value>
+       <value>7226</value>
        <value>##</value>
   </attribute>
 
   <id
     name         = "JOB"
-    sourcecol    = "8"
+    sourcecol    = "11"
     valuetype    = "integer"/>
 
   <cluster
     name         = "cluster"
-    sourcecol    = "9"
+    sourcecol    = "12"
     valuetype    = "nominal">
        <value>1</value>
        <value>2</value>
+       <value>3</value>
+       <value>Outliers</value>
+       <value>4</value>
+       <value>5</value>
+       <value>6</value>
+       <value>7</value>
+       <value>8</value>
+       <value>9</value>
+       <value>10</value>
+       <value>11</value>
+       <value>12</value>
+       <value>13</value>
+       <value>14</value>
+       <value>15</value>
+       <value>16</value>
   </cluster>
 
   <label
     name         = "label"
-    sourcecol    = "10"
+    sourcecol    = "13"
     valuetype    = "nominal">
        <value>1</value>
        <value>2</value>
+       <value>3</value>
+       <value>Outliers</value>
+       <value>4</value>
+       <value>5</value>
+       <value>6</value>
+       <value>7</value>
+       <value>8</value>
+       <value>9</value>
+       <value>10</value>
+       <value>11</value>
+       <value>12</value>
+       <value>13</value>
+       <value>14</value>
+       <value>15</value>
+       <value>16</value>
   </label>
 
 </attributeset>
