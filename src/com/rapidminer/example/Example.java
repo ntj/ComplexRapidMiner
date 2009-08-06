@@ -35,7 +35,9 @@ import com.rapidminer.tools.Ontology;
 
 import de.tud.inf.example.set.attributevalues.AbstractMatrixValue;
 import de.tud.inf.example.set.attributevalues.ComplexValue;
+import de.tud.inf.example.set.attributevalues.MapValue;
 import de.tud.inf.example.table.ComplexAttribute;
+import de.tud.inf.example.table.MapAttribute;
 import de.tud.inf.example.table.MatrixAttribute;
 import de.tud.inf.example.table.UncertainAttribute;
 
@@ -176,9 +178,17 @@ public class Example implements Serializable {
     
     public AbstractMatrixValue getMatrixValue(Attribute a){
    	 if (!Ontology.ATTRIBUTE_VALUE_TYPE.isA(a.getValueType(), Ontology.MATRIX)) {
-   		  throw new AttributeTypeException("Extraction of matrix example value for non-uncertain attribute '" + a.getName() + "' is not possible.");
+   		  throw new AttributeTypeException("Extraction of matrix example value for non-matrix attribute '" + a.getName() + "' is not possible.");
    	 }
    	 return ((MatrixAttribute)a).getComplexValue(this.getDataRow());
+   }
+    
+    
+   public MapValue getMapValue(Attribute a){
+	   if (!Ontology.ATTRIBUTE_VALUE_TYPE.isA(a.getValueType(), Ontology.MAP)) 
+	   		  throw new AttributeTypeException("Extraction of map example value for non-map attribute '" + a.getName() + "' is not possible.");
+	   
+	   	 return ((MapAttribute)a).getComplexValue(this.getDataRow());
    }
     
    
