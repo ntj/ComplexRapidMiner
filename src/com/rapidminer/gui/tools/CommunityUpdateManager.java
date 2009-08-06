@@ -34,8 +34,8 @@ import com.rapidminer.gui.MainFrame;
 public class CommunityUpdateManager implements UpdateManager {
 
 	public void checkForUpdates(MainFrame mainframe, boolean showDialog) {
-		Thread updateCheckThread = new CheckForUpdatesThread(mainframe, showDialog);		
-		updateCheckThread.start();
+		//Thread updateCheckThread = new CheckForUpdatesThread(mainframe, showDialog);		
+		//updateCheckThread.start();
 	}
 
 }
