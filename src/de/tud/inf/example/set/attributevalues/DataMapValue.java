@@ -2,11 +2,11 @@ package de.tud.inf.example.set.attributevalues;
 
 import java.util.HashMap;
 
+import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.tools.Ontology;
 
 /**
  * encapulates simple HashMap as complex object
- * TODO: think about type parameter here
  * @author Antje Gruner
  *
  */
@@ -14,19 +14,16 @@ public class DataMapValue implements ComplexValue{
 
 	
 	private HashMap<Double,Double> map;
+	/**
+	 * maps keys of HashMap entries to string keys
+	 */
+	private NominalMapping keyMapping = null;
 	public double getDoubleValue() {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	public String getStringRepresentation(int digits, boolean quoteWhitespace) {
-		/*
-		String str = "";
-		for(Double key:map.keySet()){
-			str += "{"+ key + "  " + map.get(key) +"} "; 
-		}
-		return str;
-		*/
 		return map.toString();
 	}
 
@@ -39,12 +36,15 @@ public class DataMapValue implements ComplexValue{
 	}
 	
 	
-	
-	
 	public void setValues(double[][] values){
 		map = new HashMap<Double,Double>();
 		for (int i =0;i<values.length;i++)
 			map.put(values[i][0], values[i][1]);
+	}
+	
+	public void setValues(double[][] values, NominalMapping keyMapping){
+		setValues(values);
+		this.keyMapping = keyMapping;
 	}
 
 }

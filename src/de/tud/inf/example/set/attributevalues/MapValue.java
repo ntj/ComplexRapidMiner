@@ -6,7 +6,7 @@ import com.rapidminer.tools.Ontology;
 /**
  * this complex value encapsulates a map z = f(x,y), x and y are discrete and
  * equidistant point coordinates, z can be arbitrary
- * 
+ * z values are stored in y-direction first, i.e zValues = {f(0,0), f(0,1),..., f(0,dimension[1], f(1,0)...)
  * @author Antje Gruner
  * 
  */
@@ -51,6 +51,9 @@ public class MapValue implements ComplexValue {
 		this.nm = nm;
 	}
 	
+	public MapValue(double[] spacing, double[] origin, int[] dimension, double[] values) {
+		this(spacing,origin,dimension,values,null);
+	}
 
 
 	public double getDoubleValue() {
@@ -82,10 +85,27 @@ public class MapValue implements ComplexValue {
 		return Ontology.ATTRIBUTE_VALUE_TYPE.MAP;
 	}
 
+	/**
+	 * returns z value according to x and y coordinate values
+	 * @param x x coordinate
+	 * @param y y coordinate
+	 * @return z value 
+	 */
 	public double getValueAt(double x, double y) {
 		int ix = (int) ((x - origin[0]) / spacing[0]);
 		int iy = (int) ((y - origin[1]) / spacing[1]);
 		return zValues[ix * dimension[1] + iy];
+	}
+	
+	
+	/**
+	 * returns z value according to x and y index values in z array  
+	 * @param x index of x coordinate
+	 * @param y index of y coordinate
+	 * @return z value 
+	 */
+	public double getValueAtId(int idX, int idY) {
+		return zValues[idX * dimension[1] + idY];
 	}
 	
 
@@ -100,6 +120,16 @@ public class MapValue implements ComplexValue {
 		int iy = (int) ((y - origin[1]) / spacing[1]);
 		return nm.mapIndex((int) zValues[ix * dimension[1] + iy]);
 	}
+	
+	/**
+	 *
+	 * @param id position in z array 
+	 * @return mapped value
+	 */
+	public String getStringValueAt(int id) {
+		return nm.mapIndex((int)zValues[id]);
+	}
+	
 
 	/**
 	 * 
@@ -147,5 +177,31 @@ public class MapValue implements ComplexValue {
 	public int getMapSize(){
 		return zValues.length;
 	}
-
+	
+	public double getAverage(){
+		double sum =0;
+		for(int i =0;i<zValues.length;i++)
+			sum += zValues[i];
+		return sum/zValues.length;
+	}
+	
+	public double getVariance(){
+		 double avg = getAverage();
+		 double squaredSum =0;
+		 for(int i =0;i<zValues.length;i++)
+			 squaredSum += zValues[i]*zValues[i];
+		 return squaredSum / zValues.length - (avg * avg);
+	}
+	
+	/**
+	 * returns maximum x and y values of map
+	 * @return
+	 */
+	public double[] getExtent(){
+		double[] ex = new double[2];
+	    ex[0] = origin[0] + spacing[0]*(dimension[0]-1);
+	    ex[1] = origin[1] + spacing[1]*(dimension[1]-1);
+	    return ex;
+		                              
+	}
 }

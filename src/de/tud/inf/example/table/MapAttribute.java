@@ -6,7 +6,6 @@ import java.util.List;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
-import com.rapidminer.example.table.NominalAttribute;
 import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.tools.Ontology;
 
@@ -101,7 +100,7 @@ public class MapAttribute extends ComplexProxyAttribute{
 		double[][] rValues = new double[values.length][1];
 		for(int i=0;i<rValues.length;i++){
 			rValues[i][0] = values[i];
-		}
+		}		
 		row.setRelationalValues(innerAttribute.getTableIndex(), rValues);
 	}
 	

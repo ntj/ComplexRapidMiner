@@ -18,6 +18,7 @@ public class PointListValue implements ComplexValue{
 	}
 
 	public String getStringRepresentation(int digits, boolean quoteWhitespace) {
+		//TODO use StringBuilder
 		String str = "";
 		if(points.length>0){
 			//first point
