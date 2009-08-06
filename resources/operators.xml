@@ -323,6 +323,10 @@
 	<operator name="CSVExampleSource"
 		class="com.rapidminer.operator.io.CSVExampleSource"
 		description="This operator can read csv files." group="IO.Examples" />
+	
+	<operator name="HTTPCSVExampleSource"
+		class="de.tud.inf.operator.io.HTTPCSVExampleSource"
+		description="This operator gets data from an HTTP request and reads it as csv files." group="IO.Examples" />
 
 	<operator name="CSVExampleSetWriter"
 		class="com.rapidminer.operator.io.CSVExampleSetWriter"
