@@ -229,6 +229,7 @@ public class MapLoader extends OperatorChain{
 				// create new Map
 				MapValue mapVal = new MapValue(spacing, origin, dimension, zvalues);
 				
+				// check if Map has the same value as the input
 				this.chackMap(examples, mapVal);
 				
 				
@@ -248,36 +249,36 @@ public class MapLoader extends OperatorChain{
 		return new IOObject[]{complexExampleTable.createExampleSet()};
 	}
 
-	@Override
+	
 	public InnerOperatorCondition getInnerOperatorCondition() {
 		return new AllInnerOperatorCondition(new Class[]{}, new Class[]{ExampleSet.class});
 	}
 
-	@Override
+	
 	public int getMaxNumberOfInnerOperators() {
 		
 		return 1;
 	}
 
-	@Override
+	
 	public int getMinNumberOfInnerOperators() {
 		// TODO Auto-generated method stub
 		return 1;
 	}
 
-	@Override
+	
 	public Class<?>[] getInputClasses() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
+	
 	public Class<?>[] getOutputClasses() {
 		
 		return new Class<?>[]{ExampleSet.class};
 	}
 
-	@Override
+	
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType>  types= super.getParameterTypes();
 		
@@ -316,11 +317,22 @@ public class MapLoader extends OperatorChain{
 		Attribute y = es.getAttributes().get("Y");
 		Attribute z = es.getAttributes().get("Z");
 		
+		int[] dimesnions = v.getDimension();
+		if(es.size() != (dimesnions[0] * dimesnions[1]))
+			throw new OperatorException("The dimensions of the input and output map differ");
+		
 		double zMap;
+		double intZMap;
+		int i = 0;
 		for(Example e : es) {
 			zMap = v.getValueAt(e.getValue(x),e.getValue(y));
+			// test interpolation
+//			if(e.getValue(x) < v.getOrigin()[0]+(v.getDimension()[0]-1)*v.getSpacing()[0] &&
+//					e.getValue(y) < v.getOrigin()[1] + (v.getDimension()[1]-1)*v.getSpacing()[1])
+//				intZMap = v.getValueAt(e.getValue(x) + v.getSpacing()[0]/2, e.getValue(y)+v.getSpacing()[1]/2);
 			if(zMap != e.getValue(z))
 				throw new OperatorException("z value was: " + zMap + " but should be: " + e.getValue(z));
+			i++;
 		}
 	}
 

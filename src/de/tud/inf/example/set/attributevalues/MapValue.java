@@ -87,14 +87,25 @@ public class MapValue implements ComplexValue {
 
 	/**
 	 * returns z value according to x and y coordinate values
+	 * if the values is not directly given the z value will be interpolated
+	 * using a simple bilinear interpolation
 	 * @param x x coordinate
 	 * @param y y coordinate
 	 * @return z value 
 	 */
 	public double getValueAt(double x, double y) {
-		int ix = (int) ((x - origin[0]) / spacing[0]);
-		int iy = (int) ((y - origin[1]) / spacing[1]);
-		return zValues[ix * dimension[1] + iy];
+		// do x and y lie in the grid?
+		if(Math.IEEEremainder(x - origin[0], spacing[0]) == 0.0 && Math.IEEEremainder(y - origin[0], spacing[1]) == 0.0) {
+			// -> yes
+			int ix = (int) ((x - origin[0]) / spacing[0]);
+			int iy = (int) ((y - origin[1]) / spacing[1]);
+			return zValues[ix * dimension[1] + iy];
+		} else {
+			
+			// do a bilinear interpolation
+			return getInterpolatedValue(x, y);
+		}
+		
 	}
 	
 	
@@ -203,5 +214,31 @@ public class MapValue implements ComplexValue {
 	    ex[1] = origin[1] + spacing[1]*(dimension[1]-1);
 	    return ex;
 		                              
+	}
+	
+	private double getInterpolatedValue(double x,double y) {
+		
+		x = x-origin[0];
+		y = y-origin[1];
+		// get the surrounding gridPoints for the x and y value
+		int indexX = (int)(x / spacing[0]);
+		int indexY = (int)(y/spacing[1]);
+		
+		if(indexX >= dimension[0]-1 || indexY >= dimension[1]-1)
+			throw new IndexOutOfBoundsException("The value is outside the grid");
+		
+		double x1 = indexX * spacing[0] ;
+		double x2 = x1 + spacing[0];
+		double y1 = indexY * spacing[1];
+		double y2 = y1 + spacing[1];
+		
+		
+		double deltaX1 = x-x1;
+		double deltaX2 = x2-x;
+		// interpolating the x-direction
+		double val1 =(deltaX2/spacing[0])*getValueAtId(indexX, indexY) +(deltaX1/spacing[0])*getValueAtId(indexX+1,indexY) ; 
+		double val2 = (deltaX2/spacing[0])*getValueAtId(indexY, indexY+1) + (deltaX1/spacing[0])*getValueAtId(indexX+1, indexY+1);
+		
+		return ((y2-y)/spacing[1])*val1 + ((y-y1)/spacing[1])*val2;
 	}
 }
