@@ -8,34 +8,36 @@ import com.rapidminer.tools.Ontology;
  *
  */
 public class PointListValue implements ComplexValue{
-
-	public
-	
+	/**
+	 * defines the maximum number of points which are written in string representation of this object
+	 */
+	public int maxPlotPoints = 100;
 	double[][] points;
+	
 	public double getDoubleValue() {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	public String getStringRepresentation(int digits, boolean quoteWhitespace) {
-		//TODO use StringBuilder
-		String str = "";
+		StringBuilder builder = new StringBuilder();
 		if(points.length>0){
 			//first point
-			str += "{" + points[0][0];
+			builder.append("{" + points[0][0]);
+			int max = Math.min(maxPlotPoints, points.length);
 			for (int j=1;j<points[0].length;j++){
-				str += ", " + points[0][j];
+				builder.append(", " + points[0][j]);
 			}
-			str += "}";
-			for (int i=1;i<points.length;i++){
+			builder.append("}");
+			for (int i=1;i<max;i++){
 				//first coordinate
-				str += ", {" + points[i][0];
+				builder.append(", {" + points[i][0]);
 				for (int j=1;j<points[i].length;j++){
-					str += ", " + points[i][j];
+					builder.append(", " + points[i][j]);
 				}
-				str += "}";
+				builder.append("}");
 			}
-			return str;
+			return builder.toString();
 		}
 		return "{}";	
 	}

@@ -18,7 +18,7 @@ import de.tud.inf.example.set.attributevalues.ComplexValue;
  * 
  */
 public abstract class ComplexAttribute extends AbstractAttribute {
-
+	
 	private static final long serialVersionUID = -8546639471664353338L;
 	protected final String hint;
 

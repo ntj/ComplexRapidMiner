@@ -31,10 +31,12 @@ public class MapAttribute extends ComplexProxyAttribute{
 	public MapAttribute(String name, int valueType, String hint){
 		super(name,valueType,hint);
 		innerAttribute = (RelationalAttribute)AttributeFactory.createAttribute(Ontology.ATTRIBUTE_VALUE_TYPE.RELATIONAL);
-		//(maybe TODO switch inner attribute type depending on valueType of MapAttribute (Map_STRING, MAP_DOUBLE))
-		//DEFAULT: create map, where z-values are numeric
 		List<Attribute> iList = new LinkedList<Attribute>();
-		iList.add(AttributeFactory.createAttribute(name + "_zValues",Ontology.ATTRIBUTE_VALUE_TYPE.NUMERICAL));
+		if(valueType == Ontology.ATTRIBUTE_VALUE_TYPE.MAP_STRING)
+			iList.add(AttributeFactory.createAttribute(name + "_zValues",Ontology.ATTRIBUTE_VALUE_TYPE.STRING));
+		else
+			iList.add(AttributeFactory.createAttribute(name + "_zValues",Ontology.ATTRIBUTE_VALUE_TYPE.NUMERICAL));
+		
 		//set inner relational attributes
 		innerAttribute.setInnerAttributes(iList);
 		
@@ -94,14 +96,30 @@ public class MapAttribute extends ComplexProxyAttribute{
 		parameters.get(4).setValue(row, mv.getDimension()[0]);
 		parameters.get(5).setValue(row, mv.getDimension()[1]);
 		
-		//set z values
-		double[] values = mv.getZValues();
-		//create 2d-double array
-		double[][] rValues = new double[values.length][1];
-		for(int i=0;i<rValues.length;i++){
-			rValues[i][0] = values[i];
-		}		
-		row.setRelationalValues(innerAttribute.getTableIndex(), rValues);
+		if(mv.hasMapping()){
+			NominalMapping attrMapping = innerAttribute.getInnerAttributeAt(0).getMapping();
+			NominalMapping objMapping = mv.getMapping();
+			double[] values = mv.getZValues();
+			//create 2d-double array
+			double[][] rValues = new double[values.length][1];
+			for(int i=0;i<rValues.length;i++){
+				//get string value at position i from object mapping, map that string to an index (via attribute mapping)
+				//store resulting index into dataRow
+				rValues[i][0] =  attrMapping.mapString(objMapping.mapIndex((int)values[i]));
+			}		
+			row.setRelationalValues(innerAttribute.getTableIndex(), rValues);
+			
+		}
+		else{
+			//set z values
+			double[] values = mv.getZValues();
+			//create 2d-double array
+			double[][] rValues = new double[values.length][1];
+			for(int i=0;i<rValues.length;i++){
+				rValues[i][0] = values[i];
+			}		
+			row.setRelationalValues(innerAttribute.getTableIndex(), rValues);
+		}
 	}
 	
 

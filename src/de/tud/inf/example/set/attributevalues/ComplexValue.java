@@ -8,6 +8,12 @@ package de.tud.inf.example.set.attributevalues;
  */
 public interface ComplexValue {
 
+	/** Indicates the default number of fraction digits which is defined by the system
+	 *  property rapidminer.gui.fractiondigits.numbers. */
+	public static final int DEFAULT_NUMBER_OF_DIGITS = -1;
+	
+	/** Indicates an unlimited number of fraction digits. */
+	public static final int UNLIMITED_NUMBER_OF_DIGITS = -2;
 	/**
 	 * 
 	 * @return the valueType of the complex attribute

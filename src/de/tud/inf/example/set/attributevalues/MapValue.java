@@ -1,6 +1,7 @@
 package de.tud.inf.example.set.attributevalues;
 
 import com.rapidminer.example.table.NominalMapping;
+import com.rapidminer.example.table.PolynominalMapping;
 import com.rapidminer.tools.Ontology;
 
 /**
@@ -17,7 +18,10 @@ public class MapValue implements ComplexValue {
 	 */
 	private double[] spacing = new double[2];
 	
-	
+	/**
+	 * defines the maximum number of values to be displayed in data view
+	 */
+	private int mxPlotValues = 100;
 	
 	/**
 	 * minimal value of x and y
@@ -62,16 +66,34 @@ public class MapValue implements ComplexValue {
 
 	public String getStringRepresentation(int digits, boolean quoteWhitespace) {
 		StringBuffer buf = new StringBuffer();
+		int plotNr = Math.min(zValues.length,mxPlotValues);
 		if(nm == null){
-			for (int i=0; i< zValues.length;i++){
-				buf.append(zValues[i]);
-				buf.append(" ");
-				if(i % dimension[1] == (dimension[1])-1)
-					buf.append("| ");
+			switch (digits) {
+			case UNLIMITED_NUMBER_OF_DIGITS:
+				for (int i=0; i< plotNr;i++){
+					buf.append(zValues[i]);
+					buf.append(" ");
+					if(i % dimension[1] == (dimension[1])-1)
+						buf.append("| ");
+				}
+			case DEFAULT_NUMBER_OF_DIGITS:
+				for (int i=0; i< plotNr;i++){
+					buf.append(com.rapidminer.tools.Tools.formatIntegerIfPossible(zValues[i],-1));
+					buf.append(" ");
+					if(i % dimension[1] == (dimension[1])-1)
+						buf.append("| ");
+				}
+			default:
+				for (int i=0; i< plotNr;i++){
+					buf.append(com.rapidminer.tools.Tools.formatIntegerIfPossible(zValues[i],digits));
+					buf.append(" ");
+					if(i % dimension[1] == (dimension[1])-1)
+						buf.append("| ");
+				}
 			}
 		}
 		else{
-			for (int i=0; i< zValues.length;i++){
+			for (int i=0; i< plotNr;i++){
 				buf.append(nm.mapIndex((int)zValues[i]));
 				buf.append(" ");
 				if(i % dimension[1] == (dimension[1])-1)
@@ -117,6 +139,16 @@ public class MapValue implements ComplexValue {
 	 */
 	public double getValueAtId(int idX, int idY) {
 		return zValues[idX * dimension[1] + idY];
+	}
+	
+	/**
+	 * returns z value according to x and y index values in z array  
+	 * @param x index of x coordinate
+	 * @param y index of y coordinate
+	 * @return z value 
+	 */
+	public String getStringValueAtId(int idX, int idY) {
+		return nm.mapIndex((int)zValues[idX * dimension[1] + idY]);
 	}
 	
 
@@ -212,9 +244,34 @@ public class MapValue implements ComplexValue {
 		double[] ex = new double[2];
 	    ex[0] = origin[0] + spacing[0]*(dimension[0]-1);
 	    ex[1] = origin[1] + spacing[1]*(dimension[1]-1);
-	    return ex;
-		                              
+	    return ex;                     
 	}
+
+	
+	public void createMapping(){
+		nm = new PolynominalMapping();
+	}
+	/**
+	 * maps str to value at zValues[zId], overrides z value ad zId with mappingId, resulting from mapping String value
+	 * ensure that there is an instantiated mapping or create a new one with createMapping() 
+	 * @param zId
+	 * @param str
+	 */
+	public void mapValueAt(int zId, String str){
+		zValues[zId] = nm.mapString(str);	
+	}
+	
+
+	public NominalMapping getMapping(){
+		return nm;
+	}
+	
+	public boolean hasMapping(){
+		if (nm == null) return false;
+		return true;
+	}
+	
+
 	
 	private double getInterpolatedValue(double x,double y) {
 		
@@ -241,4 +298,5 @@ public class MapValue implements ComplexValue {
 		
 		return ((y2-y)/spacing[1])*val1 + ((y-y1)/spacing[1])*val2;
 	}
+
 }

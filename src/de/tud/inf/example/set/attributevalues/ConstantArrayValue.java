@@ -26,23 +26,15 @@ public class ConstantArrayValue implements ComplexValue{
 	}
 
 	public String getStringRepresentation(int digits, boolean quoteWhitespace) {
-		String str = "[";
-		//first row and first entry of row
-		str += "{" + values[0][0];
-		//iterate through columns
-		for(int i=1;i<dim[1];i++){
-			str += ", " + values[0][i];
+		StringBuffer build = new StringBuffer();
+		for (int i=0; i< values.length;i++){
+			build.append("|");
+			for (int j=0; j < values[i].length;j++){
+				build.append(values[i][j]);
+				build.append(" ");
+			}
 		}
-		str += "}";
-		//iterate through rows of map
-		for(int i=0;i<values.length;i++){
-			str += " ,{";
-			for(int j=0;j<values[i].length;j++)
-				str += values[i*dim[1]+j][0];
-			str += "}";
-		}
-		str += "]";
-		return str;
+		return build.toString();
 	}
 
 	public int getValueType() {

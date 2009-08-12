@@ -32,9 +32,13 @@ public class DataMapValue implements ComplexValue{
 	}
 	
 	public double get(String key){
-		return map.get(key).doubleValue();
+		Double dKey = new Double(keyMapping.mapString(key));
+		return map.get(dKey).doubleValue();
 	}
 	
+	public double get(Double key){
+		return map.get(key).doubleValue();
+	}
 	
 	public void setValues(double[][] values){
 		map = new HashMap<Double,Double>();

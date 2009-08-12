@@ -73,11 +73,11 @@ public class ComplexValueFactory {
 		}
 		
 		
-		else if (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.MAP)
+		else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType,Ontology.ATTRIBUTE_VALUE_TYPE.MAP))
 			cFunc = new MapValue();
 		else if (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.POINT_LIST)
 			cFunc = new PointListValue();
-		else if (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.ARRAY){
+		else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType,Ontology.ATTRIBUTE_VALUE_TYPE.ARRAY)){
 			//check if ConstantArrayValue (hint contains information about dimensions of array) or if parameterized array value)
 			try{
 				String[] pList = hint.split(getParameterSep());
