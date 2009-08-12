@@ -2,7 +2,6 @@ package de.tud.inf.operator.meta;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -14,7 +13,6 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.DataRowFactory;
-import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.example.table.MemoryExampleTable;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.IOObject;
@@ -32,10 +30,10 @@ import com.rapidminer.parameter.ParameterTypeFile;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.tools.Ontology;
 
+import de.tud.inf.example.set.ComplexExampleSet;
 import de.tud.inf.example.set.attributevalues.MapValue;
 import de.tud.inf.example.table.ComplexExampleTable;
 import de.tud.inf.example.table.MapAttribute;
-import de.tud.inf.parameters.ParameterTypeFiles;
 
 public class MapLoader extends OperatorChain{
 	
@@ -275,7 +273,7 @@ public class MapLoader extends OperatorChain{
 	
 	public Class<?>[] getOutputClasses() {
 		
-		return new Class<?>[]{ExampleSet.class};
+		return new Class<?>[]{ComplexExampleSet.class};
 	}
 
 	

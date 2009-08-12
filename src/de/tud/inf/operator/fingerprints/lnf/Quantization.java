@@ -82,7 +82,7 @@ public class Quantization extends Operator {
 	/** Returns a list of ParameterTypes describing the parameters of this operator. */
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		types.add(new ParameterTypeString(PARAMETER_MAP_NAME, "", "Z"));
+		types.add(new ParameterTypeString(PARAMETER_MAP_NAME, "", "map"));
 		types.add(new ParameterTypeDouble("step size", "", 0,10,1));
 		types.add(new ParameterTypeString("start letter", "", "M"));
 		return types;

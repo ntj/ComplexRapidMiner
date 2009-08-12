@@ -142,7 +142,7 @@ public class MapValue implements ComplexValue {
 	}
 	
 	/**
-	 * returns z value according to x and y index values in z array  
+	 * returns z string value according to x and y index values in z array  
 	 * @param x index of x coordinate
 	 * @param y index of y coordinate
 	 * @return z value 

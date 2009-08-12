@@ -9,7 +9,7 @@ import de.tud.inf.example.set.attributevalues.ComplexValueFactory;
 
 /**
  * 
- * manages (2)-dimensional arrays where inner and outer dimensions can change for each example
+ * manages (2)-dimensional arrays where inner and outer dimensions can change for each example, or can be static
  * @author Antje Gruner
  *
  */

@@ -7,16 +7,19 @@ import java.util.Map;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
-import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeString;
+import com.rapidminer.tools.Ontology;
 
 import de.tud.inf.example.set.ComplexExampleSet;
+import de.tud.inf.example.set.attributevalues.DataMapValue;
 import de.tud.inf.example.set.attributevalues.MapValue;
+import de.tud.inf.example.table.DataMapAttribute;
 
 public class ColorHistogram extends Operator{
 	
@@ -28,9 +31,10 @@ public class ColorHistogram extends Operator{
 	
 	@Override
 	public IOObject[] apply() throws OperatorException {
-		ExampleSet input = getInput(ComplexExampleSet.class);
+		ComplexExampleSet input = getInput(ComplexExampleSet.class);
 		Attribute mapAttr = input.getAttributes().get(getParameterAsString(PARA_MAP_NAME));
-		
+		DataMapAttribute histAttr =  (DataMapAttribute)AttributeFactory.createAttribute("hist",Ontology.ATTRIBUTE_VALUE_TYPE.DATA_MAP);
+		input.addComplexAttribute(histAttr);
 		//TEST ColorHistogram of first example
 		Iterator<Example> it = input.iterator();
 		while (it.hasNext()){
@@ -45,14 +49,16 @@ public class ColorHistogram extends Operator{
 					absoluteHist.put(currentSymbol, (absoluteHist.get(currentSymbol) + 1));
 				} else {
 					// init
-					absoluteHist.put(currentSymbol, 1);
+					absoluteHist.put(currentSymbol,1);
 				}
+				
 			}
 			//write back histogram
+			//line 52
+			DataMapValue<String,Integer> dmValue = new DataMapValue<String,Integer>(absoluteHist);
+			ex.setComplexValue(histAttr, dmValue);
 		}
-		
-		ExampleSet output = null;
-		return null;
+		return new IOObject[] {input};
 	}
 
 	
@@ -73,6 +79,6 @@ public class ColorHistogram extends Operator{
 
 	@Override
 	public Class<?>[] getOutputClasses() {
-		return new Class[] {ExampleSet.class};
+		return new Class[] {ComplexExampleSet.class};
 	}
 }

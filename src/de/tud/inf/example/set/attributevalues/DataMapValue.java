@@ -1,23 +1,35 @@
 package de.tud.inf.example.set.attributevalues;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.tools.Ontology;
 
 /**
- * encapulates simple HashMap as complex object
+ * encapsulates simple Map as complex object
  * @author Antje Gruner
+ * @param <K>
  *
  */
-public class DataMapValue implements ComplexValue{
+public class DataMapValue<K,V> implements ComplexValue{
 
 	
-	private HashMap<Double,Double> map;
+	private Map<K,V> map;
 	/**
 	 * maps keys of HashMap entries to string keys
 	 */
 	private NominalMapping keyMapping = null;
+	
+	
+	public DataMapValue(){
+		
+	}
+	
+	public DataMapValue(Map<K,V> map){
+		this.map = map;
+	}	
+	
 	public double getDoubleValue() {
 		// TODO Auto-generated method stub
 		return 0;
@@ -33,17 +45,18 @@ public class DataMapValue implements ComplexValue{
 	
 	public double get(String key){
 		Double dKey = new Double(keyMapping.mapString(key));
-		return map.get(dKey).doubleValue();
+		return ((Double)map.get(dKey)).doubleValue();
 	}
 	
 	public double get(Double key){
-		return map.get(key).doubleValue();
+		return ((Double) map.get(key)).doubleValue();
 	}
 	
 	public void setValues(double[][] values){
-		map = new HashMap<Double,Double>();
-		for (int i =0;i<values.length;i++)
-			map.put(values[i][0], values[i][1]);
+		map = new HashMap<K,V>();
+		//TODO check K, V -> mapping
+		//for (int i =0;i<values.length;i++)
+			//map.put((K)values[i][0],(V)values[i][1]);
 	}
 	
 	public void setValues(double[][] values, NominalMapping keyMapping){

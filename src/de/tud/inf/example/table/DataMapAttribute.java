@@ -1,6 +1,12 @@
 package de.tud.inf.example.table;
 
+import java.util.LinkedList;
+import java.util.List;
+
+import com.rapidminer.example.Attribute;
+import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
+import com.rapidminer.tools.Ontology;
 
 import de.tud.inf.example.set.attributevalues.ComplexValue;
 import de.tud.inf.example.set.attributevalues.ComplexValueFactory;
@@ -19,6 +25,23 @@ public class DataMapAttribute extends ComplexProxyAttribute{
 		super(name, valueType, innerAttribute, hint);
 	}
 
+	public DataMapAttribute(String name, int valueType, String hint){
+		super(name,valueType,hint);
+		innerAttribute = (RelationalAttribute)AttributeFactory.createAttribute(Ontology.ATTRIBUTE_VALUE_TYPE.RELATIONAL);
+		List<Attribute> iList = new LinkedList<Attribute>();
+		//key attribute: check whether string or numeric key
+		if(valueType == Ontology.ATTRIBUTE_VALUE_TYPE.DATA_MAP_STRING)
+			iList.add(AttributeFactory.createAttribute(name + "_key",Ontology.ATTRIBUTE_VALUE_TYPE.STRING));
+		else
+			iList.add(AttributeFactory.createAttribute(name + "_key",Ontology.ATTRIBUTE_VALUE_TYPE.NUMERICAL));
+		//value attribute
+		iList.add(AttributeFactory.createAttribute(name + "_value",Ontology.ATTRIBUTE_VALUE_TYPE.NUMERICAL));
+		
+		innerAttribute.setInnerAttributes(iList);
+		
+	}
+	
+	
 	/**
 	 * 
 	 */
@@ -38,7 +61,7 @@ public class DataMapAttribute extends ComplexProxyAttribute{
 
 	//TEST if set works
 	public void setComplexValue(DataMapValue value, DataRow row){
-		//this attribute must now exactly where to store which informaion in mapvalue and stores it in datarow
+		//this attribute must now exactly where to store which information in mapValue and stores it in dataRow
 	}
 	
 	
