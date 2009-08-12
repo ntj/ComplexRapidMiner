@@ -1707,21 +1707,41 @@
                 group="IO.Generator" />
 
         <operator name="UCIvalidityIndex"
-                class="de.tud.inf.operator.UCIvalidityIndex"
+                class="de.tud.inf.operator.complexobjects.UCIvalidityIndex"
                 description="computes the UCI validity index for cluster models of uncertain clustering algorithms."
-                group=""/>
+                group="COMPLEX_OBJ"/>
+
+        <operator name="ComplexValueTestOperator"
+                class="de.tud.inf.operator.complexobjects.ComplexValueTestOperator"
+                description="test reading complex objects and creating complex attributes"
+                group="COMPLEX_OBJ"/>
 
         <operator name="PossibleWorldGenerator"
                 class="de.tud.inf.operator.generator.PossibleWorldGenerator"
                 description="Generates a Possible World ExampleSet with certain instances from a ComplexExampleSet with uncertainty regions."
-                group=""/>
+                group="COMPLEX_OBJ"/>
                 
          <operator name="DBScanEAClusteringWithPdf"
-                class="de.tud.inf.operator.learner.clustering.clusterer"
+                class="de.tud.inf.operator.learner.clustering.clusterer.DBScanEAClusteringWithPdf"
                 description="extends DBSCAN^EA, works with uncertain attributes"
-                group=""/>
+                group="COMPLEX_OBJ"/>
                 
-                <operator 
+         <operator name="ZTransformation"
+                class="de.tud.inf.operator.fingerprints.ZTransformation"
+                description="ZTransformation of map attribute objects"
+                group="Fingerprints"/>
+                
+        <operator name="Quantization"
+                class="de.tud.inf.operator.fingerprints.lnf.Quantization"
+                description=""
+         		group="Fingerprints"/>
+         		
+        <operator name="LnfCreation"
+                class="de.tud.inf.operator.fingerprints.lnf.LnfCreation"
+                description=""
+         		group="Fingerprints"/>
+                
+                <operator
 		     name        = "ClusterEnsembleCreator"       
 		     class       = "de.tud.inf.operator.mm.ClusterEnsembleCreator"
 		     description = "Clustering with k-means"
