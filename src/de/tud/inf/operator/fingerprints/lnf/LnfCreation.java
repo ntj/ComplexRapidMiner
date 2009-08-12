@@ -47,18 +47,26 @@ public class LnfCreation extends Operator {
 
 	@Override
 	public IOObject[] apply() throws OperatorException {
-		TreeMap<String, Integer> symbolMap;
-		ComplexExampleSet exampleSet = null;
+		//exampleSet of all map values
+		ComplexExampleSet inputSet = getInput(ComplexExampleSet.class);
 		MapValue mv = null;
-		MapAttribute mapAttr = (MapAttribute) exampleSet.getAttributes().get(
-				getParameterAsString(PARAMETER_MAP_NAME));
-		Iterator<Example> it = exampleSet.iterator();
+		MapAttribute mapAttr = (MapAttribute) inputSet.getAttributes().get(getParameterAsString(PARAMETER_MAP_NAME));
+		
+		//lnf attribute
+		List<Attribute> attributeList = new ArrayList<Attribute>(1);
+		Attribute lnfAttribute = AttributeFactory.createAttribute("LNF", Ontology.NOMINAL);
+		attributeList.add(lnfAttribute);
+		MemoryExampleTable outputTable = new MemoryExampleTable(attributeList);
+		DataRowFactory factory = new DataRowFactory(DataRowFactory.TYPE_BYTE_ARRAY, ',');
+		
+		Iterator<Example> it = inputSet.iterator();
 		Example e;
+		
 		while (it.hasNext()) {
 			e = it.next();
 			mv = e.getMapValue(mapAttr);
 			// calculate x and y size (map sorted by x,y)
-			symbolMap = new TreeMap<String, Integer>();
+			TreeMap<String, Integer> symbolMap = new TreeMap<String, Integer>();
 			int windowSize;
 			if (getParameterAsInt(PARAMETER_NEIGHBOURHOOD) < 3)
 				windowSize = getParameterAsInt(PARAMETER_WINDOW_SIZE);
@@ -71,28 +79,28 @@ public class LnfCreation extends Operator {
 			int ncol = mv.getDimension()[1];
 			for (int i = 0; i <= nrow - windowSize; i += stepSize)
 				for (int j = 0; j <= ncol - windowSize; j += stepSize) {
+					//symbolList for each step through one array
 					List<String> symbolList = new ArrayList<String>();
 					// line 91
 					// boundary neighbourhood
+					//here numeric values are are read from map 
 					if (getParameterAsInt("neighbourhood") == 2) {
 						String surroundSymbols = "";
 						// get only surrounding pixels
 						for (int m = 0; m < windowSize; m++)
 							surroundSymbols = surroundSymbols
-									+ mv.getValueAtId(i, j + m);
+									+ mv.getStringValueAtId(i, j + m);
 						for (int m = 1; m < windowSize; m++)
 							surroundSymbols = surroundSymbols
-									+ mv
-											.getValueAtId(i + m, j + windowSize
+									+ mv.getStringValueAtId(i + m, j + windowSize
 													- 1);
 						for (int m = 1; m < windowSize; m++)
 							surroundSymbols = surroundSymbols
-									+ mv.getValueAtId(i + windowSize - 1, j
+									+ mv.getStringValueAtId(i + windowSize - 1, j
 											+ windowSize - 1 - m);
 						for (int m = 1; m < windowSize - 1; m++)
 							surroundSymbols = surroundSymbols
-									+ mv
-											.getValueAtId(i + windowSize - 1
+									+ mv.getStringValueAtId(i + windowSize - 1
 													- m, j);
 						symbolList.add(surroundSymbols);
 						// line 108
@@ -113,6 +121,7 @@ public class LnfCreation extends Operator {
 						}
 					}
 					// ring neighbourhood
+					//for neighbourhood > 3 string values are are read from map
 					else if (getParameterAsInt("neighbourhood") == 3) {
 						int radius = getParameterAsInt(PARAMETER_RADIUS);
 						int numberOfPoints = getParameterAsInt("points");
@@ -151,7 +160,7 @@ public class LnfCreation extends Operator {
 						symbolList.add(symbols);
 					}
 					// circle neighbourhood
-					// TODO check difference betweeen maparray and maparray2
+					//for neighbourhood > 3 string values are are read from map
 					else if (getParameterAsInt("neighbourhood") == 4) {
 						int radius = getParameterAsInt("radius");
 						int numberOfPoints = getParameterAsInt("points");
@@ -219,13 +228,13 @@ public class LnfCreation extends Operator {
 					else {
 						String symbols = "";
 						if ((windowSize == 3) && (getParameterAsInt("neighbourhood") == 0)) {
-							symbols = symbols + mv.getValueAtId(i+1,j) + mv.getValueAtId(i,j+1) + mv.getValueAtId(i+1,j+1) + mv.getValueAtId(i+2,j+1) + mv.getValueAtId(i+1,j+2);
+							symbols = symbols + mv.getStringValueAtId(i+1,j) + mv.getStringValueAtId(i,j+1) + mv.getStringValueAtId(i+1,j+1) + mv.getStringValueAtId(i+2,j+1) + mv.getStringValueAtId(i+1,j+2);
 						} else {
 							for (int k=0; k<windowSize; k++)
 							{
 								for (int l=0; l<windowSize; l++)
 								{
-									symbols = symbols + mv.getValueAtId(i+k,j+l);
+									symbols = symbols + mv.getStringValueAtId(i+k,j+l);
 								}
 							}
 						}	
@@ -277,7 +286,7 @@ public class LnfCreation extends Operator {
 								symbolList.add(symbols8);
 							}
 						}
-					}
+					} //end if (default neighbourhood)
 					Collections.sort(symbolList);
 					String symbols = symbolList.get(0);
 					
@@ -307,26 +316,17 @@ public class LnfCreation extends Operator {
 				}
 			}
 			
-			//TODO check code from here
-			// create output example set
-			List<Attribute> attributeList = new ArrayList<Attribute>(1);
-			Attribute lnfAttribute = AttributeFactory.createAttribute("LNF", Ontology.NOMINAL);
-			attributeList.add(lnfAttribute);
-			MemoryExampleTable exampleTable = new MemoryExampleTable(attributeList);
-			DataRowFactory factory = new DataRowFactory(DataRowFactory.TYPE_BYTE_ARRAY, ',');
-			
+			//create new dataRow in outputexampleTable
 			DataRow dataRow = factory.create(1);
 			dataRow.set(lnfAttribute, lnfAttribute.getMapping().mapString(fingerprintBuffer.toString()));
-			exampleTable.addDataRow(dataRow);
-			
-			ExampleSet output = exampleTable.createExampleSet();
-			
+			outputTable.addDataRow(dataRow);
 			// some statistics
 			ProcessStatistics.getInstance().addFingerprintStringLength(fingerprintBuffer.length());
 			ProcessStatistics.getInstance().addNumSymbolVectors(symbolMap.size());
 		} // end iteration through all maps in exampleSet
-
-		return null;
+	
+		ExampleSet output = outputTable.createExampleSet();
+		return new IOObject[] {output};
 	}
 
 	/**
@@ -399,7 +399,7 @@ public class LnfCreation extends Operator {
 
 	@Override
 	public Class<?>[] getOutputClasses() {
-		return new Class[] { ComplexExampleSet.class };
+		return new Class[] { ExampleSet.class };
 	}
 
 	/**

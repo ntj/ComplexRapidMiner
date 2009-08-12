@@ -59,7 +59,7 @@ public class ZTransformation extends Operator{
 				}
 			}
 		catch(ClassCastException e){
-			throw new OperatorException("attribute name parameter is no map attribute");
+			throw new OperatorException("map attribute name parameter is no map attribute");
 		}
 		} catch (Exception e) {
 			System.out.println("Exception in ZTransformation " + e.toString());
