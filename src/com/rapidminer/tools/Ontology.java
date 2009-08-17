@@ -110,6 +110,8 @@ public class Ontology {
     
     public static final int MAP_STRING = 29;
     
+    public static final int DATA_MAP_STRING = 30;
+    
 	public static final String[] VALUE_TYPE_NAMES = { 
         "attribute_value", 
         "nominal", 
@@ -140,7 +142,8 @@ public class Ontology {
         "point_list",
         "array",
         "data_map",
-        "map_string"
+        "map_string",
+        "data_map_string"
 	};
 
 	/** An ontology for value types (nominal, numerical...) */
@@ -175,7 +178,8 @@ public class Ontology {
                 GEOMETRY,     		// point_list
                 GEOMETRY,           // array
                 GEOMETRY,     		// data_map
-                MAP					// map_string
+                MAP,				// map_string
+                DATA_MAP			// data_map_string
         }, VALUE_TYPE_NAMES);
 
 	// -------------------- BLOCK TYPE --------------------
