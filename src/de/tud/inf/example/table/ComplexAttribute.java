@@ -5,7 +5,6 @@ import java.util.List;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.table.AbstractAttribute;
 import com.rapidminer.example.table.DataRow;
-import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.tools.Ontology;
 
@@ -90,9 +89,6 @@ public abstract class ComplexAttribute extends AbstractAttribute {
 
 	public abstract List<Attribute> getParameterAttributes();
 
-	public abstract String checkConstraints(ExampleTable et,
-			ComplexAttributeDescription cad);
-	
 	public String getSymbol(){
 		return Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(getValueType());
 	}

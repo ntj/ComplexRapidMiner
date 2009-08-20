@@ -30,23 +30,23 @@ public class MapAttribute extends ComplexProxyAttribute{
 	
 	public MapAttribute(String name, int valueType, String hint){
 		super(name,valueType,hint);
-		innerAttribute = (RelationalAttribute)AttributeFactory.createAttribute(Ontology.ATTRIBUTE_VALUE_TYPE.RELATIONAL);
+		innerAttribute = (RelationalAttribute)AttributeFactory.createAttribute(Ontology.RELATIONAL);
 		List<Attribute> iList = new LinkedList<Attribute>();
-		if(valueType == Ontology.ATTRIBUTE_VALUE_TYPE.MAP_STRING)
-			iList.add(AttributeFactory.createAttribute(name + "_zValues",Ontology.ATTRIBUTE_VALUE_TYPE.STRING));
+		if(valueType == Ontology.MAP_STRING)
+			iList.add(AttributeFactory.createAttribute(name + "_zValues",Ontology.STRING));
 		else
-			iList.add(AttributeFactory.createAttribute(name + "_zValues",Ontology.ATTRIBUTE_VALUE_TYPE.NUMERICAL));
+			iList.add(AttributeFactory.createAttribute(name + "_zValues",Ontology.NUMERICAL));
 		
 		//set inner relational attributes
 		innerAttribute.setInnerAttributes(iList);
 		
 		parameters = new LinkedList<Attribute>();
-		parameters.add(AttributeFactory.createAttribute(name + "_oX",Ontology.ATTRIBUTE_VALUE_TYPE.NUMERICAL));
-		parameters.add(AttributeFactory.createAttribute(name + "_oY",Ontology.ATTRIBUTE_VALUE_TYPE.NUMERICAL));
-		parameters.add(AttributeFactory.createAttribute(name + "_sX",Ontology.ATTRIBUTE_VALUE_TYPE.NUMERICAL));
-		parameters.add(AttributeFactory.createAttribute(name + "_sY",Ontology.ATTRIBUTE_VALUE_TYPE.NUMERICAL));
-		parameters.add(AttributeFactory.createAttribute(name + "_dX",Ontology.ATTRIBUTE_VALUE_TYPE.INTEGER));
-		parameters.add(AttributeFactory.createAttribute(name + "_dY",Ontology.ATTRIBUTE_VALUE_TYPE.INTEGER));
+		parameters.add(AttributeFactory.createAttribute(name + "_oX",Ontology.NUMERICAL));
+		parameters.add(AttributeFactory.createAttribute(name + "_oY",Ontology.NUMERICAL));
+		parameters.add(AttributeFactory.createAttribute(name + "_sX",Ontology.NUMERICAL));
+		parameters.add(AttributeFactory.createAttribute(name + "_sY",Ontology.NUMERICAL));
+		parameters.add(AttributeFactory.createAttribute(name + "_dX",Ontology.INTEGER));
+		parameters.add(AttributeFactory.createAttribute(name + "_dY",Ontology.INTEGER));
 	}
 	
 	

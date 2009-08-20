@@ -104,7 +104,7 @@ public class MapValue implements ComplexValue {
 	}
 
 	public int getValueType() {
-		return Ontology.ATTRIBUTE_VALUE_TYPE.MAP;
+		return Ontology.MAP;
 	}
 
 	/**

@@ -5,9 +5,6 @@ import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.table.DataRow;
-import com.rapidminer.example.table.ExampleTable;
-
-import de.tud.inf.example.set.attributevalues.ComplexValue;
 
 
 
@@ -47,20 +44,7 @@ public abstract class ComplexProxyAttribute extends ComplexAttribute {
 		return 1;
 	}
 	
-	@Override
-	public String checkConstraints(ExampleTable et, ComplexAttributeDescription cad){
-		String messg = "";
-		//1. just one attribute should be wrapped
-		if(cad.getAttributeIndexes().length != 1) messg += "attribute " +cad.getName() + " must have exactly one inner attribute ";
-		//2. this attribute must be relational
-		RelationalAttribute relA = null;
-		for(int i=0;i<et.getNumberOfAttributes();i++)
-			if(et.getAttribute(i).getTableIndex() == cad.getAttributeIndexes()[0])
-				if(!et.getAttribute(i).isRelational()) messg += "attribute " +cad.getName() + "'s inner attribute must be relational ";
-				else relA = (RelationalAttribute)et.getAttribute(i);
-		if(relA == null) messg+= "complex attribute " + cad.getName() + " must wrap one attribute which is relational";
-		return messg;
-	}
+	
 
 	@Override
 	public List<Attribute> getParameterAttributes() {
@@ -90,11 +74,6 @@ public abstract class ComplexProxyAttribute extends ComplexAttribute {
 	public double getValue(DataRow row){
 		return innerAttribute.getValue(row);
 	}
-	
-	@Override
-	public void setComplexValue(DataRow row, ComplexValue value) {
-		throw new UnsupportedOperationException();
-	}
-	
+		
 
 }

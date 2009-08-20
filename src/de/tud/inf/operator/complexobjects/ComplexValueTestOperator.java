@@ -85,7 +85,7 @@ public class ComplexValueTestOperator extends Operator{
 			}
 		}
 		System.out.println("Test creating new Attributes");
-		MapAttribute mapAtt =  (MapAttribute)AttributeFactory.createAttribute("my first complex attribute added from an operator",Ontology.ATTRIBUTE_VALUE_TYPE.MAP);
+		MapAttribute mapAtt =  (MapAttribute)AttributeFactory.createAttribute("my first complex attribute added from an operator",Ontology.MAP);
 	
 		
 		double[] origin = new double[2];

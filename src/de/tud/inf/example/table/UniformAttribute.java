@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.table.DataRow;
-import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.operator.similarity.attributebased.uncertain.SimpleProbabilityDensityFunction;
 
 import de.tud.inf.example.set.attributevalues.ComplexValueFactory;
@@ -29,18 +28,5 @@ public class UniformAttribute extends UncertainAttribute {
 		setValues(pdf,row);
 		return pdf;
 	}
-
-	@Override
-	public String checkConstraints(ExampleTable et,
-			ComplexAttributeDescription cad) {
-		String messg = super.checkConstraints(et, cad);
-		if (cad.getParamIndexes().length !=1)
-			messg += "uncertain value with uniform pdf expects exactly one parameter (uncertainty)";
-		//TODO: check if parameter attribute is NUMERIC
-		return messg;
-	}
-	
-
-
 
 }

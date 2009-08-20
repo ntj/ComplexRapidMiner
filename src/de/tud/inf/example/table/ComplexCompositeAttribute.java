@@ -6,7 +6,6 @@ import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.table.DataRow;
-import com.rapidminer.example.table.ExampleTable;
 
 import de.tud.inf.example.set.attributevalues.ComplexValue;
 import de.tud.inf.example.set.attributevalues.ComplexValueFactory;
@@ -101,14 +100,6 @@ public class ComplexCompositeAttribute extends ComplexAttribute {
 		return parameters.size();
 	}
 
-
-	@Override
-	public String checkConstraints(ExampleTable et, ComplexAttributeDescription cad) {
-		String messg = "";
-		if(cad.getAttributeIndexes() == null || cad.getAttributeIndexes().length == 0)
-			messg +=  "attribute " +cad.getName()+ " must contain at least one inner attribute";
-		return messg;
-	}
 
 
 	@Override

@@ -43,7 +43,7 @@ public class PointListValue implements ComplexValue{
 	}
 
 	public int getValueType() {
-		return Ontology.ATTRIBUTE_VALUE_TYPE.POINT_LIST;
+		return Ontology.POINT_LIST;
 	}
 	
 	/*

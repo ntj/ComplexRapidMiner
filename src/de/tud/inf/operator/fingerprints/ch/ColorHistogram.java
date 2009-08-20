@@ -33,9 +33,9 @@ public class ColorHistogram extends Operator{
 	public IOObject[] apply() throws OperatorException {
 		ComplexExampleSet input = getInput(ComplexExampleSet.class);
 		Attribute mapAttr = input.getAttributes().get(getParameterAsString(PARA_MAP_NAME));
-		DataMapAttribute histAttr =  (DataMapAttribute)AttributeFactory.createAttribute("hist",Ontology.ATTRIBUTE_VALUE_TYPE.DATA_MAP);
+		DataMapAttribute histAttr =  (DataMapAttribute)AttributeFactory.createAttribute("hist",Ontology.DATA_MAP);
 		input.addComplexAttribute(histAttr);
-		//TEST ColorHistogram of first example
+	
 		Iterator<Example> it = input.iterator();
 		while (it.hasNext()){
 			Example ex = it.next();
@@ -55,7 +55,7 @@ public class ColorHistogram extends Operator{
 			}
 			//write back histogram
 			//line 52
-			DataMapValue<String,Integer> dmValue = new DataMapValue<String,Integer>(absoluteHist);
+			DataMapValue dmValue = new DataMapValue(absoluteHist);
 			ex.setComplexValue(histAttr, dmValue);
 		}
 		return new IOObject[] {input};

@@ -7,15 +7,17 @@ import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.tools.Ontology;
 
 /**
- * encapsulates simple Map as complex object
+ * 
+ * encapsulates simple Map<String,Double> as complex object
+ * think about type parameters here, if a map with double keys is needed
  * @author Antje Gruner
  * @param <K>
  *
  */
-public class DataMapValue<K,V> implements ComplexValue{
+public class DataMapValue implements ComplexValue{
 
 	
-	private Map<K,V> map;
+	private Map<String, Integer> map;
 	/**
 	 * maps keys of HashMap entries to string keys
 	 */
@@ -26,7 +28,8 @@ public class DataMapValue<K,V> implements ComplexValue{
 		
 	}
 	
-	public DataMapValue(Map<K,V> map){
+	public DataMapValue(Map<String,Integer> map){
+		
 		this.map = map;
 	}	
 	
@@ -40,23 +43,24 @@ public class DataMapValue<K,V> implements ComplexValue{
 	}
 
 	public int getValueType() {
-		return Ontology.ATTRIBUTE_VALUE_TYPE.DATA_MAP;
+		return Ontology.DATA_MAP;
 	}
 	
-	public double get(String key){
+	public int get(String key){
 		Double dKey = new Double(keyMapping.mapString(key));
-		return ((Double)map.get(dKey)).doubleValue();
+		return ((Integer)map.get(dKey)).intValue();
 	}
 	
-	public double get(Double key){
-		return ((Double) map.get(key)).doubleValue();
+	
+	public int get(Double key){
+		throw new UnsupportedOperationException();
+		//return ((Integer) map.get(key)).intValue();
 	}
 	
 	public void setValues(double[][] values){
-		map = new HashMap<K,V>();
-		//TODO check K, V -> mapping
-		//for (int i =0;i<values.length;i++)
-			//map.put((K)values[i][0],(V)values[i][1]);
+		map = new HashMap<String,Integer>();
+		for (int i =0;i<values.length;i++)
+			map.put(keyMapping.mapIndex((int)values[i][0]),new Integer((int) values[i][1]));
 	}
 	
 	public void setValues(double[][] values, NominalMapping keyMapping){
@@ -64,4 +68,15 @@ public class DataMapValue<K,V> implements ComplexValue{
 		this.keyMapping = keyMapping;
 	}
 
+	public NominalMapping getKeyMapping() {
+		return keyMapping;
+	}
+
+	public Map<String, Integer> getMap() {
+		return map;
+	}
+	
+
+	
+	
 }

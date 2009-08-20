@@ -66,7 +66,22 @@ public class SimilarityUtil {
 			"com.rapidminer.operator.similarity.attributebased.RogersTanimotoNominalSimilarity",
 			"com.rapidminer.operator.similarity.attributebased.RussellRaoNominalSimilarity",
 			"com.rapidminer.operator.similarity.attributebased.SimpleMatchingNominalSimilarity",
-			"com.rapidminer.operator.similarity.attributebased.NominalDistance"
+			"com.rapidminer.operator.similarity.attributebased.NominalDistance",
+			
+			"de.tud.inf.operator.fingerprints.lnf.LnfEuclideanDistance",
+			"de.tud.inf.operator.fingerprints.lnf.LnfManhattanDistance",
+			"de.tud.inf.operator.fingerprints.lnf.LnfBhattacharyyaSimilarity",
+			"de.tud.inf.operator.fingerprints.lnf.LnfCosineSimilarity",
+			
+			"de.tud.inf.operator.fingerprints.lbp.LbpEuclideanDistance",
+			
+			"de.tud.inf.operator.fingerprints.asc.GscEuclideanDistance",
+			"de.tud.inf.operator.fingerprints.asc.GscEuclideanDistanceWithRot",
+			"de.tud.inf.operator.fingerprints.asc.GscEuclidMultiLevel",
+			"de.tud.inf.operator.fingerprints.asc.GscCosineSimilarity",
+			"de.tud.inf.operator.fingerprints.asc.GscCosineSimilarityWithRot",
+			"de.tud.inf.operator.fingerprints.asc.GscManhattanDistance",
+			"de.tud.inf.operator.fingerprints.asc.GscManhattanDistanceWithRot"
 	};
 
 	private static ClassNameMapper SIM_CLASSES_MAP = new ClassNameMapper(DEFAULT_SIM_MEASURES);

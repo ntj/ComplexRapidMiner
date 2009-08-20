@@ -29,28 +29,28 @@ public class ComplexValueFactory {
     		return flyweightList.get(key);
     	
     	ComplexValue cFunc = null;
-		if((valueType == Ontology.ATTRIBUTE_VALUE_TYPE.SPARSE_MATRIX) 
-								|| (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.MATRIX) 
+		if((valueType == Ontology.SPARSE_MATRIX) 
+								|| (valueType == Ontology.MATRIX) 
 				 				|| (valueType == Ontology.SPARSE_BINARY_MATRIX)
-				 				|| (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.TENSOR)
-				 				|| (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.HISTOGRAM)){
+				 				|| (valueType == Ontology.TENSOR)
+				 				|| (valueType == Ontology.HISTOGRAM)){
 			//hint stores integer values to instantiate geometries
 			try{
 				String[] pList = hint.split(getParameterSep());
 				int x = Integer.parseInt(pList[0]);
-				if ((valueType == Ontology.ATTRIBUTE_VALUE_TYPE.HISTOGRAM))
+				if ((valueType == Ontology.HISTOGRAM))
 					if(nrAttributes != 0)
 						cFunc = new Histogram(nrAttributes,x,false);
 					else throw new RuntimeException("Histogram instantiation not valid");
 				else{
 					int y = Integer.parseInt(pList[1]);
-					if(valueType == Ontology.ATTRIBUTE_VALUE_TYPE.SPARSE_MATRIX)
+					if(valueType == Ontology.SPARSE_MATRIX)
 						cFunc = new SparseMatrixValue(x,y);
 					else if (valueType == Ontology.SPARSE_BINARY_MATRIX)
 						cFunc = new SparseBinaryMatrixValue(x,y);
-					else if (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.MATRIX)
+					else if (valueType == Ontology.MATRIX)
 						cFunc = new SimpleMatrixValue(x,y);
-					else if (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.TENSOR)
+					else if (valueType == Ontology.TENSOR)
 						cFunc = new TensorValue(x,y,false); //TODO: how to check whether simple or sparse tensor????
 					if(cFunc != null){
 						flyweightList.put(key, cFunc);
@@ -62,9 +62,9 @@ public class ComplexValueFactory {
 				throw new RuntimeException("Could not instantiated attribute "+ " with parameter string "+hint+". expected: 'x_y'");
 			}
 		}
-		else if(valueType == Ontology.ATTRIBUTE_VALUE_TYPE.UNIFORM)
+		else if(valueType == Ontology.UNIFORM)
 			cFunc = new SimpleProbabilityDensityFunction();
-		else if(valueType == Ontology.ATTRIBUTE_VALUE_TYPE.GAUSS){
+		else if(valueType == Ontology.GAUSS){
 			if(nrAttributes != 0)
 				cFunc = new GaussProbabilityDensityFunction(new SimpleMatrixValue(nrAttributes,nrAttributes));
 			//TOTEST: else cFunc = new GaussProbablitityDensityFunction(new SimpleMatrixValue(0,0));
@@ -73,11 +73,11 @@ public class ComplexValueFactory {
 		}
 		
 		
-		else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType,Ontology.ATTRIBUTE_VALUE_TYPE.MAP))
+		else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType,Ontology.MAP))
 			cFunc = new MapValue();
-		else if (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.POINT_LIST)
+		else if (valueType == Ontology.POINT_LIST)
 			cFunc = new PointListValue();
-		else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType,Ontology.ATTRIBUTE_VALUE_TYPE.ARRAY)){
+		else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType,Ontology.ARRAY)){
 			//check if ConstantArrayValue (hint contains information about dimensions of array) or if parameterized array value)
 			try{
 				String[] pList = hint.split(getParameterSep());
@@ -89,10 +89,10 @@ public class ComplexValueFactory {
 				cFunc = new ArrayValue();
 			}
 		}
-		else if (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.DATA_MAP)
+		else if (valueType == Ontology.DATA_MAP)
 			cFunc = new DataMapValue();
 		
-		else if (valueType == Ontology.ATTRIBUTE_VALUE_TYPE.COMPLEX_VALUE)
+		else if (valueType == Ontology.COMPLEX_VALUE)
 			cFunc = new LinearKorrelation();
 		if(cFunc != null){
 			flyweightList.put(key, cFunc);

@@ -2,6 +2,7 @@ package de.tud.inf.example.set;
 
 import java.util.HashMap;
 import java.util.Iterator;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;

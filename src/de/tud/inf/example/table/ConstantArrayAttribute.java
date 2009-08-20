@@ -36,4 +36,10 @@ public class ConstantArrayAttribute extends ComplexProxyAttribute{
 		return 0;
 	}
 
+	@Override
+	public void setComplexValue(DataRow row, ComplexValue value) {
+		throw new UnsupportedOperationException();
+		
+	}
+
 }

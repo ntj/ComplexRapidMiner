@@ -70,7 +70,7 @@ public class SimpleFilesCellEditor extends AbstractCellEditor implements Propert
 		
 	}
 
-	@Override
+	
 	public Object getCellEditorValue() {
 		
 		StringBuffer fileList = new StringBuffer();
@@ -79,19 +79,19 @@ public class SimpleFilesCellEditor extends AbstractCellEditor implements Propert
 		return fileList.toString();
 	}
 
-	@Override
+
 	public void setOperator(Operator operator) {
 		// TODO Auto-generated method stub
 		
 	}
 
-	@Override
+	
 	public boolean useEditorAsRenderer() {
 		// TODO Auto-generated method stub
 		return true;
 	}
 
-	@Override
+	
 	public Component getTableCellEditorComponent(JTable table, Object value,
 			boolean isSelected, int row, int column) {
 		String[] files = null;
@@ -112,7 +112,7 @@ public class SimpleFilesCellEditor extends AbstractCellEditor implements Propert
 		return button;
 	}
 
-	@Override
+	
 	public Component getTableCellRendererComponent(JTable table, Object value,
 			boolean isSelected, boolean hasFocus, int row, int column) {
 		return getTableCellEditorComponent(table, value, isSelected, row, column);

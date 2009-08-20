@@ -421,11 +421,11 @@ public class LnfCreation extends Operator {
 		type.registerDependencyCondition(new EqualTypeCondition(this,PARAMETER_NEIGHBOURHOOD, true, 3, 4));
 		types.add(type);
 
-		/*
-		 * type = new ParameterTypeInt("points", "", 4, Integer.MAX_VALUE, 8);
-		 * type.registerDependencyCondition(new EqualTypeCondition(this,
-		 * PARAMETER_NEIGHBOURHOOD, true, 3,4)); types.add(type);
-		 */
+		
+		type = new ParameterTypeInt("points", "", 4, Integer.MAX_VALUE, 8);
+		type.registerDependencyCondition(new EqualTypeCondition(this,
+						PARAMETER_NEIGHBOURHOOD, true, 3,4)); types.add(type);
+		
 		type = new ParameterTypeDouble("quantization step size","only for ring/circle neighbourhoods", 0, 10, 1);
 		type.registerDependencyCondition(new EqualTypeCondition(this,PARAMETER_NEIGHBOURHOOD, true, 3, 4));
 		types.add(type);

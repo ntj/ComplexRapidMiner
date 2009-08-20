@@ -38,7 +38,7 @@ public class ConstantArrayValue implements ComplexValue{
 	}
 
 	public int getValueType() {
-		return Ontology.ATTRIBUTE_VALUE_TYPE.ARRAY;
+		return Ontology.ARRAY;
 	}
 	
 	public void setValues(double[][] val) {

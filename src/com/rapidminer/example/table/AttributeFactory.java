@@ -84,9 +84,11 @@ public class AttributeFactory {
 		} else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.RELATIONAL)) {
 			return new RelationalAttribute(attributeName, valueType);
 		}
-		//TODO: here creation of complexAttribute (i.e. AttributeFactory knows parameters etc. )
 		else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.MAP))
 			return new MapAttribute(attributeName, valueType,"");
+		else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.DATA_MAP))
+			return new DataMapAttribute(attributeName, valueType,"");
+		
 		else {
 			throw new RuntimeException("AttributeFactory: cannot create attribute with value type '" + Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(valueType) + "' (" + valueType + ")!");
 		}
@@ -142,6 +144,7 @@ public class AttributeFactory {
 		String attributeName = (name != null) ? name : createName();
 		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.MAP))
 			return new MapAttribute(attributeName,valueType,innerAttribute,parameters,hint);
+		//create parameterized array attribute if there are parameter attributes, else create constant array attribute
 		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.ARRAY) && parameters.size() > 0)
 			return new ArrayAttribute(attributeName,valueType,innerAttribute,hint,parameters.get(0),parameters.get(1));
 		else return createProxyAttribute(name,valueType,innerAttribute,hint);

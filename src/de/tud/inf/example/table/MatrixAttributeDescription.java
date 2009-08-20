@@ -4,7 +4,7 @@ import com.rapidminer.example.table.ExampleTable;
 
 import de.tud.inf.example.set.attributevalues.ComplexValueFactory;
 
-public class MatrixAttributeDescription extends ComplexAttributeDescription{
+public class MatrixAttributeDescription extends GeometryAttributeDescription{
 
 	public MatrixAttributeDescription(int[] attIds, int[] paramIds,
 			String symbol, String name, String hint) {
@@ -14,16 +14,7 @@ public class MatrixAttributeDescription extends ComplexAttributeDescription{
 
 	
 	public void checkConstraints(ExampleTable et) {
-		
-		if(this.getAttributeIndexes().length != 1)
-			throw new IllegalArgumentException("attribute " +this.getName() + " must have exactly one inner attribute ");
-		for(int i=0;i<et.getNumberOfAttributes();i++)
-			if(et.getAttribute(i).getTableIndex() == this.getAttributeIndexes()[0]) {
-				if(!et.getAttribute(i).isRelational())
-					throw new IllegalArgumentException("attribute " +this.getName() + "'s inner attribute must be relational ");
-				break;
-			}
-		
+		super.checkConstraints(et);
 		String[] pList = this.getHint().split(ComplexValueFactory.getParameterSep());
 		if(pList.length != 2)
 			throw new IllegalArgumentException("Hint of matrix attribute "+ this.getName() +" is not valid, must be 'rows_columns' ");

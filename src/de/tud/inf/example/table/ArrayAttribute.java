@@ -51,7 +51,6 @@ public class ArrayAttribute extends ComplexProxyAttribute{
 	@Override
 	public void setComplexValue(DataRow row, ComplexValue value) {
 		// TODO Auto-generated method stub
-		
 	}
 
 }

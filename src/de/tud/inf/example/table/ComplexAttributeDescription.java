@@ -5,7 +5,8 @@ import com.rapidminer.example.table.ExampleTable;
 
 
 /**
- * stores information about dependencies between attribute values
+ * stores information about dependencies between attribute values,
+ * should be abstract, so that concrete implementations of ComplexAttributeDescriptions are required
  * @author Antje Gruner
  *
  */

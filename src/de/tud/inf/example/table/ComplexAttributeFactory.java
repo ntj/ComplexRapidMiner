@@ -12,6 +12,8 @@ public class ComplexAttributeFactory {
 		"simple_matrix",
 		"sparse_matrix",
 		"sparse_binary_matrix",
+		"map",
+		"data_map"
 	};
 	
 	public static final Class[] CLASSES = {
@@ -20,7 +22,10 @@ public class ComplexAttributeFactory {
 		MatrixAttributeDescription.class,
 		SimpleMatrixAttributeDescription.class,
 		SparseMatrixAttributeDescription.class,
-		SparseBinaryMatrixAttributeDescription.class
+		SparseBinaryMatrixAttributeDescription.class,
+		MapAttributeDescription.class,
+		DataMapAttributeDescription.class
+		
 	};
 	
 	public static ComplexAttributeDescription createAttributeDescription(int[] attIds, int[] paramIds, String symbol, String name, String hint) {

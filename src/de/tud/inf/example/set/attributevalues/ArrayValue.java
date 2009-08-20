@@ -41,7 +41,7 @@ public class ArrayValue implements ComplexValue{
 	}
 
 	public int getValueType() {
-		return Ontology.ATTRIBUTE_VALUE_TYPE.ARRAY;
+		return Ontology.ARRAY;
 	}
 	
 	public void setValues(int d1, int d2, double[][] val){
