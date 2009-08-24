@@ -3,22 +3,25 @@ package de.tud.inf.example.set.attributevalues;
 import com.rapidminer.tools.Ontology;
 
 /**
- * arrayValue, where dimensions are defined once
+ * this complex object encapsulates an double[n][m] object, where n and m are set once and cannot be changed
  * @author Antje Gruner
  *
  */
 public class ConstantArrayValue implements ComplexValue{
 
-	//dimension of array
-	private int[] dim = new int[2];
+	/**
+	 * 
+	 */
 	private double[][] values;
 	
 	
-	
+	/**
+	 * 
+	 * @param d1 nr of lists
+	 * @param d2 nr of entries in 
+	 */
 	public ConstantArrayValue(int d1, int d2) {
-		dim[0] = d1;
-		dim[1] = d2;
-		values = new double[dim[0]][dim[1]];
+		values = new double[d1][d2];
 	}
 
 	public double getDoubleValue() {
@@ -41,12 +44,36 @@ public class ConstantArrayValue implements ComplexValue{
 		return Ontology.ARRAY;
 	}
 	
-	public void setValues(double[][] val) {
-		for(int i=0;i<values.length;i++){
-			
-		}
-		this.values = val;
+	/**
+	 * overrides the internal a sequence of values object with a given sequence of values
+	 * it is important that the parameter array contains at least n*m values, where n = values.length and m = values[0].length  
+	 * @param values
+	 */
+	public void setValues(double[] vals){
+		for (int i=0;i<values.length;i++)
+			for (int j=0;j<values[0].length;j++)
+				values[i][j] = vals[i*values[j].length + j];
 	}
+	
+	/**
+	 * set values instances of the relational attribute which is an inner attribute of ArrayAttribute
+	 * @param values one data value of an relationalAttribute with one inner attribute
+	 */
+	public void setValues(double[][] relationalValues) {
+		for(int i=0;i<values.length;i++)
+			for(int j=0;j<values[0].length;j++)
+				values[i][j] = relationalValues[i*values[0].length + j][0];
+	}
+	
+	
+	
+	public double[][] getValues() {
+		return values;
+	}
+
+	
+	
+	
 	
 	
 	

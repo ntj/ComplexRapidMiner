@@ -7,6 +7,8 @@ import com.rapidminer.operator.similarity.attributebased.uncertain.GaussProbabil
 import com.rapidminer.operator.similarity.attributebased.uncertain.SimpleProbabilityDensityFunction;
 import com.rapidminer.tools.Ontology;
 
+import de.tud.inf.example.table.ComplexAttribute;
+
 
 /***
  * creates and manages a list of instantiated ComplexValues
@@ -17,7 +19,10 @@ public class ComplexValueFactory {
 
 	private static Map<String, ComplexValue> flyweightList = new HashMap<String, ComplexValue>();
 	
-   
+	public static ComplexValue getComplexValueFunction(ComplexAttribute a){
+		return getComplexValueFunction(a.getInnerAttributeCount(),a.getValueType(),a.getHint());
+	}
+	
     public static ComplexValue getComplexValueFunction(int valueType,String hint) throws RuntimeException{
     	return getComplexValueFunction(0,valueType,hint);
     }
@@ -86,10 +91,10 @@ public class ComplexValueFactory {
 				cFunc = new ConstantArrayValue(x,y);
 			}
 			catch(Exception e){
-				cFunc = new ArrayValue();
+				throw new RuntimeException("array value instantiation not valid");
 			}
 		}
-		else if (valueType == Ontology.DATA_MAP)
+		else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType,Ontology.DATA_MAP))
 			cFunc = new DataMapValue();
 		
 		else if (valueType == Ontology.COMPLEX_VALUE)

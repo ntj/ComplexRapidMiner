@@ -104,5 +104,9 @@ public class RelationalAttribute extends AbstractAttribute{
 		throw new UnsupportedOperationException();	
 	}
 	
+	public void addInnerAttribute(Attribute att){
+		this.innerAttributes.add(att);
+	}
+	
 	
 }

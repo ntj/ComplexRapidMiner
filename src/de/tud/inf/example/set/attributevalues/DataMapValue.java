@@ -9,7 +9,7 @@ import com.rapidminer.tools.Ontology;
 /**
  * 
  * encapsulates simple Map<String,Double> as complex object
- * think about type parameters here, if a map with double keys is needed
+ * TODO think about type parameters here, if a map with double keys is needed
  * @author Antje Gruner
  * @param <K>
  *
@@ -29,12 +29,10 @@ public class DataMapValue implements ComplexValue{
 	}
 	
 	public DataMapValue(Map<String,Integer> map){
-		
 		this.map = map;
 	}	
 	
 	public double getDoubleValue() {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
@@ -52,11 +50,6 @@ public class DataMapValue implements ComplexValue{
 	}
 	
 	
-	public int get(Double key){
-		throw new UnsupportedOperationException();
-		//return ((Integer) map.get(key)).intValue();
-	}
-	
 	public void setValues(double[][] values){
 		map = new HashMap<String,Integer>();
 		for (int i =0;i<values.length;i++)
@@ -64,8 +57,8 @@ public class DataMapValue implements ComplexValue{
 	}
 	
 	public void setValues(double[][] values, NominalMapping keyMapping){
-		setValues(values);
 		this.keyMapping = keyMapping;
+		setValues(values);		
 	}
 
 	public NominalMapping getKeyMapping() {

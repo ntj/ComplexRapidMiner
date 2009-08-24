@@ -13,10 +13,13 @@ import com.rapidminer.operator.similarity.attributebased.uncertain.ProbabilityDe
 import com.rapidminer.tools.Ontology;
 
 import de.tud.inf.example.set.ComplexExampleSet;
+import de.tud.inf.example.set.attributevalues.ComplexValueFactory;
+import de.tud.inf.example.set.attributevalues.ConstantArrayValue;
 import de.tud.inf.example.set.attributevalues.MapValue;
 import de.tud.inf.example.set.attributevalues.MatrixValue;
 import de.tud.inf.example.set.attributevalues.TensorValue;
 import de.tud.inf.example.table.ComplexAttribute;
+import de.tud.inf.example.table.ConstantArrayAttribute;
 import de.tud.inf.example.table.MapAttribute;
 import de.tud.inf.example.table.UncertainAttribute;
 
@@ -25,6 +28,7 @@ public class ComplexValueTestOperator extends Operator{
 	public ComplexValueTestOperator(OperatorDescription description) {
 		super(description);
 	}
+	
 	@Override
 	public IOObject[] apply() throws OperatorException {
 		System.out.println("\n\n--------------------------------------------");
@@ -86,24 +90,31 @@ public class ComplexValueTestOperator extends Operator{
 		}
 		System.out.println("Test creating new Attributes");
 		MapAttribute mapAtt =  (MapAttribute)AttributeFactory.createAttribute("my first complex attribute added from an operator",Ontology.MAP);
-	
-		
 		double[] origin = new double[2];
-		 
 		double[] spacing = new double[2];
 		int[] dim = new int[2];
 		dim[0] = 3;
-		dim[1] = 3;
-		
+		dim[1] = 3;	
 		double[] values = new double[5];
 		MapValue mValue = new MapValue(origin,spacing,dim,values);
 		es.addComplexAttribute(mapAtt);
 		for(int i=0;i<es.size();i++)
 			es.getExample(i).setComplexValue(mapAtt,mValue);
 		
-		
-		
-		
+		//create constant array attribute and set two constant array values
+		if(es.size() >1){
+			ConstantArrayAttribute arrayAttr =  (ConstantArrayAttribute)AttributeFactory.createAttribute("complex array attribute",Ontology.ARRAY,"2_2");
+			es.addComplexAttribute(arrayAttr);
+			ConstantArrayValue arrayValue = (ConstantArrayValue)ComplexValueFactory.getComplexValueFunction(arrayAttr);
+			
+			double[] vals = new double[]{1,2,3,4,5};
+			arrayValue.setValues(vals);
+			es.getExample(0).setComplexValue(arrayAttr, arrayValue);
+			
+			double[] vals2 = new double[]{4,6,7,9};
+			arrayValue.setValues(vals2);
+			es.getExample(1).setComplexValue(arrayAttr, arrayValue);
+		}
 		System.out.println("\n\n[ComplexValueTestOperator.apply() finished]");
 		return new IOObject[] {es};
 	}

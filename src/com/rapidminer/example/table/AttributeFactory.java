@@ -31,7 +31,6 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ConstructionDescription;
 import com.rapidminer.tools.Ontology;
 
-import de.tud.inf.example.table.ArrayAttribute;
 import de.tud.inf.example.table.ComplexCompositeAttribute;
 import de.tud.inf.example.table.ConstantArrayAttribute;
 import de.tud.inf.example.table.DataMapAttribute;
@@ -88,12 +87,26 @@ public class AttributeFactory {
 			return new MapAttribute(attributeName, valueType,"");
 		else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.DATA_MAP))
 			return new DataMapAttribute(attributeName, valueType,"");
-		
 		else {
 			throw new RuntimeException("AttributeFactory: cannot create attribute with value type '" + Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(valueType) + "' (" + valueType + ")!");
 		}
 	}
 
+	/**
+	 * create Attribute, where an additional information (hint) is necessary, e.g. {@link com.rapidminer.operator.visualization.ProcessLogOperator}
+	 * @param name
+	 * @param valueType
+	 * @param hint
+	 * @return
+	 */
+	public static Attribute createAttribute(String name, int valueType, String hint){
+		String attributeName = (name != null) ? name : createName();
+		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.ARRAY))
+			return new ConstantArrayAttribute(attributeName, valueType,hint);
+		else 
+			throw new RuntimeException("AttributeFactory: cannot create attribute with value type '" + Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(valueType) + "' (" + valueType + ")!");
+		
+	}
 	
 	public static Attribute createCompositeAttribute(String name, int valueType, List<Attribute> innerAttributes, List<Attribute> parameters, String hint){
 		String attributeName = (name != null) ? name : createName();
@@ -144,9 +157,11 @@ public class AttributeFactory {
 		String attributeName = (name != null) ? name : createName();
 		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.MAP))
 			return new MapAttribute(attributeName,valueType,innerAttribute,parameters,hint);
+		/*
 		//create parameterized array attribute if there are parameter attributes, else create constant array attribute
 		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.ARRAY) && parameters.size() > 0)
 			return new ArrayAttribute(attributeName,valueType,innerAttribute,hint,parameters.get(0),parameters.get(1));
+		*/
 		else return createProxyAttribute(name,valueType,innerAttribute,hint);
 	}
 	

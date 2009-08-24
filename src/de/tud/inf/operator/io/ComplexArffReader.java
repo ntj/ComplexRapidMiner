@@ -22,7 +22,6 @@ import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
 
-import de.tud.inf.example.ComplexAttributeConstraintChecker;
 import de.tud.inf.example.table.ComplexAttributeDescription;
 import de.tud.inf.example.table.ComplexAttributeFactory;
 import de.tud.inf.example.table.ComplexExampleTable;

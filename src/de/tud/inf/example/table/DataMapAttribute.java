@@ -1,10 +1,8 @@
 package de.tud.inf.example.table;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import com.rapidminer.example.Attribute;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.NominalMapping;
@@ -30,17 +28,14 @@ public class DataMapAttribute extends ComplexProxyAttribute{
 	public DataMapAttribute(String name, int valueType, String hint){
 		super(name,valueType,hint);
 		innerAttribute = (RelationalAttribute)AttributeFactory.createAttribute(Ontology.RELATIONAL);
-		List<Attribute> iList = new LinkedList<Attribute>();
+		
 		//key attribute: check whether string or numeric key
 		if(valueType == Ontology.DATA_MAP_STRING)
-			iList.add(AttributeFactory.createAttribute(name + "_key",Ontology.STRING));
+			innerAttribute.addInnerAttribute(AttributeFactory.createAttribute(name + "_key",Ontology.STRING));
 		else
-			iList.add(AttributeFactory.createAttribute(name + "_key",Ontology.NUMERICAL));
+			innerAttribute.addInnerAttribute(AttributeFactory.createAttribute(name + "_key",Ontology.NUMERICAL));
 		//value attribute
-		iList.add(AttributeFactory.createAttribute(name + "_value",Ontology.NUMERICAL));
-		
-		innerAttribute.setInnerAttributes(iList);
-		
+		innerAttribute.addInnerAttribute(AttributeFactory.createAttribute(name + "_value",Ontology.NUMERICAL));
 	}
 	
 	
@@ -61,11 +56,6 @@ public class DataMapAttribute extends ComplexProxyAttribute{
 		return dMapVal;
 	}
 
-	//TEST if set works
-	public void setComplexValue(DataMapValue value, DataRow row){
-		//this attribute must now exactly where to store which information in mapValue and stores it in dataRow
-	}
-	
 	
 	@Override
 	public int getParameterCount() {
@@ -74,26 +64,21 @@ public class DataMapAttribute extends ComplexProxyAttribute{
 
 	@Override
 	public void setComplexValue(DataRow row, ComplexValue value) {
-		DataMapValue dmValue = (DataMapValue)value;
-		
-		//get attribute keyMapping
+		DataMapValue dmValue = (DataMapValue)value;	
 		NominalMapping attrMapping = innerAttribute.getInnerAttributeAt(0).getMapping();
-		//get object key mapping
-		NominalMapping objMapping = dmValue.getKeyMapping();
-		
 		Map<String,Integer> kvMap = dmValue.getMap();
 		
-		double[][] rValues = new double[kvMap.size()][2];
-		//TODO: set data map values here
-		/*
-		for(int i=0;i<rValues.length;i++){
-			//get string value at position i from object mapping, map that string to an index (via attribute mapping)
-			//store resulting index into dataRow
-			rValues[i][0] =  attrMapping.mapString(objMapping.mapIndex((int)values[i]));
-			rValues[i][0] =  attrMapping.mapString(objMapping.mapIndex((int)values[i]));
-		}		
+		double[][] rValues = new double[kvMap.size()][2];	
+		int count =0;
+		Set<String> keySet = kvMap.keySet();
+		for(String key: keySet){
+			//store key
+			rValues[count][0] = attrMapping.mapString(key);
+			//store value
+            rValues[count][1] = kvMap.get(key);
+            count++;
+		}
 		row.setRelationalValues(innerAttribute.getTableIndex(), rValues);
-		*/
 	}
 
 }

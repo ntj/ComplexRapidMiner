@@ -20,6 +20,13 @@ import de.tud.inf.example.set.attributevalues.MapValue;
  */
 public class MapAttribute extends ComplexProxyAttribute{
 
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8243720102763289432L;
+
+	
 	List<Attribute> parameters;
 	
 	public MapAttribute(String name, int valueType,
@@ -31,14 +38,10 @@ public class MapAttribute extends ComplexProxyAttribute{
 	public MapAttribute(String name, int valueType, String hint){
 		super(name,valueType,hint);
 		innerAttribute = (RelationalAttribute)AttributeFactory.createAttribute(Ontology.RELATIONAL);
-		List<Attribute> iList = new LinkedList<Attribute>();
 		if(valueType == Ontology.MAP_STRING)
-			iList.add(AttributeFactory.createAttribute(name + "_zValues",Ontology.STRING));
+			innerAttribute.addInnerAttribute(AttributeFactory.createAttribute(name + "_zValues",Ontology.STRING));
 		else
-			iList.add(AttributeFactory.createAttribute(name + "_zValues",Ontology.NUMERICAL));
-		
-		//set inner relational attributes
-		innerAttribute.setInnerAttributes(iList);
+			innerAttribute.addInnerAttribute(AttributeFactory.createAttribute(name + "_zValues",Ontology.NUMERICAL));
 		
 		parameters = new LinkedList<Attribute>();
 		parameters.add(AttributeFactory.createAttribute(name + "_oX",Ontology.NUMERICAL));
@@ -50,11 +53,6 @@ public class MapAttribute extends ComplexProxyAttribute{
 	}
 	
 	
-	
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -8243720102763289432L;
 
 	@Override
 	public MapValue getComplexValue(DataRow row) {
