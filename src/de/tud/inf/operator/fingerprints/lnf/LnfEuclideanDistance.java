@@ -3,6 +3,7 @@ package de.tud.inf.operator.fingerprints.lnf;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -13,6 +14,8 @@ import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.learner.clustering.IdUtils;
 import com.rapidminer.operator.similarity.SimilarityAdapter;
 import com.rapidminer.operator.similarity.attributebased.ExampleBasedSimilarityMeasure;
+
+import de.tud.inf.example.set.attributevalues.DataMapValue;
 
 public class LnfEuclideanDistance extends SimilarityAdapter implements ExampleBasedSimilarityMeasure {
 
@@ -125,6 +128,71 @@ public class LnfEuclideanDistance extends SimilarityAdapter implements ExampleBa
 					s2Token = false;
 			}
 		}
+		return Math.sqrt(dist);
+	}
+	
+	public double euclideanDistance(DataMapValue e1, DataMapValue e2)
+	{
+		double dist = 0;
+		//get maps
+		Map<String,Integer> map1 = e1.getMap();
+		Map<String,Integer> map2 = e2.getMap();
+		Iterator<String> keys1 = map1.keySet().iterator();
+		Iterator<String> keys2 = map2.keySet().iterator();
+		//TODO: ensure that there is at least one tuple in map
+		String key1 = keys1.next();
+		String key2 = keys2.next();
+		boolean s1Token = true;
+		boolean s2Token = true;
+		while (keys1.hasNext() || keys2.hasNext() || (s1Token == true) || (s2Token == true)) {
+			if ((!keys1.hasNext()) && (s1Token == false)) {
+				dist = dist + Math.pow(map2.get(key2), 2);
+				if (keys2.hasNext())
+					key2 = keys2.next();
+				else
+					s2Token = false;
+			}
+			else if ((!keys2.hasNext()) && (s2Token == false)) {
+				dist = dist + Math.pow(map1.get(key1), 2);
+				System.out.print(dist + "  ");
+				if (keys1.hasNext())
+					key1 = keys1.next();
+				else
+					s1Token = false;
+			}
+			// equal
+			else if (key1.equals(key2)) {
+				dist = dist + Math.pow(map1.get(key1) - map2.get(key2), 2);
+				System.out.print(dist + "  ");
+				if (keys1.hasNext())
+					key1 = keys1.next();
+				else
+					s1Token = false;
+				if (keys2.hasNext())
+					key2 = keys2.next();
+				else
+					s2Token = false;
+			}
+			// s1 is smaller
+			else if (key1.compareTo(key2) < 0) {
+				dist = dist + Math.pow(map1.get(key1), 2);
+				System.out.print(dist + "  ");
+				if (keys1.hasNext())
+					key1 = keys1.next();
+				else
+					s1Token = false;
+			}
+			// s1 is greater
+			else if (key1.compareTo(key2) > 0) {
+				dist = dist + Math.pow(map2.get(key2), 2);
+				System.out.print(dist + "  ");
+				if (keys2.hasNext())
+					key2 = keys2.next();
+				else
+					s2Token = false;
+			}
+		}
+		System.out.println("");
 		return Math.sqrt(dist);
 	}
 
