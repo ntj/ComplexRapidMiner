@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.OperatorException;
@@ -16,19 +15,20 @@ import com.rapidminer.operator.similarity.SimilarityAdapter;
 import com.rapidminer.operator.similarity.attributebased.ExampleBasedSimilarityMeasure;
 
 import de.tud.inf.example.set.attributevalues.DataMapValue;
+import de.tud.inf.example.table.DataMapAttribute;
 
 public class LnfEuclideanDistance extends SimilarityAdapter implements ExampleBasedSimilarityMeasure {
 
 	private static final long serialVersionUID = 2353396887502782366L;
 	private ExampleSet es = null;
-	private Attribute simAttribute;
+	private DataMapAttribute simAttribute;
 	private Set<String> ids;
 	
 	public void init(ExampleSet exampleSet) throws OperatorException {
 		this.es = exampleSet;
 		this.es.remapIds();
 		
-		simAttribute = es.getAttributes().get("LNF");
+		simAttribute = (DataMapAttribute)es.getAttributes().get("LNF");
 		
 		ids = new HashSet<String>();
 		Iterator<Example> er = es.iterator();
@@ -37,7 +37,7 @@ public class LnfEuclideanDistance extends SimilarityAdapter implements ExampleBa
 	}
 
 	public double similarity(Example x, Example y) {
-		return euclideanDistance(x.getNominalValue(simAttribute), y.getNominalValue(simAttribute));
+		return euclideanDistance(x.getDataMapValue(simAttribute), y.getDataMapValue(simAttribute));
 	}
 
 	public Iterator<String> getIds() {
@@ -69,7 +69,7 @@ public class LnfEuclideanDistance extends SimilarityAdapter implements ExampleBa
 		if (ex.getId() == ey.getId())
 			dist = 0;
 		else
-			dist = euclideanDistance(ex.getNominalValue(simAttribute), ey.getNominalValue(simAttribute));
+			dist = euclideanDistance(ex.getDataMapValue(simAttribute), ey.getDataMapValue(simAttribute));
 		//System.out.println(x + "-" + y + ": " + dist);
 		return dist;
 	}
@@ -135,8 +135,8 @@ public class LnfEuclideanDistance extends SimilarityAdapter implements ExampleBa
 	{
 		double dist = 0;
 		//get maps
-		Map<String,Integer> map1 = e1.getMap();
-		Map<String,Integer> map2 = e2.getMap();
+		Map<String,Double> map1 = e1.getMap();
+		Map<String,Double> map2 = e2.getMap();
 		Iterator<String> keys1 = map1.keySet().iterator();
 		Iterator<String> keys2 = map2.keySet().iterator();
 		//TODO: ensure that there is at least one tuple in map
@@ -154,7 +154,6 @@ public class LnfEuclideanDistance extends SimilarityAdapter implements ExampleBa
 			}
 			else if ((!keys2.hasNext()) && (s2Token == false)) {
 				dist = dist + Math.pow(map1.get(key1), 2);
-				System.out.print(dist + "  ");
 				if (keys1.hasNext())
 					key1 = keys1.next();
 				else
@@ -163,7 +162,6 @@ public class LnfEuclideanDistance extends SimilarityAdapter implements ExampleBa
 			// equal
 			else if (key1.equals(key2)) {
 				dist = dist + Math.pow(map1.get(key1) - map2.get(key2), 2);
-				System.out.print(dist + "  ");
 				if (keys1.hasNext())
 					key1 = keys1.next();
 				else
@@ -176,7 +174,6 @@ public class LnfEuclideanDistance extends SimilarityAdapter implements ExampleBa
 			// s1 is smaller
 			else if (key1.compareTo(key2) < 0) {
 				dist = dist + Math.pow(map1.get(key1), 2);
-				System.out.print(dist + "  ");
 				if (keys1.hasNext())
 					key1 = keys1.next();
 				else
@@ -185,14 +182,12 @@ public class LnfEuclideanDistance extends SimilarityAdapter implements ExampleBa
 			// s1 is greater
 			else if (key1.compareTo(key2) > 0) {
 				dist = dist + Math.pow(map2.get(key2), 2);
-				System.out.print(dist + "  ");
 				if (keys2.hasNext())
 					key2 = keys2.next();
 				else
 					s2Token = false;
 			}
 		}
-		System.out.println("");
 		return Math.sqrt(dist);
 	}
 

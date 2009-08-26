@@ -17,7 +17,7 @@ import com.rapidminer.tools.Ontology;
 public class DataMapValue implements ComplexValue{
 
 	
-	private Map<String, Integer> map;
+	private Map<String, Double> map;
 	/**
 	 * maps keys of HashMap entries to string keys
 	 */
@@ -28,7 +28,7 @@ public class DataMapValue implements ComplexValue{
 		
 	}
 	
-	public DataMapValue(Map<String,Integer> map){
+	public DataMapValue(Map<String,Double> map){
 		this.map = map;
 	}	
 	
@@ -44,28 +44,45 @@ public class DataMapValue implements ComplexValue{
 		return Ontology.DATA_MAP;
 	}
 	
-	public int get(String key){
+	public double get(String key){
 		Double dKey = new Double(keyMapping.mapString(key));
-		return ((Integer)map.get(dKey)).intValue();
+		return map.get(dKey);
 	}
 	
 	
 	public void setValues(double[][] values){
-		map = new HashMap<String,Integer>();
+		map = new HashMap<String,Double>();
 		for (int i =0;i<values.length;i++)
-			map.put(keyMapping.mapIndex((int)values[i][0]),new Integer((int) values[i][1]));
+			map.put(keyMapping.mapIndex((int)values[i][0]),new Double(values[i][1]));
 	}
 	
-	public void setValues(double[][] values, NominalMapping keyMapping){
+	public void setValues(double[][] values,NominalMapping keyMapping){
 		this.keyMapping = keyMapping;
-		setValues(values);		
+		map = new HashMap<String,Double>();
+		for (int i =0;i<values.length;i++)
+			map.put(keyMapping.mapIndex((int)values[i][0]),new Double(values[i][1]));
 	}
+	
+	/*
+	public void setValues(double[] keys, T[] values){
+		map = new HashMap<String,T>();
+		for (int i =0;i<keys.length;i++){
+			map.put(keyMapping.mapIndex((int)keys[i]),values[i]);
+		}
+	}
+	
+	
+	public void setValues(double[] keys, T[] values, NominalMapping keyMapping){
+		this.keyMapping = keyMapping;
+		setValues(keys,values);		
+	}
+	*/
 
 	public NominalMapping getKeyMapping() {
 		return keyMapping;
 	}
 
-	public Map<String, Integer> getMap() {
+	public Map<String, Double> getMap() {
 		return map;
 	}
 	

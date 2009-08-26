@@ -72,7 +72,7 @@ public abstract class ComplexProxyAttribute extends ComplexAttribute {
 	 * returns a default value (e.g. average of matrix entries)
 	 */
 	public double getValue(DataRow row){
-		return innerAttribute.getValue(row);
+		return 0;
 	}
 		
 

@@ -45,9 +45,8 @@ public class DataMapAttribute extends ComplexProxyAttribute{
 	private static final long serialVersionUID = 806365320039407341L;
 
 	@Override
-	public ComplexValue getComplexValue(DataRow row) {
-		DataMapValue dMapVal = null;
-		dMapVal = (DataMapValue)ComplexValueFactory.getComplexValueFunction(getValueType(),this.hint);
+	public DataMapValue getComplexValue(DataRow row) {
+		DataMapValue dMapVal = (DataMapValue)ComplexValueFactory.getComplexValueFunction(getValueType(),this.hint);
 		double[][]  values = row.getRelativeValuesFor(this.innerAttribute.getTableIndex());
 		//build map
 		if(innerAttribute.getInnerAttributeAt(0).isNominal())
@@ -60,13 +59,14 @@ public class DataMapAttribute extends ComplexProxyAttribute{
 	@Override
 	public int getParameterCount() {
 		return 0;
+		
 	}
 
 	@Override
 	public void setComplexValue(DataRow row, ComplexValue value) {
 		DataMapValue dmValue = (DataMapValue)value;	
 		NominalMapping attrMapping = innerAttribute.getInnerAttributeAt(0).getMapping();
-		Map<String,Integer> kvMap = dmValue.getMap();
+		Map<String,Double> kvMap = dmValue.getMap();
 		
 		double[][] rValues = new double[kvMap.size()][2];	
 		int count =0;

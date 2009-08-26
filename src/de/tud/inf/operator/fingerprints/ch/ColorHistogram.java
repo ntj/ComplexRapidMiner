@@ -40,7 +40,7 @@ public class ColorHistogram extends Operator{
 		while (it.hasNext()){
 			Example ex = it.next();
 			MapValue mapVal =  ex.getMapValue(mapAttr);
-			Map<String, Integer> absoluteHist = new HashMap<String, Integer>();
+			Map<String, Double> absoluteHist = new HashMap<String, Double>();
 			int numPix = mapVal.getMapSize();
 			for(int i=0;i<numPix;i++){
 				String currentSymbol = mapVal.getStringValueAt(i);
@@ -49,7 +49,7 @@ public class ColorHistogram extends Operator{
 					absoluteHist.put(currentSymbol, (absoluteHist.get(currentSymbol) + 1));
 				} else {
 					// init
-					absoluteHist.put(currentSymbol,1);
+					absoluteHist.put(currentSymbol,1.0);
 				}
 				
 			}

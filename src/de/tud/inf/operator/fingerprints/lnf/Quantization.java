@@ -31,7 +31,6 @@ public class Quantization extends Operator {
 	@Override
 	public IOObject[] apply() throws OperatorException {
 		
-		
 		// get input
 		ComplexExampleSet exampleSet = getInput(ComplexExampleSet.class);
 		
@@ -40,7 +39,7 @@ public class Quantization extends Operator {
 		if(mapInAttr == null) throw new OperatorException("map attribute \"" + getParameterAsString(PARAMETER_MAP_NAME) + "\" misses.");
 		
 		//create output attribute
-		MapAttribute mapOutAttr = (MapAttribute)AttributeFactory.createAttribute(mapInAttr.getName() + "_quantization", Ontology.ATTRIBUTE_VALUE_TYPE.MAP_STRING);
+		MapAttribute mapOutAttr = (MapAttribute)AttributeFactory.createAttribute(mapInAttr.getName() + "_quantization", Ontology.MAP_STRING);
 		
 		exampleSet.addComplexAttribute(mapOutAttr);
 		

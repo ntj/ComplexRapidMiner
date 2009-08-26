@@ -2,6 +2,7 @@ package de.tud.inf.operator.fingerprints.lnf;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,9 @@ import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.Ontology;
 
 import de.tud.inf.example.set.ComplexExampleSet;
+import de.tud.inf.example.set.attributevalues.DataMapValue;
 import de.tud.inf.example.set.attributevalues.MapValue;
+import de.tud.inf.example.table.ComplexAttribute;
 import de.tud.inf.example.table.MapAttribute;
 import de.tud.inf.operator.fingerprints.ProcessStatistics;
 
@@ -42,7 +45,6 @@ public class LnfCreation extends Operator {
 
 	public LnfCreation(OperatorDescription description) {
 		super(description);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
@@ -54,10 +56,10 @@ public class LnfCreation extends Operator {
 		
 		//lnf attribute
 		List<Attribute> attributeList = new ArrayList<Attribute>(1);
-		Attribute lnfAttribute = AttributeFactory.createAttribute("LNF", Ontology.NOMINAL);
+		ComplexAttribute lnfAttribute = (ComplexAttribute)AttributeFactory.createAttribute("LNF", Ontology.DATA_MAP_STRING);
 		attributeList.add(lnfAttribute);
 		MemoryExampleTable outputTable = new MemoryExampleTable(attributeList);
-		DataRowFactory factory = new DataRowFactory(DataRowFactory.TYPE_BYTE_ARRAY, ',');
+		DataRowFactory factory = new DataRowFactory(DataRowFactory.TYPE_DOUBLE_ARRAY, ',');
 		
 		Iterator<Example> it = inputSet.iterator();
 		Example e;
@@ -304,24 +306,27 @@ public class LnfCreation extends Operator {
 			int xSize = nrow;
 			int ySize = ncol;
 			double totalNum = ((xSize - windowSize) + 1) * ((ySize - windowSize) + 1);
-			StringBuffer fingerprintBuffer = new StringBuffer("");
+			
 			double minFreq = getParameterAsDouble("min relative frequency");
 			double relValue = 0;
+			Map<String,Double> resultMap = new HashMap<String,Double>();
 			for (Map.Entry<String, Integer> mapEntry: symbolMap.entrySet())
 			{
 				relValue = (double)mapEntry.getValue()/totalNum;
 				if (relValue > minFreq)
 				{
-					fingerprintBuffer.append(mapEntry.getKey() + "!" + relValue + "#");			
+					resultMap.put(mapEntry.getKey(),relValue);			
 				}
 			}
 			
+			DataMapValue mValue = new DataMapValue(resultMap);
 			//create new dataRow in outputexampleTable
-			DataRow dataRow = factory.create(1);
-			dataRow.set(lnfAttribute, lnfAttribute.getMapping().mapString(fingerprintBuffer.toString()));
+			DataRow dataRow = factory.create(10);
 			outputTable.addDataRow(dataRow);
+			dataRow.set(lnfAttribute,mValue);
 			// some statistics
-			ProcessStatistics.getInstance().addFingerprintStringLength(fingerprintBuffer.length());
+			//war vorher fingerprintbuffer.
+			ProcessStatistics.getInstance().addFingerprintStringLength(resultMap.size());
 			ProcessStatistics.getInstance().addNumSymbolVectors(symbolMap.size());
 		} // end iteration through all maps in exampleSet
 	

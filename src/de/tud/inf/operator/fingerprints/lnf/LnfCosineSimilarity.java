@@ -4,6 +4,7 @@ package de.tud.inf.operator.fingerprints.lnf;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -14,6 +15,8 @@ import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.learner.clustering.IdUtils;
 import com.rapidminer.operator.similarity.SimilarityAdapter;
 import com.rapidminer.operator.similarity.attributebased.ExampleBasedSimilarityMeasure;
+
+import de.tud.inf.example.set.attributevalues.DataMapValue;
 
 public class LnfCosineSimilarity extends SimilarityAdapter implements ExampleBasedSimilarityMeasure {
 
@@ -35,7 +38,7 @@ public class LnfCosineSimilarity extends SimilarityAdapter implements ExampleBas
 	}
 
 	public double similarity(Example x, Example y) {
-		return distance(x.getNominalValue(simAttribute), y.getNominalValue(simAttribute));
+		return distance(x.getDataMapValue(simAttribute), y.getDataMapValue(simAttribute));
 	}
 
 	public Iterator<String> getIds() {
@@ -63,7 +66,7 @@ public class LnfCosineSimilarity extends SimilarityAdapter implements ExampleBas
 		Example ex = IdUtils.getExampleFromId(es, x);
 		Example ey = IdUtils.getExampleFromId(es, y);
 
-		return distance(ex.getNominalValue(simAttribute), ey.getNominalValue(simAttribute));
+		return distance(ex.getDataMapValue(simAttribute), ey.getDataMapValue(simAttribute));
 	}
 	
 	public double distance(String e1, String e2)
@@ -122,6 +125,73 @@ public class LnfCosineSimilarity extends SimilarityAdapter implements ExampleBas
 				sumS2 += Math.pow(Double.valueOf(s2[1]),2);
 				if (string2.hasMoreTokens())
 					s2 = string2.nextToken().split("!");
+				else
+					s2Token = false;
+			}
+		}
+		return sum / Math.sqrt(sumS1 * sumS2);
+	}
+	
+
+	public double distance(DataMapValue e1, DataMapValue e2)
+	{
+		//get maps
+		Map<String,Double> map1 = e1.getMap();
+		Map<String,Double> map2 = e2.getMap();
+		Iterator<String> keys1 = map1.keySet().iterator();
+		Iterator<String> keys2 = map2.keySet().iterator();
+		//TODO: ensure that there is at least one tuple in map
+		String key1 = keys1.next();
+		String key2 = keys2.next();
+		boolean s1Token = true;
+		boolean s2Token = true;
+		
+		double sum = 0;
+		double sumS1 = 0;
+		double sumS2 = 0;
+	
+		while (keys1.hasNext() || keys2.hasNext() || (s1Token == true) || (s2Token == true)) {
+			if ((!keys1.hasNext()) && (s1Token == false)) {
+				sumS2 += Math.pow(map2.get(key2),2);
+				if (keys2.hasNext())
+					key2 = keys2.next();
+				else
+					s2Token = false;
+			}
+			else if ((!keys2.hasNext()) && (s2Token == false)) {
+				sumS1 += Math.pow(map1.get(key1),2);
+				if (keys1.hasNext())
+					key1 = keys1.next();
+				else
+					s1Token = false;
+			}
+			// equal
+			else if (key1.equals(key2)) {
+				sum += Double.valueOf(map1.get(key1)) * map2.get(key2);
+				sumS1 += Math.pow(map1.get(key1),2);
+				sumS2 += Math.pow(map2.get(key2),2);
+				if (keys1.hasNext())
+					key1 = keys1.next();
+				else
+					s1Token = false;
+				if (keys2.hasNext())
+					key2 = keys2.next();
+				else
+					s2Token = false;
+			}
+			// s1 is smaller
+			else if (key1.compareTo(key2) < 0) {
+				sumS1 += Math.pow(map1.get(key1),2);
+				if (keys1.hasNext())
+					key1 = keys1.next();
+				else
+					s1Token = false;
+			}
+			// s1 is greater
+			else if (key1.compareTo(key2) > 0) {
+				sumS2 += Math.pow(map2.get(key2),2);
+				if (keys2.hasNext())
+					key2 = keys2.next();
 				else
 					s2Token = false;
 			}
