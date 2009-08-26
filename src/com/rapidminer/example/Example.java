@@ -35,8 +35,10 @@ import com.rapidminer.tools.Ontology;
 
 import de.tud.inf.example.set.attributevalues.AbstractMatrixValue;
 import de.tud.inf.example.set.attributevalues.ComplexValue;
+import de.tud.inf.example.set.attributevalues.DataMapValue;
 import de.tud.inf.example.set.attributevalues.MapValue;
 import de.tud.inf.example.table.ComplexAttribute;
+import de.tud.inf.example.table.DataMapAttribute;
 import de.tud.inf.example.table.MapAttribute;
 import de.tud.inf.example.table.MatrixAttribute;
 import de.tud.inf.example.table.UncertainAttribute;
@@ -197,6 +199,14 @@ public class Example implements Serializable {
 		   return data.getRelativeValuesFor(a.getTableIndex());
 	   else throw new AttributeTypeException("Extraction of relational example value for non-relational attribute '" + a.getName() + "' is not possible.");
    }
+   
+   public DataMapValue getDataMapValue(Attribute a){
+	   if (!Ontology.ATTRIBUTE_VALUE_TYPE.isA(a.getValueType(), Ontology.DATA_MAP)) 
+	   		  throw new AttributeTypeException("Extraction of dataMap example value for non-dataMap attribute '" + a.getName() + "' is not possible.");
+	   
+	   	 return ((DataMapAttribute)a).getComplexValue(this.getDataRow());
+   }
+   
    
 	/**
 	 * Sets the value of attribute a. The attribute a need not necessarily be
