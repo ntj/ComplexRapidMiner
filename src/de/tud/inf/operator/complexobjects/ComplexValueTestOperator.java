@@ -15,11 +15,13 @@ import com.rapidminer.tools.Ontology;
 import de.tud.inf.example.set.ComplexExampleSet;
 import de.tud.inf.example.set.attributevalues.ComplexValueFactory;
 import de.tud.inf.example.set.attributevalues.ConstantArrayValue;
+import de.tud.inf.example.set.attributevalues.DataMapValue;
 import de.tud.inf.example.set.attributevalues.MapValue;
 import de.tud.inf.example.set.attributevalues.MatrixValue;
 import de.tud.inf.example.set.attributevalues.TensorValue;
 import de.tud.inf.example.table.ComplexAttribute;
 import de.tud.inf.example.table.ConstantArrayAttribute;
+import de.tud.inf.example.table.DataMapAttribute;
 import de.tud.inf.example.table.MapAttribute;
 import de.tud.inf.example.table.UncertainAttribute;
 
@@ -88,8 +90,10 @@ public class ComplexValueTestOperator extends Operator{
 				}
 			}
 		}
+		
+	
 		System.out.println("Test creating new Attributes");
-		MapAttribute mapAtt =  (MapAttribute)AttributeFactory.createAttribute("my first complex attribute added from an operator",Ontology.MAP);
+		MapAttribute mapAtt =  (MapAttribute)AttributeFactory.createAttribute("firstMap",Ontology.MAP);
 		double[] origin = new double[2];
 		double[] spacing = new double[2];
 		int[] dim = new int[2];
@@ -100,6 +104,7 @@ public class ComplexValueTestOperator extends Operator{
 		es.addComplexAttribute(mapAtt);
 		for(int i=0;i<es.size();i++)
 			es.getExample(i).setComplexValue(mapAtt,mValue);
+	
 		
 		//create constant array attribute and set two constant array values
 		if(es.size() >1){
@@ -115,6 +120,40 @@ public class ComplexValueTestOperator extends Operator{
 			arrayValue.setValues(vals2);
 			es.getExample(1).setComplexValue(arrayAttr, arrayValue);
 		}
+		
+		
+		if(es.size() >1){
+			DataMapAttribute dMapAttr =  (DataMapAttribute)AttributeFactory.createAttribute("data map attribute",Ontology.DATA_MAP);
+			es.addComplexAttribute(dMapAttr);
+			DataMapValue dMapValue = (DataMapValue)ComplexValueFactory.getComplexValueFunction(dMapAttr);
+			
+			double[][] vals = new double[][]{{1,2},{3,4},{5,6}};
+			
+			dMapValue.setValues(vals);
+			es.getExample(0).setComplexValue(dMapAttr, dMapValue);
+			
+			double[][] vals2 = new double[][]{{6,7},{8,9},{10,11}};
+			dMapValue.setValues(vals2);
+			es.getExample(1).setComplexValue(dMapAttr, dMapValue);
+		}
+		
+		
+		if(es.size() >1){
+			DataMapAttribute dMapStringAttr =  (DataMapAttribute)AttributeFactory.createAttribute("data map attribute",Ontology.DATA_MAP_STRING);
+			es.addComplexAttribute(dMapStringAttr);
+			DataMapValue dMapValue = (DataMapValue)ComplexValueFactory.getComplexValueFunction(dMapStringAttr);
+			
+			double[] vals = new double[]{1,2,3,4};
+			String[] strings = new String[]{"eins","zwei","drei","vier"};
+			dMapValue.setValues(strings, vals);
+			es.getExample(0).setComplexValue(dMapStringAttr, dMapValue);
+			
+			double[] vals2 = new double[]{6,7,8,5};
+			String[] strings2 = new String[]{"sechs","sieben","acht","fünf"};
+			dMapValue.setValues(strings2,vals2);
+			es.getExample(1).setComplexValue(dMapStringAttr, dMapValue);
+		}
+		
 		System.out.println("\n\n[ComplexValueTestOperator.apply() finished]");
 		return new IOObject[] {es};
 	}

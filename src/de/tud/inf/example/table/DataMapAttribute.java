@@ -1,7 +1,6 @@
 package de.tud.inf.example.table;
 
 import java.util.Map;
-import java.util.Set;
 
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
@@ -65,18 +64,26 @@ public class DataMapAttribute extends ComplexProxyAttribute{
 	@Override
 	public void setComplexValue(DataRow row, ComplexValue value) {
 		DataMapValue dmValue = (DataMapValue)value;	
-		NominalMapping attrMapping = innerAttribute.getInnerAttributeAt(0).getMapping();
-		Map<String,Double> kvMap = dmValue.getMap();
-		
-		double[][] rValues = new double[kvMap.size()][2];	
+		double[][] rValues = new double[dmValue.size()][2];
 		int count =0;
-		Set<String> keySet = kvMap.keySet();
-		for(String key: keySet){
-			//store key
-			rValues[count][0] = attrMapping.mapString(key);
-			//store value
-            rValues[count][1] = kvMap.get(key);
-            count++;
+		if(innerAttribute.getInnerAttributeAt(0).isNominal()){
+			NominalMapping attrMapping = innerAttribute.getInnerAttributeAt(0).getMapping();
+			Map<String,Double> kvMap = dmValue.getStringMap();  
+			for (Map.Entry<String, Double> entry: kvMap.entrySet()) {
+				//store key
+				rValues[count][0] = attrMapping.mapString(entry.getKey());
+				//store value
+	            rValues[count][1] = entry.getValue();
+	            count++;
+			}
+		}
+		else{
+			Map<Integer,Double> kvMap = dmValue.getMap();  
+			for (Map.Entry<Integer, Double> entry: kvMap.entrySet()) {
+				rValues[count][0] = entry.getKey();
+	            rValues[count][1] = entry.getValue();
+	            count++;
+			}
 		}
 		row.setRelationalValues(innerAttribute.getTableIndex(), rValues);
 	}

@@ -251,6 +251,7 @@ public class MapValue implements ComplexValue {
 	public void createMapping(){
 		nm = new PolynominalMapping();
 	}
+	
 	/**
 	 * maps str to value at zValues[zId], overrides z value ad zId with mappingId, resulting from mapping String value
 	 * ensure that there is an instantiated mapping or create a new one with createMapping() 

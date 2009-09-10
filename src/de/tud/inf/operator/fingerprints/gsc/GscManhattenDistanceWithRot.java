@@ -63,7 +63,7 @@ public class GscManhattenDistanceWithRot extends SimilarityAdapter implements Ex
 		return false;
 	}
 
-	@Override
+	
 	public boolean isSimilarityDefined(String x, String y) {
 		return (ids.contains(x) && ids.contains(y));
 	}

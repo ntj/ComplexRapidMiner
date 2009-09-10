@@ -131,17 +131,7 @@ public abstract class DataRow implements Serializable {
 	 * @param valueMap key: tableIndex of relational attribute, values: tuple instances of relational attribute
 	 */
 	public void setRelationalValues(Map<Integer,double[][]>valueMap){
-		int tupleDim = -1;
-		for(Integer key:valueMap.keySet()){
-			double[][] values = valueMap.get(key);
-			//get dimension of first tuple in list
-			if(values.length>0)
-				tupleDim = values[0].length;
-			for(int i =0;i<values.length;i++)
-				if(values[i].length != tupleDim) throw new RuntimeException("varying tuple dimensions are not allowed within relational attribute");
-		}
 		this.relValueMap = valueMap;
-		
 	}
 	
 	/**

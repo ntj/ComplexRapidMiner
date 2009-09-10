@@ -135,8 +135,8 @@ public class LnfManhattanDistance extends SimilarityAdapter implements ExampleBa
 	{
 		double dist = 0;
 		//get maps
-		Map<String,Double> map1 = e1.getMap();
-		Map<String,Double> map2 = e2.getMap();
+		Map<String,Double> map1 = e1.getStringMap();
+		Map<String,Double> map2 = e2.getStringMap();
 		Iterator<String> keys1 = map1.keySet().iterator();
 		Iterator<String> keys2 = map2.keySet().iterator();
 		//TODO: ensure that there is at least one tuple in map

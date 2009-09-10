@@ -3,6 +3,7 @@ package de.tud.inf.operator.fingerprints.lbp;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -27,9 +28,10 @@ import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.tools.Ontology;
 
 import de.tud.inf.example.set.ComplexExampleSet;
+import de.tud.inf.example.set.attributevalues.DataMapValue;
 import de.tud.inf.example.set.attributevalues.MapValue;
+import de.tud.inf.example.table.ComplexAttribute;
 import de.tud.inf.example.table.MapAttribute;
-import de.tud.inf.operator.fingerprints.ProcessStatistics;
 
 public class LocalBinaryPattern extends Operator {
 
@@ -42,7 +44,7 @@ public class LocalBinaryPattern extends Operator {
 	@Override
 	public IOObject[] apply() throws OperatorException {
 		ExampleSet output = null;
-		Map<Integer, Integer> resultMap = null;
+		Map<Integer, Integer> map = null;
 		try {
 			ComplexExampleSet inputSet = getInput(ComplexExampleSet.class);
 			MapValue mv = null;
@@ -50,7 +52,7 @@ public class LocalBinaryPattern extends Operator {
 			
 			Iterator<Example> it = inputSet.iterator();
 			Example e;
-			
+			DataMapValue dmValue = new DataMapValue();
 			while (it.hasNext()) {
 				e = it.next();
 				mv = e.getMapValue(mapAttr);
@@ -66,7 +68,7 @@ public class LocalBinaryPattern extends Operator {
 				int nrow = xSize;
 				int ncol = ySize;
 				
-				resultMap = new TreeMap<Integer, Integer>();		
+				map = new TreeMap<Integer, Integer>();		
 				for (int i=0; i<=nrow-(2*radius+1); i++)
 				{
 					for (int j=0; j<=ncol-(2*radius+1); j++)
@@ -94,43 +96,45 @@ public class LocalBinaryPattern extends Operator {
 						}
 						
 						Integer number;
-						if ((number = resultMap.get(result)) != null)
+						if ((number = map.get(result)) != null)
 						{
 							number++;
-							resultMap.put(result, number);
+							map.put(result, number);
 						}
 						else
-							resultMap.put(result, 1);
+							map.put(result, 1);
 					}
 				}
 				
 				// normalize
 				double totalNum = ((xSize - (2*radius+1)) + 1) * ((ySize - (2*radius+1)) + 1);
 
-				// create output string
-				StringBuffer fingerprintBuffer = new StringBuffer("");
-				for (Map.Entry<Integer, Integer> mapEntry: resultMap.entrySet()) {
+				// create output map, here we do not have string keys
+				Map<Integer, Double> resultMap = new HashMap<Integer,Double>();
+				
+				for (Map.Entry<Integer, Integer> mapEntry: map.entrySet()) {
 					if (getParameterAsBoolean("normalize"))
-							fingerprintBuffer.append(String.valueOf(mapEntry.getKey()) + "!" + (double) mapEntry.getValue()/totalNum + "#");			
+							resultMap.put(mapEntry.getKey(), mapEntry.getValue()/totalNum);			
 					else
-						fingerprintBuffer.append(String.valueOf(mapEntry.getKey()) + "!" + mapEntry.getValue() + "#");	
+							resultMap.put(mapEntry.getKey(), mapEntry.getValue().doubleValue());	
 				}
 				
+				dmValue.setMap(resultMap);
 				// create output example set
 				List<Attribute> attributeList = new ArrayList<Attribute>(1);
-				Attribute lnfAttribute = AttributeFactory.createAttribute("LBP", Ontology.NOMINAL);
+				ComplexAttribute lnfAttribute = (ComplexAttribute)AttributeFactory.createAttribute("LBP", Ontology.DATA_MAP);
 				attributeList.add(lnfAttribute);
 				MemoryExampleTable exampleTable = new MemoryExampleTable(attributeList);
 				DataRowFactory factory = new DataRowFactory(DataRowFactory.TYPE_BYTE_ARRAY, ',');
 				
 				DataRow dataRow = factory.create(1);
-				dataRow.set(lnfAttribute, lnfAttribute.getMapping().mapString(fingerprintBuffer.toString()));
+				dataRow.set(lnfAttribute, dmValue);
 				exampleTable.addDataRow(dataRow);
 				
 				output = exampleTable.createExampleSet();
 				
 				// some statistics
-				ProcessStatistics.getInstance().addFingerprintStringLength(fingerprintBuffer.length());
+				//ProcessStatistics.getInstance().addFingerprintStringLength(fingerprintBuffer.length());
 
 
 			}

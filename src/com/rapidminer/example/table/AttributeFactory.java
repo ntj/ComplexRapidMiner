@@ -143,8 +143,12 @@ public class AttributeFactory {
 		//since there are no parameter attributes, ArrayAttribute must be a constant one
 		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.ARRAY))
 			return new ConstantArrayAttribute(attributeName,valueType,innerAttribute,hint);
-		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.DATA_MAP))
+		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.DATA_MAP)){
+			//if attribute, which stores keys of this map is nominal, set correct valueType
+			if(innerAttribute.getInnerAttributeAt(0).isNominal() )
+				return new DataMapAttribute(attributeName,Ontology.DATA_MAP_STRING,innerAttribute,hint);
 			return new DataMapAttribute(attributeName,valueType,innerAttribute,hint);
+		}
 		else {
 			throw new RuntimeException("AttributeFactory: cannot create attribute with value type '" + Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(valueType) + "' (" + valueType + ")!");
 		}
@@ -155,8 +159,12 @@ public class AttributeFactory {
 	 */
 	public static Attribute createProxyAttribute(String name, int valueType, RelationalAttribute innerAttribute, List<Attribute> parameters, String symbol,String hint){
 		String attributeName = (name != null) ? name : createName();
-		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.MAP))
+		//if attribute, which stores z values of this map is nominal, set correct valueType
+		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.MAP)){
+			if(innerAttribute.getInnerAttributeAt(0).isNominal() )
+				return new MapAttribute(attributeName,Ontology.MAP_STRING,innerAttribute,parameters,hint);
 			return new MapAttribute(attributeName,valueType,innerAttribute,parameters,hint);
+		}
 		/*
 		//create parameterized array attribute if there are parameter attributes, else create constant array attribute
 		if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(valueType, Ontology.ARRAY) && parameters.size() > 0)

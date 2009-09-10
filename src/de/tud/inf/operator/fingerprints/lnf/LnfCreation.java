@@ -15,6 +15,7 @@ import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.DataRowFactory;
 import com.rapidminer.example.table.MemoryExampleTable;
+import com.rapidminer.example.table.PolynominalMapping;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
@@ -63,6 +64,7 @@ public class LnfCreation extends Operator {
 		
 		Iterator<Example> it = inputSet.iterator();
 		Example e;
+		DataMapValue mValue = new DataMapValue();
 		
 		while (it.hasNext()) {
 			e = it.next();
@@ -319,14 +321,14 @@ public class LnfCreation extends Operator {
 				}
 			}
 			
-			DataMapValue mValue = new DataMapValue(resultMap);
+			mValue.setStringMap(resultMap);
 			//create new dataRow in outputexampleTable
-			DataRow dataRow = factory.create(10);
+			DataRow dataRow = factory.create(lnfAttribute.getParameterCount());
 			outputTable.addDataRow(dataRow);
 			dataRow.set(lnfAttribute,mValue);
 			// some statistics
 			//war vorher fingerprintbuffer.
-			ProcessStatistics.getInstance().addFingerprintStringLength(resultMap.size());
+			//ProcessStatistics.getInstance().addFingerprintStringLength(resultMap.size());
 			ProcessStatistics.getInstance().addNumSymbolVectors(symbolMap.size());
 		} // end iteration through all maps in exampleSet
 	

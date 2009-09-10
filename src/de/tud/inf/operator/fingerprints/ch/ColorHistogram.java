@@ -8,6 +8,7 @@ import java.util.Map;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.table.AttributeFactory;
+import com.rapidminer.example.table.PolynominalMapping;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
@@ -34,13 +35,14 @@ public class ColorHistogram extends Operator{
 		ComplexExampleSet input = getInput(ComplexExampleSet.class);
 		Attribute mapAttr = input.getAttributes().get(getParameterAsString(PARA_MAP_NAME));
 		DataMapAttribute histAttr =  (DataMapAttribute)AttributeFactory.createAttribute("hist",Ontology.DATA_MAP_STRING);
+		DataMapValue dmValue = new DataMapValue();
 		input.addComplexAttribute(histAttr);
 	
 		Iterator<Example> it = input.iterator();
 		while (it.hasNext()){
 			Example ex = it.next();
 			MapValue mapVal =  ex.getMapValue(mapAttr);
-			Map<String, Double> absoluteHist = new HashMap<String, Double>();
+			Map<String, Integer> absoluteHist = new HashMap<String, Integer>();
 			int numPix = mapVal.getMapSize();
 			for(int i=0;i<numPix;i++){
 				String currentSymbol = mapVal.getStringValueAt(i);
@@ -49,13 +51,19 @@ public class ColorHistogram extends Operator{
 					absoluteHist.put(currentSymbol, (absoluteHist.get(currentSymbol) + 1));
 				} else {
 					// init
-					absoluteHist.put(currentSymbol,1.0);
+					absoluteHist.put(currentSymbol,1);
 				}
 				
 			}
 			//write back histogram
 			//line 52
-			DataMapValue dmValue = new DataMapValue(absoluteHist);
+			Map<Integer,Double> result = new HashMap<Integer,Double>();
+			PolynominalMapping keyMapping = new PolynominalMapping();
+			//change type of data map
+			for (Map.Entry<String, Integer> mapEntry: absoluteHist.entrySet()) {
+				result.put(keyMapping.mapString(mapEntry.getKey()), mapEntry.getValue().doubleValue());
+			}
+			dmValue.setStringIntMap(absoluteHist);
 			ex.setComplexValue(histAttr, dmValue);
 		}
 		return new IOObject[] {input};

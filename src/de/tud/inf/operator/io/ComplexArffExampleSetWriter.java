@@ -87,7 +87,7 @@ public class ComplexArffExampleSetWriter extends ArffExampleSetWriter{
 	        		out.print("','");
 	        		//parameter attributes
 	        		innerAs = ((ComplexAttribute)a).getParameterAttributes();
-	        		if(innerAs.size() == 0)
+	        		if((innerAs == null) || innerAs.size() == 0)
 	        			out.print("?");
 	        		else{
 		        		for(int i =0;i<innerAs.size()-1;i++)
