@@ -139,6 +139,7 @@ public class RapidMiner {
     /** The name of the property indicating the default encoding for files. */
     public static final String PROPERTY_RAPIDMINER_GENERAL_DEFAULT_ENCODING = "rapidminer.general.encoding";
 
+    public static boolean isInitialized = false;
     
 	/**
 	 * A set of some non-gui and operator related system properties (starting with "rapidminer."). Properties
@@ -248,6 +249,7 @@ public class RapidMiner {
 			                boolean searchJDBCInLibDir, 
 			                boolean searchJDBCInClasspath, 
 			                boolean addPlugins) {		
+		isInitialized = true;
 	    // set locale fix to US
 	    RapidMiner.splashMessage("Using US Local");
 	    Locale.setDefault(Locale.US);
@@ -507,5 +509,9 @@ public class RapidMiner {
 			System.err.println("ERROR during SHUTDOWN: " + e.getMessage());
 		}
 		System.exit(errorcode);	
+	}
+
+	public static boolean isInitialized() {
+		return isInitialized;
 	}
 }
