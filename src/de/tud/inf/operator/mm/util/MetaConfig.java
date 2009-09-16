@@ -13,6 +13,7 @@ package de.tud.inf.operator.mm.util;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,296 +28,321 @@ import org.ho.yaml.Yaml;
  */
 public class MetaConfig {
 
-   public static MetaConfig load(String fileName) {
-      MetaConfig mc = null;
-      try {
-         mc = Yaml.loadType(new File(fileName), MetaConfig.class);
-         mc.sourceFileName = fileName;
-      }
-      catch (FileNotFoundException e) {
-         throw new Error(e.getMessage());
-      }
+	public static MetaConfig load(String fileName) {
+		MetaConfig mc = null;
+		try {
+			mc = Yaml.loadType(new File(fileName), MetaConfig.class);
+			mc.sourceFileName = fileName;
+		} catch (FileNotFoundException e) {
+			throw new Error(e.getMessage());
+		}
 
-      return mc;
-   }
+		return mc;
+	}
 
-   private Integer aggregationClusterCount;
+	private Integer aggregationClusterCount;
 
-   private String aggregationColumnName;
+	private String aggregationColumnName;
 
-   private String aggregationFileName;
+	private String aggregationFileName;
 
-   private List<String> classifyingAttributeNames;
+	private List<String> classifyingAttributeNames;
 
-   private String clusteringColumnPrefix;
+	private String clusteringColumnPrefix;
 
-   private Integer clusteringCount;
+	private Integer clusteringCount;
 
-   private Map<String, ClusteringInfo> clusteringInfo = new HashMap<String, ClusteringInfo>();
-   
-   private String dataFileName;
+	private Map<String, ClusteringInfo> clusteringInfo = new HashMap<String, ClusteringInfo>();
 
-   private String ensembleFileName;
+	private String dataFileName;
 
-   private String idColumnName;
+	private String ensembleFileName;
 
-   private String nmiFileName;
+	private String idColumnName;
 
-   private Boolean nmiNormalized = false;
+	private String nmiFileName;
 
-   private String selectorFileName;
+	private Boolean nmiNormalized = false;
 
-   private String selectorUsedForAggregation;
+	private String selectorFileName;
 
-   private Boolean snmiAdded = false;
+	private String selectorUsedForAggregation;
 
-   private String snmiColumnName;
+	private Boolean snmiAdded = false;
 
-   private String sourceFileName;
+	private String snmiColumnName;
 
-   /**
-    * @return Returns the aggregationClusterCount.
-    */
-   public Integer getAggregationClusterCount() {
-      return aggregationClusterCount;
-   }
-   
-   /**
-    * @return Returns the aggregationColumnName.
-    */
-   public String getAggregationColumnName() {
-      return aggregationColumnName;
-   }
+	private String sourceFileName;
 
-   /**
-    * @return Returns the aggregationFileName.
-    */
-   public String getAggregationFileName() {
-      return aggregationFileName;
-   }
+	/**
+	 * @return Returns the aggregationClusterCount.
+	 */
+	public Integer getAggregationClusterCount() {
+		return aggregationClusterCount;
+	}
 
-   /**
-    * @return Returns the classifyingAttributeNames.
-    */
-   public List<String> getClassifyingAttributeNames() {
-      return classifyingAttributeNames;
-   }
+	/**
+	 * @return Returns the aggregationColumnName.
+	 */
+	public String getAggregationColumnName() {
+		return aggregationColumnName;
+	}
 
-   /**
-    * @return Returns the clusteringColumnPrefix.
-    */
-   public String getClusteringColumnPrefix() {
-      return clusteringColumnPrefix;
-   }
+	/**
+	 * @return Returns the aggregationFileName.
+	 */
+	public String getAggregationFileName() {
+		return aggregationFileName;
+	}
 
-   /**
-    * @return Returns the clusteringCount.
-    */
-   public Integer getClusteringCount() {
-      return clusteringCount;
-   }
+	/**
+	 * @return Returns the classifyingAttributeNames.
+	 */
+	public List<String> getClassifyingAttributeNames() {
+		return classifyingAttributeNames;
+	}
 
-   /**
-    * @return Returns the clusteringInfo.
-    */
-   public Map<String, ClusteringInfo> getClusteringInfo() {
-      return clusteringInfo;
-   }
+	/**
+	 * @return Returns the clusteringColumnPrefix.
+	 */
+	public String getClusteringColumnPrefix() {
+		return clusteringColumnPrefix;
+	}
 
-   /**
-    * @return Returns the dataFileName.
-    */
-   public String getDataFileName() {
-      return dataFileName;
-   }
+	/**
+	 * @return Returns the clusteringCount.
+	 */
+	public Integer getClusteringCount() {
+		return clusteringCount;
+	}
 
-   /**
-    * @return Returns the ensembleFileName.
-    */
-   public String getEnsembleFileName() {
-      return ensembleFileName;
-   }
+	/**
+	 * @return Returns the clusteringInfo.
+	 */
+	public Map<String, ClusteringInfo> getClusteringInfo() {
+		return clusteringInfo;
+	}
 
-   /**
-    * @return Returns the idColumnName.
-    */
-   public String getIdColumnName() {
-      return idColumnName;
-   }
+	/**
+	 * @return Returns the dataFileName.
+	 */
+	public String getDataFileName() {
+		return dataFileName;
+	}
 
-   /**
-    * @return Returns the nmiFileName.
-    */
-   public String getNmiFileName() {
-      return nmiFileName;
-   }
+	/**
+	 * @return Returns the ensembleFileName.
+	 */
+	public String getEnsembleFileName() {
+		return ensembleFileName;
+	}
 
-   /**
-    * @return Returns the nmiNormalized.
-    */
-   public Boolean getNmiNormalized() {
-      return nmiNormalized;
-   }
+	/**
+	 * @return Returns the idColumnName.
+	 */
+	public String getIdColumnName() {
+		return idColumnName;
+	}
 
-   /**
-    * @return Returns the selectorFileName.
-    */
-   public String getSelectorFileName() {
-      return selectorFileName;
-   }
+	/**
+	 * @return Returns the nmiFileName.
+	 */
+	public String getNmiFileName() {
+		return nmiFileName;
+	}
 
-   /**
-    * @return Returns the selectorUsedForAggregation.
-    */
-   public String getSelectorUsedForAggregation() {
-      return selectorUsedForAggregation;
-   }
+	/**
+	 * @return Returns the nmiNormalized.
+	 */
+	public Boolean getNmiNormalized() {
+		return nmiNormalized;
+	}
 
-   /**
-    * @return Returns the snmiAdded.
-    */
-   public Boolean getSnmiAdded() {
-      return snmiAdded;
-   }
+	/**
+	 * @return Returns the selectorFileName.
+	 */
+	public String getSelectorFileName() {
+		return selectorFileName;
+	}
 
-   /**
-    * @return Returns the snmiColumnName.
-    */
-   public String getSnmiColumnName() {
-      return snmiColumnName;
-   }
+	/**
+	 * @return Returns the selectorUsedForAggregation.
+	 */
+	public String getSelectorUsedForAggregation() {
+		return selectorUsedForAggregation;
+	}
 
-   /**
-    * @return Returns the sourceFileName.
-    */
-   public String getSourceFileName() {
-      return sourceFileName;
-   }
+	/**
+	 * @return Returns the snmiAdded.
+	 */
+	public Boolean getSnmiAdded() {
+		return snmiAdded;
+	}
 
-   public void save() {
-      try {
-         Yaml.dump(this, new File(this.sourceFileName));
-      }
-      catch (FileNotFoundException e) {
-         throw new Error(e.getMessage());
-      }
-   }
+	/**
+	 * @return Returns the snmiColumnName.
+	 */
+	public String getSnmiColumnName() {
+		return snmiColumnName;
+	}
 
-   public void save(String fileName) {
-      this.sourceFileName = fileName;
-      this.save();
-   }
-   
-   /**
-    * @param aggregationClusterCount The aggregationClusterCount to set.
-    */
-   public void setAggregationClusterCount(Integer aggregationClusterCount) {
-      this.aggregationClusterCount = aggregationClusterCount;
-   }
+	/**
+	 * @return Returns the sourceFileName.
+	 */
+	public String getSourceFileName() {
+		return sourceFileName;
+	}
 
-   /**
-    * @param aggregationColumnName The aggregationColumnName to set.
-    */
-   public void setAggregationColumnName(String aggregationColumnName) {
-      this.aggregationColumnName = aggregationColumnName;
-   }
+	public void save() {
+		try {
+			File f = new File(sourceFileName);
+			if (f.exists() == false) {
+				try {
+					f.mkdirs();
+				
+					f.createNewFile();
+				} catch (Exception e) {
+					throw new Error(e.getMessage());
+				}
+			}
+			Yaml.dump(this, f);
+		} catch (FileNotFoundException e) {
+			throw new Error(e.getMessage());
+		}
+	}
 
-   /**
-    * @param aggregationFileName The aggregationFileName to set.
-    */
-   public void setAggregationFileName(String aggregationFileName) {
-      this.aggregationFileName = aggregationFileName;
-   }
+	public void save(String fileName) {
+		this.sourceFileName = fileName;
+		this.save();
+	}
 
-   /**
-    * @param classifyingAttributeNames The classifyingAttributeNames to set.
-    */
-   public void setClassifyingAttributeNames(List<String> classifyingAttributeNames) {
-      this.classifyingAttributeNames = classifyingAttributeNames;
-   }
+	/**
+	 * @param aggregationClusterCount
+	 *            The aggregationClusterCount to set.
+	 */
+	public void setAggregationClusterCount(Integer aggregationClusterCount) {
+		this.aggregationClusterCount = aggregationClusterCount;
+	}
 
-   /**
-    * @param clusteringColumnPrefix The clusteringColumnPrefix to set.
-    */
-   public void setClusteringColumnPrefix(String clusteringColumnPrefix) {
-      this.clusteringColumnPrefix = clusteringColumnPrefix;
-   }
+	/**
+	 * @param aggregationColumnName
+	 *            The aggregationColumnName to set.
+	 */
+	public void setAggregationColumnName(String aggregationColumnName) {
+		this.aggregationColumnName = aggregationColumnName;
+	}
 
-   /**
-    * @param clusteringCount The clusteringCount to set.
-    */
-   public void setClusteringCount(Integer clusteringCount) {
-      this.clusteringCount = clusteringCount;
-   }
+	/**
+	 * @param aggregationFileName
+	 *            The aggregationFileName to set.
+	 */
+	public void setAggregationFileName(String aggregationFileName) {
+		this.aggregationFileName = aggregationFileName;
+	}
 
-   /**
-    * @param clusteringInfo The clusteringInfo to set.
-    */
-   public void setClusteringInfo(Map<String, ClusteringInfo> clusteringInfo) {
-      this.clusteringInfo = clusteringInfo;
-   }
+	/**
+	 * @param classifyingAttributeNames
+	 *            The classifyingAttributeNames to set.
+	 */
+	public void setClassifyingAttributeNames(
+			List<String> classifyingAttributeNames) {
+		this.classifyingAttributeNames = classifyingAttributeNames;
+	}
 
-   /**
-    * @param dataFileName The dataFileName to set.
-    */
-   public void setDataFileName(String dataFileName) {
-      this.dataFileName = dataFileName;
-   }
+	/**
+	 * @param clusteringColumnPrefix
+	 *            The clusteringColumnPrefix to set.
+	 */
+	public void setClusteringColumnPrefix(String clusteringColumnPrefix) {
+		this.clusteringColumnPrefix = clusteringColumnPrefix;
+	}
 
-   /**
-    * @param ensembleFileName The ensembleFileName to set.
-    */
-   public void setEnsembleFileName(String ensembleFileName) {
-      this.ensembleFileName = ensembleFileName;
-   }
+	/**
+	 * @param clusteringCount
+	 *            The clusteringCount to set.
+	 */
+	public void setClusteringCount(Integer clusteringCount) {
+		this.clusteringCount = clusteringCount;
+	}
 
-   /**
-    * @param idColumnName The idColumnName to set.
-    */
-   public void setIdColumnName(String idColumnName) {
-      this.idColumnName = idColumnName;
-   }
+	/**
+	 * @param clusteringInfo
+	 *            The clusteringInfo to set.
+	 */
+	public void setClusteringInfo(Map<String, ClusteringInfo> clusteringInfo) {
+		this.clusteringInfo = clusteringInfo;
+	}
 
-   /**
-    * @param nmiFileName The nmiFileName to set.
-    */
-   public void setNmiFileName(String nmiFileName) {
-      this.nmiFileName = nmiFileName;
-   }
+	/**
+	 * @param dataFileName
+	 *            The dataFileName to set.
+	 */
+	public void setDataFileName(String dataFileName) {
+		this.dataFileName = dataFileName;
+	}
 
-   /**
-    * @param nmiNormalized The nmiNormalized to set.
-    */
-   public void setNmiNormalized(Boolean nmiNormalized) {
-      this.nmiNormalized = nmiNormalized;
-   }
+	/**
+	 * @param ensembleFileName
+	 *            The ensembleFileName to set.
+	 */
+	public void setEnsembleFileName(String ensembleFileName) {
+		this.ensembleFileName = ensembleFileName;
+	}
 
-   /**
-    * @param selectorFileName The selectorFileName to set.
-    */
-   public void setSelectorFileName(String selectorFileName) {
-      this.selectorFileName = selectorFileName;
-   }
+	/**
+	 * @param idColumnName
+	 *            The idColumnName to set.
+	 */
+	public void setIdColumnName(String idColumnName) {
+		this.idColumnName = idColumnName;
+	}
 
-   /**
-    * @param selectorUsedForAggregation The selectorUsedForAggregation to set.
-    */
-   public void setSelectorUsedForAggregation(String selectorUsedForAggregation) {
-      this.selectorUsedForAggregation = selectorUsedForAggregation;
-   }
+	/**
+	 * @param nmiFileName
+	 *            The nmiFileName to set.
+	 */
+	public void setNmiFileName(String nmiFileName) {
+		this.nmiFileName = nmiFileName;
+	}
 
-   /**
-    * @param snmiAdded The snmiAdded to set.
-    */
-   public void setSnmiAdded(Boolean snmiAdded) {
-      this.snmiAdded = snmiAdded;
-   }
+	/**
+	 * @param nmiNormalized
+	 *            The nmiNormalized to set.
+	 */
+	public void setNmiNormalized(Boolean nmiNormalized) {
+		this.nmiNormalized = nmiNormalized;
+	}
 
-   /**
-    * @param snmiColumnName The snmiColumnName to set.
-    */
-   public void setSnmiColumnName(String snmiColumnName) {
-      this.snmiColumnName = snmiColumnName;
-   }
+	/**
+	 * @param selectorFileName
+	 *            The selectorFileName to set.
+	 */
+	public void setSelectorFileName(String selectorFileName) {
+		this.selectorFileName = selectorFileName;
+	}
+
+	/**
+	 * @param selectorUsedForAggregation
+	 *            The selectorUsedForAggregation to set.
+	 */
+	public void setSelectorUsedForAggregation(String selectorUsedForAggregation) {
+		this.selectorUsedForAggregation = selectorUsedForAggregation;
+	}
+
+	/**
+	 * @param snmiAdded
+	 *            The snmiAdded to set.
+	 */
+	public void setSnmiAdded(Boolean snmiAdded) {
+		this.snmiAdded = snmiAdded;
+	}
+
+	/**
+	 * @param snmiColumnName
+	 *            The snmiColumnName to set.
+	 */
+	public void setSnmiColumnName(String snmiColumnName) {
+		this.snmiColumnName = snmiColumnName;
+	}
 
 }
