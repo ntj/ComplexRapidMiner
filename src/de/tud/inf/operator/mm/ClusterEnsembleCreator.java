@@ -418,7 +418,8 @@ public class ClusterEnsembleCreator extends Operator {
          output = this.kMeans.apply(new IOContainer(exampleSet));
       }
       catch (OperatorException e) {
-         throw new Error("Error while running K-means.");
+    	  e.printStackTrace();
+         throw new Error("Error while running K-means.",e);
       }
 
       return output;
