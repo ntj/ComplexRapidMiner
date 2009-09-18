@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
@@ -24,6 +25,7 @@ import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorService;
 
+import de.tud.inf.operator.mm.util.ClusteringInfo;
 import de.tud.inf.operator.mm.util.MetaConfig;
 import de.tud.inf.operator.mm.util.SortingIndex;
 
@@ -133,7 +135,10 @@ public class ClusteringAggregation extends Operator {
       String idColumnName = mc.getIdColumnName();
       String csvFileNameClustering = mc.getEnsembleFileName();
       String csvFileNameSelection = mc.getSelectorFileName();
-      String selectionColumnName = mc.getClusteringInfo().get(selector).getSelectedColumnName();
+      Map<String, ClusteringInfo> mapi =  mc.getClusteringInfo();
+      ClusteringInfo inf = mapi.get(selector);
+      String selectionColumnName =inf.getSelectedColumnName();
+     // String selectionColumnName = mc.getClusteringInfo().get(selector).getSelectedColumnName();
 
       // read csv files and get example sets
       Operator csvReader = null;
