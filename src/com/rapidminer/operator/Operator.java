@@ -550,7 +550,7 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 	public List<Capability> checkCapabilities(List<Capability> input) {
 		
 		if (isEnabled())
-			return getCapabilityDescription().getDeliveredOutputCapability(input);
+			return getCapabilityDescription().getDeliveredOutputCapability(input,this);
 		else
 			return input;
 	}

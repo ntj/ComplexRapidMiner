@@ -22,9 +22,15 @@
  */
 package com.rapidminer.operator.condition;
 
+
+import java.util.List;
+
 import com.rapidminer.operator.IllegalInputException;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.WrongNumberOfInnerOperatorsException;
+
+import de.tud.inf.operator.Capability;
+import de.tud.inf.operator.UnsatisfiedCapabilityException;
 
 /**
  * InnerOperatorConditions can be used to define conditions on the in- and
@@ -41,6 +47,8 @@ public interface InnerOperatorCondition {
 	 * an exception if it is not fullfilled.
 	 */
 	public Class[] checkIO(OperatorChain chain, Class[] input) throws IllegalInputException, WrongNumberOfInnerOperatorsException;
+	
+	public List<Capability> checkCapabilities(OperatorChain chain, List<Capability> input) throws UnsatisfiedCapabilityException;
 
 	/** Returns a HTML string representation of this condition. */
 	public String toHTML();

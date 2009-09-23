@@ -34,6 +34,9 @@ import com.rapidminer.operator.condition.InnerOperatorCondition;
 import com.rapidminer.operator.condition.SimpleChainInnerOperatorCondition;
 import com.rapidminer.tools.Tools;
 
+import de.tud.inf.operator.Capability;
+import de.tud.inf.operator.UnsatisfiedCapabilityException;
+
 
 /**
  * A chain of operators that is subsequently applied. As an OperatorChain is an
@@ -136,6 +139,20 @@ public abstract class OperatorChain extends Operator {
 		} else {
 			return getDeliveredOutputClasses();
 		}
+	}
+	
+	public final List<Capability> checkCapabilites(List<Capability> input) throws UnsatisfiedCapabilityException {
+		InnerOperatorCondition condition = getInnerOperatorCondition();
+		return condition.checkCapabilities(this, input);
+		//TODO: returnInnerOutput - Awareness
+		/*
+		if (shouldReturnInnerOutput()) {
+			return getAllOutputClasses(innerOutput);
+		} else {
+			return getDeliveredOutputClasses();
+		}
+		*/
+		
 	}
 
 	/**

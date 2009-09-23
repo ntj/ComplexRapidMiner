@@ -30,6 +30,9 @@ import com.rapidminer.operator.IllegalInputException;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.WrongNumberOfInnerOperatorsException;
 
+import de.tud.inf.operator.Capability;
+import de.tud.inf.operator.UnsatisfiedCapabilityException;
+
 
 /**
  * This condition is a container for other (simple) inner operator conditions.
@@ -69,5 +72,11 @@ public class CombinedInnerOperatorCondition implements InnerOperatorCondition {
 		}
 		result.append("</ul>");
 		return result.toString();
+	}
+	
+	public List<Capability> checkCapabilities(OperatorChain chain, List<Capability> input)
+	throws UnsatisfiedCapabilityException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

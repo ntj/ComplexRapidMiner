@@ -22,10 +22,15 @@
  */
 package com.rapidminer.operator.condition;
 
+import java.util.List;
+
 import com.rapidminer.operator.IllegalInputException;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.WrongNumberOfInnerOperatorsException;
+
+import de.tud.inf.operator.Capability;
+import de.tud.inf.operator.UnsatisfiedCapabilityException;
 
 /**
  * This condition can be used to check if all inner operators can handle the
@@ -48,8 +53,21 @@ public class SimpleChainInnerOperatorCondition implements InnerOperatorCondition
 		}
 		return output;
 	}
+	
+	
+	
+	public List<Capability> checkCapabilities(OperatorChain chain, List<Capability> input) throws UnsatisfiedCapabilityException{
+		List<Capability> output = input;
+		for (int i = 0; i < chain.getNumberOfOperators(); i++) {
+			Operator operator = chain.getOperator(i);
+			if (operator.isEnabled())
+				output = operator.checkCapabilities(output);
+		}
+		return output;
+	}
 
 	public String toHTML() {
 		return "All inner operators must be able to handle the output of their predecessor.";
 	}
+
 }
