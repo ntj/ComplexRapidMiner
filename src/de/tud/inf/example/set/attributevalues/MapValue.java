@@ -68,6 +68,7 @@ public class MapValue implements ComplexValue {
 		StringBuffer buf = new StringBuffer();
 		int plotNr = Math.min(zValues.length,mxPlotValues);
 		if(nm == null){
+
 			switch (digits) {
 			case UNLIMITED_NUMBER_OF_DIGITS:
 				for (int i=0; i< plotNr;i++){
@@ -90,6 +91,7 @@ public class MapValue implements ComplexValue {
 					if(i % dimension[1] == (dimension[1])-1)
 						buf.append("| ");
 				}
+
 			}
 		}
 		else{
@@ -125,7 +127,7 @@ public class MapValue implements ComplexValue {
 		} else {
 			
 			// do a bilinear interpolation
-			return getInterpolatedValue(x, y);
+			return getInterpolatedValue((x - origin[0]) / spacing[0], (y - origin[1]) / spacing[1]);
 		}
 		
 	}
@@ -141,6 +143,16 @@ public class MapValue implements ComplexValue {
 		return zValues[idX * dimension[1] + idY];
 	}
 	
+
+	
+	public double getValueAtId(double idX,double idY) {
+		
+		//double x = origin[0] + idX*spacing[0];
+		//double y = origin[1] + idY*spacing[0];
+		
+		return getInterpolatedValue(idX, idY);
+	}
+	
 	/**
 	 * returns z string value according to x and y index values in z array  
 	 * @param x index of x coordinate
@@ -151,6 +163,7 @@ public class MapValue implements ComplexValue {
 		return nm.mapIndex((int)zValues[idX * dimension[1] + idY]);
 	}
 	
+
 
 	/**
 	 * maps internal double values to String, call this method iff there is definitely an nominal mapping in map value
@@ -231,9 +244,13 @@ public class MapValue implements ComplexValue {
 	public double getVariance(){
 		 double avg = getAverage();
 		 double squaredSum =0;
-		 for(int i =0;i<zValues.length;i++)
-			 squaredSum += zValues[i]*zValues[i];
-		 return squaredSum / zValues.length - (avg * avg);
+		 double deviation;
+		 for(int i =0;i<zValues.length;i++) {
+			 deviation = zValues[i] - avg;
+			 squaredSum += deviation*deviation;
+		 }
+			// squaredSum += zValues[i]*zValues[i];
+		 return squaredSum / (zValues.length-1);
 	}
 	
 	/**
@@ -274,30 +291,58 @@ public class MapValue implements ComplexValue {
 	
 
 	
+	/**
+	 * fast interpolation according to the description in the R function interp.surface
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	
 	private double getInterpolatedValue(double x,double y) {
 		
-		x = x-origin[0];
-		y = y-origin[1];
-		// get the surrounding gridPoints for the x and y value
-		int indexX = (int)(x / spacing[0]);
-		int indexY = (int)(y/spacing[1]);
+		int x1 = (int) x;
+		int x2 = x1+1;
 		
-		if(indexX >= dimension[0]-1 || indexY >= dimension[1]-1)
-			throw new IndexOutOfBoundsException("The value is outside the grid");
+		int y1 = (int)y;
+		int y2 = y1+1;
 		
-		double x1 = indexX * spacing[0] ;
-		double x2 = x1 + spacing[0];
-		double y1 = indexY * spacing[1];
-		double y2 = y1 + spacing[1];
+		double ex = (x-x1)/(x2-x1);
+		double ey = (y-y1)/(y2-y1);
 		
+		double[] coeff = {
+				(1-ex)*(1-ey),
+				(1-ex)*ey,
+				ex*(1-ey),
+				ex*ey
+		};
 		
-		double deltaX1 = x-x1;
-		double deltaX2 = x2-x;
-		// interpolating the x-direction
-		double val1 =(deltaX2/spacing[0])*getValueAtId(indexX, indexY) +(deltaX1/spacing[0])*getValueAtId(indexX+1,indexY) ; 
-		double val2 = (deltaX2/spacing[0])*getValueAtId(indexY, indexY+1) + (deltaX1/spacing[0])*getValueAtId(indexX+1, indexY+1);
+		//val = (1-ex)*(1-ey)*getValueAtId(x1, y1) + (1-ex)*ey*getValueAtId(x1, y2) + ex*(1-ey)*getValueAtId(x2, y1) + ex*ey*getValueAtId(x2, y2);
 		
-		return ((y2-y)/spacing[1])*val1 + ((y-y1)/spacing[1])*val2;
+		double val = (coeff[0]==0?0:coeff[0]*getValueAtId(x1, y1)) + (coeff[1]==0?0:coeff[1]*getValueAtId(x1, y2)) + (coeff[2]==0?0:coeff[2]*getValueAtId(x2, y1)) + (coeff[3]==0?0:coeff[3]*getValueAtId(x2, y2));
+		return val;
+		
+//		x = x-origin[0];
+//		y = y-origin[1];
+//		// get the surrounding gridPoints for the x and y value
+//		int indexX = (int)(x / spacing[0]);
+//		int indexY = (int)(y/spacing[1]);
+//		
+//		if(indexX >= dimension[0]-1 || indexY >= dimension[1]-1)
+//			throw new IndexOutOfBoundsException("The value is outside the grid");
+//		
+//		double x1 = indexX * spacing[0] ;
+//		double x2 = x1 + spacing[0];
+//		double y1 = indexY * spacing[1];
+//		double y2 = y1 + spacing[1];
+//		
+//		
+//		double deltaX1 = x-x1;
+//		double deltaX2 = x2-x;
+//		// interpolating the x-direction
+//		double val1 =(deltaX2/spacing[0])*getValueAtId(indexX, indexY) +(deltaX1/spacing[0])*getValueAtId(indexX+1,indexY) ; 
+//		double val2 = (deltaX2/spacing[0])*getValueAtId(indexY, indexY+1) + (deltaX1/spacing[0])*getValueAtId(indexX+1, indexY+1);
+//		
+//		return ((y2-y)/spacing[1])*val1 + ((y-y1)/spacing[1])*val2;
 	}
 
 }

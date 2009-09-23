@@ -177,5 +177,9 @@ public class ComplexExampleSet extends AbstractExampleSet{
 		
 		exampleTable.addComplexAttribute(ca);
 	}
+	
+	public void addAttribute(Attribute attr) {
+		exampleTable.addAttribute(attr);
+	}
 }
 
