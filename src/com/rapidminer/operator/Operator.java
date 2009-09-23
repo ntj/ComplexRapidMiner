@@ -41,11 +41,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-/* imports for math expression parameter macro
-import com.graphbuilder.math.Expression;
-import com.graphbuilder.math.ExpressionTree;
-import com.graphbuilder.math.VarMap;
-*/
 import com.rapidminer.BreakpointListener;
 import com.rapidminer.Process;
 import com.rapidminer.RapidMiner;
@@ -63,6 +58,9 @@ import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.WekaTools;
 import com.rapidminer.tools.XMLException;
 import com.rapidminer.tools.math.StringToMatrixConverter;
+
+import de.tud.inf.operator.Capability;
+import de.tud.inf.operator.CapabilityDescription;
 
 
 /**
@@ -548,7 +546,15 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 		else
 			return input;
 	}
-
+	
+	public List<Capability> checkCapabilities(List<Capability> input) {
+		
+		if (isEnabled())
+			return getCapabilityDescription().getDeliveredOutputCapability(input);
+		else
+			return input;
+	}
+	
 	/**
 	 * This method is invoked during the validation checks. It is invoked as a
 	 * last check. The default implementation does nothing. Subclasses might
@@ -1761,5 +1767,25 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 
 	public void setApplyCount(int applyCount) {
 		this.applyCount = applyCount;
+	}
+	
+	public List<Capability> getInputCapabilities(){
+		return null;
+	}
+	
+	public List<Capability> getOutputCapabilities(){
+		return null;
+	}
+	
+	public List<Capability> getDeliveredOutputCapabilities(){
+		return getCapabilityDescription().getDeliveredOutputCapability(getInputCapabilities(),this);
+	}
+	
+	/**
+	 * override this method to set operator specific capabilites
+	 * 
+	 */
+	public CapabilityDescription getCapabilityDescription(){
+		return new CapabilityDescription();
 	}
 }
