@@ -49,7 +49,7 @@ public class ConstantArrayAttribute extends ComplexProxyAttribute{
 		double[][] values = ((ConstantArrayValue)value).getValues(); 
 		double[][] relValues = new double[values.length * values[0].length][1];
 		for (int i=0;i<values.length;i++)
-			for (int j=0;j<values.length;j++)
+			for (int j=0;j<values[0].length;j++)
 				relValues[i*values[0].length + j][0] = values[i][j];
 		row.setRelationalValues(this.innerAttribute.getTableIndex(),relValues);	
 	}
