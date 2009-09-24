@@ -31,8 +31,8 @@ import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.WrongNumberOfInnerOperatorsException;
 import com.rapidminer.tools.Tools;
 
-import de.tud.inf.operator.Capability;
 import de.tud.inf.operator.UnsatisfiedCapabilityException;
+import de.tud.inf.operator.capabilites.Capability;
 
 
 /**
