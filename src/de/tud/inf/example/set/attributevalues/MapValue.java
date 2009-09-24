@@ -36,14 +36,14 @@ public class MapValue implements ComplexValue {
 	/**
 	 * features z = f(x,y) of this map
 	 */
-	private double[] zValues;
+	private double[] zValues = new double[0];
 
 	private NominalMapping nm; 
 	
 	public MapValue() {
 	}
 	
-	public MapValue(double[] spacing, double[] origin, int[] dimension, double[] values, NominalMapping nm) {
+	MapValue(double[] spacing, double[] origin, int[] dimension, double[] values, NominalMapping nm) {
 		this.spacing = spacing;
 		this.origin = origin;
 		this.dimension = dimension;
@@ -55,7 +55,7 @@ public class MapValue implements ComplexValue {
 		this.nm = nm;
 	}
 	
-	public MapValue(double[] spacing, double[] origin, int[] dimension, double[] values) {
+	MapValue(double[] spacing, double[] origin, int[] dimension, double[] values) {
 		this(spacing,origin,dimension,values,null);
 	}
 
@@ -195,15 +195,15 @@ public class MapValue implements ComplexValue {
 	 *            origin
 	 * @param s
 	 *            spacing
-	 * @param e   dimension vector (nr entries)
+	 * @param dim   dimension vector (nr entries)
 	 */
-	public void setValues(double[] z, double[] o, double[] s, int[] e, NominalMapping nm) {
+	public void setValues(double[] z, double[] o, double[] s, int[] dim, NominalMapping nm) {
 		spacing[0] = s[0];
 		spacing[1] = s[1];
 		origin[0] = o[0];
 		origin[1] = o[1];
-		dimension[0] = e[0];
-		dimension[1] = e[1];
+		dimension[0] = dim[0];
+		dimension[1] = dim[1];
 		// create new map array
 		zValues = new double[dimension[0] * dimension[1]];
 		

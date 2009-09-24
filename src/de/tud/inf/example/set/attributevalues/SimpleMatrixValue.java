@@ -10,7 +10,7 @@ public class SimpleMatrixValue extends AbstractMatrixValue{
 
 
 	
-	public SimpleMatrixValue(int nrRows, int nrColumns){
+	SimpleMatrixValue(int nrRows, int nrColumns){
 		super(nrRows, nrColumns);
 	}
 

@@ -3,6 +3,7 @@ package de.tud.inf.example.table;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.tools.Ontology;
+
 import de.tud.inf.example.set.attributevalues.ComplexValue;
 import de.tud.inf.example.set.attributevalues.ComplexValueFactory;
 import de.tud.inf.example.set.attributevalues.ConstantArrayValue;

@@ -25,11 +25,11 @@ public class DataMapValue implements ComplexValue{
 	 */
 	private NominalMapping keyMapping = null;
 	
-	public DataMapValue(){
+	DataMapValue(){
 		
 	}
 	
-	public DataMapValue(Map<Integer, Double> map){
+	DataMapValue(Map<Integer, Double> map){
 		this.map = map;
 	}
 	
@@ -87,6 +87,7 @@ public class DataMapValue implements ComplexValue{
 	}
 	
 	public void setStringMap(Map<String,Double> strMap){
+		map = new HashMap<Integer, Double>();
 		keyMapping = new PolynominalMapping();
 		for (Map.Entry<String, Double> mapEntry: strMap.entrySet()) {
 			map.put(keyMapping.mapString(mapEntry.getKey()), mapEntry.getValue());

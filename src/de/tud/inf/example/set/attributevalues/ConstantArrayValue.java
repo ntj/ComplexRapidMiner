@@ -66,6 +66,14 @@ public class ConstantArrayValue implements ComplexValue{
 	}
 	
 	
+	public void setValues2(double[][] val) {
+		for(int i=0;i<values.length;i++)
+			for(int j=0;j<values[0].length;j++)
+				values[i][j] = val[i][j];
+	}
+	
+	
+	
 	
 	public double[][] getValues() {
 		return values;
