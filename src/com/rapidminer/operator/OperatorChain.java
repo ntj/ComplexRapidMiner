@@ -34,8 +34,8 @@ import com.rapidminer.operator.condition.InnerOperatorCondition;
 import com.rapidminer.operator.condition.SimpleChainInnerOperatorCondition;
 import com.rapidminer.tools.Tools;
 
-import de.tud.inf.operator.Capability;
 import de.tud.inf.operator.UnsatisfiedCapabilityException;
+import de.tud.inf.operator.capabilites.Capability;
 
 
 /**
