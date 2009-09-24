@@ -1,8 +1,8 @@
 package de.tud.inf.operator.fingerprints.ch;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -23,8 +23,10 @@ import de.tud.inf.example.set.attributevalues.ComplexValueFactory;
 import de.tud.inf.example.set.attributevalues.DataMapValue;
 import de.tud.inf.example.set.attributevalues.MapValue;
 import de.tud.inf.example.table.DataMapAttribute;
-import de.tud.inf.operator.capabilites.AttributeTypeCapability;
+import de.tud.inf.operator.capabilites.AttributeCapability;
 import de.tud.inf.operator.capabilites.Capability;
+import de.tud.inf.operator.capabilites.ExampleSetCapability;
+import de.tud.inf.operator.capabilites.RegularAttributesCapability;
 
 public class ColorHistogram extends Operator{
 	
@@ -95,21 +97,33 @@ public class ColorHistogram extends Operator{
 	}
 
 	
+	@Override
+	public List<Capability> getInputCapabilities() {
+		AttributeCapability ac = new RegularAttributesCapability();
+		ac.setInnerTypes(new int[]{Ontology.MAP}, true);
+		
+		ExampleSetCapability result = new ExampleSetCapability();
+		result.addCapability(ac);
+		
+		List<Capability> list = new ArrayList<Capability>();
+		list.add(result);
+		return list;
+	}
 	
 	@Override
 	public List<Capability> getDeliveredOutputCapabilities() {
-		//for each output one capability
-		List<Capability> list = new LinkedList<Capability>();
+		AttributeCapability ac = new RegularAttributesCapability();
+		ac.setInnerTypes(new int[]{Ontology.DATA_MAP}, true);
 		
-		List<Capability> aList = new LinkedList<Capability>();
-		List<Capability> tList = new LinkedList<Capability>();
-		tList.add(new AttributeTypeCapability(Ontology.MAP));
-		//aList.add(new AndCapability(tList));
+		ExampleSetCapability result = new ExampleSetCapability();
+		result.addCapability(ac);
 		
-		//one output -> one element in list
-		//list.add(new ExampleSetCapability(aList));
-		return null;
+		List<Capability> list = new ArrayList<Capability>();
+		list.add(result);
+		return list;
 	}
+
+	
 	
 	
 }

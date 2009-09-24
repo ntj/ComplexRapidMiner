@@ -12,6 +12,16 @@ public abstract class AttributeCapability implements Capability{
 		this.inner = cap;	
 	}
 	
+	public void setInnerTypes(int[] types, boolean isAnd){
+		if(isAnd)
+			inner = new AndCapability();
+		else inner = new OrCapability();
+		
+		for(int i=0;i<types.length;i++){
+			inner.addCapability(new AttributeTypeCapability(types[i]));
+		}
+	}
+	
 	public boolean checkCapability(Capability toCheck) {
 		
 		if(toCheck.getType() == this.getType()) {

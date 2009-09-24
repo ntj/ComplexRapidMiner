@@ -1,7 +1,6 @@
 package de.tud.inf.operator.capabilites;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class AndCapability extends BoolCapability{
 	
@@ -10,7 +9,6 @@ public class AndCapability extends BoolCapability{
 	}
 	
 
-
 	public boolean checkCapability(Capability toCheck) {
 		
 		for(Capability child : inner) {
@@ -18,12 +16,6 @@ public class AndCapability extends BoolCapability{
 				return false;
 		}
 		return true;
-	}
-
-	
-	public List<Capability> getInnerCapabilities() {
-		
-		return inner;
 	}
 
 	

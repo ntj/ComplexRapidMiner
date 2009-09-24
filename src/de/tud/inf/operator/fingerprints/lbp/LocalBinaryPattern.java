@@ -33,6 +33,10 @@ import de.tud.inf.example.set.attributevalues.DataMapValue;
 import de.tud.inf.example.set.attributevalues.MapValue;
 import de.tud.inf.example.table.ComplexAttribute;
 import de.tud.inf.example.table.MapAttribute;
+import de.tud.inf.operator.capabilites.AttributeCapability;
+import de.tud.inf.operator.capabilites.Capability;
+import de.tud.inf.operator.capabilites.ExampleSetCapability;
+import de.tud.inf.operator.capabilites.RegularAttributesCapability;
 
 public class LocalBinaryPattern extends Operator {
 
@@ -225,4 +229,33 @@ public class LocalBinaryPattern extends Operator {
 	public Class<?>[] getOutputClasses() {
 		return new Class[] {ExampleSet.class}; 
 	}
+
+	@Override
+	public List<Capability> getDeliveredOutputCapabilities() {
+		AttributeCapability ac = new RegularAttributesCapability();
+		ac.setInnerTypes(new int[]{Ontology.DATA_MAP}, true);
+		
+		ExampleSetCapability result = new ExampleSetCapability();
+		result.addCapability(ac);
+		
+		List<Capability> list = new ArrayList<Capability>();
+		list.add(result);
+		return list;
+	}
+
+	@Override
+	public List<Capability> getInputCapabilities() {
+		AttributeCapability ac = new RegularAttributesCapability();
+		ac.setInnerTypes(new int[]{Ontology.MAP}, true);
+		
+		ExampleSetCapability result = new ExampleSetCapability();
+		result.addCapability(ac);
+		
+		List<Capability> list = new ArrayList<Capability>();
+		list.add(result);
+		return list;
+	}
+	
+	
+	
 }

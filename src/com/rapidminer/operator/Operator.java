@@ -60,7 +60,7 @@ import com.rapidminer.tools.XMLException;
 import com.rapidminer.tools.math.StringToMatrixConverter;
 
 import de.tud.inf.operator.capabilites.Capability;
-import de.tud.inf.operator.CapabilityDescription;
+import de.tud.inf.operator.capabilites.CapabilityDescription;
 
 
 /**

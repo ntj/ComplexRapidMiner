@@ -225,6 +225,11 @@ public class ComplexExampleSetGenerator extends ExampleSetGenerator{
 		}
 	}
 	
+	public Class<?>[] getOutputClasses() {
+		return new Class[]{ComplexExampleSet.class};
+	}
+	
+	
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
