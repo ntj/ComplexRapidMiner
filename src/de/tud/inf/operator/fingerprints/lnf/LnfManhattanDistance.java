@@ -69,7 +69,7 @@ public class LnfManhattanDistance extends SimilarityAdapter implements ExampleBa
 		if (ex.getId() == ey.getId())
 			dist = 0;
 		else
-			dist = distance(ex.getNominalValue(simAttribute), ey.getNominalValue(simAttribute));
+			dist = distance(ex.getDataMapValue(simAttribute), ey.getDataMapValue(simAttribute));
 		//System.out.println(x + "-" + y + ": " + dist);
 		return dist;
 	}

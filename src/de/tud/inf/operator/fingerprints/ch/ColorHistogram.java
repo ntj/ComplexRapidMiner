@@ -2,6 +2,7 @@ package de.tud.inf.operator.fingerprints.ch;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -18,9 +19,12 @@ import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.tools.Ontology;
 
 import de.tud.inf.example.set.ComplexExampleSet;
+import de.tud.inf.example.set.attributevalues.ComplexValueFactory;
 import de.tud.inf.example.set.attributevalues.DataMapValue;
 import de.tud.inf.example.set.attributevalues.MapValue;
 import de.tud.inf.example.table.DataMapAttribute;
+import de.tud.inf.operator.capabilites.AttributeTypeCapability;
+import de.tud.inf.operator.capabilites.Capability;
 
 public class ColorHistogram extends Operator{
 	
@@ -35,7 +39,7 @@ public class ColorHistogram extends Operator{
 		ComplexExampleSet input = getInput(ComplexExampleSet.class);
 		Attribute mapAttr = input.getAttributes().get(getParameterAsString(PARA_MAP_NAME));
 		DataMapAttribute histAttr =  (DataMapAttribute)AttributeFactory.createAttribute("hist",Ontology.DATA_MAP_STRING);
-		DataMapValue dmValue = new DataMapValue();
+		DataMapValue dmValue = (DataMapValue)ComplexValueFactory.getComplexValueFunction(histAttr);
 		input.addComplexAttribute(histAttr);
 	
 		Iterator<Example> it = input.iterator();
@@ -89,4 +93,23 @@ public class ColorHistogram extends Operator{
 	public Class<?>[] getOutputClasses() {
 		return new Class[] {ComplexExampleSet.class};
 	}
+
+	
+	
+	@Override
+	public List<Capability> getDeliveredOutputCapabilities() {
+		//for each output one capability
+		List<Capability> list = new LinkedList<Capability>();
+		
+		List<Capability> aList = new LinkedList<Capability>();
+		List<Capability> tList = new LinkedList<Capability>();
+		tList.add(new AttributeTypeCapability(Ontology.MAP));
+		//aList.add(new AndCapability(tList));
+		
+		//one output -> one element in list
+		//list.add(new ExampleSetCapability(aList));
+		return null;
+	}
+	
+	
 }

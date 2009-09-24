@@ -15,7 +15,6 @@ import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.DataRowFactory;
 import com.rapidminer.example.table.MemoryExampleTable;
-import com.rapidminer.example.table.PolynominalMapping;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
@@ -29,6 +28,7 @@ import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.Ontology;
 
 import de.tud.inf.example.set.ComplexExampleSet;
+import de.tud.inf.example.set.attributevalues.ComplexValueFactory;
 import de.tud.inf.example.set.attributevalues.DataMapValue;
 import de.tud.inf.example.set.attributevalues.MapValue;
 import de.tud.inf.example.table.ComplexAttribute;
@@ -64,7 +64,7 @@ public class LnfCreation extends Operator {
 		
 		Iterator<Example> it = inputSet.iterator();
 		Example e;
-		DataMapValue mValue = new DataMapValue();
+		DataMapValue mValue = (DataMapValue)ComplexValueFactory.getComplexValueFunction(lnfAttribute);
 		
 		while (it.hasNext()) {
 			e = it.next();

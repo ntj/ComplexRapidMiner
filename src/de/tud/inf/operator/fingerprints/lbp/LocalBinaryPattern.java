@@ -28,6 +28,7 @@ import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.tools.Ontology;
 
 import de.tud.inf.example.set.ComplexExampleSet;
+import de.tud.inf.example.set.attributevalues.ComplexValueFactory;
 import de.tud.inf.example.set.attributevalues.DataMapValue;
 import de.tud.inf.example.set.attributevalues.MapValue;
 import de.tud.inf.example.table.ComplexAttribute;
@@ -52,7 +53,7 @@ public class LocalBinaryPattern extends Operator {
 			
 			Iterator<Example> it = inputSet.iterator();
 			Example e;
-			DataMapValue dmValue = new DataMapValue();
+			DataMapValue dmValue = (DataMapValue)ComplexValueFactory.getComplexValueFunction(Ontology.DATA_MAP,"");
 			while (it.hasNext()) {
 				e = it.next();
 				mv = e.getMapValue(mapAttr);

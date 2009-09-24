@@ -11,7 +11,6 @@ import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.ValueDouble;
-
 import com.rapidminer.operator.learner.clustering.Cluster;
 import com.rapidminer.operator.learner.clustering.ClusterIterator;
 import com.rapidminer.operator.learner.clustering.ClusterModel;

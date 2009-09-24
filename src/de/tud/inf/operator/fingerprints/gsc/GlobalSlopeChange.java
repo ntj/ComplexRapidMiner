@@ -1,17 +1,10 @@
 package de.tud.inf.operator.fingerprints.gsc;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.collections15.Buffer;
-
 import JSci.maths.wavelet.FWTCoef;
 import JSci.maths.wavelet.Filter;
-import JSci.maths.wavelet.Multiresolution;
 import JSci.maths.wavelet.Signal;
 import JSci.maths.wavelet.haar.MultiSplineHaar;
 
@@ -24,7 +17,6 @@ import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
-import com.rapidminer.operator.UserError;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeInt;
@@ -32,7 +24,6 @@ import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.Ontology;
 
 import de.tud.inf.example.set.ComplexExampleSet;
-import de.tud.inf.example.set.attributevalues.ConstantArrayValue;
 import de.tud.inf.example.set.attributevalues.MapValue;
 import de.tud.inf.example.table.ConstantArrayAttribute;
 import de.tud.inf.example.table.MapAttribute;
