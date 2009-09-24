@@ -31,6 +31,7 @@ import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.tools.Ontology;
 
 import de.tud.inf.example.set.ComplexExampleSet;
+import de.tud.inf.example.set.attributevalues.ComplexValueFactory;
 import de.tud.inf.example.set.attributevalues.MapValue;
 import de.tud.inf.example.table.ComplexExampleTable;
 import de.tud.inf.example.table.MapAttribute;
@@ -225,7 +226,8 @@ public class MapLoader extends OperatorChain{
 					dimension[1] = dimcounter;
 				
 				// create new Map
-				MapValue mapVal = new MapValue(spacing, origin, dimension, zvalues);
+				MapValue mapVal = (MapValue)ComplexValueFactory.getComplexValueFunction(mapAttr);
+				mapVal.setValues(zvalues, origin, spacing, dimension, null);
 				
 				// check if Map has the same value as the input
 				this.chackMap(examples, mapVal);

@@ -3,6 +3,7 @@ package de.tud.inf.operator;
 import java.util.List;
 
 import com.rapidminer.operator.Operator;
+import de.tud.inf.operator.capabilites.Capability;
 
 /**
  * stores Capabilities

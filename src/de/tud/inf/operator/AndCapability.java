@@ -3,6 +3,8 @@ package de.tud.inf.operator;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.tud.inf.operator.capabilites.Capability;
+
 public class AndCapability implements Capability{
 	
 	List<Capability> inner;

@@ -24,7 +24,7 @@ import de.tud.inf.example.table.ConstantArrayAttribute;
 import de.tud.inf.example.table.DataMapAttribute;
 import de.tud.inf.example.table.MapAttribute;
 import de.tud.inf.example.table.UncertainAttribute;
-import de.tud.inf.operator.capabilites.CapabilityDescription;
+
 
 public class ComplexValueTestOperator extends Operator{
 
@@ -169,9 +169,8 @@ public class ComplexValueTestOperator extends Operator{
 		return new Class[] {ExampleSet.class};
 	}
 
-	@Override
-	public CapabilityDescription getCapabilityDescription() {
-		return new CapabilityDescription(getInputCapabilities(),getOutputCapabilities());
-	}
-
 }
+
+
+
+

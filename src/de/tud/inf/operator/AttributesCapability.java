@@ -2,6 +2,8 @@ package de.tud.inf.operator;
 
 import java.util.List;
 
+import de.tud.inf.operator.capabilites.Capability;
+
 public class AttributesCapability implements Capability{
 
 	private List<Capability> inner;
