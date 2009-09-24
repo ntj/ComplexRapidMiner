@@ -24,6 +24,7 @@ import de.tud.inf.example.table.ConstantArrayAttribute;
 import de.tud.inf.example.table.DataMapAttribute;
 import de.tud.inf.example.table.MapAttribute;
 import de.tud.inf.example.table.UncertainAttribute;
+import de.tud.inf.operator.capabilites.CapabilityDescription;
 
 public class ComplexValueTestOperator extends Operator{
 
@@ -100,7 +101,8 @@ public class ComplexValueTestOperator extends Operator{
 		dim[0] = 3;
 		dim[1] = 3;	
 		double[] values = new double[5];
-		MapValue mValue = new MapValue(origin,spacing,dim,values);
+		MapValue mValue = (MapValue)ComplexValueFactory.getComplexValueFunction(mapAtt);
+		mValue.setValues(values, new double[]{0,0}, new double[]{1,1}, new int[]{3,3}, null);
 		es.addComplexAttribute(mapAtt);
 		for(int i=0;i<es.size();i++)
 			es.getExample(i).setComplexValue(mapAtt,mValue);
@@ -126,7 +128,6 @@ public class ComplexValueTestOperator extends Operator{
 			DataMapAttribute dMapAttr =  (DataMapAttribute)AttributeFactory.createAttribute("data map attribute",Ontology.DATA_MAP);
 			es.addComplexAttribute(dMapAttr);
 			DataMapValue dMapValue = (DataMapValue)ComplexValueFactory.getComplexValueFunction(dMapAttr);
-			
 			double[][] vals = new double[][]{{1,2},{3,4},{5,6}};
 			
 			dMapValue.setValues(vals);
@@ -166,6 +167,11 @@ public class ComplexValueTestOperator extends Operator{
 	@Override
 	public Class<?>[] getOutputClasses() {
 		return new Class[] {ExampleSet.class};
+	}
+
+	@Override
+	public CapabilityDescription getCapabilityDescription() {
+		return new CapabilityDescription(getInputCapabilities(),getOutputCapabilities());
 	}
 
 }
