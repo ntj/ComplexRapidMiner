@@ -3,19 +3,13 @@ package de.tud.inf.operator.capabilites;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AndCapability implements BoolCapability{
-	
-	List<Capability> inner;
-
+public class AndCapability extends BoolCapability{
 	
 	public AndCapability() {
 		inner = new ArrayList<Capability>();
 	}
 	
-	public void addCapability(AttributeTypeCapability cap) {
-		inner.add(cap);
-		
-	}
+
 
 	public boolean checkCapability(Capability toCheck) {
 		

@@ -1,21 +1,10 @@
 package de.tud.inf.operator.capabilites;
 
-import java.util.ArrayList;
-import java.util.List;
 
 
-public class OrCapability implements BoolCapability {
+public class OrCapability extends BoolCapability {
 
-	private List<Capability> inner;
 	
-	
-	public OrCapability() {
-		inner = new ArrayList<Capability>();
-	}
-	
-	public void addCapability(AttributeTypeCapability cap) {
-		inner.add(cap);
-	}
 
 	
 	public boolean checkCapability(Capability toCheck) {
@@ -28,15 +17,10 @@ public class OrCapability implements BoolCapability {
 	}
 
 	
-	public List<Capability> getInnerCapabilities() {
-		
-		return inner;
-	}
-
-	
 	public int getType() {
 		
 		return OR_CAPABILITY_TYPE;
 	}
 
+	
 }
