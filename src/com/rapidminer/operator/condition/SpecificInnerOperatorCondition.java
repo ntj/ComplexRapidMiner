@@ -24,7 +24,6 @@ package com.rapidminer.operator.condition;
 
 import java.util.List;
 
-import com.rapidminer.operator.IOCapability;
 import com.rapidminer.operator.IODescription;
 import com.rapidminer.operator.IllegalInputException;
 import com.rapidminer.operator.Operator;
@@ -32,6 +31,7 @@ import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.WrongNumberOfInnerOperatorsException;
 import com.rapidminer.tools.Tools;
 
+import de.tud.inf.operator.IOCapability;
 import de.tud.inf.operator.UnsatisfiedCapabilityException;
 
 

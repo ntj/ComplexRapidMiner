@@ -59,6 +59,7 @@ import com.rapidminer.tools.WekaTools;
 import com.rapidminer.tools.XMLException;
 import com.rapidminer.tools.math.StringToMatrixConverter;
 
+import de.tud.inf.operator.IOCapability;
 import de.tud.inf.operator.UnsatisfiedCapabilityException;
 import de.tud.inf.operator.capabilites.Capability;
 

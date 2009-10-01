@@ -98,7 +98,7 @@ public class SystemMonitor extends JPanel {
 				while (true) {
 					// memory
 					SystemMonitor.this.currentlyUsed = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-					ProcessStatistics.printMemory(System.currentTimeMillis(), (long)SystemMonitor.this.currentlyUsed, "mem");
+					ProcessStatistics.printMemory(System.currentTimeMillis(), (long)SystemMonitor.this.currentlyUsed, "mem_new");
 					SystemMonitor.this.memory[SystemMonitor.this.currentMeasurement] = (long)currentlyUsed;
 					SystemMonitor.this.currentMeasurement = (SystemMonitor.this.currentMeasurement + 1) % SystemMonitor.this.memory.length;
 					

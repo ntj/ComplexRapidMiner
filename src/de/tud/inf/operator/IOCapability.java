@@ -1,4 +1,4 @@
-package com.rapidminer.operator;
+package de.tud.inf.operator;
 
 import de.tud.inf.operator.capabilites.Capability;
 

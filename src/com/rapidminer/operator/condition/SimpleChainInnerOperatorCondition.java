@@ -22,12 +22,12 @@
  */
 package com.rapidminer.operator.condition;
 
-import com.rapidminer.operator.IOCapability;
 import com.rapidminer.operator.IllegalInputException;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.WrongNumberOfInnerOperatorsException;
 
+import de.tud.inf.operator.IOCapability;
 import de.tud.inf.operator.UnsatisfiedCapabilityException;
 import de.tud.inf.operator.capabilites.Capability;
 

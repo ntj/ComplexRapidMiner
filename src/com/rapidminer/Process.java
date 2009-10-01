@@ -49,7 +49,6 @@ import org.xml.sax.SAXException;
 
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.example.table.AttributeFactory;
-import com.rapidminer.operator.IOCapability;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.IllegalInputException;
@@ -68,6 +67,7 @@ import com.rapidminer.tools.ResultService;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.XMLException;
 
+import de.tud.inf.operator.IOCapability;
 import de.tud.inf.operator.UnsatisfiedCapabilityException;
 
 /**

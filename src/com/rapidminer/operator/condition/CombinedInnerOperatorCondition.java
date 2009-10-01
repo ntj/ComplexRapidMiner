@@ -26,11 +26,11 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.rapidminer.operator.IOCapability;
 import com.rapidminer.operator.IllegalInputException;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.WrongNumberOfInnerOperatorsException;
 
+import de.tud.inf.operator.IOCapability;
 import de.tud.inf.operator.UnsatisfiedCapabilityException;
 
 
