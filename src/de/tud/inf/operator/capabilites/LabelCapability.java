@@ -10,5 +10,8 @@ public class LabelCapability extends AttributeCapability{
 		return Capability.LABEL_CAPABILITY_TYPE;
 	}
 
+	public String getAsString(){
+		return "label types: ";
+	}
 
 }

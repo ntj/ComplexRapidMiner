@@ -19,4 +19,6 @@ public interface Capability {
 	//public void addCapability(Capability cap);
 	
 	public List<Capability> getInnerCapabilities();
+	
+	public String getAsString();
 }

@@ -1,6 +1,5 @@
 package de.tud.inf.operator.fingerprints.ch;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -23,10 +22,8 @@ import de.tud.inf.example.set.attributevalues.ComplexValueFactory;
 import de.tud.inf.example.set.attributevalues.DataMapValue;
 import de.tud.inf.example.set.attributevalues.MapValue;
 import de.tud.inf.example.table.DataMapAttribute;
-import de.tud.inf.operator.capabilites.AttributeCapability;
 import de.tud.inf.operator.capabilites.Capability;
-import de.tud.inf.operator.capabilites.ExampleSetCapability;
-import de.tud.inf.operator.capabilites.RegularAttributesCapability;
+import de.tud.inf.operator.capabilites.CapabilityBuilder;
 
 public class ColorHistogram extends Operator{
 	
@@ -98,28 +95,14 @@ public class ColorHistogram extends Operator{
 
 	
 	@Override
-	public List<Capability> getInputCapabilities() {
-		AttributeCapability ac = new RegularAttributesCapability();
-		ac.setInnerTypes(new int[]{Ontology.MAP}, true);
-		
-		ExampleSetCapability result = new ExampleSetCapability();
-		result.addCapability(ac);
-		
-		List<Capability> list = new ArrayList<Capability>();
-		list.add(result);
+	public Capability[] getInputCapabilities() {
+		Capability[] list = new Capability[]{CapabilityBuilder.buildCapability(new int[]{Ontology.MAP}, true)};
 		return list;
 	}
 	
 	@Override
-	public List<Capability> getDeliveredOutputCapabilities() {
-		AttributeCapability ac = new RegularAttributesCapability();
-		ac.setInnerTypes(new int[]{Ontology.DATA_MAP}, true);
-		
-		ExampleSetCapability result = new ExampleSetCapability();
-		result.addCapability(ac);
-		
-		List<Capability> list = new ArrayList<Capability>();
-		list.add(result);
+	public Capability[] getOutputCapabilities() {
+		Capability[] list = new Capability[]{CapabilityBuilder.buildCapability(new int[]{Ontology.DATA_MAP}, true)};
 		return list;
 	}
 

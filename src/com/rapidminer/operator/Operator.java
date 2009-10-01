@@ -59,8 +59,8 @@ import com.rapidminer.tools.WekaTools;
 import com.rapidminer.tools.XMLException;
 import com.rapidminer.tools.math.StringToMatrixConverter;
 
+import de.tud.inf.operator.UnsatisfiedCapabilityException;
 import de.tud.inf.operator.capabilites.Capability;
-import de.tud.inf.operator.capabilites.CapabilityDescription;
 
 
 /**
@@ -547,10 +547,10 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 			return input;
 	}
 	
-	public List<Capability> checkCapabilities(List<Capability> input) {
+	public IOCapability[] checkCapabilities(IOCapability[] input) throws UnsatisfiedCapabilityException {
 		
 		if (isEnabled())
-			return getCapabilityDescription().getDeliveredOutputCapability(input,this);
+			return getDeliveredOutputCapability(input);
 		else
 			return input;
 	}
@@ -1769,23 +1769,53 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 		this.applyCount = applyCount;
 	}
 	
-	public List<Capability> getInputCapabilities(){
-		return null;
+	public Capability[] getInputCapabilities(){
+		return new Capability[]{};
 	}
 	
-	public List<Capability> getOutputCapabilities(){
-		return null;
+	
+	public Capability[] getOutputCapabilities(){
+		return new Capability[]{};
 	}
 	
-	public List<Capability> getDeliveredOutputCapabilities(){
-		return getCapabilityDescription().getDeliveredOutputCapability(getInputCapabilities(),this);
-	}
-	
-	/**
-	 * override this method to set operator specific capabilites
-	 * 
-	 */
-	public CapabilityDescription getCapabilityDescription(){
-		return new CapabilityDescription();
+	public IOCapability[] getDeliveredOutputCapability(IOCapability[] input) throws UnsatisfiedCapabilityException{
+			//those capabilities match
+			Capability[] inputCaps = getInputCapabilities();
+			Capability[] outputCaps = getOutputCapabilities();
+			
+			Class<?>[] inputClasses = getInputClasses();
+			Class<?>[] outputClasses = getOutputClasses();
+			
+			List<IOCapability> outputList = new LinkedList<IOCapability>();
+			for (int i = 0; i < input.length; i++) {
+				outputList.add(input[i]);
+			}
+			if(inputClasses != null){
+				for (int i = 0; i < inputClasses.length; i++) {
+					boolean found = false;
+					Iterator<IOCapability> j = outputList.iterator();
+					while (j.hasNext()) {
+						IOCapability next = j.next();
+						if (inputClasses[i].isAssignableFrom(next.getClazz())) {
+							//test if capability matches
+							if(inputCaps[i].checkCapability(next.getCapability()))
+							if(false){
+								j.remove();
+								found = true;
+								break;
+							}
+						}
+					}
+					if (!found)
+						throw new  UnsatisfiedCapabilityException(this,inputClasses[i],inputCaps[i]);
+				}
+			}
+
+			for (int i = 0; i < outputClasses.length; i++)
+				outputList.add(new IOCapability(outputClasses[i],outputCaps[i]));
+			
+			IOCapability[] outputArray = new IOCapability[outputList.size()];
+			outputList.toArray(outputArray);
+			return outputArray;
 	}
 }

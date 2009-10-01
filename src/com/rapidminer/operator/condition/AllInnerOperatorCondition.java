@@ -25,6 +25,7 @@ package com.rapidminer.operator.condition;
 
 import java.util.List;
 
+import com.rapidminer.operator.IOCapability;
 import com.rapidminer.operator.IODescription;
 import com.rapidminer.operator.IllegalInputException;
 import com.rapidminer.operator.Operator;
@@ -33,7 +34,6 @@ import com.rapidminer.operator.WrongNumberOfInnerOperatorsException;
 import com.rapidminer.tools.Tools;
 
 import de.tud.inf.operator.UnsatisfiedCapabilityException;
-import de.tud.inf.operator.capabilites.Capability;
 
 
 /**
@@ -97,7 +97,7 @@ public class AllInnerOperatorCondition implements InnerOperatorCondition {
 	}
 
 	
-	public List<Capability> checkCapabilities(OperatorChain chain, List<Capability> input)
+	public IOCapability[] checkCapabilities(OperatorChain chain, IOCapability[] input)
 			throws UnsatisfiedCapabilityException {
 			// TODO Auto-generated method stub
 			return null;

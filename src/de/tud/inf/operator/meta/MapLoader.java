@@ -35,6 +35,8 @@ import de.tud.inf.example.set.attributevalues.ComplexValueFactory;
 import de.tud.inf.example.set.attributevalues.MapValue;
 import de.tud.inf.example.table.ComplexExampleTable;
 import de.tud.inf.example.table.MapAttribute;
+import de.tud.inf.operator.capabilites.Capability;
+import de.tud.inf.operator.capabilites.CapabilityBuilder;
 
 public class MapLoader extends OperatorChain{
 	
@@ -336,4 +338,12 @@ public class MapLoader extends OperatorChain{
 		}
 	}
 
+	@Override
+	public Capability[] getOutputCapabilities() {
+		Capability[] list = new Capability[]{
+				CapabilityBuilder.buildCapability(new int[]{Ontology.MAP}, true)};
+		return list;
+	}
+
+	
 }

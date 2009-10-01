@@ -25,12 +25,12 @@ package com.rapidminer.operator.condition;
 
 import java.util.List;
 
+import com.rapidminer.operator.IOCapability;
 import com.rapidminer.operator.IllegalInputException;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.WrongNumberOfInnerOperatorsException;
 
 import de.tud.inf.operator.UnsatisfiedCapabilityException;
-import de.tud.inf.operator.capabilites.Capability;
 
 /**
  * InnerOperatorConditions can be used to define conditions on the in- and
@@ -48,7 +48,7 @@ public interface InnerOperatorCondition {
 	 */
 	public Class[] checkIO(OperatorChain chain, Class[] input) throws IllegalInputException, WrongNumberOfInnerOperatorsException;
 	
-	public List<Capability> checkCapabilities(OperatorChain chain, List<Capability> input) throws UnsatisfiedCapabilityException;
+	public IOCapability[] checkCapabilities(OperatorChain chain, IOCapability[] input) throws UnsatisfiedCapabilityException;
 
 	/** Returns a HTML string representation of this condition. */
 	public String toHTML();

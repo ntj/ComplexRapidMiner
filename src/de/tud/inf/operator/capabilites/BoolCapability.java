@@ -15,6 +15,13 @@ public abstract class BoolCapability implements Capability{
 	public List<Capability> getInnerCapabilities() {	
 		return inner;
 	}
+	
+	public String getAsString(){
+		String res = "";
+		for(Capability c: inner)
+			res += c.getAsString();
+		return res;
+	}
 
 
 }

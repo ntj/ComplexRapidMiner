@@ -10,10 +10,13 @@ import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeString;
+import com.rapidminer.tools.Ontology;
 
 import de.tud.inf.example.set.ComplexExampleSet;
 import de.tud.inf.example.set.attributevalues.MapValue;
 import de.tud.inf.example.table.MapAttribute;
+import de.tud.inf.operator.capabilites.Capability;
+import de.tud.inf.operator.capabilites.CapabilityBuilder;
 
 /**
  * 
@@ -88,5 +91,21 @@ public class ZTransformation extends Operator{
 	public Class<?>[] getOutputClasses() {
 		return new Class[] {ComplexExampleSet.class}; 
 	}
+
+	@Override
+	public Capability[] getOutputCapabilities() {
+		Capability[] list = new Capability[]{
+				CapabilityBuilder.buildCapability(new int[]{Ontology.MAP}, true)};
+		return list;
+	}
+
+	@Override
+	public Capability[] getInputCapabilities() {
+		Capability[] list = new Capability[]{
+				CapabilityBuilder.buildCapability(new int[]{Ontology.MAP}, true)};
+		return list;
+	}
+	
+	
 
 }

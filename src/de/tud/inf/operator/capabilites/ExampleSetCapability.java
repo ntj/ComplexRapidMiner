@@ -55,4 +55,9 @@ public class ExampleSetCapability implements Capability{
 		return inner;
 	}
 
+	public String getAsString() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

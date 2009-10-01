@@ -1,18 +1,17 @@
 package de.tud.inf.operator.capabilites;
 
-import java.util.ArrayList;
 import java.util.List;
+
+import com.rapidminer.tools.Ontology;
 
 public class AttributeTypeCapability implements Capability{
 	
 	private int attributeType;
 	
-	private List<Capability> inner = new ArrayList<Capability>();
 	
 	public AttributeTypeCapability(int attributeType){
 		this.attributeType = attributeType;
 	}
-	
 	
 
 	public boolean checkCapability(Capability toCheck) {
@@ -20,20 +19,9 @@ public class AttributeTypeCapability implements Capability{
 		if(toCheck.getType() == Capability.ATTRIBUTE_CAPABILITY_TYPE)
 			if(((AttributeTypeCapability)toCheck).getAttributeType() == attributeType)
 				return true;
-		
-		for(Capability child : toCheck.getInnerCapabilities()) {
-			if(this.checkCapability(child))
-				return true;
-		}
-		
 		return false;
 	}
 
-	
-	public List<Capability> getInnerCapabilities() {
-		
-		return inner;
-	}
 
 	
 	public int getType() {
@@ -43,6 +31,16 @@ public class AttributeTypeCapability implements Capability{
 	
 	public int getAttributeType() {
 		return attributeType;
+	}
+
+
+	public List<Capability> getInnerCapabilities() {
+		return null;
+	}
+
+
+	public String getAsString() {
+		return Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(attributeType);
 	}
 
 }

@@ -26,12 +26,12 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.rapidminer.operator.IOCapability;
 import com.rapidminer.operator.IllegalInputException;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.WrongNumberOfInnerOperatorsException;
 
 import de.tud.inf.operator.UnsatisfiedCapabilityException;
-import de.tud.inf.operator.capabilites.Capability;
 
 
 /**
@@ -74,7 +74,7 @@ public class CombinedInnerOperatorCondition implements InnerOperatorCondition {
 		return result.toString();
 	}
 	
-	public List<Capability> checkCapabilities(OperatorChain chain, List<Capability> input)
+	public IOCapability[] checkCapabilities(OperatorChain chain, IOCapability[] input)
 	throws UnsatisfiedCapabilityException {
 		// TODO Auto-generated method stub
 		return null;

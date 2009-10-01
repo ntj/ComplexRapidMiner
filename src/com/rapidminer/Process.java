@@ -49,6 +49,7 @@ import org.xml.sax.SAXException;
 
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.example.table.AttributeFactory;
+import com.rapidminer.operator.IOCapability;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.IllegalInputException;
@@ -66,6 +67,8 @@ import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.ResultService;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.XMLException;
+
+import de.tud.inf.operator.UnsatisfiedCapabilityException;
 
 /**
  * <p>This class was introduced to avoid confusing handling of operator maps and
@@ -469,6 +472,34 @@ public class Process implements Cloneable {
 			return 1;
 		}
 	}
+	
+	  /** Checks the nesting (compatible in- and output types) of the current process. */
+	private int checkCapabilites() {
+        
+		logService.log("Checking Capabilities", LogService.INIT);
+		try {
+			rootOperator.checkCapabilites(new IOCapability[]{});
+			/*
+			if (output.length == 0) {
+				logService.log("i/o classes are ok.", LogService.INIT);
+			} else {
+				StringBuffer left = new StringBuffer();
+				for (int i = 0; i < output.length; i++) {
+					left.append(Tools.classNameWOPackage(output[i]));
+					if (i < output.length - 1)
+						left.append(", ");
+				}
+				logService.log("i/o classes are ok. Process output: " + left.toString() + ".", LogService.INIT);
+			}
+			*/
+				return 0;
+		} catch (UnsatisfiedCapabilityException e) {
+			if (e.getOperator() != null)
+				e.getOperator().addError(e.getMessage());
+			return 1;
+		}
+	}
+	
     
     /** Checks the nesting (number of inner operators) of the current process. */
 	private int checkNumberOfInnerOperators() {
@@ -520,6 +551,8 @@ public class Process implements Cloneable {
 			errorCount += performAdditionalChecks();
 		if (errorCount == 0)
 			errorCount += checkIO(inputContainer);
+		if (errorCount == 0)
+			errorCount += checkCapabilites();
 		if (errorCount == 0) {
 			logService.log("Process ok.", LogService.INIT);
 		} else {

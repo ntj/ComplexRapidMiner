@@ -49,5 +49,9 @@ public abstract class AttributeCapability implements Capability{
 	
 	public abstract int getType();
 	
+	public String getAsString(){
+		return inner.getAsString();
+	}
+	
 }
 	

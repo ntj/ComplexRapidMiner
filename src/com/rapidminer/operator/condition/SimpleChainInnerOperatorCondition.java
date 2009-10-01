@@ -22,8 +22,7 @@
  */
 package com.rapidminer.operator.condition;
 
-import java.util.List;
-
+import com.rapidminer.operator.IOCapability;
 import com.rapidminer.operator.IllegalInputException;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
@@ -56,8 +55,8 @@ public class SimpleChainInnerOperatorCondition implements InnerOperatorCondition
 	
 	
 	
-	public List<Capability> checkCapabilities(OperatorChain chain, List<Capability> input) throws UnsatisfiedCapabilityException{
-		List<Capability> output = input;
+	public IOCapability[] checkCapabilities(OperatorChain chain, IOCapability[] input) throws UnsatisfiedCapabilityException{
+		IOCapability[] output = input;
 		for (int i = 0; i < chain.getNumberOfOperators(); i++) {
 			Operator operator = chain.getOperator(i);
 			if (operator.isEnabled())
