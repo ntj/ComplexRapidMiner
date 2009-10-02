@@ -1771,12 +1771,12 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 	}
 	
 	public Capability[] getInputCapabilities(){
-		return new Capability[]{};
+		return new Capability[getInputClasses().length];
 	}
 	
 	
 	public Capability[] getOutputCapabilities(){
-		return new Capability[]{};
+		return new Capability[getOutputClasses().length];
 	}
 	
 	public IOCapability[] getDeliveredOutputCapability(IOCapability[] input) throws UnsatisfiedCapabilityException{
@@ -1799,8 +1799,7 @@ public abstract class Operator implements ConfigurationListener, PreviewListener
 						IOCapability next = j.next();
 						if (inputClasses[i].isAssignableFrom(next.getClazz())) {
 							//test if capability matches
-							if(inputCaps[i].checkCapability(next.getCapability()))
-							if(false){
+							if((inputCaps[i] != null) &&( inputCaps[i].checkCapability(next.getCapability()))){
 								j.remove();
 								found = true;
 								break;

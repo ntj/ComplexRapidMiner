@@ -551,8 +551,11 @@ public class Process implements Cloneable {
 			errorCount += performAdditionalChecks();
 		if (errorCount == 0)
 			errorCount += checkIO(inputContainer);
+		//TODO: test default (no capabilities defined)
+		/*
 		if (errorCount == 0)
 			errorCount += checkCapabilites();
+		*/
 		if (errorCount == 0) {
 			logService.log("Process ok.", LogService.INIT);
 		} else {

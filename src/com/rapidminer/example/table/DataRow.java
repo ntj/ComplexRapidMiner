@@ -135,7 +135,7 @@ public abstract class DataRow implements Serializable {
 	}
 	
 	/**
-	 * init this map if there are relational attributes, if it is not already initiated
+	 * initialize this map if there are relational attributes, if it is not already initialized
 	 */
 	public void initRelationalMap(){
 		if(relValueMap == null)
