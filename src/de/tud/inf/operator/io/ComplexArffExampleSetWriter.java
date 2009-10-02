@@ -136,17 +136,19 @@ public class ComplexArffExampleSetWriter extends ArffExampleSetWriter{
 		double[][] values = example.getRelativeValue(attribute);
 		List<Attribute> innerAtts = attribute.getInnerAttributes();
 		out.print("'");
-		for(int j=0;j<values.length;j++){
-			if(!firstInstance) out.print("\\n");
-			firstValue = true;
-			for(int i=0;i<innerAtts.size();i++){
-				if(!firstValue) out.print(",");
-				if(innerAtts.get(i).isNominal())
-					out.print(innerAtts.get(i).getMapping().mapIndex((int)values[j][i]));
-				else out.print(values[j][i]);
-				firstValue = false;
+		if(values != null){
+			for(int j=0;j<values.length;j++){
+				if(!firstInstance) out.print("\\n");
+				firstValue = true;
+				for(int i=0;i<innerAtts.size();i++){
+					if(!firstValue) out.print(",");
+					if(innerAtts.get(i).isNominal())
+						out.print(innerAtts.get(i).getMapping().mapIndex((int)values[j][i]));
+					else out.print(values[j][i]);
+					firstValue = false;
+				}
+				firstInstance = false;
 			}
-			firstInstance = false;
 		}
 		out.print("'");
     }
