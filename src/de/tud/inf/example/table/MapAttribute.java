@@ -20,14 +20,15 @@ import de.tud.inf.example.set.attributevalues.MapValue;
  */
 public class MapAttribute extends ComplexProxyAttribute{
 
-	
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -8243720102763289432L;
-
 	
 	List<Attribute> parameters;
+	
+	public MapAttribute(MapAttribute a){
+		super(a);
+		this.parameters = a.parameters;
+	}
+	
 	
 	public MapAttribute(String name, int valueType,
 			RelationalAttribute innerAttribute, List<Attribute> parameters, String hint) {
@@ -118,6 +119,11 @@ public class MapAttribute extends ComplexProxyAttribute{
 			}		
 			row.setRelationalValues(innerAttribute.getTableIndex(), rValues);
 		}
+	}
+
+	@Override
+	public MapAttribute clone() {
+		return new MapAttribute(this);
 	}
 	
 

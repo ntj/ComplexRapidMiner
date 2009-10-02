@@ -13,16 +13,17 @@ import de.tud.inf.example.set.attributevalues.TensorValue;
  */
 public class TensorAttribute extends ComplexProxyAttribute{
 
+	private static final long serialVersionUID = 773973406424862179L;
+	
 	public TensorAttribute(String name, int valueType,
 			RelationalAttribute innerAttribute, String hint) {
 		super(name, valueType, innerAttribute, hint);
 	}
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 773973406424862179L;
-
+	public TensorAttribute(TensorAttribute a){
+		super(a);
+	}
+	
 	@Override
 	public TensorValue getComplexValue(DataRow row) {
 		//all matrices are instantiated with one relational attribute, which can have different number of inner attributes,
@@ -42,6 +43,11 @@ public class TensorAttribute extends ComplexProxyAttribute{
 	@Override
 	public void setComplexValue(DataRow row, ComplexValue value) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public TensorAttribute clone() {
+		return new TensorAttribute(this);
 	}
 
 }

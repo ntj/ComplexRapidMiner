@@ -29,6 +29,12 @@ public class ArrayAttribute extends ComplexProxyAttribute{
 		this.dim1 = dim1;
 		this.dim2 = dim2;
 	}
+	
+	public ArrayAttribute(ArrayAttribute a){
+		super(a);
+		this.dim1 = a.dim1;
+		this.dim2 = a.dim2;
+	}
 
 	
 	@Override
@@ -51,6 +57,12 @@ public class ArrayAttribute extends ComplexProxyAttribute{
 	@Override
 	public void setComplexValue(DataRow row, ComplexValue value) {
 		// TODO Auto-generated method stub
+	}
+
+
+	@Override
+	public Object clone() {
+		return new ArrayAttribute(this);
 	}
 
 }

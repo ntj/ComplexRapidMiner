@@ -246,6 +246,7 @@ public class DataRowFactory {
 		}
 		dataRow.trim();
 		if(rlValues != null){
+			dataRow.initRelationalMap();
 			dataRow.setRelationalValues(rlValues);
 		}
 		return dataRow;

@@ -19,6 +19,10 @@ import de.tud.inf.example.set.attributevalues.DataMapValue;
  */
 public class DataMapAttribute extends ComplexProxyAttribute{
 
+	public DataMapAttribute(DataMapAttribute a){
+		super(a);
+	}
+	
 	public DataMapAttribute(String name, int valueType,
 			RelationalAttribute innerAttribute, String hint) {
 		super(name, valueType, innerAttribute, hint);
@@ -86,6 +90,11 @@ public class DataMapAttribute extends ComplexProxyAttribute{
 			}
 		}
 		row.setRelationalValues(innerAttribute.getTableIndex(), rValues);
+	}
+
+	@Override
+	public DataMapAttribute clone() {
+		return new DataMapAttribute(this);
 	}
 
 }

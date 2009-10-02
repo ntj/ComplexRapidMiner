@@ -10,6 +10,10 @@ import de.tud.inf.example.set.attributevalues.ComplexValueFactory;
 
 public class UniformAttribute extends UncertainAttribute {
 
+	public UniformAttribute(UniformAttribute a){
+		super(a);
+	}
+	
 	public UniformAttribute(String name, int valueType,
 			List<Attribute> innerAttributes, List<Attribute> parameters,
 			String hint) {
@@ -28,5 +32,11 @@ public class UniformAttribute extends UncertainAttribute {
 		setValues(pdf,row);
 		return pdf;
 	}
+	
+	@Override
+	public UniformAttribute clone() {
+		return new UniformAttribute(this);
+	}
+	
 
 }

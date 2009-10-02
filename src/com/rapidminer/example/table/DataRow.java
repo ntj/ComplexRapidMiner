@@ -50,7 +50,7 @@ public abstract class DataRow implements Serializable {
 	/**
 	 * this map stores value lists for each relational attribute (identified with table index)
 	 */
-	private Map<Integer,double[][]> relValueMap = new HashMap<Integer,double[][]>();
+	private Map<Integer,double[][]> relValueMap = null;
 	
 
 	/** Returns the value for the given index. */
@@ -133,6 +133,15 @@ public abstract class DataRow implements Serializable {
 	public void setRelationalValues(Map<Integer,double[][]>valueMap){
 		this.relValueMap = valueMap;
 	}
+	
+	/**
+	 * init this map if there are relational attributes, if it is not already initiated
+	 */
+	public void initRelationalMap(){
+		if(relValueMap == null)
+			this.relValueMap = new HashMap<Integer,double[][]>();
+	}
+	
 	
 	/**
 	 * 

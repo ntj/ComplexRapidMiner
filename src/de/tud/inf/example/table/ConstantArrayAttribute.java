@@ -15,6 +15,10 @@ import de.tud.inf.example.set.attributevalues.ConstantArrayValue;
  */
 public class ConstantArrayAttribute extends ComplexProxyAttribute{
 
+	public ConstantArrayAttribute(ConstantArrayAttribute a){
+		super(a);
+	}
+	
 	public ConstantArrayAttribute(String name, int valueType,
 			RelationalAttribute innerAttribute, String hint) {
 		super(name, valueType, innerAttribute, hint);
@@ -52,6 +56,11 @@ public class ConstantArrayAttribute extends ComplexProxyAttribute{
 			for (int j=0;j<values[0].length;j++)
 				relValues[i*values[0].length + j][0] = values[i][j];
 		row.setRelationalValues(this.innerAttribute.getTableIndex(),relValues);	
+	}
+
+	@Override
+	public Object clone() {
+		return new ConstantArrayAttribute(this);
 	}
 
 }

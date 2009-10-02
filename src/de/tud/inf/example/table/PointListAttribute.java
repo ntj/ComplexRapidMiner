@@ -13,6 +13,10 @@ import de.tud.inf.example.set.attributevalues.PointListValue;
  */
 public class PointListAttribute extends ComplexProxyAttribute{
 
+	public PointListAttribute(PointListAttribute a){
+		super(a);
+	}
+	
 	public PointListAttribute(String name, int valueType,
 			RelationalAttribute innerAttribute, String hint) {
 		super(name, valueType, innerAttribute, hint);
@@ -39,5 +43,12 @@ public class PointListAttribute extends ComplexProxyAttribute{
 	public void setComplexValue(DataRow row, ComplexValue value) {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public Object clone() {
+		return new PointListAttribute(this);
+	}
+	
+	
 
 }

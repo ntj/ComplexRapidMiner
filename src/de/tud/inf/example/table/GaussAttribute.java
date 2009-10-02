@@ -15,10 +15,11 @@ import de.tud.inf.example.set.attributevalues.ComplexValueFactory;
  */
 public class GaussAttribute extends UncertainAttribute {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -8515028651795348008L;
+	
+	public GaussAttribute(GaussAttribute a){
+		super(a);
+	}
 	
 	public GaussAttribute(String name, int valueType,
 			List<Attribute> innerAttributes, List<Attribute> parameters,
@@ -33,6 +34,14 @@ public class GaussAttribute extends UncertainAttribute {
 		setValues(pdf,row);
 		return pdf;
 	}
+	
+
+	@Override
+	public Object clone() {
+		return new GaussAttribute(this);
+	}
+	
+	
 
 
 }

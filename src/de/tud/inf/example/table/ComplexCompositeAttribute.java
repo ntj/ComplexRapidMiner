@@ -13,7 +13,7 @@ import de.tud.inf.example.set.attributevalues.LinearKorrelation;
 
 
 /**
- * Complex Attribute, which manages a list of inner attributes
+ * Complex Attribute, which manages a list of inner attributes without any parameter attributes
  * @author Antje Gruner
  *
  */
@@ -116,5 +116,12 @@ public class ComplexCompositeAttribute extends ComplexAttribute {
 	public void setComplexValue(DataRow row, ComplexValue value) {
 		throw new UnsupportedOperationException();
 	}
+
+
+	@Override
+	public Object clone() {
+		return new ComplexCompositeAttribute(this);
+	}
+
 	
 }

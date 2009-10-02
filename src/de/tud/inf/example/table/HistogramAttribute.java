@@ -10,17 +10,18 @@ import de.tud.inf.example.set.attributevalues.Histogram;
 
 public class HistogramAttribute extends UncertainAttribute{
 
+	private static final long serialVersionUID = 827552188427781393L;
+	
+	public HistogramAttribute(HistogramAttribute a){
+		super(a);
+	}
 	public HistogramAttribute(String name, int valueType,
 			List<Attribute> innerAttributes, List<Attribute> parameters,
 			String hint) {
 		super(name, valueType, innerAttributes, parameters, hint);
 	}
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 827552188427781393L;
-
+	
 	@Override
 	public Histogram getComplexValue(DataRow row) {
 		Histogram h = (Histogram)ComplexValueFactory.getComplexValueFunction(innerAttributes.size(), this.getValueType(),hint);
@@ -30,5 +31,13 @@ public class HistogramAttribute extends UncertainAttribute{
 		setValues(h,row);
 		return h;
 	}
+	
+	
+	@Override
+	public HistogramAttribute clone() {
+		return new HistogramAttribute(this);
+	}
+	
+	
 
 }

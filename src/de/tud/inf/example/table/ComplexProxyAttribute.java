@@ -22,6 +22,11 @@ public abstract class ComplexProxyAttribute extends ComplexAttribute {
 
 	protected RelationalAttribute innerAttribute;
 	
+	ComplexProxyAttribute(ComplexProxyAttribute a){
+		super(a);
+		this.innerAttribute = a.innerAttribute;
+	}
+	
 	ComplexProxyAttribute(String name, int valueType,RelationalAttribute innerAttribute, String hint) {
 		super(name, valueType,hint);
 		this.innerAttribute = innerAttribute;
@@ -51,7 +56,7 @@ public abstract class ComplexProxyAttribute extends ComplexAttribute {
 		return null;
 	}
 
-	public Attribute getInnerAttribute() {
+	public RelationalAttribute getInnerAttribute() {
 		return innerAttribute;
 	}
 	

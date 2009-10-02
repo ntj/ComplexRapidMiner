@@ -32,9 +32,7 @@ public abstract class ComplexAttribute extends AbstractAttribute {
 	}
 
 	@Override
-	public Object clone() {
-		throw new UnsupportedOperationException();
-	}
+	public abstract Object clone();
 
 	public String getAsString(double value, int digits, boolean quoteWhitespace) {
 		throw new UnsupportedOperationException();

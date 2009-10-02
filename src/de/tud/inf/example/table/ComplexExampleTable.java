@@ -15,6 +15,7 @@ import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.DataRowReader;
 import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.att.AttributeSet;
 
 import de.tud.inf.example.set.ComplexExampleSet;
@@ -165,6 +166,24 @@ public class ComplexExampleTable implements ExampleTable{
 	}
 	
 	public void addComplexAttribute(ComplexAttribute ca) {
+		//check if ca is an multiinstance attribute -> if so, dataRow must store relational values
+		if(Ontology.ATTRIBUTE_VALUE_TYPE.isA(ca.getValueType(),Ontology.GEOMETRY)){
+			//test if exampleSet already contains multiinstance attributes,
+			//(if not then dataRow needs to initialize the map which stores relational values)
+			boolean first = true;
+			for(ComplexAttributeDescription cad: dependencies){
+				int type = Ontology.ATTRIBUTE_VALUE_TYPE.mapName(cad.getSymbol());
+				if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(type,Ontology.GEOMETRY)){
+					first = false;
+					break;
+				}
+			}
+			if (first){
+				DataRowReader dReader = this.getDataRowReader();
+				while (dReader.hasNext())
+					dReader.next().initRelationalMap();
+			}
+		}
 		//add atomar attributes and parameter attributes
 		List<Attribute> innerAtts = ca.getInnerAttributes();
 		int[] innerIds = new int[ca.getInnerAttributeCount()];
