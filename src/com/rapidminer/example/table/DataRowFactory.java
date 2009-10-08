@@ -209,6 +209,7 @@ public class DataRowFactory {
 					dataRow.set(attributes[i], attributes[i].getMapping().mapString(strings[i]));
 				}
 				else if(attributes[i].isRelational()){
+					dataRow.initRelationalMap();
 					if(rlValues == null) rlValues = new HashMap<Integer, double[][]>();
 					//then string[i] contains arbitrary tuples of innerAttributs.size() - number of attributes
 					//saves them as double.. get attribute information from ComplexAttribute.getInnerAttributes.type
@@ -239,14 +240,15 @@ public class DataRowFactory {
 					dataRow.set(attributes[i], string2Double(strings[i], this.decimalPointCharacter));
 				}
 			} else {
+				if(attributes[i].isRelational())
+					dataRow.initRelationalMap();
 				if(attributes[i].isNominal())
-						dataRow.set(attributes[i], attributes[i].getMapping().mapString(""));
+					dataRow.set(attributes[i], attributes[i].getMapping().mapString(""));
 				else dataRow.set(attributes[i], Double.NaN);
 			}
 		}
 		dataRow.trim();
 		if(rlValues != null){
-			dataRow.initRelationalMap();
 			dataRow.setRelationalValues(rlValues);
 		}
 		return dataRow;
@@ -309,6 +311,7 @@ public class DataRowFactory {
 		return dataRow;
 	}
 
+	
 	/**
 	* Creates a data row from an Object array. The classes of the object must
 	* match the value type of the corresponding {@link Attribute}. If the
