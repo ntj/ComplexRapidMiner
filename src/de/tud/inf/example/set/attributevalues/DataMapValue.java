@@ -95,6 +95,7 @@ public class DataMapValue implements ComplexValue{
 	}
 	
 	public void setStringIntMap(Map<String,Integer> strMap){
+		map = new HashMap<Integer, Double>();
 		keyMapping = new PolynominalMapping();
 		for (Map.Entry<String, Integer> mapEntry: strMap.entrySet()) {
 			map.put(keyMapping.mapString(mapEntry.getKey()), mapEntry.getValue().doubleValue());
