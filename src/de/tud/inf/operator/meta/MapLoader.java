@@ -113,17 +113,18 @@ public class MapLoader extends OperatorChain{
 		 * create ExampleTable for the map
 		 */
 		List<Attribute> attributes = new ArrayList<Attribute>();
+		String nameAttrName = "map_name"; 
 		attributes.add(AttributeFactory.createAttribute("map_name", Ontology.NOMINAL));
 		
 		MemoryExampleTable parent = new MemoryExampleTable(attributes);
 		complexExampleTable = new ComplexExampleTable(parent);
 		
 		/**create and add complex Map Attribute */
-		MapAttribute mapAttr = (MapAttribute)AttributeFactory.createAttribute("map", Ontology.ATTRIBUTE_VALUE_TYPE.MAP);
+		MapAttribute mapAttr = (MapAttribute)AttributeFactory.createAttribute("map", Ontology.MAP);
 		complexExampleTable.addComplexAttribute(mapAttr);
-		attributes.add(mapAttr);
+		//attributes.add(mapAttr);
 		
-		Attribute[] attr = new Attribute[attributes.size()];
+		Attribute[] attr = new Attribute[parent.getAttributes().length];
 		attr = attributes.toArray(attr);
 		
 		Object[] data = new Object[attr.length];
@@ -239,7 +240,15 @@ public class MapLoader extends OperatorChain{
 				data[0] = mapName;
 				data[1] = mapVal;
 				
-				DataRow row = fac.create(data, attr);
+				// add relational value map into dataRow
+				
+				//DataRow row = fac.create(data, attr,true);
+				//create appropriate dataRow
+				DataRow row = fac.create(attr.length);
+				row.set(complexExampleTable.getAttribute(0), complexExampleTable.getAttribute(0).getMapping().mapString(mapName));
+				//those row stuff should be encapsulated
+				row.initRelationalMap();
+				row.set(mapAttr, mapVal);
 				parent.addDataRow(row);
 				mapI++;
 			}
