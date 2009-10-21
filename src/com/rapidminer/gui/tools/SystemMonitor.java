@@ -32,8 +32,6 @@ import java.awt.geom.Rectangle2D;
 
 import javax.swing.JPanel;
 
-import de.tud.inf.statistics.ProcessStatistics;
-
 /**
  * The default system monitor which graphically displays the amount of used
  * memory. Please note that the upper line of the system monitor shows the
@@ -98,7 +96,6 @@ public class SystemMonitor extends JPanel {
 				while (true) {
 					// memory
 					SystemMonitor.this.currentlyUsed = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-					ProcessStatistics.printMemory(System.currentTimeMillis(), (long)SystemMonitor.this.currentlyUsed, "mem_new");
 					SystemMonitor.this.memory[SystemMonitor.this.currentMeasurement] = (long)currentlyUsed;
 					SystemMonitor.this.currentMeasurement = (SystemMonitor.this.currentMeasurement + 1) % SystemMonitor.this.memory.length;
 					
