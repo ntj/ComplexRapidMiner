@@ -75,7 +75,9 @@ public class RegressionPerformanceEvaluator extends AbstractPerformanceEvaluator
 		com.rapidminer.operator.performance.SquaredError.class, 
 		com.rapidminer.operator.performance.CorrelationCriterion.class,
 		com.rapidminer.operator.performance.SquaredCorrelationCriterion.class, 
-		com.rapidminer.operator.performance.PredictionAverage.class
+		com.rapidminer.operator.performance.PredictionAverage.class,
+		com.rapidminer.operator.performance.AbsMaxError.class,
+		com.rapidminer.operator.performance.AbsMinError.class
 	};
 		
 	public RegressionPerformanceEvaluator(OperatorDescription description) {
