@@ -22,10 +22,16 @@
  */
 package com.rapidminer.operator.meta;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedList;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.SplittedExampleSet;
+import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.OperatorDescription;
@@ -50,7 +56,7 @@ public class ClusterIterator extends OperatorChain {
 
     private static final Class[] INPUT_CLASSES = { ExampleSet.class };
 
-    private static final Class[] OUTPUT_CLASSES = {};
+    private static final Class[] OUTPUT_CLASSES = {IOObject.class};
 
     private int numberOfClusters = 0;
 
@@ -60,7 +66,7 @@ public class ClusterIterator extends OperatorChain {
 
     public IOObject[] apply() throws OperatorException {
         ExampleSet exampleSet = getInput(ExampleSet.class);
-
+        ArrayList<IOObject> ioObjects = new ArrayList<IOObject>();
         Attribute clusterAttribute = exampleSet.getAttributes().getCluster();
         if (clusterAttribute == null) {
         	throw new UserError(this, 113, Attributes.CLUSTER_NAME);
@@ -71,11 +77,12 @@ public class ClusterIterator extends OperatorChain {
         for (int i = 0; i < numberOfClusters; i++) {
             splitted.selectSingleSubset(i);
             setInput(getInput().copy().append(new IOObject[] { splitted }));
-            super.apply();
+            IOObject[] input = super.apply();
+            ioObjects.addAll(Arrays.asList(input));
             inApplyLoop();
         }
         
-        return new IOObject[0];
+        return (IOObject[]) ioObjects.toArray();
     }
 
     /** the clustered example set */
